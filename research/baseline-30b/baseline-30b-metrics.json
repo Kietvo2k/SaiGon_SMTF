@@ -1,0 +1,2507 @@
+{
+ "generated": "2026-10-04T19:44:09.365Z",
+ "viewport": {
+  "width": 1600,
+  "height": 900
+ },
+ "runs": [
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "overview",
+   "light": "day",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-overview-day.png",
+   "pose": {
+    "position": [
+     1947.6,
+     6141,
+     4031.8
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 521,
+    "fpsAvg": 104.1,
+    "frameMsP50": 9.6,
+    "frameMsP95": 10.2,
+    "frameMsMax": 10.9,
+    "hudFps": 103,
+    "hudTriangles": "5.4M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 5420380,
+     "drawCallsMedian": 289,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 27147
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 2783918,
+      "draws": 254
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 2636445,
+      "draws": 18
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 103,
+     "triangles": 5420380,
+     "meshes": 191,
+     "light": "day",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "city",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 1,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 216480,
+     "castShadowVisible": 0
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 0,
+     "trianglesAll": 500352,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 0,
+     "trianglesAll": 176720,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 0,
+     "trianglesAll": 9802,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 0,
+     "trianglesAll": 24,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    }
+   },
+   "console": [
+    {
+     "type": "warning",
+     "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+    }
+   ]
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "overview",
+   "light": "night",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-overview-night.png",
+   "pose": {
+    "position": [
+     1947.6,
+     6141,
+     4031.8
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 517,
+    "fpsAvg": 103.4,
+    "frameMsP50": 9.6,
+    "frameMsP95": 10.2,
+    "frameMsMax": 10.6,
+    "hudFps": 103,
+    "hudTriangles": "5.4M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 5420380,
+     "drawCallsMedian": 289,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 46243
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 2783918,
+      "draws": 254
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 2636445,
+      "draws": 18
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 103,
+     "triangles": 5420380,
+     "meshes": 191,
+     "light": "night",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "city",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": null,
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "materials",
+   "light": "day",
+   "via": "controlBody",
+   "file": "30b-webgpu-presentation-materials-day.png",
+   "pose": {
+    "position": [
+     184.4,
+     595.9,
+     885.9
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 395,
+    "fpsAvg": 79,
+    "frameMsP50": 10,
+    "frameMsP95": 19.9,
+    "frameMsMax": 20.5,
+    "hudFps": 79,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22662932,
+     "drawCallsMedian": 455,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 69805
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9419870,
+      "draws": 280
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13243045,
+      "draws": 158
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 79,
+     "triangles": 22662932,
+     "meshes": 191,
+     "light": "day",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "city",
+     "identity": true
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 2,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 2857536,
+     "castShadowVisible": 2857536
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 500352,
+     "trianglesVisible": 500352,
+     "castShadowVisible": 500352
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 2,
+     "trianglesAll": 176720,
+     "trianglesVisible": 176720,
+     "castShadowVisible": 176720
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 0,
+     "trianglesAll": 9802,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 11,
+     "trianglesAll": 24,
+     "trianglesVisible": 24,
+     "castShadowVisible": 0
+    }
+   },
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "materials",
+   "light": "night",
+   "via": "controlBody",
+   "file": "30b-webgpu-presentation-materials-night.png",
+   "pose": {
+    "position": [
+     184.4,
+     595.9,
+     885.9
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 395,
+    "fpsAvg": 78.9,
+    "frameMsP50": 10,
+    "frameMsP95": 19.9,
+    "frameMsMax": 20.3,
+    "hudFps": 79,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22662932,
+     "drawCallsMedian": 455,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 84347
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9419870,
+      "draws": 280
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13243045,
+      "draws": 158
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 79,
+     "triangles": 22662932,
+     "meshes": 191,
+     "light": "night",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "city",
+     "identity": true
+    }
+   },
+   "breakdown": null,
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "river",
+   "light": "day",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-river-day.png",
+   "pose": {
+    "position": [
+     486.3,
+     615.1,
+     1195.1
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 400,
+    "fpsAvg": 80,
+    "frameMsP50": 10,
+    "frameMsP95": 19.9,
+    "frameMsMax": 22.9,
+    "hudFps": 81,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22663068,
+     "drawCallsMedian": 433,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 105929
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9420174,
+      "draws": 272
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13242877,
+      "draws": 144
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 81,
+     "triangles": 22663068,
+     "meshes": 191,
+     "light": "day",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 2,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 2857536,
+     "castShadowVisible": 2857536
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 500352,
+     "trianglesVisible": 500352,
+     "castShadowVisible": 500352
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 2,
+     "trianglesAll": 176720,
+     "trianglesVisible": 176720,
+     "castShadowVisible": 176720
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 0,
+     "trianglesAll": 9802,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 0,
+     "trianglesAll": 24,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    }
+   },
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "river",
+   "light": "night",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-river-night.png",
+   "pose": {
+    "position": [
+     486.3,
+     615.1,
+     1195.1
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 403,
+    "fpsAvg": 80.4,
+    "frameMsP50": 10,
+    "frameMsP95": 19.8,
+    "frameMsMax": 20.6,
+    "hudFps": 80,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22663044,
+     "drawCallsMedian": 431,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 120823
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9420174,
+      "draws": 272
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13242853,
+      "draws": 142
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 80,
+     "triangles": 22663044,
+     "meshes": 191,
+     "light": "night",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": null,
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "boulevard",
+   "light": "day",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-boulevard-day.png",
+   "pose": {
+    "position": [
+     81.1,
+     630.1,
+     939.8
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 399,
+    "fpsAvg": 79.7,
+    "frameMsP50": 10,
+    "frameMsP95": 20,
+    "frameMsMax": 20.6,
+    "hudFps": 80,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22658444,
+     "drawCallsMedian": 259,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 142493
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9415478,
+      "draws": 92
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13242949,
+      "draws": 150
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 80,
+     "triangles": 22658444,
+     "meshes": 191,
+     "light": "day",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "city",
+     "identity": true
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 2,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 2857536,
+     "castShadowVisible": 2857536
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 500352,
+     "trianglesVisible": 500352,
+     "castShadowVisible": 500352
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 2,
+     "trianglesAll": 176720,
+     "trianglesVisible": 176720,
+     "castShadowVisible": 176720
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 0,
+     "trianglesAll": 9802,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 11,
+     "trianglesAll": 24,
+     "trianglesVisible": 24,
+     "castShadowVisible": 0
+    }
+   },
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "boulevard",
+   "light": "night",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-boulevard-night.png",
+   "pose": {
+    "position": [
+     81.1,
+     630.1,
+     939.8
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 399,
+    "fpsAvg": 79.5,
+    "frameMsP50": 10,
+    "frameMsP95": 20,
+    "frameMsMax": 20.5,
+    "hudFps": 80,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22658060,
+     "drawCallsMedian": 248,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 157167
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9415478,
+      "draws": 92
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13242565,
+      "draws": 139
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 80,
+     "triangles": 22658060,
+     "meshes": 191,
+     "light": "night",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "city",
+     "identity": true
+    }
+   },
+   "breakdown": null,
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "bason",
+   "light": "day",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-bason-day.png",
+   "pose": {
+    "position": [
+     220.7,
+     554.8,
+     -963.8
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 406,
+    "fpsAvg": 81.1,
+    "frameMsP50": 10,
+    "frameMsP95": 19.9,
+    "frameMsMax": 20.7,
+    "hudFps": 81,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22663248,
+     "drawCallsMedian": 448,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 179387
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9420174,
+      "draws": 272
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13243057,
+      "draws": 159
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 81,
+     "triangles": 22663248,
+     "meshes": 191,
+     "light": "day",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 2,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 2857536,
+     "castShadowVisible": 2857536
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 500352,
+     "trianglesVisible": 500352,
+     "castShadowVisible": 500352
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 2,
+     "trianglesAll": 176720,
+     "trianglesVisible": 176720,
+     "castShadowVisible": 176720
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 0,
+     "trianglesAll": 9802,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 0,
+     "trianglesAll": 24,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    }
+   },
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "bason",
+   "light": "night",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-bason-night.png",
+   "pose": {
+    "position": [
+     220.7,
+     554.8,
+     -963.8
+    ],
+    "fov": 42
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 405,
+    "fpsAvg": 80.9,
+    "frameMsP50": 10,
+    "frameMsP95": 19.8,
+    "frameMsMax": 20.3,
+    "hudFps": 81,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22663248,
+     "drawCallsMedian": 448,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 194413
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9420174,
+      "draws": 272
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13243057,
+      "draws": 159
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 81,
+     "triangles": 22663248,
+     "meshes": 191,
+     "light": "night",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": null,
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "corridor",
+   "light": "day",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-corridor-day.png",
+   "pose": {
+    "position": [
+     -755.8,
+     87.5,
+     65.3
+    ],
+    "fov": 48
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 406,
+    "fpsAvg": 81.2,
+    "frameMsP50": 10,
+    "frameMsP95": 19.8,
+    "frameMsMax": 20.4,
+    "hudFps": 81,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22701304,
+     "drawCallsMedian": 314,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 216699
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9435018,
+      "draws": 162
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13266269,
+      "draws": 135
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 81,
+     "triangles": 22701304,
+     "meshes": 191,
+     "light": "day",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "hero",
+     "identity": true
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 2,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 2857536,
+     "castShadowVisible": 2857536
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 500352,
+     "trianglesVisible": 500352,
+     "castShadowVisible": 500352
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 2,
+     "trianglesAll": 176720,
+     "trianglesVisible": 176720,
+     "castShadowVisible": 176720
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 41,
+     "trianglesAll": 9802,
+     "trianglesVisible": 9802,
+     "castShadowVisible": 9802
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 11,
+     "trianglesAll": 24,
+     "trianglesVisible": 24,
+     "castShadowVisible": 0
+    }
+   },
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "presentation",
+   "view": "corridor",
+   "light": "night",
+   "via": "cityNav",
+   "file": "30b-webgpu-presentation-corridor-night.png",
+   "pose": {
+    "position": [
+     -755.8,
+     87.5,
+     65.3
+    ],
+    "fov": 48
+   },
+   "metrics": {
+    "seconds": 5,
+    "frames": 408,
+    "fpsAvg": 81.4,
+    "frameMsP50": 10,
+    "frameMsP95": 19.8,
+    "frameMsMax": 20.6,
+    "hudFps": 81,
+    "hudTriangles": "22.7M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 22701328,
+     "drawCallsMedian": 317,
+     "frameCallsMedian": 22,
+     "renderCallsTotal": 231835
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 9435018,
+      "draws": 162
+     },
+     "shadow-ortho": {
+      "passes": 3,
+      "tris": 13266293,
+      "draws": 138
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 81,
+     "triangles": 22701328,
+     "meshes": 191,
+     "light": "night",
+     "backend": "webgpu",
+     "profile": "presentation",
+     "pipeline": "City Visual Runtime 30 · Trình diễn",
+     "effects": [
+      "GTAO 8s @ 55%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 3,
+      "mapSize": 2048,
+      "maxFar": 3400
+     },
+     "lod": "hero",
+     "corridor": "hero",
+     "identity": true
+    }
+   },
+   "breakdown": null,
+   "console": []
+  },
+  {
+   "backend": "webgpu",
+   "quality": "balanced",
+   "view": "overview",
+   "light": "day",
+   "file": "30b-webgpu-balanced-overview-day.png",
+   "metrics": {
+    "seconds": 5,
+    "frames": 522,
+    "fpsAvg": 104.3,
+    "frameMsP50": 9.5,
+    "frameMsP95": 10.2,
+    "frameMsMax": 10.9,
+    "hudFps": 104,
+    "hudTriangles": "4.5M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 4541565,
+     "drawCallsMedian": 283,
+     "frameCallsMedian": 21,
+     "renderCallsTotal": 24843
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 17,
+      "tris": 17,
+      "draws": 17
+     },
+     "main": {
+      "passes": 2,
+      "tris": 2783918,
+      "draws": 254
+     },
+     "shadow-ortho": {
+      "passes": 2,
+      "tris": 1757630,
+      "draws": 12
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 104,
+     "triangles": 4541565,
+     "meshes": 191,
+     "light": "day",
+     "backend": "webgpu",
+     "profile": "balanced",
+     "pipeline": "City Visual Runtime 30 · Cân bằng",
+     "effects": [
+      "GTAO 6s @ 42%",
+      "TRAA velocity/depth",
+      "selective emissive bloom",
+      "grade",
+      "RCAS denoise"
+     ],
+     "shadows": {
+      "type": "cascaded",
+      "cascades": 2,
+      "mapSize": 1536,
+      "maxFar": 3000
+     },
+     "lod": "city",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 1,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 216480,
+     "castShadowVisible": 0
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 0,
+     "trianglesAll": 500352,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 0,
+     "trianglesAll": 176720,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 0,
+     "trianglesAll": 9802,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 0,
+     "trianglesAll": 24,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    }
+   },
+   "loadMs": 8911,
+   "console": [
+    {
+     "type": "warning",
+     "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+    }
+   ]
+  },
+  {
+   "backend": "webgpu",
+   "quality": "performance",
+   "view": "overview",
+   "light": "day",
+   "file": "30b-webgpu-performance-overview-day.png",
+   "metrics": {
+    "seconds": 5,
+    "frames": 528,
+    "fpsAvg": 105.6,
+    "frameMsP50": 9.3,
+    "frameMsP95": 10.2,
+    "frameMsMax": 10.7,
+    "hudFps": 105,
+    "hudTriangles": "2.3M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 2272165,
+     "drawCallsMedian": 191,
+     "frameCallsMedian": 5,
+     "renderCallsTotal": 5236
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 3,
+      "tris": 3,
+      "draws": 3
+     },
+     "main": {
+      "passes": 1,
+      "tris": 1391959,
+      "draws": 127
+     },
+     "shadow-ortho": {
+      "passes": 1,
+      "tris": 880203,
+      "draws": 61
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 105,
+     "triangles": 2272165,
+     "meshes": 191,
+     "light": "day",
+     "backend": "webgpu",
+     "profile": "performance",
+     "pipeline": "City Visual Runtime 30 · Hiệu năng",
+     "effects": [
+      "depth-micro-contact",
+      "bounded-local-contrast",
+      "grade",
+      "rcas-denoise"
+     ],
+     "shadows": {
+      "type": "single",
+      "cascades": 1,
+      "mapSize": 4096,
+      "maxFar": 11000
+     },
+     "lod": "city",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 1,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 216480,
+     "castShadowVisible": 0
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 0,
+     "trianglesAll": 500352,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 0,
+     "trianglesAll": 176720,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 0,
+     "trianglesAll": 9802,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 0,
+     "trianglesAll": 24,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    }
+   },
+   "loadMs": 5284,
+   "console": [
+    {
+     "type": "warning",
+     "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+    }
+   ]
+  },
+  {
+   "backend": "webgl",
+   "quality": "presentation(requested)",
+   "view": "overview",
+   "light": "day",
+   "file": "30b-webgl-presentationrequested-overview-day.png",
+   "metrics": {
+    "seconds": 5,
+    "frames": 523,
+    "fpsAvg": 104.7,
+    "frameMsP50": 9.5,
+    "frameMsP95": 10.2,
+    "frameMsMax": 13.1,
+    "hudFps": 104,
+    "hudTriangles": "2.3M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 2272165,
+     "drawCallsMedian": 191,
+     "frameCallsMedian": 5,
+     "renderCallsTotal": 5176
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 3,
+      "tris": 3,
+      "draws": 3
+     },
+     "main": {
+      "passes": 1,
+      "tris": 1391959,
+      "draws": 127
+     },
+     "shadow-ortho": {
+      "passes": 1,
+      "tris": 880203,
+      "draws": 61
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 104,
+     "triangles": 2272165,
+     "meshes": 191,
+     "light": "day",
+     "backend": "webgl2-fallback",
+     "profile": "balanced-webgl",
+     "pipeline": "City Visual Runtime 30 · Cân bằng · WebGL",
+     "effects": [
+      "depth-micro-contact",
+      "bounded-local-contrast",
+      "grade",
+      "rcas-denoise"
+     ],
+     "shadows": {
+      "type": "single",
+      "cascades": 1,
+      "mapSize": 4096,
+      "maxFar": 11000
+     },
+     "lod": "city",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 1,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 216480,
+     "castShadowVisible": 0
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 0,
+     "trianglesAll": 500352,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 0,
+     "trianglesAll": 176720,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 0,
+     "trianglesAll": 9802,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 0,
+     "trianglesAll": 24,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    }
+   },
+   "loadMs": 7016,
+   "console": []
+  },
+  {
+   "backend": "webgl",
+   "quality": "presentation(requested)",
+   "view": "overview",
+   "light": "night",
+   "file": "30b-webgl-presentationrequested-overview-night.png",
+   "metrics": {
+    "seconds": 5,
+    "frames": 523,
+    "fpsAvg": 104.6,
+    "frameMsP50": 9.5,
+    "frameMsP95": 10.2,
+    "frameMsMax": 16.7,
+    "hudFps": 105,
+    "hudTriangles": "2.3M",
+    "hudMeshes": 191,
+    "info": {
+     "trianglesMedian": 2272165,
+     "drawCallsMedian": 191,
+     "frameCallsMedian": 5,
+     "renderCallsTotal": 9311
+    },
+    "passes": {
+     "post/other-scene": {
+      "passes": 3,
+      "tris": 3,
+      "draws": 3
+     },
+     "main": {
+      "passes": 1,
+      "tris": 1391959,
+      "draws": 127
+     },
+     "shadow-ortho": {
+      "passes": 1,
+      "tris": 880203,
+      "draws": 61
+     }
+    },
+    "pixelRatio": 1,
+    "status": {
+     "fps": 105,
+     "triangles": 2272165,
+     "meshes": 191,
+     "light": "night",
+     "backend": "webgl2-fallback",
+     "profile": "balanced-webgl",
+     "pipeline": "City Visual Runtime 30 · Cân bằng · WebGL",
+     "effects": [
+      "depth-micro-contact",
+      "bounded-local-contrast",
+      "grade",
+      "rcas-denoise"
+     ],
+     "shadows": {
+      "type": "single",
+      "cascades": 1,
+      "mapSize": 4096,
+      "maxFar": 11000
+     },
+     "lod": "city",
+     "corridor": "city",
+     "identity": false
+    }
+   },
+   "breakdown": {
+    "cong-trinh (city mesh)": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 833559,
+     "trianglesVisible": 833559,
+     "castShadowVisible": 833559
+    },
+    "nen/cong vien": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 3418,
+     "trianglesVisible": 3418,
+     "castShadowVisible": 0
+    },
+    "nuoc": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 4788,
+     "trianglesVisible": 4788,
+     "castShadowVisible": 0
+    },
+    "duong · edge": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 97182,
+     "trianglesVisible": 97182,
+     "castShadowVisible": 0
+    },
+    "duong · asphalt": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 74860,
+     "trianglesVisible": 74860,
+     "castShadowVisible": 0
+    },
+    "duong · pedestrian": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 22322,
+     "trianglesVisible": 22322,
+     "castShadowVisible": 0
+    },
+    "duong · marking": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 12386,
+     "trianglesVisible": 12386,
+     "castShadowVisible": 0
+    },
+    "flood proxy": {
+     "meshes": 17,
+     "visibleMeshes": 0,
+     "trianglesAll": 3876,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "cau Ba Son (ket cau)": {
+     "meshes": 71,
+     "visibleMeshes": 71,
+     "trianglesAll": 1916,
+     "trianglesVisible": 1916,
+     "castShadowVisible": 1244
+    },
+    "Marina/Grand Marina": {
+     "meshes": 32,
+     "visibleMeshes": 32,
+     "trianglesAll": 480,
+     "trianglesVisible": 480,
+     "castShadowVisible": 144
+    },
+    "cay": {
+     "meshes": 3,
+     "visibleMeshes": 1,
+     "trianglesAll": 3074016,
+     "trianglesVisible": 216480,
+     "castShadowVisible": 0
+    },
+    "xe": {
+     "meshes": 3,
+     "visibleMeshes": 3,
+     "trianglesAll": 115200,
+     "trianglesVisible": 115200,
+     "castShadowVisible": 38400
+    },
+    "tau": {
+     "meshes": 6,
+     "visibleMeshes": 6,
+     "trianglesAll": 1012,
+     "trianglesVisible": 1012,
+     "castShadowVisible": 748
+    },
+    "roof fixtures": {
+     "meshes": 1,
+     "visibleMeshes": 1,
+     "trianglesAll": 6108,
+     "trianglesVisible": 6108,
+     "castShadowVisible": 6108
+    },
+    "chi tiet 28 · kien truc": {
+     "meshes": 6,
+     "visibleMeshes": 0,
+     "trianglesAll": 500352,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "chi tiet 28 · den duong": {
+     "meshes": 2,
+     "visibleMeshes": 0,
+     "trianglesAll": 176720,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "hero corridor 30B": {
+     "meshes": 41,
+     "visibleMeshes": 0,
+     "trianglesAll": 9802,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    },
+    "identity facades 30B": {
+     "meshes": 11,
+     "visibleMeshes": 0,
+     "trianglesAll": 24,
+     "trianglesVisible": 0,
+     "castShadowVisible": 0
+    }
+   },
+   "loadMs": 7016,
+   "console": []
+  }
+ ]
+}

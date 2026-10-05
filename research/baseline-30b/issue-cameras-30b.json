@@ -1,0 +1,105 @@
+{
+ "note": "Pose suy ra bằng cách so ảnh research/issues-31 (checkout chính) với ảnh probe 30B. Toạ độ cảnh: mét, x đông, z = (lat0-lat)*110574. baseView quyết định LOD (cameraDistance của orbit), pose ghi đè camera qua __THREE_DEVTOOLS__ + scene.onBeforeRender, fov mặc định 42.",
+ "issues": [
+  {
+   "id": "01-vong-xoay-cau-vuot",
+   "source": "01-vong-xoay-cau-vuot.webp",
+   "match": "khớp tốt",
+   "place": "Vòng xoay Nguyễn Hữu Cảnh (way 1030367238, 1267462157/58, 1267913082); ribbon Cầu Thủ Thiêm 166092209 + 165919725 (layer 1, y=13) đi ngang phía trên",
+   "baseView": "bason",
+   "pose": {
+    "position": [
+     713.4,
+     70,
+     -1244.2
+    ],
+    "target": [
+     518,
+     0,
+     -1122.9
+    ],
+    "fov": 42
+   }
+  },
+  {
+   "id": "02-giao-lo-nhin-tren",
+   "source": "02-giao-lo-nhin-tren.webp",
+   "match": "khớp tốt (cùng nút với 01, nhìn từ trên)",
+   "place": "Vòng xoay Nguyễn Hữu Cảnh, nhìn thẳng xuống; HUD ảnh gốc 9,1M tam giác ở view overview đã zoom",
+   "baseView": "bason",
+   "pose": {
+    "position": [
+     625,
+     300,
+     -1204.8
+    ],
+    "target": [
+     605.8,
+     0,
+     -1188.8
+    ],
+    "fov": 42
+   }
+  },
+  {
+   "id": "03-cau-lo-lung-xuyen-nha",
+   "source": "03-cau-lo-lung-xuyen-nha.webp",
+   "match": "khớp tốt",
+   "place": "Cầu Thủ Thiêm way 35470085 (secondary, layer 1, oneway, 3 làn) phía Thủ Thiêm; mặt cầu y=13 đè lên nhà Overture 2000049897/98/99 (h 12/12/7.5 m, chiều cao ước lượng). Nhãn Lam Sơn chỉ là điểm neo ở xa.",
+   "baseView": "bason",
+   "pose": {
+    "position": [
+     1028.9,
+     20,
+     -397.1
+    ],
+    "target": [
+     856,
+     6,
+     -447
+    ],
+    "fov": 42
+   }
+  },
+  {
+   "id": "04-vach-qua-duong-den",
+   "source": "04-vach-qua-duong-den.webp",
+   "match": "gần đúng (cùng đoạn, góc lệch)",
+   "place": "Lê Lợi, cặp footway=crossing 1104500480 + 719047631 (~47 m), 4 lòng đường có dải phân cách, công viên bên trái",
+   "baseView": "bason",
+   "pose": {
+    "position": [
+     -1278.1,
+     75,
+     657.4
+    ],
+    "target": [
+     -1237.2,
+     0,
+     613.5
+    ],
+    "fov": 42
+   }
+  },
+  {
+   "id": "05-dau-cau-ba-son",
+   "source": "05-dau-cau-ba-son.webp",
+   "match": "khớp tốt (ảnh gốc khổ dọc 505×630, bản chụp 1600×900 nên rộng hơn)",
+   "place": "Đầu đông (Thủ Thiêm) Cầu Ba Son: ribbon OSM 321564421/321564423 (secondary, layer 1, 3 làn) bắt đầu ở [118.4,80.9]/[114.3,89.2] ở y=13 trong khi đường mặt đất nối tiếp ở y=1.0 (bậc 12 m, không có dốc); hộp mặt cầu BoxGeometry(24,3.2,…) y=11.25 kết thúc cùng chỗ, lơ lửng trên phố",
+   "baseView": "bason",
+   "pose": {
+    "position": [
+     197.9,
+     60,
+     133.5
+    ],
+    "target": [
+     74.5,
+     0,
+     56.9
+    ],
+    "fov": 55
+   }
+  }
+ ]
+}
