@@ -8,7 +8,7 @@
   "inputs": [
    {
     "path": "webgpu-materials-24.js",
-    "sha256": "4c420153bf4fa3aff92b861c5f4377408322ff0ca38d457978eb34f57fc58f5e"
+    "sha256": "0670d1f1b123c36aebb95e2e77df6fc023a4e1738091e00aa1ad7e1f398b24fb"
    },
    {
     "path": "city-hero-corridor-30.js",

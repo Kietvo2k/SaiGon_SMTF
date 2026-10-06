@@ -805,7 +805,7 @@ const cityDensity=createDensityController31({
   treeDensity:createInstanceDensity31({sources:[{mesh:trunks,key:'trunks'},{mesh:canopies,stride:3,key:'canopies'},{mesh:farCanopies,key:'farCanopies',inPlace:true}],items:trees,isProtected:(x,z)=>signatureGate.protects(x,z,'tree'),cellSize:1000,label:'Cây 31E'}),
   detailDensity:(()=>{const list=[];cityDetailRuntime.root.traverse(o=>{if(o.isInstancedMesh)list.push(o);});return list.map(mesh=>createInstanceDensity31({sources:[{mesh}],items:instanceItems31(mesh),isProtected:(x,z)=>signatureGate.protects(x,z,'detail'),cellSize:1500}));})(),
   fixtureDensity:createInstanceDensity31({sources:[{mesh:fixtures,key:'roofFixtures'}],items:roofFixtures,isProtected:(x,z)=>signatureGate.protects(x,z,'detail')}),
-  streetFurniture,traffic:{api:()=>materialStatus.traffic?.api,group:trafficGroup},vesselGroup,
+  streetFurniture,traffic:{api:()=>materialStatus.traffic?.api??materialStatus.motion?.api,group:trafficGroup},vesselGroup,   // xe: API city-traffic-31 (bước D) gắn ở status hoặc motionStatus
   bridgeRails:(bridgesApi?.procedural||[]).filter(mesh=>/lan can/.test(mesh.name)),
   audit:{
     extraBuildingIds:()=>[...heroEnvelopeIds],   // 3 hero envelope do hero corridor vẽ thay mesh công trình
