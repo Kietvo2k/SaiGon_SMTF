@@ -81,7 +81,8 @@ check('Visual Runtime 30B uses official temporal, AO and cascade primitives',()=
   const detail=read('city-detail-runtime-28.js');
   const hero=read('city-hero-corridor-30.js');
   assert(js.includes("from './city-visual-runtime-30.js?v=30b'"));
-  assert(js.includes("from './city-detail-runtime-28.js?v=30b'"));
+  assert(js.includes("from './city-detail-runtime-28.js?v=30b-31e2'"));
+  assert(js.includes("from './city-street-furniture-31.js?v=30b-31e2'"));
   assert(js.includes("from './city-hero-corridor-30.js?v=30b'"));
   assert(js.includes("from './city-identity-facades-30.js?v=30b'"));
   assert(js.includes('createCityRenderPipeline(renderer,scene,camera,visualQuality)'));
@@ -99,7 +100,9 @@ check('Visual Runtime 30B uses official temporal, AO and cascade primitives',()=
   assert(hero.includes('Continental sourced facade'));
   assert(hero.includes('Caravelle sourced low wing'));
   assert(hero.includes("classification:'site photos on approximate open-map envelopes'"));
-  for(const layer of ['Hero roof parapets','Hero facade ledges','Hero podium cornices','Street awnings','Ground-floor lightbox signs','Rooftop water and plant tanks','Street lamp poles'])assert(detail.includes(layer));
+  for(const layer of ['Hero roof parapets','Hero facade ledges','Hero podium cornices','Street awnings','Ground-floor lightbox signs','Rooftop water and plant tanks'])assert(detail.includes(layer));
+  // Bước E2 31A: đèn đường chuyển sang city-street-furniture-31.js (theo mép mặt đường hợp nhất).
+  for(const layer of ['Street lamp poles','Street lamp heads','Zebra crossings 31'])assert(read('city-street-furniture-31.js').includes(layer));
   assert(detail.includes("classification:'inferred presentation geometry'"));
 });
 check('Facade, vegetation and water receive multi-scale detail',()=>{

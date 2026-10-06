@@ -185,11 +185,12 @@ function buildStrip(points,halfWidth,dirIn,dirOut,emit){
 
 function pushTri(out,a,b,c){out.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);}
 
-export async function buildRoadNetwork31({roads,graph,widths,yieldMain=async()=>{},onProgress=()=>{}}){
+// hiddenRoads (bước E2): chỉ số road không vẽ ribbon, ví dụ footway=crossing (thay bằng zebra) và footway trùng lòng đường.
+export async function buildRoadNetwork31({roads,graph,widths,hiddenRoads=null,yieldMain=async()=>{},onProgress=()=>{}}){
   const started=performance.now();
   const groundY=graph.frame.groundY,nodeById=new Map(graph.nodes.map(node=>[node.id,node]));
   const buckets=Object.fromEntries(LAYERS.map(layer=>[layer.key,[]]));
-  const drawn=index=>!roads[index].tunnel&&graph.roads[index].skipRender!=='hide';
+  const drawn=index=>!roads[index].tunnel&&graph.roads[index].skipRender!=='hide'&&!hiddenRoads?.has(index);
   const groupOf=index=>PEDESTRIAN_TYPES.has(roads[index].type)?'pedestrian':'asphalt';
   const halfOf=index=>roadWidth31(roads[index],widths)/2;
   const geoCache=new Map();
@@ -458,12 +459,12 @@ function createSurfaceIndex(data){
     for(let k=0;k<c.length/3-1;k++){
       const ax=c[k*3],ay=c[k*3+1],az=c[k*3+2],bx=c[k*3+3],by=c[k*3+4],bz=c[k*3+5];
       if(Math.hypot(bx-ax,bz-az)<1e-4)continue;
-      insert({type:0,ax,ay,az,bx,by,bz,hw,road:piece.road},Math.min(ax,bx)-hw,Math.min(az,bz)-hw,Math.max(ax,bx)+hw,Math.max(az,bz)+hw);
+      insert({type:0,ax,ay,az,bx,by,bz,hw,road:piece.road,group:piece.group},Math.min(ax,bx)-hw,Math.min(az,bz)-hw,Math.max(ax,bx)+hw,Math.max(az,bz)+hw);
     }
   }
   for(const j of data.junctions){
     const xs=j.polygon.map(p=>p[0]),zs=j.polygon.map(p=>p[2]);
-    insert({type:1,polygon:j.polygon,y:j.y,node:j.node},Math.min(...xs),Math.min(...zs),Math.max(...xs),Math.max(...zs));
+    insert({type:1,polygon:j.polygon,y:j.y,node:j.node,group:j.group},Math.min(...xs),Math.min(...zs),Math.max(...xs),Math.max(...zs));
   }
   const inPolygon=(poly,x,z)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[2]>z)!==(b[2]>z)&&x<(b[0]-a[0])*(z-a[2])/(b[2]-a[2])+a[0])c=!c;}return c;};
   // y nội suy barycentric trên tam giác quạt của polygon giao lộ (góc polygon mang y profile của từng nhánh).
@@ -476,10 +477,11 @@ function createSurfaceIndex(data){
     }
     return null;
   };
-  // Mọi mặt đường chứa (x, z): trả về danh sách y.
-  return (x,z)=>{
+  // Mọi mặt đường chứa (x, z): trả về danh sách y; group ('asphalt' | 'pedestrian') lọc theo nhóm mặt.
+  return (x,z,group)=>{
     const out=[];
     for(const item of grid.get(key(Math.floor(x/cell),Math.floor(z/cell)))||[]){
+      if(group&&item.group!==group)continue;
       if(item.type===1){if(inPolygon(item.polygon,x,z))out.push(fanY(item.polygon,x,z)??item.y);continue;}
       const sx=item.bx-item.ax,sz=item.bz-item.az,t=Math.min(1,Math.max(0,((x-item.ax)*sx+(z-item.az)*sz)/(sx*sx+sz*sz)));
       if(Math.hypot(item.ax+sx*t-x,item.az+sz*t-z)<=item.hw)out.push(item.ay+(item.by-item.ay)*t);
@@ -488,10 +490,10 @@ function createSurfaceIndex(data){
   };
 }
 
-export async function createRoadNetwork31({scene,roads,graph,widths,colors,yieldMain,onProgress,status={}}){
+export async function createRoadNetwork31({scene,roads,graph,widths,colors,hiddenRoads,yieldMain,onProgress,status={}}){
   if(!graph?.roads||graph.roads.length!==roads.length)throw new Error('ROAD_GRAPH_31 không khả dụng hoặc lệch CITY_DATA.roads');
   status.version=ROAD_NETWORK_31_VERSION;status.state='building';
-  const data=await buildRoadNetwork31({roads,graph,widths,yieldMain,onProgress});
+  const data=await buildRoadNetwork31({roads,graph,widths,hiddenRoads,yieldMain,onProgress});
   const root=new THREE.Group();root.name='Road network 31 · mặt đường liền mạch';scene.add(root);
   const palette={median:'#55654a',...colors};
   const meshes=[];
@@ -515,14 +517,15 @@ export async function createRoadNetwork31({scene,roads,graph,widths,colors,yield
   });
   data.buckets=null;  // giải phóng mảng tạm, hình học đã nằm trong BufferGeometry
   let surfaces=null;
-  const surfacesAt=(x,z)=>(surfaces||(surfaces=createSurfaceIndex(data)))(x,z);
+  const surfacesAt=(x,z,group)=>(surfaces||(surfaces=createSurfaceIndex(data)))(x,z,group);
   // y mặt đường tại (x, z); nearY chọn mặt gần nhất khi có nhiều tầng (cầu trên đường). null = không có mặt đường.
   const sampleY=(x,z,nearY)=>{
     const ys=surfacesAt(x,z);if(!ys.length)return null;
     if(nearY===undefined)return Math.max(...ys);
     return ys.reduce((best,y)=>Math.abs(y-nearY)<Math.abs(best-nearY)?y:best,ys[0]);
   };
-  // Mép mặt đường đã hợp nhất (cho bước E2): mép trái/phải các mảnh + cạnh góc polygon giao lộ, bỏ đoạn nằm trong mặt đường khác.
+  // Mép mặt đường đã hợp nhất (cho bước E2): mép trái/phải các mảnh + cạnh góc polygon giao lộ, bỏ đoạn nằm trong mặt
+  // đường khác CÙNG NHÓM (vỉa hè footway chạy dọc không xóa mép asphalt: đó chính là chỗ đặt đèn).
   let curbCache=null;
   const curbLines=()=>{
     if(curbCache)return curbCache;
@@ -538,7 +541,7 @@ export async function createRoadNetwork31({scene,roads,graph,widths,colors,yield
         const v=piece[side],c=piece.center,pts=[];
         for(let k=0;k<v.length/3;k++){
           const ox=v[k*3]-c[k*3],oz=v[k*3+2]-c[k*3+2],ol=Math.hypot(ox,oz)||1,x=v[k*3]+ox/ol*probe,z=v[k*3+2]+oz/ol*probe;
-          pts.push({x:v[k*3],y:v[k*3+1],z:v[k*3+2],covered:surfacesAt(x,z).some(y=>Math.abs(y-v[k*3+1])<1)});
+          pts.push({x:v[k*3],y:v[k*3+1],z:v[k*3+2],covered:surfacesAt(x,z,piece.group).some(y=>Math.abs(y-v[k*3+1])<1)});
         }
         emitLine(pts,{kind:'side',road:piece.road,group:piece.group,side,sign});
       }
@@ -547,7 +550,7 @@ export async function createRoadNetwork31({scene,roads,graph,widths,colors,yield
       const poly=j.polygon;
       for(let i=0;i<poly.length;i++){
         const a=poly[i],b=poly[(i+1)%poly.length],mx=(a[0]+b[0])/2,mz=(a[2]+b[2])/2,ox=mx-j.x,oz=mz-j.z,ol=Math.hypot(ox,oz)||1;
-        const covered=surfacesAt(mx+ox/ol*probe,mz+oz/ol*probe).some(y=>Math.abs(y-j.y)<1);
+        const covered=surfacesAt(mx+ox/ol*probe,mz+oz/ol*probe,j.group).some(y=>Math.abs(y-j.y)<1);
         if(!covered)lines.push({kind:'junction-corner',node:j.node,group:j.group,points:Float32Array.of(a[0],a[1],a[2],b[0],b[1],b[2])});
       }
     }

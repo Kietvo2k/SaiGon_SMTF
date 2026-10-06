@@ -1,0 +1,7313 @@
+{
+ "schema": "street-furniture-31",
+ "version": "31A",
+ "seed": 31,
+ "attribution": "© OpenStreetMap contributors, ODbL 1.0. Mặt asphalt dùng để so trùng là suy luận từ tim đường và bề rộng theo loại/làn, không khảo sát.",
+ "generated": {
+  "script": "scripts/build_street_furniture_31.py",
+  "hash": "sha256 nội dung đã chuẩn hóa CRLF→LF",
+  "inputs": [
+   {
+    "path": "data/osm-raw.json",
+    "sha256": "3124e5bafe27958e47aa763b88b02fd60b893b56ec0a2329dda439d6d6aaf087"
+   },
+   {
+    "path": "data/scene.js",
+    "sha256": "b6d7d7d40945cf3daadc242eac72931ff8968732057abfd7e1c20c322d50dab6"
+   }
+  ]
+ },
+ "params": {
+  "overlapHide": 0.3,
+  "widths": {
+   "motorway": 16,
+   "trunk": 15,
+   "primary": 14,
+   "secondary": 11,
+   "tertiary": 8,
+   "residential": 5,
+   "living_street": 4,
+   "service": 3.5,
+   "unclassified": 5,
+   "footway": 2.5,
+   "pedestrian": 12,
+   "cycleway": 2,
+   "path": 1.5
+  },
+  "asphaltRule": "mọi loại trừ pedestrian/footway, bỏ hầm và cầu"
+ },
+ "policy": "Chỉ số road song song CITY_DATA.roads; runtime phải kiểm D.roads[road].id === way trước khi dùng.",
+ "crossings": [
+  {
+   "road": 317,
+   "way": 35113344,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 371,
+   "way": 35113595,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 478,
+   "way": 35114085,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 487,
+   "way": 35114118,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 639,
+   "way": 35114955,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 697,
+   "way": 35115259,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 707,
+   "way": 35115291,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 1084,
+   "way": 165582255,
+   "crossing": "zebra",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 2443,
+   "way": 293824491,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 2550,
+   "way": 327090290,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 2591,
+   "way": 341944379,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 2593,
+   "way": 343884790,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5237,
+   "way": 618070970,
+   "crossing": "zebra",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5239,
+   "way": 618070972,
+   "crossing": "zebra",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5240,
+   "way": 618070973,
+   "crossing": "zebra",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5241,
+   "way": 618070974,
+   "crossing": "zebra",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5756,
+   "way": 695895011,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5757,
+   "way": 695895017,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5763,
+   "way": 695895025,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5764,
+   "way": 695895026,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5879,
+   "way": 718458986,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5887,
+   "way": 718493840,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5889,
+   "way": 718493843,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5890,
+   "way": 718496037,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5891,
+   "way": 718496038,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5892,
+   "way": 718497152,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5893,
+   "way": 718497154,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5894,
+   "way": 718498113,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5898,
+   "way": 718501084,
+   "crossing": null,
+   "markings": "zebra",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5906,
+   "way": 719037897,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5909,
+   "way": 719045914,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5910,
+   "way": 719045917,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5911,
+   "way": 719045919,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5912,
+   "way": 719045921,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5915,
+   "way": 719047631,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5917,
+   "way": 719418650,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5922,
+   "way": 719462461,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5923,
+   "way": 719464018,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5942,
+   "way": 719473068,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5948,
+   "way": 719476246,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5949,
+   "way": 719476247,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5965,
+   "way": 719484497,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5973,
+   "way": 719486256,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5974,
+   "way": 719486257,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5977,
+   "way": 719487197,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5980,
+   "way": 719488288,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5981,
+   "way": 719488289,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5985,
+   "way": 719490071,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5986,
+   "way": 719490072,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5995,
+   "way": 719969718,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5996,
+   "way": 719969719,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5997,
+   "way": 719973800,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 5998,
+   "way": 719973801,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6007,
+   "way": 719977782,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6009,
+   "way": 719992112,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6010,
+   "way": 719992113,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6012,
+   "way": 719994970,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6018,
+   "way": 720354118,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6019,
+   "way": 720354119,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6020,
+   "way": 720354120,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6021,
+   "way": 720354121,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6028,
+   "way": 720372216,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6029,
+   "way": 720372217,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6055,
+   "way": 721687746,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6059,
+   "way": 721696337,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6060,
+   "way": 721696338,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6070,
+   "way": 721737703,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6075,
+   "way": 721742701,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6085,
+   "way": 721756980,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6086,
+   "way": 721756981,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6088,
+   "way": 721758594,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6089,
+   "way": 721951323,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6096,
+   "way": 721960803,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6097,
+   "way": 721960806,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6101,
+   "way": 721971735,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6105,
+   "way": 721982591,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6113,
+   "way": 722005332,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6117,
+   "way": 722007170,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6118,
+   "way": 722011334,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6120,
+   "way": 722012731,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6122,
+   "way": 722016815,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6140,
+   "way": 722052963,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6141,
+   "way": 722052964,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6148,
+   "way": 722058171,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6149,
+   "way": 722058172,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6150,
+   "way": 722058173,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6151,
+   "way": 722058174,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6152,
+   "way": 722059937,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6272,
+   "way": 723241495,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6345,
+   "way": 723597099,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6346,
+   "way": 723597100,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6347,
+   "way": 723597101,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6348,
+   "way": 723597102,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6349,
+   "way": 723597103,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6350,
+   "way": 723597104,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6351,
+   "way": 723597105,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6352,
+   "way": 723597106,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6353,
+   "way": 723597107,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6354,
+   "way": 723597108,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6355,
+   "way": 723597109,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6356,
+   "way": 723597110,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6357,
+   "way": 723597111,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6358,
+   "way": 723597112,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6359,
+   "way": 723597113,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6360,
+   "way": 723597931,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6375,
+   "way": 723608302,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6378,
+   "way": 723804052,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6379,
+   "way": 723808226,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6386,
+   "way": 723813631,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6392,
+   "way": 723828603,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6395,
+   "way": 723828606,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6396,
+   "way": 723829926,
+   "crossing": null,
+   "markings": "zebra;surface",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6404,
+   "way": 723849324,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6405,
+   "way": 723849325,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6407,
+   "way": 723849327,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6410,
+   "way": 723867075,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6413,
+   "way": 723868604,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6415,
+   "way": 723868606,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6416,
+   "way": 723868607,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6421,
+   "way": 723872751,
+   "crossing": "zebra",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6424,
+   "way": 723876671,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6431,
+   "way": 723879053,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6432,
+   "way": 723879054,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6443,
+   "way": 723889773,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6444,
+   "way": 723890889,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6445,
+   "way": 723890890,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6516,
+   "way": 724163061,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6521,
+   "way": 724170877,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6548,
+   "way": 724436412,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6556,
+   "way": 724451982,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6580,
+   "way": 724477799,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6581,
+   "way": 724477800,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6679,
+   "way": 738190675,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6835,
+   "way": 801848892,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6860,
+   "way": 801848930,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6861,
+   "way": 801902451,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6957,
+   "way": 802174528,
+   "crossing": "zebra",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6962,
+   "way": 803149508,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6963,
+   "way": 803149509,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6976,
+   "way": 804073932,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 6996,
+   "way": 807062685,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7073,
+   "way": 808321430,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7091,
+   "way": 809048419,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7095,
+   "way": 809048424,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7335,
+   "way": 891452090,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7342,
+   "way": 891454865,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7343,
+   "way": 891454866,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7378,
+   "way": 891528403,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7379,
+   "way": 891528404,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7400,
+   "way": 892593633,
+   "crossing": "unmarked",
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 7401,
+   "way": 892593634,
+   "crossing": "unmarked",
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 7402,
+   "way": 892593635,
+   "crossing": "unmarked",
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 7403,
+   "way": 892593636,
+   "crossing": "unmarked",
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 7404,
+   "way": 892593637,
+   "crossing": "unmarked",
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 7405,
+   "way": 892593638,
+   "crossing": "unmarked",
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 7409,
+   "way": 892596185,
+   "crossing": "unmarked",
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 7412,
+   "way": 892597350,
+   "crossing": "unmarked",
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 7723,
+   "way": 1011942074,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7810,
+   "way": 1020848353,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7811,
+   "way": 1020848354,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7812,
+   "way": 1020848355,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7813,
+   "way": 1020848356,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7814,
+   "way": 1020848357,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7841,
+   "way": 1030369796,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7842,
+   "way": 1030369797,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7843,
+   "way": 1030369798,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 7954,
+   "way": 1047597850,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8140,
+   "way": 1063094410,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8296,
+   "way": 1104500479,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8297,
+   "way": 1104500480,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8348,
+   "way": 1115004050,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8349,
+   "way": 1115004051,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8353,
+   "way": 1115004055,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8354,
+   "way": 1115004057,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8401,
+   "way": 1119254706,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8402,
+   "way": 1119254707,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8406,
+   "way": 1119254712,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8408,
+   "way": 1119254714,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8409,
+   "way": 1119254715,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8410,
+   "way": 1119254716,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8412,
+   "way": 1119257690,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8567,
+   "way": 1150142903,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8568,
+   "way": 1150165101,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8569,
+   "way": 1150165102,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8573,
+   "way": 1150225321,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8575,
+   "way": 1150240113,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8577,
+   "way": 1150659801,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8581,
+   "way": 1150659808,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8582,
+   "way": 1150659809,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8583,
+   "way": 1150659810,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8584,
+   "way": 1150659811,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8585,
+   "way": 1150659812,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8669,
+   "way": 1154233514,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8712,
+   "way": 1157785731,
+   "crossing": "uncontrolled",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8765,
+   "way": 1160221300,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8766,
+   "way": 1160221301,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8774,
+   "way": 1160259122,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 8791,
+   "way": 1162661815,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9460,
+   "way": 1217789848,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9461,
+   "way": 1217789853,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9463,
+   "way": 1217789855,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9472,
+   "way": 1217816950,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9481,
+   "way": 1218095020,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9482,
+   "way": 1218095021,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9484,
+   "way": 1218095023,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9513,
+   "way": 1218947875,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9529,
+   "way": 1219523331,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9538,
+   "way": 1220077878,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9567,
+   "way": 1221578564,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9569,
+   "way": 1221589523,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9570,
+   "way": 1221589524,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9573,
+   "way": 1221589527,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9585,
+   "way": 1221967455,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9587,
+   "way": 1221967467,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9589,
+   "way": 1221967471,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9590,
+   "way": 1221967472,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9591,
+   "way": 1221967474,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9593,
+   "way": 1221967476,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9594,
+   "way": 1221967477,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9595,
+   "way": 1221967478,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9597,
+   "way": 1221967480,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9598,
+   "way": 1221967481,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9599,
+   "way": 1221967482,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9601,
+   "way": 1221967485,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9607,
+   "way": 1221967495,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9611,
+   "way": 1221967499,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9612,
+   "way": 1221967500,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9613,
+   "way": 1221967501,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9614,
+   "way": 1221967502,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9617,
+   "way": 1221967507,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9618,
+   "way": 1221967508,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9619,
+   "way": 1221967511,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9627,
+   "way": 1221967525,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9631,
+   "way": 1222154001,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9632,
+   "way": 1222154002,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9633,
+   "way": 1222154003,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9635,
+   "way": 1222272520,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9644,
+   "way": 1222272540,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9646,
+   "way": 1222272543,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9647,
+   "way": 1222272544,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9650,
+   "way": 1222272551,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9660,
+   "way": 1222703193,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9665,
+   "way": 1222703198,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9667,
+   "way": 1222703200,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9673,
+   "way": 1222703208,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9676,
+   "way": 1222703211,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9680,
+   "way": 1222703215,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9681,
+   "way": 1222703216,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9683,
+   "way": 1222703218,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9685,
+   "way": 1222703222,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9686,
+   "way": 1222703223,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9690,
+   "way": 1222703229,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9691,
+   "way": 1222703230,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9692,
+   "way": 1222703231,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9693,
+   "way": 1222703232,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9694,
+   "way": 1222703233,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9696,
+   "way": 1222703235,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9698,
+   "way": 1222703237,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9699,
+   "way": 1222703238,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9700,
+   "way": 1222703239,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9701,
+   "way": 1222703240,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9704,
+   "way": 1222718579,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9705,
+   "way": 1222718580,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9714,
+   "way": 1222752208,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9717,
+   "way": 1222752211,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9730,
+   "way": 1224779694,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9731,
+   "way": 1224779695,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9732,
+   "way": 1224779696,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9733,
+   "way": 1224779697,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9734,
+   "way": 1224779699,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9735,
+   "way": 1224779700,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9736,
+   "way": 1224779701,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9737,
+   "way": 1224779702,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9738,
+   "way": 1224779703,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9740,
+   "way": 1224779710,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9741,
+   "way": 1224779711,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9742,
+   "way": 1224779712,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9743,
+   "way": 1224779713,
+   "crossing": "uncontrolled",
+   "markings": "lines",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9744,
+   "way": 1224779714,
+   "crossing": "uncontrolled",
+   "markings": "lines",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9781,
+   "way": 1224952855,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9782,
+   "way": 1224952856,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9976,
+   "way": 1237558226,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9978,
+   "way": 1237558228,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9980,
+   "way": 1237558231,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9981,
+   "way": 1237558232,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9983,
+   "way": 1237832365,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9985,
+   "way": 1237832367,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9990,
+   "way": 1237832396,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9992,
+   "way": 1237832398,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9994,
+   "way": 1237832409,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9995,
+   "way": 1237832410,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9996,
+   "way": 1237832411,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9998,
+   "way": 1237832413,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 9999,
+   "way": 1237832414,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10000,
+   "way": 1237832415,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10002,
+   "way": 1237832417,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10006,
+   "way": 1237832422,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10008,
+   "way": 1237832424,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10011,
+   "way": 1237832428,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10037,
+   "way": 1241398017,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10041,
+   "way": 1241398021,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10043,
+   "way": 1241398023,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10044,
+   "way": 1241398024,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10045,
+   "way": 1241398025,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10046,
+   "way": 1241398026,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10048,
+   "way": 1241398028,
+   "crossing": "traffic_signals",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10050,
+   "way": 1241678404,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10054,
+   "way": 1241678408,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10056,
+   "way": 1241678410,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10058,
+   "way": 1241678412,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10061,
+   "way": 1241979921,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10062,
+   "way": 1241979922,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10064,
+   "way": 1241979924,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10066,
+   "way": 1241979926,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10068,
+   "way": 1241979928,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10069,
+   "way": 1241979929,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10070,
+   "way": 1241979930,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10071,
+   "way": 1241979931,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10072,
+   "way": 1241979932,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10082,
+   "way": 1242259550,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10084,
+   "way": 1242259552,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10085,
+   "way": 1242259553,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10086,
+   "way": 1242259554,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10088,
+   "way": 1242457729,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10094,
+   "way": 1242943078,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10095,
+   "way": 1242943079,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10551,
+   "way": 1281995086,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10752,
+   "way": 1307887375,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10753,
+   "way": 1307904255,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10784,
+   "way": 1316089520,
+   "crossing": "marked",
+   "markings": "zebra",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10785,
+   "way": 1316089521,
+   "crossing": "marked",
+   "markings": "zebra",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10810,
+   "way": 1319664940,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10893,
+   "way": 1330783349,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10894,
+   "way": 1330783350,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10897,
+   "way": 1330784593,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10940,
+   "way": 1331640254,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10941,
+   "way": 1331640255,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 10942,
+   "way": 1331640256,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11015,
+   "way": 1342382652,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11365,
+   "way": 1381088103,
+   "crossing": "traffic_signals",
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11368,
+   "way": 1381088106,
+   "crossing": "uncontrolled",
+   "markings": "zebra",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11369,
+   "way": 1381665476,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11370,
+   "way": 1381665477,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11371,
+   "way": 1381665478,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11372,
+   "way": 1381665479,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11682,
+   "way": 1447059000,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11684,
+   "way": 1447309317,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11686,
+   "way": 1447309319,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11687,
+   "way": 1447309320,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11689,
+   "way": 1447309322,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11690,
+   "way": 1447309323,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11693,
+   "way": 1447637220,
+   "crossing": "unmarked",
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 11765,
+   "way": 1461799769,
+   "crossing": null,
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 11793,
+   "way": 1465511899,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11794,
+   "way": 1465511900,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11795,
+   "way": 1465511901,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11796,
+   "way": 1465511902,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11797,
+   "way": 1465511903,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11798,
+   "way": 1465511904,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11799,
+   "way": 1465512598,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11800,
+   "way": 1465512599,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11801,
+   "way": 1465512600,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11802,
+   "way": 1465512601,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11803,
+   "way": 1465512602,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11804,
+   "way": 1465512603,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11805,
+   "way": 1465513197,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11808,
+   "way": 1466401877,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11809,
+   "way": 1466401878,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11810,
+   "way": 1466401879,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11811,
+   "way": 1466401880,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11812,
+   "way": 1466401881,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11813,
+   "way": 1466401882,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11814,
+   "way": 1466401883,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11815,
+   "way": 1466401884,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11816,
+   "way": 1466401885,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11817,
+   "way": 1466401886,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11818,
+   "way": 1466401887,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11819,
+   "way": 1466401888,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11820,
+   "way": 1466401889,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11821,
+   "way": 1466401890,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11822,
+   "way": 1466401891,
+   "crossing": "traffic_signals",
+   "markings": "zebra",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11823,
+   "way": 1466401892,
+   "crossing": "traffic_signals",
+   "markings": "zebra",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11824,
+   "way": 1466401893,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11825,
+   "way": 1466401894,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11826,
+   "way": 1466401895,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11827,
+   "way": 1466401896,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11828,
+   "way": 1466401897,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11829,
+   "way": 1466403127,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11830,
+   "way": 1466403128,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11831,
+   "way": 1466403129,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11832,
+   "way": 1466403130,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11833,
+   "way": 1466403131,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11834,
+   "way": 1466403132,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11835,
+   "way": 1466403133,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11836,
+   "way": 1466403134,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11837,
+   "way": 1466403135,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11838,
+   "way": 1466403136,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11839,
+   "way": 1466403137,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11840,
+   "way": 1466403138,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11841,
+   "way": 1466403139,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11842,
+   "way": 1466403140,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11843,
+   "way": 1466404531,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11844,
+   "way": 1466404532,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11845,
+   "way": 1466404533,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11846,
+   "way": 1466404534,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11847,
+   "way": 1466404535,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11848,
+   "way": 1466404536,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11849,
+   "way": 1466405054,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11862,
+   "way": 1469427215,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11863,
+   "way": 1469427216,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11866,
+   "way": 1471513070,
+   "crossing": "marked",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11869,
+   "way": 1471513073,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11871,
+   "way": 1471513075,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11874,
+   "way": 1471524216,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11875,
+   "way": 1471524217,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11877,
+   "way": 1471524219,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11882,
+   "way": 1472755831,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11884,
+   "way": 1472755836,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11887,
+   "way": 1472887441,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11889,
+   "way": 1472887443,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11891,
+   "way": 1472887445,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11896,
+   "way": 1472910302,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11897,
+   "way": 1472910303,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11901,
+   "way": 1473763460,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11902,
+   "way": 1473763461,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11904,
+   "way": 1473763463,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11907,
+   "way": 1473763466,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11910,
+   "way": 1473763473,
+   "crossing": null,
+   "markings": "no",
+   "zebra": false,
+   "reason": "crossing=unmarked hoặc crossing:markings=no: không vẽ zebra"
+  },
+  {
+   "road": 11921,
+   "way": 1474693912,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11925,
+   "way": 1476089653,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11926,
+   "way": 1476089655,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11928,
+   "way": 1476089657,
+   "crossing": "marked",
+   "markings": "zebra",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11929,
+   "way": 1476089658,
+   "crossing": "marked",
+   "markings": "zebra",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11943,
+   "way": 1489474476,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11958,
+   "way": 1492866506,
+   "crossing": null,
+   "markings": null,
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11970,
+   "way": 1496010293,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11976,
+   "way": 1496010320,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11977,
+   "way": 1496010321,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11978,
+   "way": 1496010322,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  },
+  {
+   "road": 11979,
+   "way": 1496010323,
+   "crossing": "uncontrolled",
+   "markings": "yes",
+   "zebra": true,
+   "reason": "footway=crossing có vạch (mặc định có vạch khi không ghi tag)"
+  }
+ ],
+ "hiddenFootways": [
+  {
+   "road": 206,
+   "way": 35112837,
+   "footway": "sidewalk",
+   "overlap": 0.852,
+   "reason": "ribbon footway nằm 85% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 317,
+   "way": 35113344,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 371,
+   "way": 35113595,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 429,
+   "way": 35113839,
+   "footway": "sidewalk",
+   "overlap": 0.786,
+   "reason": "ribbon footway nằm 79% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 478,
+   "way": 35114085,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 487,
+   "way": 35114118,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 639,
+   "way": 35114955,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 697,
+   "way": 35115259,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 707,
+   "way": 35115291,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 1084,
+   "way": 165582255,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 2410,
+   "way": 287137238,
+   "footway": null,
+   "overlap": 0.376,
+   "reason": "ribbon footway nằm 38% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 2412,
+   "way": 287858831,
+   "footway": null,
+   "overlap": 0.708,
+   "reason": "ribbon footway nằm 71% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 2442,
+   "way": 293824490,
+   "footway": null,
+   "overlap": 0.703,
+   "reason": "ribbon footway nằm 70% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 2443,
+   "way": 293824491,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 2524,
+   "way": 326776743,
+   "footway": null,
+   "overlap": 0.73,
+   "reason": "ribbon footway nằm 73% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 2550,
+   "way": 327090290,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 2591,
+   "way": 341944379,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 2593,
+   "way": 343884790,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5237,
+   "way": 618070970,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5239,
+   "way": 618070972,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5240,
+   "way": 618070973,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5241,
+   "way": 618070974,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5430,
+   "way": 676484400,
+   "footway": null,
+   "overlap": 0.528,
+   "reason": "ribbon footway nằm 53% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 5756,
+   "way": 695895011,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5757,
+   "way": 695895017,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5763,
+   "way": 695895025,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5764,
+   "way": 695895026,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5875,
+   "way": 716825852,
+   "footway": null,
+   "overlap": 0.53,
+   "reason": "ribbon footway nằm 53% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 5879,
+   "way": 718458986,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5887,
+   "way": 718493840,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5889,
+   "way": 718493843,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5890,
+   "way": 718496037,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5891,
+   "way": 718496038,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5892,
+   "way": 718497152,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5893,
+   "way": 718497154,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5894,
+   "way": 718498113,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5898,
+   "way": 718501084,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5906,
+   "way": 719037897,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5909,
+   "way": 719045914,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5910,
+   "way": 719045917,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5911,
+   "way": 719045919,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5912,
+   "way": 719045921,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5915,
+   "way": 719047631,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5917,
+   "way": 719418650,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5922,
+   "way": 719462461,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5923,
+   "way": 719464018,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5942,
+   "way": 719473068,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5948,
+   "way": 719476246,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5949,
+   "way": 719476247,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5965,
+   "way": 719484497,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5973,
+   "way": 719486256,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5974,
+   "way": 719486257,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5977,
+   "way": 719487197,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5980,
+   "way": 719488288,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5981,
+   "way": 719488289,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5985,
+   "way": 719490071,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5986,
+   "way": 719490072,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5995,
+   "way": 719969718,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5996,
+   "way": 719969719,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5997,
+   "way": 719973800,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 5998,
+   "way": 719973801,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6007,
+   "way": 719977782,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6009,
+   "way": 719992112,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6010,
+   "way": 719992113,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6012,
+   "way": 719994970,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6018,
+   "way": 720354118,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6019,
+   "way": 720354119,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6020,
+   "way": 720354120,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6021,
+   "way": 720354121,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6028,
+   "way": 720372216,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6029,
+   "way": 720372217,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6055,
+   "way": 721687746,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6059,
+   "way": 721696337,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6060,
+   "way": 721696338,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6070,
+   "way": 721737703,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6075,
+   "way": 721742701,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6085,
+   "way": 721756980,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6086,
+   "way": 721756981,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6088,
+   "way": 721758594,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6089,
+   "way": 721951323,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6096,
+   "way": 721960803,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6097,
+   "way": 721960806,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6101,
+   "way": 721971735,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6105,
+   "way": 721982591,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6113,
+   "way": 722005332,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6117,
+   "way": 722007170,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6118,
+   "way": 722011334,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6120,
+   "way": 722012731,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6122,
+   "way": 722016815,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6140,
+   "way": 722052963,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6141,
+   "way": 722052964,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6148,
+   "way": 722058171,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6149,
+   "way": 722058172,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6150,
+   "way": 722058173,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6151,
+   "way": 722058174,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6152,
+   "way": 722059937,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6272,
+   "way": 723241495,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6345,
+   "way": 723597099,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6346,
+   "way": 723597100,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6347,
+   "way": 723597101,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6348,
+   "way": 723597102,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6349,
+   "way": 723597103,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6350,
+   "way": 723597104,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6351,
+   "way": 723597105,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6352,
+   "way": 723597106,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6353,
+   "way": 723597107,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6354,
+   "way": 723597108,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6355,
+   "way": 723597109,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6356,
+   "way": 723597110,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6357,
+   "way": 723597111,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6358,
+   "way": 723597112,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6359,
+   "way": 723597113,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6360,
+   "way": 723597931,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6375,
+   "way": 723608302,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6378,
+   "way": 723804052,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6379,
+   "way": 723808226,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6384,
+   "way": 723813628,
+   "footway": null,
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6385,
+   "way": 723813629,
+   "footway": null,
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6386,
+   "way": 723813631,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6392,
+   "way": 723828603,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6395,
+   "way": 723828606,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6396,
+   "way": 723829926,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6404,
+   "way": 723849324,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6405,
+   "way": 723849325,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6407,
+   "way": 723849327,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6410,
+   "way": 723867075,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6413,
+   "way": 723868604,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6415,
+   "way": 723868606,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6416,
+   "way": 723868607,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6421,
+   "way": 723872751,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6424,
+   "way": 723876671,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6431,
+   "way": 723879053,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6432,
+   "way": 723879054,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6443,
+   "way": 723889773,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6444,
+   "way": 723890889,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6445,
+   "way": 723890890,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6516,
+   "way": 724163061,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6521,
+   "way": 724170877,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6542,
+   "way": 724433242,
+   "footway": null,
+   "overlap": 0.886,
+   "reason": "ribbon footway nằm 89% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6543,
+   "way": 724433243,
+   "footway": null,
+   "overlap": 0.928,
+   "reason": "ribbon footway nằm 93% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6548,
+   "way": 724436412,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6556,
+   "way": 724451982,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6580,
+   "way": 724477799,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6581,
+   "way": 724477800,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6676,
+   "way": 737799731,
+   "footway": "sidewalk",
+   "overlap": 0.651,
+   "reason": "ribbon footway nằm 65% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6677,
+   "way": 737799732,
+   "footway": "sidewalk",
+   "overlap": 0.991,
+   "reason": "ribbon footway nằm 99% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6679,
+   "way": 738190675,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6732,
+   "way": 752925524,
+   "footway": "sidewalk",
+   "overlap": 0.509,
+   "reason": "ribbon footway nằm 51% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6807,
+   "way": 801521451,
+   "footway": "sidewalk",
+   "overlap": 0.762,
+   "reason": "ribbon footway nằm 76% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6820,
+   "way": 801710794,
+   "footway": null,
+   "overlap": 0.498,
+   "reason": "ribbon footway nằm 50% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6832,
+   "way": 801848887,
+   "footway": null,
+   "overlap": 0.357,
+   "reason": "ribbon footway nằm 36% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6835,
+   "way": 801848892,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6836,
+   "way": 801848893,
+   "footway": null,
+   "overlap": 0.446,
+   "reason": "ribbon footway nằm 45% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6845,
+   "way": 801848905,
+   "footway": "sidewalk",
+   "overlap": 0.444,
+   "reason": "ribbon footway nằm 44% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6860,
+   "way": 801848930,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6861,
+   "way": 801902451,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6912,
+   "way": 802069412,
+   "footway": null,
+   "overlap": 0.596,
+   "reason": "ribbon footway nằm 60% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6913,
+   "way": 802069413,
+   "footway": null,
+   "overlap": 0.313,
+   "reason": "ribbon footway nằm 31% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6914,
+   "way": 802069414,
+   "footway": null,
+   "overlap": 0.348,
+   "reason": "ribbon footway nằm 35% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 6957,
+   "way": 802174528,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6962,
+   "way": 803149508,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6963,
+   "way": 803149509,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6976,
+   "way": 804073932,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 6996,
+   "way": 807062685,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7008,
+   "way": 807297569,
+   "footway": "sidewalk",
+   "overlap": 0.377,
+   "reason": "ribbon footway nằm 38% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 7073,
+   "way": 808321430,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7091,
+   "way": 809048419,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7093,
+   "way": 809048421,
+   "footway": "sidewalk",
+   "overlap": 0.35,
+   "reason": "ribbon footway nằm 35% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 7095,
+   "way": 809048424,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7096,
+   "way": 809048425,
+   "footway": "sidewalk",
+   "overlap": 0.4,
+   "reason": "ribbon footway nằm 40% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 7335,
+   "way": 891452090,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7342,
+   "way": 891454865,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7343,
+   "way": 891454866,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7362,
+   "way": 891520970,
+   "footway": "sidewalk",
+   "overlap": 0.429,
+   "reason": "ribbon footway nằm 43% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 7378,
+   "way": 891528403,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7379,
+   "way": 891528404,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7392,
+   "way": 892593625,
+   "footway": "sidewalk",
+   "overlap": 0.464,
+   "reason": "ribbon footway nằm 46% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 7400,
+   "way": 892593633,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7401,
+   "way": 892593634,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7402,
+   "way": 892593635,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7403,
+   "way": 892593636,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7404,
+   "way": 892593637,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7405,
+   "way": 892593638,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7409,
+   "way": 892596185,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7412,
+   "way": 892597350,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7723,
+   "way": 1011942074,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7730,
+   "way": 1016751628,
+   "footway": null,
+   "overlap": 0.626,
+   "reason": "ribbon footway nằm 63% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 7731,
+   "way": 1016751630,
+   "footway": null,
+   "overlap": 0.481,
+   "reason": "ribbon footway nằm 48% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 7810,
+   "way": 1020848353,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7811,
+   "way": 1020848354,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7812,
+   "way": 1020848355,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7813,
+   "way": 1020848356,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7814,
+   "way": 1020848357,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7841,
+   "way": 1030369796,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7842,
+   "way": 1030369797,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7843,
+   "way": 1030369798,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 7953,
+   "way": 1047597841,
+   "footway": "sidewalk",
+   "overlap": 0.397,
+   "reason": "ribbon footway nằm 40% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 7954,
+   "way": 1047597850,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8052,
+   "way": 1056530152,
+   "footway": null,
+   "overlap": 0.438,
+   "reason": "ribbon footway nằm 44% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 8077,
+   "way": 1056701640,
+   "footway": null,
+   "overlap": 0.554,
+   "reason": "ribbon footway nằm 55% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 8140,
+   "way": 1063094410,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8296,
+   "way": 1104500479,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8297,
+   "way": 1104500480,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8348,
+   "way": 1115004050,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8349,
+   "way": 1115004051,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8353,
+   "way": 1115004055,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8354,
+   "way": 1115004057,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8401,
+   "way": 1119254706,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8402,
+   "way": 1119254707,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8406,
+   "way": 1119254712,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8408,
+   "way": 1119254714,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8409,
+   "way": 1119254715,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8410,
+   "way": 1119254716,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8412,
+   "way": 1119257690,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8555,
+   "way": 1147395276,
+   "footway": "sidewalk",
+   "overlap": 0.309,
+   "reason": "ribbon footway nằm 31% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 8567,
+   "way": 1150142903,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8568,
+   "way": 1150165101,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8569,
+   "way": 1150165102,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8573,
+   "way": 1150225321,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8575,
+   "way": 1150240113,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8577,
+   "way": 1150659801,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8578,
+   "way": 1150659805,
+   "footway": "sidewalk",
+   "overlap": 0.943,
+   "reason": "ribbon footway nằm 94% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 8581,
+   "way": 1150659808,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8582,
+   "way": 1150659809,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8583,
+   "way": 1150659810,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8584,
+   "way": 1150659811,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8585,
+   "way": 1150659812,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8669,
+   "way": 1154233514,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8712,
+   "way": 1157785731,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8765,
+   "way": 1160221300,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8766,
+   "way": 1160221301,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8774,
+   "way": 1160259122,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 8791,
+   "way": 1162661815,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9425,
+   "way": 1216671169,
+   "footway": null,
+   "overlap": 0.782,
+   "reason": "ribbon footway nằm 78% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9459,
+   "way": 1217789847,
+   "footway": "sidewalk",
+   "overlap": 0.518,
+   "reason": "ribbon footway nằm 52% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9460,
+   "way": 1217789848,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9461,
+   "way": 1217789853,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9463,
+   "way": 1217789855,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9467,
+   "way": 1217789859,
+   "footway": "sidewalk",
+   "overlap": 0.47,
+   "reason": "ribbon footway nằm 47% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9472,
+   "way": 1217816950,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9480,
+   "way": 1218095019,
+   "footway": "sidewalk",
+   "overlap": 0.492,
+   "reason": "ribbon footway nằm 49% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9481,
+   "way": 1218095020,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9482,
+   "way": 1218095021,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9484,
+   "way": 1218095023,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9513,
+   "way": 1218947875,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9527,
+   "way": 1219523329,
+   "footway": "sidewalk",
+   "overlap": 0.333,
+   "reason": "ribbon footway nằm 33% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9529,
+   "way": 1219523331,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9538,
+   "way": 1220077878,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9567,
+   "way": 1221578564,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9568,
+   "way": 1221578565,
+   "footway": "sidewalk",
+   "overlap": 0.86,
+   "reason": "ribbon footway nằm 86% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9569,
+   "way": 1221589523,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9570,
+   "way": 1221589524,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9573,
+   "way": 1221589527,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9574,
+   "way": 1221589532,
+   "footway": "sidewalk",
+   "overlap": 0.906,
+   "reason": "ribbon footway nằm 91% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9575,
+   "way": 1221589533,
+   "footway": "sidewalk",
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9585,
+   "way": 1221967455,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9587,
+   "way": 1221967467,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9589,
+   "way": 1221967471,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9590,
+   "way": 1221967472,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9591,
+   "way": 1221967474,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9593,
+   "way": 1221967476,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9594,
+   "way": 1221967477,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9595,
+   "way": 1221967478,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9597,
+   "way": 1221967480,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9598,
+   "way": 1221967481,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9599,
+   "way": 1221967482,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9601,
+   "way": 1221967485,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9607,
+   "way": 1221967495,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9611,
+   "way": 1221967499,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9612,
+   "way": 1221967500,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9613,
+   "way": 1221967501,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9614,
+   "way": 1221967502,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9617,
+   "way": 1221967507,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9618,
+   "way": 1221967508,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9619,
+   "way": 1221967511,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9627,
+   "way": 1221967525,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9631,
+   "way": 1222154001,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9632,
+   "way": 1222154002,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9633,
+   "way": 1222154003,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9635,
+   "way": 1222272520,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9644,
+   "way": 1222272540,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9646,
+   "way": 1222272543,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9647,
+   "way": 1222272544,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9650,
+   "way": 1222272551,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9660,
+   "way": 1222703193,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9665,
+   "way": 1222703198,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9667,
+   "way": 1222703200,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9673,
+   "way": 1222703208,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9676,
+   "way": 1222703211,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9680,
+   "way": 1222703215,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9681,
+   "way": 1222703216,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9683,
+   "way": 1222703218,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9685,
+   "way": 1222703222,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9686,
+   "way": 1222703223,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9690,
+   "way": 1222703229,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9691,
+   "way": 1222703230,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9692,
+   "way": 1222703231,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9693,
+   "way": 1222703232,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9694,
+   "way": 1222703233,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9696,
+   "way": 1222703235,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9698,
+   "way": 1222703237,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9699,
+   "way": 1222703238,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9700,
+   "way": 1222703239,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9701,
+   "way": 1222703240,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9704,
+   "way": 1222718579,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9705,
+   "way": 1222718580,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9714,
+   "way": 1222752208,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9717,
+   "way": 1222752211,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9730,
+   "way": 1224779694,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9731,
+   "way": 1224779695,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9732,
+   "way": 1224779696,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9733,
+   "way": 1224779697,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9734,
+   "way": 1224779699,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9735,
+   "way": 1224779700,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9736,
+   "way": 1224779701,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9737,
+   "way": 1224779702,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9738,
+   "way": 1224779703,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9740,
+   "way": 1224779710,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9741,
+   "way": 1224779711,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9742,
+   "way": 1224779712,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9743,
+   "way": 1224779713,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9744,
+   "way": 1224779714,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9781,
+   "way": 1224952855,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9782,
+   "way": 1224952856,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9963,
+   "way": 1234939213,
+   "footway": null,
+   "overlap": 0.382,
+   "reason": "ribbon footway nằm 38% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9976,
+   "way": 1237558226,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9978,
+   "way": 1237558228,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9980,
+   "way": 1237558231,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9981,
+   "way": 1237558232,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9983,
+   "way": 1237832365,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9984,
+   "way": 1237832366,
+   "footway": "sidewalk",
+   "overlap": 0.315,
+   "reason": "ribbon footway nằm 32% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9985,
+   "way": 1237832367,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9987,
+   "way": 1237832373,
+   "footway": "sidewalk",
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9988,
+   "way": 1237832393,
+   "footway": "sidewalk",
+   "overlap": 0.926,
+   "reason": "ribbon footway nằm 93% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9989,
+   "way": 1237832395,
+   "footway": "sidewalk",
+   "overlap": 0.749,
+   "reason": "ribbon footway nằm 75% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9990,
+   "way": 1237832396,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9991,
+   "way": 1237832397,
+   "footway": "sidewalk",
+   "overlap": 0.97,
+   "reason": "ribbon footway nằm 97% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9992,
+   "way": 1237832398,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9993,
+   "way": 1237832399,
+   "footway": "sidewalk",
+   "overlap": 0.757,
+   "reason": "ribbon footway nằm 76% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 9994,
+   "way": 1237832409,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9995,
+   "way": 1237832410,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9996,
+   "way": 1237832411,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9998,
+   "way": 1237832413,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 9999,
+   "way": 1237832414,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10000,
+   "way": 1237832415,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10002,
+   "way": 1237832417,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10006,
+   "way": 1237832422,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10008,
+   "way": 1237832424,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10010,
+   "way": 1237832427,
+   "footway": "sidewalk",
+   "overlap": 0.98,
+   "reason": "ribbon footway nằm 98% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10011,
+   "way": 1237832428,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10037,
+   "way": 1241398017,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10038,
+   "way": 1241398018,
+   "footway": "sidewalk",
+   "overlap": 0.578,
+   "reason": "ribbon footway nằm 58% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10039,
+   "way": 1241398019,
+   "footway": "sidewalk",
+   "overlap": 0.92,
+   "reason": "ribbon footway nằm 92% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10040,
+   "way": 1241398020,
+   "footway": "sidewalk",
+   "overlap": 0.722,
+   "reason": "ribbon footway nằm 72% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10041,
+   "way": 1241398021,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10043,
+   "way": 1241398023,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10044,
+   "way": 1241398024,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10045,
+   "way": 1241398025,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10046,
+   "way": 1241398026,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10048,
+   "way": 1241398028,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10049,
+   "way": 1241678403,
+   "footway": "sidewalk",
+   "overlap": 0.694,
+   "reason": "ribbon footway nằm 69% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10050,
+   "way": 1241678404,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10054,
+   "way": 1241678408,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10056,
+   "way": 1241678410,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10058,
+   "way": 1241678412,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10061,
+   "way": 1241979921,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10062,
+   "way": 1241979922,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10064,
+   "way": 1241979924,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10066,
+   "way": 1241979926,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10067,
+   "way": 1241979927,
+   "footway": "sidewalk",
+   "overlap": 0.322,
+   "reason": "ribbon footway nằm 32% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10068,
+   "way": 1241979928,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10069,
+   "way": 1241979929,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10070,
+   "way": 1241979930,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10071,
+   "way": 1241979931,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10072,
+   "way": 1241979932,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10074,
+   "way": 1242106397,
+   "footway": null,
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10078,
+   "way": 1242259546,
+   "footway": "sidewalk",
+   "overlap": 0.559,
+   "reason": "ribbon footway nằm 56% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10082,
+   "way": 1242259550,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10084,
+   "way": 1242259552,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10085,
+   "way": 1242259553,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10086,
+   "way": 1242259554,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10088,
+   "way": 1242457729,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10094,
+   "way": 1242943078,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10095,
+   "way": 1242943079,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10390,
+   "way": 1273247315,
+   "footway": "sidewalk",
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10450,
+   "way": 1275091691,
+   "footway": null,
+   "overlap": 0.763,
+   "reason": "ribbon footway nằm 76% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10458,
+   "way": 1275182960,
+   "footway": null,
+   "overlap": 0.447,
+   "reason": "ribbon footway nằm 45% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10551,
+   "way": 1281995086,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10752,
+   "way": 1307887375,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10753,
+   "way": 1307904255,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10784,
+   "way": 1316089520,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10785,
+   "way": 1316089521,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10810,
+   "way": 1319664940,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10838,
+   "way": 1324830732,
+   "footway": "sidewalk",
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 10893,
+   "way": 1330783349,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10894,
+   "way": 1330783350,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10897,
+   "way": 1330784593,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10940,
+   "way": 1331640254,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10941,
+   "way": 1331640255,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 10942,
+   "way": 1331640256,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11015,
+   "way": 1342382652,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11128,
+   "way": 1346297210,
+   "footway": null,
+   "overlap": 0.477,
+   "reason": "ribbon footway nằm 48% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11204,
+   "way": 1350625385,
+   "footway": "sidewalk",
+   "overlap": 0.619,
+   "reason": "ribbon footway nằm 62% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11206,
+   "way": 1350625387,
+   "footway": "sidewalk",
+   "overlap": 0.787,
+   "reason": "ribbon footway nằm 79% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11207,
+   "way": 1350625388,
+   "footway": "sidewalk",
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11365,
+   "way": 1381088103,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11368,
+   "way": 1381088106,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11369,
+   "way": 1381665476,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11370,
+   "way": 1381665477,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11371,
+   "way": 1381665478,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11372,
+   "way": 1381665479,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11387,
+   "way": 1390610376,
+   "footway": null,
+   "overlap": 0.748,
+   "reason": "ribbon footway nằm 75% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11462,
+   "way": 1410352754,
+   "footway": null,
+   "overlap": 0.413,
+   "reason": "ribbon footway nằm 41% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11678,
+   "way": 1447058992,
+   "footway": "sidewalk",
+   "overlap": 0.503,
+   "reason": "ribbon footway nằm 50% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11680,
+   "way": 1447058998,
+   "footway": "sidewalk",
+   "overlap": 0.928,
+   "reason": "ribbon footway nằm 93% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11681,
+   "way": 1447058999,
+   "footway": "sidewalk",
+   "overlap": 0.339,
+   "reason": "ribbon footway nằm 34% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11682,
+   "way": 1447059000,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11684,
+   "way": 1447309317,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11685,
+   "way": 1447309318,
+   "footway": "sidewalk",
+   "overlap": 0.411,
+   "reason": "ribbon footway nằm 41% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11686,
+   "way": 1447309319,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11687,
+   "way": 1447309320,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11689,
+   "way": 1447309322,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11690,
+   "way": 1447309323,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11691,
+   "way": 1447637218,
+   "footway": "sidewalk",
+   "overlap": 0.552,
+   "reason": "ribbon footway nằm 55% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11692,
+   "way": 1447637219,
+   "footway": "sidewalk",
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11693,
+   "way": 1447637220,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11710,
+   "way": 1452547040,
+   "footway": "sidewalk",
+   "overlap": 0.603,
+   "reason": "ribbon footway nằm 60% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11765,
+   "way": 1461799769,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11793,
+   "way": 1465511899,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11794,
+   "way": 1465511900,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11795,
+   "way": 1465511901,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11796,
+   "way": 1465511902,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11797,
+   "way": 1465511903,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11798,
+   "way": 1465511904,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11799,
+   "way": 1465512598,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11800,
+   "way": 1465512599,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11801,
+   "way": 1465512600,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11802,
+   "way": 1465512601,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11803,
+   "way": 1465512602,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11804,
+   "way": 1465512603,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11805,
+   "way": 1465513197,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11808,
+   "way": 1466401877,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11809,
+   "way": 1466401878,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11810,
+   "way": 1466401879,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11811,
+   "way": 1466401880,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11812,
+   "way": 1466401881,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11813,
+   "way": 1466401882,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11814,
+   "way": 1466401883,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11815,
+   "way": 1466401884,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11816,
+   "way": 1466401885,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11817,
+   "way": 1466401886,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11818,
+   "way": 1466401887,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11819,
+   "way": 1466401888,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11820,
+   "way": 1466401889,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11821,
+   "way": 1466401890,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11822,
+   "way": 1466401891,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11823,
+   "way": 1466401892,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11824,
+   "way": 1466401893,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11825,
+   "way": 1466401894,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11826,
+   "way": 1466401895,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11827,
+   "way": 1466401896,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11828,
+   "way": 1466401897,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11829,
+   "way": 1466403127,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11830,
+   "way": 1466403128,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11831,
+   "way": 1466403129,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11832,
+   "way": 1466403130,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11833,
+   "way": 1466403131,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11834,
+   "way": 1466403132,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11835,
+   "way": 1466403133,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11836,
+   "way": 1466403134,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11837,
+   "way": 1466403135,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11838,
+   "way": 1466403136,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11839,
+   "way": 1466403137,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11840,
+   "way": 1466403138,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11841,
+   "way": 1466403139,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11842,
+   "way": 1466403140,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11843,
+   "way": 1466404531,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11844,
+   "way": 1466404532,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11845,
+   "way": 1466404533,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11846,
+   "way": 1466404534,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11847,
+   "way": 1466404535,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11848,
+   "way": 1466404536,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11849,
+   "way": 1466405054,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11860,
+   "way": 1469427212,
+   "footway": "sidewalk",
+   "overlap": 0.385,
+   "reason": "ribbon footway nằm 39% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11862,
+   "way": 1469427215,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11863,
+   "way": 1469427216,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11866,
+   "way": 1471513070,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11868,
+   "way": 1471513072,
+   "footway": "sidewalk",
+   "overlap": 0.542,
+   "reason": "ribbon footway nằm 54% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11869,
+   "way": 1471513073,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11870,
+   "way": 1471513074,
+   "footway": "sidewalk",
+   "overlap": 0.872,
+   "reason": "ribbon footway nằm 87% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11871,
+   "way": 1471513075,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11872,
+   "way": 1471513076,
+   "footway": "sidewalk",
+   "overlap": 0.34,
+   "reason": "ribbon footway nằm 34% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11873,
+   "way": 1471524215,
+   "footway": "sidewalk",
+   "overlap": 0.375,
+   "reason": "ribbon footway nằm 38% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11874,
+   "way": 1471524216,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11875,
+   "way": 1471524217,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11876,
+   "way": 1471524218,
+   "footway": "sidewalk",
+   "overlap": 0.605,
+   "reason": "ribbon footway nằm 61% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11877,
+   "way": 1471524219,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11882,
+   "way": 1472755831,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11884,
+   "way": 1472755836,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11885,
+   "way": 1472755837,
+   "footway": "sidewalk",
+   "overlap": 0.372,
+   "reason": "ribbon footway nằm 37% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11886,
+   "way": 1472887439,
+   "footway": "sidewalk",
+   "overlap": 0.606,
+   "reason": "ribbon footway nằm 61% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11887,
+   "way": 1472887441,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11888,
+   "way": 1472887442,
+   "footway": "sidewalk",
+   "overlap": 0.873,
+   "reason": "ribbon footway nằm 87% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11889,
+   "way": 1472887443,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11890,
+   "way": 1472887444,
+   "footway": "sidewalk",
+   "overlap": 0.988,
+   "reason": "ribbon footway nằm 99% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11891,
+   "way": 1472887445,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11896,
+   "way": 1472910302,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11897,
+   "way": 1472910303,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11901,
+   "way": 1473763460,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11902,
+   "way": 1473763461,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11903,
+   "way": 1473763462,
+   "footway": "sidewalk",
+   "overlap": 0.831,
+   "reason": "ribbon footway nằm 83% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11904,
+   "way": 1473763463,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11905,
+   "way": 1473763464,
+   "footway": "sidewalk",
+   "overlap": 0.528,
+   "reason": "ribbon footway nằm 53% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11906,
+   "way": 1473763465,
+   "footway": "sidewalk",
+   "overlap": 0.734,
+   "reason": "ribbon footway nằm 73% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11907,
+   "way": 1473763466,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11909,
+   "way": 1473763472,
+   "footway": "sidewalk",
+   "overlap": 0.518,
+   "reason": "ribbon footway nằm 52% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11910,
+   "way": 1473763473,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11917,
+   "way": 1474693908,
+   "footway": null,
+   "overlap": 0.448,
+   "reason": "ribbon footway nằm 45% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11918,
+   "way": 1474693909,
+   "footway": null,
+   "overlap": 0.388,
+   "reason": "ribbon footway nằm 39% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11921,
+   "way": 1474693912,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11925,
+   "way": 1476089653,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11926,
+   "way": 1476089655,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11928,
+   "way": 1476089657,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11929,
+   "way": 1476089658,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11943,
+   "way": 1489474476,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11958,
+   "way": 1492866506,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11970,
+   "way": 1496010293,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11975,
+   "way": 1496010319,
+   "footway": "sidewalk",
+   "overlap": 0.702,
+   "reason": "ribbon footway nằm 70% trong mặt asphalt (vẽ trùng lòng đường)"
+  },
+  {
+   "road": 11976,
+   "way": 1496010320,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11977,
+   "way": 1496010321,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11978,
+   "way": 1496010322,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11979,
+   "way": 1496010323,
+   "footway": "crossing",
+   "overlap": null,
+   "reason": "crossing: thay ribbon be bằng zebra trên asphalt"
+  },
+  {
+   "road": 11991,
+   "way": 1499350359,
+   "footway": "sidewalk",
+   "overlap": 1.0,
+   "reason": "ribbon footway nằm 100% trong mặt asphalt (vẽ trùng lòng đường)"
+  }
+ ],
+ "stats": {
+  "crossings": 440,
+  "zebraCrossings": 429,
+  "crossingTags": {
+   "uncontrolled": 220,
+   "None": 164,
+   "marked": 23,
+   "traffic_signals": 17,
+   "unmarked": 9,
+   "zebra": 7
+  },
+  "hiddenFootways": 533,
+  "hiddenByFootwayTag": {
+   "crossing": 440,
+   "sidewalk": 63,
+   "None": 30
+  }
+ }
+}

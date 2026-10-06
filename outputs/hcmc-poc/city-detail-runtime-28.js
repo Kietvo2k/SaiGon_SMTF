@@ -54,7 +54,6 @@ export function createCityDetailRuntime({scene,buildings,roads,widths,hash01,nig
   scene.add(root);
 
   const architectural=new THREE.Group();architectural.name='LOD0/1 architectural relief';root.add(architectural);
-  const street=new THREE.Group();street.name='LOD0 public realm detail';root.add(street);
 
   const parapetItems=[];
   const ledgeItems=[];
@@ -123,37 +122,11 @@ export function createCityDetailRuntime({scene,buildings,roads,widths,hash01,nig
   tankItems.forEach((item,index)=>{dummy.position.set(item.x,item.y,item.z);dummy.rotation.set(0,item.seed*6.28,0);dummy.scale.set(item.scale,2.2+item.seed*2.4,item.scale);dummy.updateMatrix();tanks.setMatrixAt(index,dummy.matrix);});
   architectural.add(parapets,ledges,podiums,awnings,signs,tanks);
 
-  // Sample major roads at a real-world spacing. Two-sided lamps provide scale
-  // and a continuous public-realm rhythm without fabricating lane telemetry.
-  const lamps=[];
-  const major=new Set(['motorway','trunk','primary','secondary','tertiary']);
-  for(const road of roads){
-    if(road.bridge||road.tunnel||!major.has(road.type))continue;
-    const width=road.lanes?Math.max(widths[road.type]||8,road.lanes*3.1):widths[road.type]||8;
-    for(let i=0;i<road.c.length-1;i++){
-      const a=road.c[i],b=road.c[i+1],dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz);
-      if(length<10)continue;
-      const steps=Math.floor(length/62),nx=-dz/length,nz=dx/length;
-      for(let step=0;step<=steps;step++){
-        const t=(step+.5)/(steps+1),x=a[0]+dx*t,z=a[1]+dz*t;
-        if(Math.hypot(x,z)>1800)continue;
-        for(const side of [-1,1])lamps.push({x:x+nx*(width*.5+1.8)*side,z:z+nz*(width*.5+1.8)*side,angle:Math.atan2(dz,dx),side});
-      }
-    }
-  }
-  const poleMaterial=new THREE.MeshStandardNodeMaterial({color:'#313b3d',roughness:.46,metalness:.62});
-  const lampMaterial=new THREE.MeshStandardNodeMaterial({color:'#d8e0d8',emissive:'#ffd397',emissiveIntensity:.08,roughness:.3,metalness:.28});
-  const poles=new THREE.InstancedMesh(new THREE.CylinderGeometry(.09,.14,1,7),poleMaterial,Math.max(1,lamps.length));
-  const lampHeads=createBoxInstances(lamps.length,lampMaterial,'Street lamp heads · inferred');
-  poles.name='Street lamp poles · inferred';poles.castShadow=true;
-  lamps.forEach((item,index)=>{
-    dummy.position.set(item.x,4.2,item.z);dummy.scale.set(1,8.2,1);dummy.updateMatrix();poles.setMatrixAt(index,dummy.matrix);
-    placeBox(lampHeads,index,item.x,item.side>0?8.3:8.15,item.z,1.25,.18,.34,item.angle);
-  });
-  street.add(poles,lampHeads);
+  // Đèn đường chuyển sang city-street-furniture-31.js (bước E2 31A): đặt theo mép mặt đường hợp nhất, không
+  // còn đặt theo tim từng way. Runtime 28 chỉ giữ chi tiết kiến trúc.
 
-  const counts={parapets:parapetItems.length,facadeLedges:ledgeItems.length,podiumCornices:podiumItems.length,awnings:awningItems.length,lightboxSigns:signItems.length,rooftopPlant:tankItems.length,streetLamps:lamps.length};
-  Object.assign(status,{version:'28b',classification:'inferred presentation geometry',sourceGeometry:'CITY_DATA footprints and OSM road centrelines',counts});
+  const counts={parapets:parapetItems.length,facadeLedges:ledgeItems.length,podiumCornices:podiumItems.length,awnings:awningItems.length,lightboxSigns:signItems.length,rooftopPlant:tankItems.length};
+  Object.assign(status,{version:'28b',classification:'inferred presentation geometry',sourceGeometry:'CITY_DATA footprints',counts});
 
   let mode='';
   return{
@@ -168,10 +141,8 @@ export function createCityDetailRuntime({scene,buildings,roads,widths,hash01,nig
         awnings.visible=next==='hero';
         signs.visible=next==='hero';
         tanks.visible=next!=='city';
-        street.visible=next==='hero';
         status.lod=mode;
       }
-      lampMaterial.emissiveIntensity=.04+Math.max(0,Math.min(1,night||0))*3.1;
       signMaterial.emissiveIntensity=.08+Math.max(0,Math.min(1,night||0))*1.45;
     },
     dispose(){

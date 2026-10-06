@@ -9,10 +9,11 @@ import {
   createAdaptiveQuality, createCityRenderPipeline, createCityShadowSystem,
   resolveVisualQuality, smoothDampScalar, smoothDampVector
 } from './city-visual-runtime-30.js?v=30b';
-import { createCityDetailRuntime } from './city-detail-runtime-28.js?v=30b';
+import { createCityDetailRuntime } from './city-detail-runtime-28.js?v=30b-31e2';
 import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b';
 import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
-import { createRoadNetwork31 } from './city-road-network-31.js?v=30b-31b';
+import { createRoadNetwork31 } from './city-road-network-31.js?v=30b-31e2';
+import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=30b-31e2';
 
 const D=window.CITY_DATA;
 const SM=window.SEMANTIC_MATERIALS_08||{records:{},directTaggedBuildings:0,directCoveragePercent:0};
@@ -403,7 +404,7 @@ function ribbon(coords,width,y,target){
 const roadColors={edge:'#8c9188',asphalt:'#293534',pedestrian:'#c8ad84',marking:'#f4db80'};
 setProgress(58,'Đang dựng mạng đường liền mạch…');
 materialStatus.roadNetwork={};
-const roadNetwork=await createRoadNetwork31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,widths,colors:roadColors,yieldMain,status:materialStatus.roadNetwork,
+const roadNetwork=await createRoadNetwork31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,widths,colors:roadColors,hiddenRoads:hiddenFootwayRoads(D.roads,window.STREET_FURNITURE_31),yieldMain,status:materialStatus.roadNetwork,
   onProgress:value=>setProgress(58+value*12,`Đang dựng mạng đường liền mạch · ${Math.round(value*100)}%`)});
 
 // Flood 25A visual calibration layer. The ribbons follow named OSM road centrelines
@@ -748,6 +749,9 @@ materialStatus.heroDetail={};
 const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
 materialStatus.heroCorridor={};
 const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,status:materialStatus.heroCorridor});
+// Bước E2: cột đèn theo mép đường hợp nhất + vạch zebra (thay đèn đặt theo tim từng way của runtime 28).
+materialStatus.streetFurniture={};
+const streetFurniture=createStreetFurniture31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,data:window.STREET_FURNITURE_31,widths,nightLevel,status:materialStatus.streetFurniture});
 materialStatus.identityFacades={};
 const identityFacades=createIdentityFacades30({scene,status:materialStatus.identityFacades});
 let sceneMeshCount=0;scene.traverse(object=>{if(object.isMesh)sceneMeshCount++;});$('#draws').textContent=sceneMeshCount;
@@ -929,6 +933,7 @@ function render(now){
   scene.fog.density=Math.min(activeFogDensity,Math.max(.000018,.22/cameraDistance));
   shadowSystem.update(target,cameraDistance);
   cityDetailRuntime.update(cameraDistance,nightLevel.value);
+  streetFurniture.update(cameraDistance,nightLevel.value);
   heroCorridor.update(cameraDistance,nightLevel.value,activeView==='corridor');
   identityFacades.update(cameraDistance,activeView);
   const closeVegetation=cameraDistance<3400;trunks.visible=closeVegetation;canopies.visible=closeVegetation;farCanopies.visible=cameraDistance>2500;
