@@ -379,3 +379,19 @@ button:focus-visible,select:focus-visible,a:focus-visible{
   .nav-dock,.nav-dock.collapsed{bottom:52px}
   .selection{bottom:110px}
 }
+
+/* Mật độ chi tiết · 31E */
+.density-control{margin:14px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
+.density-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:12px;font-weight:700}
+.density-head small{color:var(--muted);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.segmented.density-options{grid-template-columns:repeat(4,1fr);margin:8px 0 6px}
+.density-options button{padding:10px 2px;white-space:nowrap}
+.density-counts{margin:0;color:var(--muted);font-size:10px;line-height:1.4;font-variant-numeric:tabular-nums}
+.density-suggest{position:fixed;z-index:14;left:50%;bottom:calc(var(--edge) + 44px);transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:calc(100% - 2 * var(--edge));padding:9px 10px 9px 14px;border:1px solid rgba(233,187,131,.38);border-radius:12px}
+.density-suggest[hidden]{display:none}
+.density-suggest p{margin:0;font-size:11px;line-height:1.4}
+.density-suggest div{display:flex;gap:6px;flex:none}
+.density-suggest button{min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:rgba(202,222,216,.06);color:var(--ink);font-size:11px;font-weight:700;cursor:pointer}
+.density-suggest [data-density-apply]{background:rgba(234,214,182,.92);border-color:transparent;color:#173138}
+body.ui-hidden .density-suggest{opacity:0;pointer-events:none}
+@media(max-width:540px){.density-suggest{left:var(--edge);right:var(--edge);transform:none;bottom:calc(var(--edge) + 40px);flex-wrap:wrap}}

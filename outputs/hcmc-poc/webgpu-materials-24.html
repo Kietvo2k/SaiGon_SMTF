@@ -95,6 +95,16 @@
           <button type="button" data-view="bason"><span>05</span>Ba Son + Marina</button>
           <button type="button" data-view="corridor"><span>06</span>Lam Sơn + Đồng Khởi</button>
         </div>
+        <div class="density-control">
+          <div class="density-head"><span id="densityTitle">Mật độ chi tiết</span><small>Signature luôn giữ</small></div>
+          <div id="densityControl" class="segmented density-options" role="radiogroup" aria-labelledby="densityTitle" aria-describedby="densityCounts">
+            <button type="button" role="radio" data-density="full" aria-checked="true" tabindex="0" class="active">Đầy đủ</button>
+            <button type="button" role="radio" data-density="balanced" aria-checked="false" tabindex="-1">Cân bằng</button>
+            <button type="button" role="radio" data-density="light" aria-checked="false" tabindex="-1">Nhẹ</button>
+            <button type="button" role="radio" data-density="minimal" aria-checked="false" tabindex="-1">Tối thiểu</button>
+          </div>
+          <p id="densityCounts" class="density-counts" aria-live="polite">—</p>
+        </div>
         <button type="button" id="compare" class="compare"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 010 16z"/></svg><b>Giữ để xem khối nền</b></button>
         <button type="button" id="openFloodLab" class="flood-launch" data-open-flood><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8c2.4 0 2.4-2 4.8-2s2.4 2 4.8 2S15 6 17.4 6 19.8 8 22 8M3 13c2.4 0 2.4-2 4.8-2s2.4 2 4.8 2 2.4-2 4.8-2 2.4 2 4.6 2M3 18c2.4 0 2.4-2 4.8-2s2.4 2 4.8 2 2.4-2 4.8-2 2.4 2 4.6 2"/></svg><b>Ngập đô thị</b><small>25A · DATA GATE</small></button>
         <div class="legend">
@@ -110,6 +120,11 @@
     <div class="hud glass">
       <span><i id="fps">—</i> FPS</span><span><i id="draws">—</i> MESH</span><span><i id="triangles">—</i> TRI</span>
       <b id="viewLabel">MATERIAL DISTRICT</b>
+    </div>
+
+    <div id="densitySuggest" class="density-suggest glass" role="status" aria-live="polite" hidden>
+      <p id="densitySuggestText">Khung hình thấp. Hạ mật độ chi tiết?</p>
+      <div><button type="button" data-density-apply>Áp dụng</button><button type="button" data-density-dismiss>Bỏ qua</button></div>
     </div>
 
     <div id="selection" class="selection glass" hidden>

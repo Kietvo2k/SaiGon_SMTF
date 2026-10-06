@@ -8,7 +8,7 @@
   "inputs": [
    {
     "path": "webgpu-materials-24.js",
-    "sha256": "ddd4a1e731ea5d0d152b85d539ac840d89c26e2abed0e32893e053187dae0b91"
+    "sha256": "4c420153bf4fa3aff92b861c5f4377408322ff0ca38d457978eb34f57fc58f5e"
    },
    {
     "path": "city-hero-corridor-30.js",
@@ -86,7 +86,7 @@
    "ids": [
     801710792
    ],
-   "source": "webgpu-materials-24.js:202",
+   "source": "webgpu-materials-24.js:203",
    "reason": "Hero envelope có nguồn ảnh thay proxy gộp; footprint bị loại khỏi city mesh nên không được giảm hay ẩn thêm."
   },
   {
@@ -97,7 +97,7 @@
    "ids": [
     2000032897
    ],
-   "source": "webgpu-materials-24.js:202",
+   "source": "webgpu-materials-24.js:203",
    "reason": "Hero envelope có nguồn ảnh thay proxy gộp; footprint bị loại khỏi city mesh nên không được giảm hay ẩn thêm."
   },
   {
@@ -108,7 +108,7 @@
    "ids": [
     39598465
    ],
-   "source": "webgpu-materials-24.js:202",
+   "source": "webgpu-materials-24.js:203",
    "reason": "Hero envelope có nguồn ảnh thay proxy gộp; footprint bị loại khỏi city mesh nên không được giảm hay ẩn thêm."
   },
   {
@@ -129,7 +129,7 @@
    "kind": "module",
    "label": "Cầu Ba Son · kết cấu dây văng",
    "module": "webgpu-materials-24.js#bridgeGroup",
-   "source": "webgpu-materials-24.js:481",
+   "source": "webgpu-materials-24.js:480",
    "reason": "Toàn bộ trụ, tháp và 28 dây văng của cầu Ba Son là nhận diện chính; không được lược dây hay trụ.",
    "ids": []
   },
@@ -349,7 +349,7 @@
    "kind": "module",
    "label": "Marina Central · dải giật cấp + vương miện",
    "module": "webgpu-materials-24.js#marinaDetail",
-   "source": "webgpu-materials-24.js:563",
+   "source": "webgpu-materials-24.js:562",
    "reason": "Chi tiết nhận diện có nguồn của cụm Marina; không được lược ở mức mật độ thấp.",
    "ids": []
   },
@@ -359,7 +359,7 @@
    "kind": "module",
    "label": "Grand Marina · vương miện + khung",
    "module": "webgpu-materials-24.js#grandMarinaDetail",
-   "source": "webgpu-materials-24.js:576",
+   "source": "webgpu-materials-24.js:575",
    "reason": "Chi tiết nhận diện có nguồn của cụm Marina; không được lược ở mức mật độ thấp.",
    "ids": []
   },
@@ -418,7 +418,7 @@
    "kind": "module",
    "label": "Hero Corridor 30B",
    "module": "city-hero-corridor-30.js#createHeroCorridor30",
-   "source": "webgpu-materials-24.js:793",
+   "source": "webgpu-materials-24.js:792",
    "reason": "Toàn bộ lớp hero corridor (vỏ công trình, public realm, đèn) giữ nguyên ở mọi mức mật độ.",
    "ids": []
   },
@@ -4703,7 +4703,7 @@
     -781.89,
     818.25
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     804073951,
     1222241871
@@ -4720,7 +4720,7 @@
     -874.85,
     431.24
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     341504312,
     377881079,
@@ -4741,7 +4741,7 @@
     -524.91,
     309.61
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "zone": {
     "protects": [
      "tree",
@@ -5358,7 +5358,7 @@
     -896.72,
     276.43
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     801710792
    ],
@@ -5374,7 +5374,7 @@
     -929.52,
     243.26
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     35112941,
     35114970,
@@ -5392,7 +5392,7 @@
     -962.33,
     154.8
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     666609822,
     1278461434,
@@ -5413,7 +5413,7 @@
     1137.3,
     -1758.13
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     622296615
    ],
@@ -5429,7 +5429,7 @@
     -401.77,
     -353.62
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     1151026868,
     1432358258,
@@ -5448,7 +5448,7 @@
     -278.86,
     -632.48
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     1151026866
    ],
@@ -5464,7 +5464,7 @@
     -84.2,
     -29.85
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     321564421,
     321564423
@@ -5481,7 +5481,7 @@
     2154.31,
     -2731.18
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     256667238,
     604108243,
@@ -5501,7 +5501,7 @@
     2263.67,
     -2808.58
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     32577094,
     32580686,
@@ -5525,7 +5525,7 @@
     1826.24,
     -2565.32
    ],
-   "source": "webgpu-materials-24.js:803",
+   "source": "webgpu-materials-24.js:822",
    "ids": [
     604163756,
     785535443,
@@ -5597,7 +5597,7 @@
    "kind": "module",
    "label": "Identity Facades 30B",
    "module": "city-identity-facades-30.js#createIdentityFacades30",
-   "source": "webgpu-materials-24.js:798",
+   "source": "webgpu-materials-24.js:797",
    "reason": "Lớp mặt đứng ảnh nhận diện; mật độ không được ẩn lớp này.",
    "ids": []
   }

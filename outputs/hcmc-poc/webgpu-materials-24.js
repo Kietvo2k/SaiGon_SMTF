@@ -15,6 +15,7 @@ import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
 import { createRoadNetwork31 } from './city-road-network-31.js?v=30b-31e2';
 import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=30b-31e2';
 import { createBridges31, loftStrip } from './city-bridges-31.js?v=30b-31c';
+import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31e';
 
 const D=window.CITY_DATA;
 const SM=window.SEMANTIC_MATERIALS_08||{records:{},directTaggedBuildings:0,directCoveragePercent:0};
@@ -246,15 +247,6 @@ for(let bi=0;bi<renderBuildings.length;bi++){
 }
 
 setProgress(57,'Đang biên dịch vật liệu TSL…');
-const geometry=new THREE.BufferGeometry();
-geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
-geometry.setAttribute('baseColor24',new THREE.Float32BufferAttribute(baseRgb,3));
-geometry.setAttribute('surface24',new THREE.Float32BufferAttribute(surfaces,1));
-geometry.setAttribute('class24',new THREE.Float32BufferAttribute(classes,1));
-geometry.setAttribute('seed24',new THREE.Float32BufferAttribute(seeds,1));
-geometry.setAttribute('direct24',new THREE.Float32BufferAttribute(directs,1));
-geometry.computeVertexNormals();
 
 const realism=uniform(1);
 const nightLevel=uniform(0);
@@ -355,9 +347,16 @@ cityMaterial.clearcoatRoughnessNode=select(isGlass,float(.18),float(.72));
 const litRoom=innerWindow.mul(step(.972,roomRandom)).mul(nightLevel).mul(realism).mul(.34);
 cityMaterial.emissiveNode=color('#ffc47f').mul(litRoom);
 
-const city=new THREE.Mesh(geometry,cityMaterial);
-city.castShadow=true;
-city.receiveShadow=true;
+// Bước E 31A: công trình chia chunk lưới (frustum culling), trong chunk xếp theo hạng ưu tiên để mỗi mức mật độ
+// chỉ là drawRange khác. Cùng vật liệu/thuộc tính đỉnh như mesh gộp cũ; signature (registry) luôn trong drawRange.
+const signatureGate=createSignatureGate31({buildings:renderBuildings});
+const cityChunks=createBuildingChunks31({
+  arrays:{position:positions,uv:uvs,baseColor24:baseRgb,surface24:surfaces,class24:classes,seed24:seeds,direct24:directs},
+  itemSizes:{position:3,uv:2,baseColor24:3,surface24:1,class24:1,seed24:1,direct24:1},
+  faceEnds,buildings:renderBuildings,material:cityMaterial,roads:D.roads,gate:signatureGate
+});
+for(const list of [positions,uvs,baseRgb,surfaces,classes,seeds,directs])list.length=0;  // dữ liệu đã chép vào chunk
+const city=cityChunks.group;
 scene.add(city);
 
 // Context layers keep the PBR facade readable without inventing surveyed detail.
@@ -796,6 +795,26 @@ materialStatus.streetFurniture={};
 const streetFurniture=createStreetFurniture31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,data:window.STREET_FURNITURE_31,widths,nightLevel,status:materialStatus.streetFurniture});
 materialStatus.identityFacades={};
 const identityFacades=createIdentityFacades30({scene,status:materialStatus.identityFacades});
+// Bước E/F 31A: "Mật độ chi tiết". Kết cấu signature được gộp (không ẩn) để bớt draw call cố định; cây, chi tiết
+// runtime 28 chia chunk lưới (cull theo ô), tán cây xa và thiết bị mái sắp lại tại chỗ; mọi bộ lọc đi qua signature registry.
+materialStatus.density={};
+for(const group of [bridgeDeckGroup,bridgeSupportGroup,bridgeCableGroup,marinaDetail,grandMarinaDetail])mergeStaticMeshes31(group);
+const bridgesApi=materialStatus.bridges.api;
+const cityDensity=createDensityController31({
+  gate:signatureGate,buildingChunks:cityChunks,
+  treeDensity:createInstanceDensity31({sources:[{mesh:trunks,key:'trunks'},{mesh:canopies,stride:3,key:'canopies'},{mesh:farCanopies,key:'farCanopies',inPlace:true}],items:trees,isProtected:(x,z)=>signatureGate.protects(x,z,'tree'),cellSize:1000,label:'Cây 31E'}),
+  detailDensity:(()=>{const list=[];cityDetailRuntime.root.traverse(o=>{if(o.isInstancedMesh)list.push(o);});return list.map(mesh=>createInstanceDensity31({sources:[{mesh}],items:instanceItems31(mesh),isProtected:(x,z)=>signatureGate.protects(x,z,'detail'),cellSize:1500}));})(),
+  fixtureDensity:createInstanceDensity31({sources:[{mesh:fixtures,key:'roofFixtures'}],items:roofFixtures,isProtected:(x,z)=>signatureGate.protects(x,z,'detail')}),
+  streetFurniture,traffic:{api:()=>materialStatus.traffic?.api,group:trafficGroup},vesselGroup,
+  bridgeRails:(bridgesApi?.procedural||[]).filter(mesh=>/lan can/.test(mesh.name)),
+  audit:{
+    extraBuildingIds:()=>[...heroEnvelopeIds],   // 3 hero envelope do hero corridor vẽ thay mesh công trình
+    ways:()=>D.roads.filter((road,index)=>roadNetwork.pieces(index).length).map(road=>road.id),
+    modules:{'ba-son-bridge-structure':bridgeGroup,'bach-dang-footbridge-structure':bridgesApi?.signature||[],'marina-central-detail':marinaDetail,'grand-marina-detail':grandMarinaDetail,'hero-corridor-module':heroCorridor.root,'extra-identity-facades-module':identityFacades.root}
+  },
+  ui:{root:$('#densityControl'),counts:$('#densityCounts'),suggest:$('#densitySuggest'),suggestText:$('#densitySuggestText'),suggestApply:$('[data-density-apply]'),suggestDismiss:$('[data-density-dismiss]')},
+  params,status:materialStatus.density,getFps:()=>adaptiveQuality.fps,lowFps:visualQuality.targetLowFps
+});
 let sceneMeshCount=0;scene.traverse(object=>{if(object.isMesh)sceneMeshCount++;});$('#draws').textContent=sceneMeshCount;
 
 setProgress(84,'Đang hoàn tất cảnh và biên dịch pipeline…');
@@ -825,7 +844,7 @@ function selectView(key){
   transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
   transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
   document.querySelectorAll('[data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view===key));
-  $('#viewLabel').textContent=p.label;history.replaceState(null,'',`?v=${APP_VERSION}&view=${key}${forceWebGL?'&backend=webgl':''}${requestedQuality!=='presentation'?`&quality=${requestedQuality}`:''}`);
+  $('#viewLabel').textContent=p.label;const density=new URLSearchParams(location.search).get('density');history.replaceState(null,'',`?v=${APP_VERSION}&view=${key}${forceWebGL?'&backend=webgl':''}${requestedQuality!=='presentation'?`&quality=${requestedQuality}`:''}${density?`&density=${encodeURIComponent(density)}`:''}`);
 }
 document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>selectView(button.dataset.view));
 selectView(params.get('view') in presets?params.get('view'):'materials');
@@ -905,8 +924,7 @@ window.addEventListener('keydown',event=>{
 
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 function pick(x,y){
-  pointer.set(x/innerWidth*2-1,-y/innerHeight*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObject(city,false)[0];if(!hit){$('#selection').hidden=true;return;}
-  const face=hit.faceIndex;let low=0,high=faceEnds.length-1;while(low<high){const mid=(low+high)>>1;if(faceEnds[mid]>face)high=mid;else low=mid+1;}
+  pointer.set(x/innerWidth*2-1,-y/innerHeight*2+1);raycaster.setFromCamera(pointer,camera);const low=cityChunks.pick(raycaster);if(low===null){$('#selection').hidden=true;return;}
   const building=renderBuildings[low],kind=classify(building),direct=SM.records[String(building.id)]||{};
   $('#selectedName').textContent=building.name||`Công trình ${building.id}`;
   $('#selectedBody').innerHTML=`<p>Chiều cao dựng: <b>${building.h.toLocaleString('vi-VN')} m</b> · ${building.q==='estimated'?'ước lượng':'có đối chiếu nguồn'}</p><p>Họ vật liệu: <b>${['Phổ thông','Nhà ở','Kính thương mại','Công cộng','Công nghiệp','Trung tâm','Tôn giáo','Hỗn hợp'][kind]}</b></p><p>${Object.keys(direct).length?'Có thẻ vật liệu/màu từ dữ liệu mở; shader thêm độ nhám, ô cửa và phong hóa.':'Màu và nhịp mặt đứng được suy luận ổn định từ loại công trình, chiều cao, khu vực và ID.'}</p>`;
@@ -940,7 +958,7 @@ materialStatus.visualRuntime={
 let lastTime=performance.now(),frameCount=0,fpsTime=lastTime,lastLabel=0;
 const overlaps=(a,b,padding=6)=>a.left-padding<b.right&&a.right+padding>b.left&&a.top-padding<b.bottom&&a.bottom+padding>b.top;
 function updateLabels(){
-  const occupied=[...document.querySelectorAll('.topbar,.nav-dock,.controls,.flood-lab,.selection,.hud,.ioc-alert-bar')]
+  const occupied=[...document.querySelectorAll('.topbar,.nav-dock,.controls,.flood-lab,.selection,.hud,.ioc-alert-bar,.density-suggest')]
     .filter(element=>{const style=getComputedStyle(element),rect=element.getBoundingClientRect();return !element.hidden&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)>0.05&&rect.width>0&&rect.height>0;})
     .map(element=>element.getBoundingClientRect());
   const candidates=[];
@@ -982,6 +1000,7 @@ function render(now){
   advanceUrbanMotion(now);
   if(now-lastLabel>120){lastLabel=now;updateLabels();}
   adaptiveQuality.update(dt,cameraDistance,pointerDown||!!desired);
+  cityDensity.update(dt);
   renderer.info?.reset?.();
   if(visualPipeline&&!pipelineFault){try{visualPipeline.render();}catch(error){pipelineFault=true;materialStatus.visualRuntime.pipeline='direct fallback after compile failure';materialStatus.visualRuntime.error=String(error?.message||error);console.warn('City Visual Runtime 30 pipeline failed; switching to direct rendering.',error);renderer.render(scene,camera);}}
   else renderer.render(scene,camera);
