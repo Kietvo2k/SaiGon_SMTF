@@ -12,6 +12,7 @@ import {
 import { createCityDetailRuntime } from './city-detail-runtime-28.js?v=30b';
 import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b';
 import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
+import { createRoadNetwork31 } from './city-road-network-31.js?v=30b-31b';
 
 const D=window.CITY_DATA;
 const SM=window.SEMANTIC_MATERIALS_08||{records:{},directTaggedBuildings:0,directCoveragePercent:0};
@@ -358,10 +359,13 @@ function mergeGeometry(items){
   const out=[];for(const g of items)out.push(...g.attributes.position.array);
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(out,3));g.computeVertexNormals();return g;
 }
-const groundMaterial=new THREE.MeshStandardNodeMaterial({color:'#b9b29e',roughness:1});
+// Nền đất tối hơn 30B (#b9b29e) để khe giữa các mặt đường không lộ thành vệt sáng; màu nhân với ảnh Sentinel-2.
+const groundTint='#a29c8a';
+const groundMaterial=new THREE.MeshStandardNodeMaterial({color:groundTint,roughness:1});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(D.meta.width,D.meta.depth),groundMaterial);
+ground.name='Nền đất · Sentinel-2 2016';
 ground.geometry.rotateX(-Math.PI/2);ground.position.y=-1;ground.receiveShadow=true;scene.add(ground);
-new THREE.TextureLoader().load('data/sentinel-2016.jpg',texture=>{texture.colorSpace=THREE.SRGBColorSpace;ground.material.map=texture;ground.material.color.set('#b9b29e');ground.material.needsUpdate=true;});
+new THREE.TextureLoader().load('data/sentinel-2016.jpg',texture=>{texture.colorSpace=THREE.SRGBColorSpace;ground.material.map=texture;ground.material.color.set(groundTint);ground.material.needsUpdate=true;});
 const outsideMaterial=new THREE.MeshStandardNodeMaterial({color:'#536b58',roughness:1});
 const outside=new THREE.Mesh(new THREE.PlaneGeometry(60000,60000),outsideMaterial);outside.rotation.x=-Math.PI/2;outside.position.y=-3;scene.add(outside);
 const parksMaterial=new THREE.MeshStandardNodeMaterial({color:'#315b38',roughness:.96,side:THREE.DoubleSide});
@@ -385,8 +389,8 @@ waterMaterial.colorNode=waterColor;
 waterMaterial.roughnessNode=mix(float(.43),float(.17),currentBand.mul(.58).add(fineRipple.mul(.18))).add(waterFresnel.mul(.04));
 const water=new THREE.Mesh(mergeGeometry(D.water.map(r=>flatGeometry(r,.7))),waterMaterial);water.receiveShadow=true;scene.add(water);
 
-const roadGroups={edge:[],asphalt:[],pedestrian:[],marking:[]};
 const widths={motorway:16,trunk:15,primary:14,secondary:11,tertiary:8,residential:5,living_street:4,service:3.5,unclassified:5,footway:2.5,pedestrian:12,cycleway:2,path:1.5};
+// Ribbon từng đoạn không miter: chỉ còn dùng cho lớp proxy ngập 25A bên dưới; mặt đường do city-road-network-31.js dựng.
 function ribbon(coords,width,y,target){
   for(let i=0;i<coords.length-1;i++){
     const a=coords[i],b=coords[i+1],dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz);if(length<.1)continue;
@@ -395,28 +399,12 @@ function ribbon(coords,width,y,target){
     for(const k of [0,2,1,1,2,3])target.push(...vs[k]);
   }
 }
-for(const road of D.roads){
-  if(road.tunnel)continue;
-  const width=road.lanes?Math.max(widths[road.type]||4,road.lanes*3.1):widths[road.type]||4;
-  const y=road.bridge?13:1.0;
-  ribbon(road.c,width+1.8,y,roadGroups.edge);
-  ribbon(road.c,width,y+.09,roadGroups[road.type==='pedestrian'||road.type==='footway'?'pedestrian':'asphalt']);
-  if(['motorway','trunk','primary','secondary'].includes(road.type))ribbon(road.c,.16,y+.18,roadGroups.marking);
-}
+// Mạng đường 31A: polyline có miter, mặt giao lộ, cao độ theo profile ROAD_GRAPH_31, thứ tự vẽ bằng polygonOffset.
 const roadColors={edge:'#8c9188',asphalt:'#293534',pedestrian:'#c8ad84',marking:'#f4db80'};
-const roadMaterials={};
-for(const [name,data] of Object.entries(roadGroups)){
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(data,3));g.computeVertexNormals();
-  const m=new THREE.MeshStandardNodeMaterial({color:roadColors[name],roughness:name==='asphalt'?.76:.9,metalness:name==='asphalt'?.05:0,side:THREE.DoubleSide});
-  if(name==='asphalt'){
-    const aggregate=sin(positionWorld.x.mul(.21).add(sin(positionWorld.z.mul(.17)).mul(2.3))).mul(.5).add(.5);
-    const wear=sin(positionWorld.x.add(positionWorld.z).mul(.006)).mul(.5).add(.5);
-    m.colorNode=mix(color('#202c2d'),color('#354140'),aggregate.mul(.2).add(wear.mul(.13)));
-    m.roughnessNode=mix(float(.68),float(.88),aggregate);
-  }
-  roadMaterials[name]=m;
-  const mesh=new THREE.Mesh(g,m);mesh.receiveShadow=true;scene.add(mesh);
-}
+setProgress(58,'Đang dựng mạng đường liền mạch…');
+materialStatus.roadNetwork={};
+const roadNetwork=await createRoadNetwork31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,widths,colors:roadColors,yieldMain,status:materialStatus.roadNetwork,
+  onProgress:value=>setProgress(58+value*12,`Đang dựng mạng đường liền mạch · ${Math.round(value*100)}%`)});
 
 // Flood 25A visual calibration layer. The ribbons follow named OSM road centrelines
 // in the observed Thao Dien corridor. Their depth is a bounded visual proxy tied to
@@ -626,16 +614,17 @@ function roadSegmentClear(a,b,laneWidth){
   return true;
 }
 const trafficCandidates=[],trafficTypes=new Set(['motorway','trunk','primary','secondary','tertiary','residential']);
-for(const road of D.roads){
-  if(road.tunnel||road.bridge||!trafficTypes.has(road.type))continue;
+D.roads.forEach((road,roadIndex)=>{
+  if(road.tunnel||road.bridge||!trafficTypes.has(road.type))return;
   const roadWidth=road.lanes?Math.max(widths[road.type]||5,road.lanes*3.1):widths[road.type]||5;
   for(let i=0;i<road.c.length-1;i++){
     const a=road.c[i],b=road.c[i+1],length=Math.hypot(b[0]-a[0],b[1]-a[1]);if(length<26)continue;
     const mx=(a[0]+b[0])*.5,mz=(a[1]+b[1])*.5,centrality=Math.max(0,1-Math.hypot(mx,mz)/6500);
     const hierarchy=['motorway','trunk','primary','secondary'].includes(road.type)?.32:road.type==='tertiary'?.2:.09;
-    trafficCandidates.push({a,b,length,width:roadWidth,score:motionHash(Number(road.id)+i*7919)+centrality*1.25+hierarchy,roadType:road.type});
+    // roadIndex/vertex: tra cao độ mặt đường theo profile (dốc dẫn rampOf có thể cao hơn groundY).
+    trafficCandidates.push({a,b,length,width:roadWidth,roadIndex,vertex:i,score:motionHash(Number(road.id)+i*7919)+centrality*1.25+hierarchy,roadType:road.type});
   }
-}
+});
 trafficCandidates.sort((a,b)=>b.score-a.score);
 const trafficItems=[];
 for(const segment of trafficCandidates){
@@ -648,6 +637,18 @@ for(const segment of trafficCandidates){
     trafficItems.push({...segment,kind,side,lane:Math.max(.85,Math.min(2.4,segment.width*.2)),phase:(repeat/repeats+motionRandom()*.16)%1,speed:speedMps/segment.length,colorSeed:motionRandom()});
   }
 }
+// Cao độ bánh xe: 17 mẫu dọc làn trên mặt đường thật (mảnh có miter + polygon giao lộ), không thấp hơn tim road theo profile.
+// trafficLaneY(item,u) → vị trí làn và y mặt đường; trafficGroundY nội suy mẫu mỗi khung hình.
+const TRAFFIC_Y_STEPS=16,TRAFFIC_SAME_LEVEL_M=.5;
+const trafficLaneY=(item,u)=>{
+  const dx=item.b[0]-item.a[0],dz=item.b[1]-item.a[1],nx=-dz/item.length,nz=dx/item.length;
+  const x=item.a[0]+dx*u+nx*item.side*item.lane,z=item.a[1]+dz*u+nz*item.side*item.lane,centre=roadNetwork.roadY(item.roadIndex,item.vertex,u);
+  // Mặt nhìn thấy là mặt cao nhất trong ±TRAFFIC_SAME_LEVEL_M quanh tim road (dốc dẫn chồng lên đường mặt đất kề bên);
+  // mặt cao hơn nữa là công trình khác cấp (cầu, mép dốc), không kéo xe lên.
+  return{x,z,y:Math.max(centre,...roadNetwork.surfaceYs(x,z).filter(y=>Math.abs(y-centre)<TRAFFIC_SAME_LEVEL_M))};
+};
+for(const item of trafficItems){item.ys=new Float32Array(TRAFFIC_Y_STEPS+1);for(let k=0;k<=TRAFFIC_Y_STEPS;k++)item.ys[k]=trafficLaneY(item,k/TRAFFIC_Y_STEPS).y;}
+const trafficGroundY=(item,u)=>{const f=Math.min(TRAFFIC_Y_STEPS,Math.max(0,u*TRAFFIC_Y_STEPS)),k=Math.min(TRAFFIC_Y_STEPS-1,Math.floor(f));return item.ys[k]+(item.ys[k+1]-item.ys[k])*(f-k);};
 const trafficBodyMaterial=new THREE.MeshStandardNodeMaterial({color:'#b8c1bd',roughness:.34,metalness:.46});
 const trafficTopMaterial=new THREE.MeshStandardNodeMaterial({color:'#273b42',roughness:.22,metalness:.35});
 const trafficLightMaterial=new THREE.MeshStandardNodeMaterial({color:'#fff0c7',emissive:'#ffb45d',emissiveIntensity:2.8,roughness:.18});
@@ -709,11 +710,11 @@ function advanceUrbanMotion(now){
   for(let i=0;i<trafficItems.length;i++){
     const item=trafficItems[i],raw=(item.phase+timeSeconds*item.speed)%1,u=item.side>0?raw:1-raw,dx=item.b[0]-item.a[0],dz=item.b[1]-item.a[1],length=item.length,nx=-dz/length,nz=dx/length;
     const x=item.a[0]+dx*u+nx*item.side*item.lane,z=item.a[1]+dz*u+nz*item.side*item.lane,rotation=-Math.atan2(dz*item.side,dx*item.side);
-    const dimensions=item.kind==='motorbike'?[2.05,.56,.62]:item.kind==='car'?[4.15,1.05,1.78]:[8.8,2.45,2.45];
-    motionDummy.position.set(x,1.16+dimensions[1]*.5,z);motionDummy.rotation.set(0,rotation,0);motionDummy.scale.set(...dimensions);motionDummy.updateMatrix();trafficBody.setMatrixAt(i,motionDummy.matrix);
+    const dimensions=item.kind==='motorbike'?[2.05,.56,.62]:item.kind==='car'?[4.15,1.05,1.78]:[8.8,2.45,2.45],ground=trafficGroundY(item,u);
+    motionDummy.position.set(x,ground+.16+dimensions[1]*.5,z);motionDummy.rotation.set(0,rotation,0);motionDummy.scale.set(...dimensions);motionDummy.updateMatrix();trafficBody.setMatrixAt(i,motionDummy.matrix);
     const top=item.kind==='motorbike'?[.58,1.18,.55]:item.kind==='car'?[2.25,.62,1.48]:[6.9,.78,2.48];
-    motionDummy.position.set(x,1.18+dimensions[1]+top[1]*.45,z);motionDummy.scale.set(...top);motionDummy.updateMatrix();trafficTop.setMatrixAt(i,motionDummy.matrix);
-    motionDummy.position.set(x+dx/length*item.side*dimensions[0]*.46,1.25+dimensions[1]*.48,z+dz/length*item.side*dimensions[0]*.46);motionDummy.scale.set(.3,.28,Math.max(.38,dimensions[2]*.72));motionDummy.updateMatrix();trafficLights.setMatrixAt(i,motionDummy.matrix);
+    motionDummy.position.set(x,ground+.18+dimensions[1]+top[1]*.45,z);motionDummy.scale.set(...top);motionDummy.updateMatrix();trafficTop.setMatrixAt(i,motionDummy.matrix);
+    motionDummy.position.set(x+dx/length*item.side*dimensions[0]*.46,ground+.25+dimensions[1]*.48,z+dz/length*item.side*dimensions[0]*.46);motionDummy.scale.set(.3,.28,Math.max(.38,dimensions[2]*.72));motionDummy.updateMatrix();trafficLights.setMatrixAt(i,motionDummy.matrix);
   }
   for(const mesh of [trafficBody,trafficTop,trafficLights])mesh.instanceMatrix.needsUpdate=true;
   for(let i=0;i<vesselItems.length;i++){
@@ -727,7 +728,16 @@ function advanceUrbanMotion(now){
   for(const mesh of [vesselHulls,vesselCabins,vesselWindows,...vesselWakes])mesh.instanceMatrix.needsUpdate=true;
   materialStatus.motion.lastFrame=motionFrame;
 }
-materialStatus.motion={motorbikes:trafficItems.filter(item=>item.kind==='motorbike').length,cars:trafficItems.filter(item=>item.kind==='car').length,buses:trafficItems.filter(item=>item.kind==='bus').length,nearCore:trafficItems.filter(item=>Math.hypot((item.a[0]+item.b[0])*.5,(item.a[1]+item.b[1])*.5)<2200).length,vessels:vesselItems.length,roadSegments:trafficItems.length,roadSource:'OSM centerlines',vesselRoute:'illustrative Saigon River lane',vesselAuditSamples,vesselSamplesOutsideWater,vesselHeadingMismatches,classification:'procedural visual motion; not live traffic or AIS'};
+// Kiểm xe không chìm: mặt dưới xe (nội suy từ mẫu) so với mặt đường thật tại 3 điểm lệch khỏi lưới mẫu.
+let trafficSurfaceChecked=0,trafficBelowRoad=0;const trafficBelowSamples=[];
+for(const item of trafficItems){
+  for(const u of [.29,.53,.81]){
+    const {x,z}=trafficLaneY(item,u),ground=trafficGroundY(item,u),base=ground+.16;
+    const near=roadNetwork.surfaceYs(x,z).filter(y=>Math.abs(y-ground)<TRAFFIC_SAME_LEVEL_M);if(!near.length)continue;const surface=Math.max(...near);
+    trafficSurfaceChecked++;if(base<surface-.02){trafficBelowRoad++;if(trafficBelowSamples.length<8)trafficBelowSamples.push({road:D.roads[item.roadIndex].id,x:+x.toFixed(1),z:+z.toFixed(1),base:+base.toFixed(2),surface:+surface.toFixed(2)});}
+  }
+}
+materialStatus.motion={surfaceChecked:trafficSurfaceChecked,belowRoad:trafficBelowRoad,belowRoadSamples:trafficBelowSamples,motorbikes:trafficItems.filter(item=>item.kind==='motorbike').length,cars:trafficItems.filter(item=>item.kind==='car').length,buses:trafficItems.filter(item=>item.kind==='bus').length,nearCore:trafficItems.filter(item=>Math.hypot((item.a[0]+item.b[0])*.5,(item.a[1]+item.b[1])*.5)<2200).length,vessels:vesselItems.length,roadSegments:trafficItems.length,roadSource:'OSM centerlines',vesselRoute:'illustrative Saigon River lane',vesselAuditSamples,vesselSamplesOutsideWater,vesselHeadingMismatches,classification:'procedural visual motion; not live traffic or AIS'};
 document.body.dataset.motionTraffic=String(trafficItems.length);document.body.dataset.motionMotorbikes=String(materialStatus.motion.motorbikes);document.body.dataset.motionCars=String(materialStatus.motion.cars);document.body.dataset.motionBuses=String(materialStatus.motion.buses);document.body.dataset.motionNearCore=String(materialStatus.motion.nearCore);document.body.dataset.motionVessels=String(vesselItems.length);document.body.dataset.motionVesselOutside=String(vesselSamplesOutsideWater);document.body.dataset.motionVesselHeadingMismatch=String(vesselHeadingMismatches);
 
 const fixtureMaterial=new THREE.MeshStandardNodeMaterial({color:'#6d7772',roughness:.68,metalness:.2});
