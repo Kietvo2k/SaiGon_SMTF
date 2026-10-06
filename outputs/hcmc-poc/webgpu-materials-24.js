@@ -112,12 +112,22 @@ const marinaParts=new Map(Object.entries(CORRECTIONS.marinaCentral.parts).map(([
 // Official project updates identify the built/high-rise Lake, Sea, Cove and Lagoon residential cluster.
 // Heights remain floor-count proxies until surveyed/BIM geometry is licensed; tower-name-to-footprint mapping is deliberately withheld.
 const grandMarinaHeightCorrections=new Map(Object.entries(CORRECTIONS.grandMarina.parts).map(([id,value])=>[Number(id),value]));
+// Bước C 31A: bảng sửa lỗi công trình runtime (data/bridge-corrections-31.js). Mỗi mục có lý do: ẩn footprint xuyên mặt
+// cầu/nằm trong mặt đường, hoặc nâng đáy mái/hạ đỉnh. Không sửa CITY_DATA; công trình signature không có trong bảng.
+const BRIDGE_FIXES=new Map((window.BRIDGE_CORRECTIONS_31?.buildings||[]).map(entry=>[Number(entry.id),entry]));
 const renderBuildings=D.buildings.map(source=>{
-  const id=Number(source.id),heightCorrection=grandMarinaHeightCorrections.get(id),marinaCorrection=marinaParts.get(id);
+  const id=Number(source.id),fix=BRIDGE_FIXES.get(id);
+  if(fix)return fix.action==='hide'?{...source,hiddenByCorrection:fix.rule}:{...source,min:fix.setMin??source.min,h:fix.setH??source.h,correctedBy:fix.rule};
+  const heightCorrection=grandMarinaHeightCorrections.get(id),marinaCorrection=marinaParts.get(id);
   if(heightCorrection)return {...source,...heightCorrection,...CORRECTIONS.grandMarina.shared};
   if(marinaCorrection&&!source.name)return {...source,...marinaCorrection};
   return source;
 });
+{
+  const counts={hidden:0,adjusted:0,byRule:{}};
+  for(const entry of BRIDGE_FIXES.values()){entry.action==='hide'?counts.hidden++:counts.adjusted++;counts.byRule[entry.rule]=(counts.byRule[entry.rule]||0)+1;}
+  materialStatus.buildingCorrections={version:window.BRIDGE_CORRECTIONS_31?.version||null,source:'data/bridge-corrections-31.js',...counts};
+}
 
 function classify(b){
   const d=SM.records[String(b.id)]||{};
@@ -200,6 +210,7 @@ function tri(a,b,c,ta,tb,tc,tint,surface,kind,seed,direct){
 for(let bi=0;bi<renderBuildings.length;bi++){
   const b=renderBuildings[bi];
   if(heroEnvelopeIds.has(Number(b.id))){faceEnds.push(positions.length/9);continue;}
+  if(b.hiddenByCorrection){faceEnds.push(positions.length/9);continue;}   // bảng sửa lỗi 31C: footprint ẩn không vẽ
   const kind=classify(b),seed=hash01(b.id),tones=baseColors(b,kind);
   const y=b.h+1.5,base=b.min+1.5,ring=b.r[0];
   const flat=[],holes=[];let count=0;
@@ -602,7 +613,7 @@ function indexMotionObstacle(rings){
     const key=`${x},${z}`;if(!obstacleGrid.has(key))obstacleGrid.set(key,[]);obstacleGrid.get(key).push(box);
   }
 }
-for(const building of renderBuildings)indexMotionObstacle(building.r);
+for(const building of renderBuildings)if(!building.hiddenByCorrection)indexMotionObstacle(building.r);
 for(const green of D.green)indexMotionObstacle(green);
 function motionBlocked(point){
   const items=obstacleGrid.get(`${Math.floor(point[0]/obstacleCell)},${Math.floor(point[1]/obstacleCell)}`)||[];
@@ -746,7 +757,7 @@ const fixtures=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),fixtureMater
 roofFixtures.forEach((item,i)=>{dummy.position.set(item.x,item.y,item.z);dummy.rotation.set(0,item.seed*5.3,0);dummy.scale.set(item.scale,1.4+item.seed*1.8,item.scale*.62);dummy.updateMatrix();fixtures.setMatrixAt(i,dummy.matrix);});
 fixtures.castShadow=true;scene.add(fixtures);
 materialStatus.heroDetail={};
-const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
+const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))&&!building.hiddenByCorrection),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
 materialStatus.heroCorridor={};
 const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,status:materialStatus.heroCorridor});
 // Bước E2: cột đèn theo mép đường hợp nhất + vạch zebra (thay đèn đặt theo tim từng way của runtime 28).
