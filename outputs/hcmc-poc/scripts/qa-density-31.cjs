@@ -251,6 +251,17 @@ async function runBackend(browser, backend) {
     await page.evaluate(() => window.webgpuMaterials24.density.api.simulateFps(null));
     out.suggest = suggest;
     out.countsText = await page.evaluate(() => document.querySelector('#densityCounts')?.textContent.trim().replace(/\s+/g, ' '));
+    // Xe: API bước D có thể sẵn sàng SAU bộ điều phối (thứ tự khởi tạo). Chưa có API thật thì gắn API giả và kiểm bộ
+    // điều phối tự đồng bộ mức hiện tại trong vài khung (không cần người dùng bấm lại).
+    out.traffic = await page.evaluate(async () => {
+      const s = window.webgpuMaterials24, frames = n => new Promise(r => { const t = () => (n-- <= 0 ? r() : requestAnimationFrame(t)); requestAnimationFrame(t); });
+      const real = typeof s.traffic?.api?.setVisibleFraction === 'function', calls = [];
+      if (!real) { s.traffic = s.traffic || {}; Object.defineProperty(s.traffic, 'api', { value: { total: 1000, setVisibleFraction: f => { calls.push(f); return Math.round(1000 * f); } }, configurable: true }); }
+      await frames(4);
+      const d = s.density, out = { real, calls, level: d.level, fraction: d.fractions.vehicles, via: d.vehiclesVia, vehicles: d.counts.vehicles, total: d.totals.vehicles, dataset: document.body.dataset.densityVehicles };
+      if (!real) delete s.traffic.api;
+      return out;
+    });
     out.errors.push(...errors);
     await context.close();
   }
@@ -379,13 +390,19 @@ async function runBackend(browser, backend) {
         assert.deepEqual(r.urlWins, { level: 'minimal', source: 'url', checked: 'minimal' });
         assert(/[?&]density=minimal/.test(r.urlAfterView), r.urlAfterView);
       });
+      check(tag + 'xe: bộ điều phối dùng API bước D (setVisibleFraction) kể cả khi API có sau, tự đồng bộ mức hiện tại', () => {
+        const t = r.traffic; assert(t, 'thiếu số liệu');
+        assert.equal(t.via, 'traffic.api.setVisibleFraction', JSON.stringify(t));
+        if (!t.real) { assert.deepEqual(t.calls, [t.fraction], JSON.stringify(t)); assert.equal(t.total, 1000); }
+        assert.equal(t.vehicles, Math.round(t.total * t.fraction), JSON.stringify(t)); assert.equal(t.dataset, String(t.vehicles));
+      });
       check(tag + 'console không có lỗi', () => assert.deepEqual(r.errors, []));
     }
   } finally {
     await browser.close();
     const summary = Object.fromEntries(Object.entries(report).map(([k, r]) => [k, {
       levels: Object.fromEntries(Object.entries(r.levels || {}).map(([key, v]) => [key, { info: v.info, timing: v.timing, counts: v.state?.counts, audit: v.state?.audit && { complete: v.state.audit.complete, total: v.state.audit.total, visible: v.state.audit.visible }, shown: v.state?.shown, expected: v.state?.expected, cityTriangles: v.state?.triangles, cityMeshes: v.state?.cityMeshes, trees: v.state && { all: v.state.trees.all, shown: v.state.trees.shown, protAll: v.state.trees.protAll, protShown: v.state.trees.protShown, chunks: v.state.trees.chunks } }])),
-      keyboard: r.keyboard, pick: r.pick, suggest: r.suggest, reload: r.reload, urlWins: r.urlWins, urlAfterView: r.urlAfterView, countsText: r.countsText, errors: r.errors
+      keyboard: r.keyboard, pick: r.pick, suggest: r.suggest, reload: r.reload, urlWins: r.urlWins, urlAfterView: r.urlAfterView, countsText: r.countsText, traffic: r.traffic, errors: r.errors
     }]));
     console.log(JSON.stringify({ suite: 'density-31 · E/F', passed: checks.length, failed: failures.length, checks, failures, summary }, null, 1));
     if (failures.length) process.exitCode = 1;

@@ -266,6 +266,14 @@ export function createDensityController31({
     let shown=0;for(const mesh of trafficFallback){mesh.count=Math.ceil(mesh.userData.densityCapacity*f);shown=mesh.count;}
     return {shown,via:'fallback mesh.count'};
   }
+  const hasTrafficApi=()=>{const api=traffic?.api?.();return typeof api?.setVisibleFraction==='function'||typeof api?.setDensity==='function';};
+  function syncVehicles(){
+    for(const mesh of trafficFallback)mesh.count=mesh.userData.densityCapacity;   // trả mesh cũ về nguyên trạng
+    const vehicles=setVehicles(current.vehicles);
+    status.counts.vehicles=vehicles.shown;status.totals.vehicles=vehicleTotal();status.vehiclesVia=vehicles.via;
+    document.body.dataset.densityVehicles=String(vehicles.shown);
+    renderUi();
+  }
   function runAudit(){
     const modules=Object.entries(auditInputs.modules||{}).filter(([,object])=>{
       const list=Array.isArray(object)?object:[object];
@@ -362,6 +370,8 @@ export function createDensityController31({
     get level(){return current.id;},
     update(dt){
       clock+=dt;
+      // API xe của bước D có thể khởi tạo sau bộ điều phối: khi xuất hiện thì đồng bộ ngay mức hiện tại.
+      if(status.vehiclesVia==='fallback mesh.count'&&hasTrafficApi())syncVehicles();
       const fps=simulatedFps??getFps();
       lowFor=fps<lowFps?lowFor+dt:0;
       if(!suggestion&&lowFor>=SUGGEST_AFTER_S&&clock>=snoozeUntil&&current.index<DENSITY_LEVELS_31.length-1)showSuggestion(levelById.get(DENSITY_LEVELS_31[current.index+1].id),fps);
