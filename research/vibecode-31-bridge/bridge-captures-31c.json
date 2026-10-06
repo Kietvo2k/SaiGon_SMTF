@@ -1,0 +1,967 @@
+[
+ {
+  "id": "ba-son-dau-a",
+  "base": "bason",
+  "pose": {
+   "position": [
+    240,
+    75,
+    190
+   ],
+   "target": [
+    60,
+    5,
+    40
+   ],
+   "fov": 45
+  },
+  "light": "day",
+  "file": "bridges/31c-ba-son-dau-a.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 403,
+   "fpsAvg": 80.5,
+   "frameMsP50": 8.5,
+   "frameMsP95": 16.7,
+   "frameMsMax": 17.1,
+   "hudFps": 81,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22406978,
+    "drawCallsMedian": 449,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 33021
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9386562,
+     "draws": 276
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13020423,
+     "draws": 158
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 81,
+    "triangles": 22406978,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": [
+   {
+    "type": "warning",
+    "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+   }
+  ]
+ },
+ {
+  "id": "ba-son-dau-b",
+  "base": "bason",
+  "pose": {
+   "position": [
+    -620,
+    150,
+    -400
+   ],
+   "target": [
+    -705,
+    3,
+    -495
+   ],
+   "fov": 45
+  },
+  "light": "day",
+  "file": "bridges/31c-ba-son-dau-b.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 401,
+   "fpsAvg": 80.1,
+   "frameMsP50": 8.5,
+   "frameMsP95": 16.8,
+   "frameMsMax": 24.9,
+   "hudFps": 80,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22396566,
+    "drawCallsMedian": 159,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 49917
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9382146,
+     "draws": 86
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13014403,
+     "draws": 56
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 80,
+    "triangles": 22396566,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "ba-son-nhin-ngang",
+  "base": "bason",
+  "pose": {
+   "position": [
+    -150,
+    60,
+    -420
+   ],
+   "target": [
+    -330,
+    8,
+    -170
+   ],
+   "fov": 50
+  },
+  "light": "day",
+  "file": "bridges/31c-ba-son-nhin-ngang.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 409,
+   "fpsAvg": 81.5,
+   "frameMsP50": 8.5,
+   "frameMsP95": 16.7,
+   "frameMsMax": 16.9,
+   "hudFps": 82,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22413018,
+    "drawCallsMedian": 316,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 66967
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9389034,
+     "draws": 144
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13023967,
+     "draws": 155
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 82,
+    "triangles": 22413018,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "thi-nghe-1",
+  "base": "bason",
+  "pose": {
+   "position": [
+    -517,
+    18,
+    -1337
+   ],
+   "target": [
+    -548,
+    2,
+    -1407
+   ],
+   "fov": 45
+  },
+  "light": "day",
+  "file": "bridges/31c-thi-nghe-1.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 413,
+   "fpsAvg": 82.3,
+   "frameMsP50": 8.4,
+   "frameMsP95": 16.7,
+   "frameMsMax": 16.9,
+   "hudFps": 83,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22368946,
+    "drawCallsMedian": 153,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 83819
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9378602,
+     "draws": 84
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 12990327,
+     "draws": 52
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 83,
+    "triangles": 22368946,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "cau-bong",
+  "base": "bason",
+  "pose": {
+   "position": [
+    -1640,
+    15,
+    -1600
+   ],
+   "target": [
+    -1703,
+    3,
+    -1567
+   ],
+   "fov": 45
+  },
+  "light": "day",
+  "file": "bridges/31c-cau-bong.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 421,
+   "fpsAvg": 84.2,
+   "frameMsP50": 8.4,
+   "frameMsP95": 16.7,
+   "frameMsMax": 16.9,
+   "hudFps": 84,
+   "hudTriangles": "22.2M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22183082,
+    "drawCallsMedian": 145,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 101221
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9192738,
+     "draws": 76
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 12990327,
+     "draws": 52
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 84,
+    "triangles": 22183082,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "hang-xanh",
+  "base": "bason",
+  "pose": {
+   "position": [
+    -102,
+    35,
+    -2393
+   ],
+   "target": [
+    -177,
+    6,
+    -2459
+   ],
+   "fov": 45
+  },
+  "light": "day",
+  "file": "bridges/31c-hang-xanh.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 422,
+   "fpsAvg": 84.1,
+   "frameMsP50": 8.4,
+   "frameMsP95": 16.7,
+   "frameMsMax": 16.8,
+   "hudFps": 84,
+   "hudTriangles": "21.7M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 21738510,
+    "drawCallsMedian": 129,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 118777
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9027666,
+     "draws": 70
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 12710827,
+     "draws": 42
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 84,
+    "triangles": 21738510,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "bach-dang",
+  "base": "bason",
+  "pose": {
+   "position": [
+    -300,
+    45,
+    650
+   ],
+   "target": [
+    -330,
+    3,
+    545
+   ],
+   "fov": 50
+  },
+  "light": "day",
+  "file": "bridges/31c-bach-dang.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 409,
+   "fpsAvg": 81.7,
+   "frameMsP50": 8.4,
+   "frameMsP95": 16.7,
+   "frameMsMax": 17,
+   "hudFps": 82,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22413030,
+    "drawCallsMedian": 398,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 135805
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9391458,
+     "draws": 244
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13021555,
+     "draws": 137
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 82,
+    "triangles": 22413030,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "bach-dang-dau-tay",
+  "base": "bason",
+  "pose": {
+   "position": [
+    -520,
+    25,
+    610
+   ],
+   "target": [
+    -460,
+    2,
+    550
+   ],
+   "fov": 45
+  },
+  "light": "day",
+  "file": "bridges/31c-bach-dang-dau-tay.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 414,
+   "fpsAvg": 82.7,
+   "frameMsP50": 8.4,
+   "frameMsP95": 16.7,
+   "frameMsMax": 25,
+   "hudFps": 82,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22416722,
+    "drawCallsMedian": 453,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 152877
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9391922,
+     "draws": 254
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13024783,
+     "draws": 182
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 82,
+    "triangles": 22416722,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "anh-03-gan",
+  "base": "bason",
+  "pose": {
+   "position": [
+    1028.9,
+    20,
+    -397.1
+   ],
+   "target": [
+    856,
+    6,
+    -447
+   ],
+   "fov": 42
+  },
+  "light": "day",
+  "file": "bridges/31c-anh-03-gan.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 419,
+   "fpsAvg": 83.8,
+   "frameMsP50": 8.4,
+   "frameMsP95": 16.8,
+   "frameMsMax": 25,
+   "hudFps": 81,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22405726,
+    "drawCallsMedian": 411,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 170213
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9385474,
+     "draws": 244
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13020235,
+     "draws": 150
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 81,
+    "triangles": 22405726,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "anh-03-tren",
+  "base": "bason",
+  "pose": {
+   "position": [
+    930,
+    120,
+    -360
+   ],
+   "target": [
+    900,
+    0,
+    -440
+   ],
+   "fov": 42
+  },
+  "light": "day",
+  "file": "bridges/31c-anh-03-tren.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 412,
+   "fpsAvg": 82.3,
+   "frameMsP50": 8.4,
+   "frameMsP95": 16.8,
+   "frameMsMax": 17.3,
+   "hudFps": 82,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22393022,
+    "drawCallsMedian": 157,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 187461
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9378602,
+     "draws": 84
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13014403,
+     "draws": 56
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 82,
+    "triangles": 22393022,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "mai-732220089-cau-so-11",
+  "base": "bason",
+  "pose": {
+   "position": [
+    1590,
+    40,
+    950
+   ],
+   "target": [
+    1500,
+    2,
+    858
+   ],
+   "fov": 45
+  },
+  "light": "day",
+  "file": "bridges/31c-mai-732220089-cau-so-11.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 405,
+   "fpsAvg": 80.9,
+   "frameMsP50": 8.4,
+   "frameMsP95": 16.7,
+   "frameMsMax": 25.1,
+   "hudFps": 81,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22411442,
+    "drawCallsMedian": 405,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 204313
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9392258,
+     "draws": 282
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13019167,
+     "draws": 106
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 81,
+    "triangles": 22411442,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "nguyen-hue-pho-di-bo",
+  "base": "bason",
+  "pose": {
+   "position": [
+    -700,
+    160,
+    450
+   ],
+   "target": [
+    -820,
+    0,
+    600
+   ],
+   "fov": 45
+  },
+  "light": "day",
+  "file": "bridges/31c-nguyen-hue-pho-di-bo.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 408,
+   "fpsAvg": 81.6,
+   "frameMsP50": 8.4,
+   "frameMsP95": 16.8,
+   "frameMsMax": 17.1,
+   "hudFps": 82,
+   "hudTriangles": "22.4M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22393026,
+    "drawCallsMedian": 157,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 221319
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9378602,
+     "draws": 84
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13014407,
+     "draws": 56
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 82,
+    "triangles": 22393026,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ }
+]
