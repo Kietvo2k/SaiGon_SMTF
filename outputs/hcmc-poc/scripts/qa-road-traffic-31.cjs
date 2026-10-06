@@ -198,7 +198,10 @@ async function runBackend(browser, backend) {
   const report = {};
   try {
     for (const backend of backends) {
-      const r = report[backend] = await runBackend(browser, backend);
+      let r;
+      // Không mở được trang (server tắt, timeout) phải hiện là check thất bại, không chỉ là stack trace.
+      try { r = report[backend] = await runBackend(browser, backend); }
+      catch (error) { check(`[${backend}] mở app và dựng xong`, () => { throw error; }); continue; }
       const tag = `[${backend}] `;
       check(tag + 'road-network-31 đã dựng xong', () => assert(!r.missing, `roadNetwork chưa sẵn sàng (state=${r.state})`));
       check(tag + 'giao lộ bậc ≥ 3 có polygon (≥ 95 % ứng viên, ≥ 5000)', () => {
