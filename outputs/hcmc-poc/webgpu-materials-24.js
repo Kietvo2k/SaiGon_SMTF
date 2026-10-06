@@ -14,6 +14,7 @@ import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b';
 import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
 import { createRoadNetwork31 } from './city-road-network-31.js?v=30b-31e2';
 import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=30b-31e2';
+import { createBridges31, loftStrip } from './city-bridges-31.js?v=30b-31c';
 
 const D=window.CITY_DATA;
 const SM=window.SEMANTIC_MATERIALS_08||{records:{},directTaggedBuildings:0,directCoveragePercent:0};
@@ -479,7 +480,23 @@ const BS=window.BA_SON_BRIDGE;
 if(!BS?.centerline?.length)throw new Error('BA_SON_BRIDGE không khả dụng');
 const bridgeGroup=new THREE.Group();bridgeGroup.name='Cầu Ba Son · kết cấu dây văng';scene.add(bridgeGroup);
 const bridgeDeckGroup=new THREE.Group(),bridgeSupportGroup=new THREE.Group(),bridgeCableGroup=new THREE.Group();
+bridgeDeckGroup.name='Cầu Ba Son · mặt cầu';
 bridgeGroup.add(bridgeDeckGroup,bridgeSupportGroup,bridgeCableGroup);
+// Bước C 31A: hộp mặt cầu giữ nguyên (BoxGeometry 24×3,2 tại y=11,25, đỉnh 12,85) trên nhịp phẳng; ở hai cầu dẫn đỉnh hộp
+// bám đúng profile mặt đường OSM (way 321564421 trùng tim) nên mặt đường khớp đỉnh hộp suốt cầu, đầu cầu hạ liền xuống
+// đường hai bờ. Trụ dẫn và neo dây văng ở đoạn dốc dịch theo cùng độ hạ; trụ không còn chỗ dưới bản mặt thì bỏ (nền đắp).
+const BA_SON_TOP=11.25+3.2/2,baSonRoad=D.roads.findIndex(road=>road.id===BS.mappedRoadIds[0]);
+function baSonDeckTop(x,z){
+  if(baSonRoad<0)return BA_SON_TOP;
+  const c=D.roads[baSonRoad].c;let best=Infinity,top=BA_SON_TOP;
+  for(let k=0;k<c.length-1;k++){
+    const ax=c[k][0],az=c[k][1],dx=c[k+1][0]-ax,dz=c[k+1][1]-az,u=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/Math.max(1e-9,dx*dx+dz*dz)));
+    const d=Math.hypot(ax+dx*u-x,az+dz*u-z);if(d<best){best=d;top=roadNetwork.roadY(baSonRoad,k,u);}
+  }
+  return Math.min(BA_SON_TOP,top);
+}
+const baSonJoin={decision:'profile-match-box-top',rampSegments:0,piersSkipped:[],anchorsLowered:0};
+const baSonRampStrips=[];
 const bridgeConcrete=new THREE.MeshStandardNodeMaterial({color:'#888e89',roughness:.76,metalness:.05});
 const bridgeUnderside=new THREE.MeshStandardNodeMaterial({color:'#455256',roughness:.68,metalness:.18});
 const bridgeGold=new THREE.MeshStandardNodeMaterial({color:'#d3a35a',roughness:.34,metalness:.48});
@@ -493,20 +510,28 @@ function bridgeBeam(a,b,radius,material,parent=bridgeSupportGroup,radial=8){
   mesh.castShadow=radius>.5;mesh.receiveShadow=radius>.5;parent.add(mesh);return mesh;
 }
 function bridgeDeckSegment(a,b){
-  const dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz),mesh=new THREE.Mesh(new THREE.BoxGeometry(24,3.2,length),bridgeUnderside);
+  const dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz),n=Math.max(1,Math.ceil(length/4)),strip=[];
+  for(let k=0;k<=n;k++){const x=a[0]+dx*k/n,z=a[1]+dz*k/n,top=baSonDeckTop(x,z);strip.push({x,z,top,bottom:top-3.2});}
+  if(strip.some(point=>point.top<BA_SON_TOP-.005)){baSonRampStrips.push(...loftStrip(strip,24));baSonJoin.rampSegments++;return;}
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(24,3.2,length),bridgeUnderside);
   mesh.position.set((a[0]+b[0])*.5,11.25,(a[1]+b[1])*.5);mesh.rotation.y=Math.atan2(dx,dz);mesh.castShadow=true;mesh.receiveShadow=true;bridgeDeckGroup.add(mesh);
 }
 for(let i=0;i<BS.centerline.length-1;i++)bridgeDeckSegment(BS.centerline[i],BS.centerline[i+1]);
+if(baSonRampStrips.length){
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(baSonRampStrips,3));geometry.computeVertexNormals();
+  const ramp=new THREE.Mesh(geometry,bridgeUnderside);ramp.name='Cầu Ba Son · cầu dẫn bám profile';ramp.castShadow=true;ramp.receiveShadow=true;bridgeDeckGroup.add(ramp);
+}
 const bridgeAxis=new THREE.Vector3(BS.directionToThuThiem[0],0,BS.directionToThuThiem[1]);
 const bridgePerp=new THREE.Vector3(BS.perpendicular[0],0,BS.perpendicular[1]);
 const pylonBase=new THREE.Vector3(BS.supports[1].position[0],1.5,BS.supports[1].position[1]);
 function bridgePier(support,isMain=false){
-  const p=new THREE.Vector3(support.position[0],0,support.position[1]);
+  const p=new THREE.Vector3(support.position[0],0,support.position[1]),drop=isMain?0:baSonDeckTop(p.x,p.z)-BA_SON_TOP;
+  if(9.95+drop<5){baSonJoin.piersSkipped.push(support.id);return;}  // xà mũ sẽ chạm móng: đoạn này là nền đắp, không trụ
   const foundation=new THREE.Mesh(new THREE.CylinderGeometry(isMain?9:4.2,isMain?11:5.2,4,16),bridgeConcrete);
   foundation.position.set(p.x,3,p.z);foundation.castShadow=true;foundation.receiveShadow=true;bridgeSupportGroup.add(foundation);
   if(isMain)return;
-  for(const side of [-1,1]){const q=p.clone().addScaledVector(bridgePerp,side*5.4);bridgeBeam([q.x,2,q.z],[q.x,10.8,q.z],2.35,bridgeConcrete);}
-  const cap=new THREE.Mesh(new THREE.BoxGeometry(15,2.3,4.3),bridgeConcrete);cap.position.set(p.x,11.1,p.z);cap.rotation.y=Math.atan2(bridgeAxis.x,bridgeAxis.z);cap.castShadow=true;bridgeSupportGroup.add(cap);
+  for(const side of [-1,1]){const q=p.clone().addScaledVector(bridgePerp,side*5.4);bridgeBeam([q.x,2,q.z],[q.x,10.8+drop,q.z],2.35,bridgeConcrete);}
+  const cap=new THREE.Mesh(new THREE.BoxGeometry(15,2.3,4.3),bridgeConcrete);cap.position.set(p.x,11.1+drop,p.z);cap.rotation.y=Math.atan2(bridgeAxis.x,bridgeAxis.z);cap.castShadow=true;bridgeSupportGroup.add(cap);
 }
 for(const support of BS.supports)bridgePier(support,support.id==='S2');
 for(const side of [-1,1]){
@@ -519,13 +544,19 @@ for(const side of [-1,1]){
 }
 const pylonCross=new THREE.Mesh(new THREE.BoxGeometry(20,2.5,3.4),bridgeGold);pylonCross.position.copy(pylonBase).setY(18);pylonCross.rotation.y=Math.atan2(bridgeAxis.x,bridgeAxis.z);pylonCross.castShadow=true;bridgeSupportGroup.add(pylonCross);
 function bridgeCable(anchor,top,side){
-  const lateral=bridgePerp.clone().multiplyScalar(side*6.8),a=pylonBase.clone().add(anchor).add(lateral);a.y=14.8;
+  const lateral=bridgePerp.clone().multiplyScalar(side*6.8),a=pylonBase.clone().add(anchor).add(lateral),drop=baSonDeckTop(pylonBase.x+anchor.x,pylonBase.z+anchor.z)-BA_SON_TOP;a.y=14.8+drop;
+  if(drop<-.005)baSonJoin.anchorsLowered++;
   const t=pylonBase.clone().add(top).addScaledVector(bridgePerp,side*(3.8-top.y/113*2.2));bridgeBeam(a.toArray(),t.toArray(),.32,bridgeCableMaterial,bridgeCableGroup,6);
 }
 for(const side of [-1,1]){
   for(let i=0;i<9;i++){const anchor=bridgeAxis.clone().multiplyScalar(-(28+i*23)),top=bridgeAxis.clone().multiplyScalar(4+12*(i/8));top.y=34+i*8.4;bridgeCable(anchor,top,side);}
   for(let i=0;i<5;i++){const anchor=bridgeAxis.clone().multiplyScalar(25+i*22),top=bridgeAxis.clone().multiplyScalar(5+12*(i/4));top.y=42+i*13;bridgeCable(anchor,top,side);}
 }
+
+// Bước C 31A: kết cấu cầu thủ tục (bản mặt dày, trụ, lan can — minh họa) và Bạch Đằng dựng lại trong runtime WebGPU.
+materialStatus.bridges={};
+createBridges31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,water:D.water,bachDang:window.BACH_DANG_FOOTBRIDGE,status:materialStatus.bridges});
+materialStatus.bridges.baSon=baSonJoin;
 
 // Marina Central Tower: official 240 m / 55 floors, anchored to three current OSM building parts.
 // The bands visualize the documented terraced networking floors; they are schematic, not survey geometry.

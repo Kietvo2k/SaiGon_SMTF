@@ -1,6 +1,7 @@
 /*
- * QA 31A · mạng đường và giao thông (bước B: phần "road surface").
- * Bước release hoàn thiện tiêu chí 1–4; file này hiện kiểm mặt đường city-road-network-31.js trong trình duyệt thật.
+ * QA 31A · mạng đường và giao thông (bước B: phần "road surface"; bước C: phần "bridges").
+ * Bước release hoàn thiện tiêu chí 1–4; file này kiểm mặt đường city-road-network-31.js và kết cấu cầu city-bridges-31.js
+ * (cùng bảng sửa lỗi công trình BRIDGE_CORRECTIONS_31) trong trình duyệt thật.
  *
  * Chạy (server serve.py phải đang chạy):
  *   node outputs/hcmc-poc/scripts/qa-road-traffic-31.cjs            → WebGPU + WebGL 2
@@ -146,6 +147,151 @@ async function inspect(page) {
   });
 }
 
+// Bước C · phần "bridges": kết cấu cầu thủ tục, Ba Son, Bạch Đằng và bảng sửa lỗi công trình, đo trên cảnh thật.
+async function inspectBridges(page) {
+  return page.evaluate(async () => {
+    const T = await import('three/webgpu');
+    const status = window.webgpuMaterials24, G = window.ROAD_GRAPH_31, D = window.CITY_DATA, C = window.BRIDGE_CORRECTIONS_31;
+    const net = status.roadNetwork?.api, br = status.bridges, api = br?.api;
+    if (!net || !br || br.state !== 'ready' || !api) return { missing: true, state: br?.state };
+    const groundY = G.frame.groundY, BRIDGE = new Set(['river', 'canal', 'overpass', 'low']);
+    const out = { stats: br.stats, classification: br.classification, label: br.label, dataset: document.body.dataset.bridgeStructure };
+    out.uiNote = [...document.querySelectorAll('[data-bridge-note]')].map(el => el.textContent).join(' | ');
+    const drawnRoads = G.roads.map((r, i) => net.pieces(i).length > 0);
+    // 1) Đầu road cầu: nối road khác cùng cao độ (≤ 0,05 m), hoặc đầu cụt chạm đất. Đầu bị cắt ở biên bbox tải dữ liệu
+    //    (nút kind=boundary) không có cạnh tiếp nối trong cảnh nên được miễn; đầu nối vào hầm (tunnel, không vẽ) cũng miễn.
+    const [ex0, ex1, ez0, ez1] = G.frame.extent, onBoundary = p => Math.min(Math.abs(p[0] - ex0), Math.abs(p[0] - ex1), Math.abs(p[1] - ez0), Math.abs(p[1] - ez1)) < 0.05;
+    const at = new Map(), tunnelAt = new Set();
+    D.roads.forEach((road, i) => { if (G.roads[i].tunnel) road.c.forEach(p => tunnelAt.add(p[0].toFixed(2) + ',' + p[1].toFixed(2))); });
+    D.roads.forEach((road, i) => { if (!drawnRoads[i]) return; road.c.forEach((p, k) => { const key = p[0].toFixed(2) + ',' + p[1].toFixed(2); if (!at.has(key)) at.set(key, []); at.get(key).push([i, k]); }); });
+    let bridgeEnds = 0, endBad = 0, tunnelEnds = 0; const endSamples = [];
+    G.roads.forEach((road, i) => {
+      if (!BRIDGE.has(road.elevationClass) || !drawnRoads[i]) return;
+      const c = D.roads[i].c;
+      for (const k of [0, c.length - 1]) {
+        if (onBoundary(c[k])) continue;
+        bridgeEnds++;
+        const y = net.vertexY(i, k), key = c[k][0].toFixed(2) + ',' + c[k][1].toFixed(2), others = (at.get(key) || []).filter(([j]) => j !== i);
+        if (!others.length && tunnelAt.has(key)) { tunnelEnds++; continue; }
+        const worst = others.length ? Math.max(...others.map(([j, kk]) => Math.abs(net.vertexY(j, kk) - y))) : Math.abs(y - groundY);
+        if (worst > 0.05) { endBad++; if (endSamples.length < 6) endSamples.push({ way: road.id, end: k, y: +y.toFixed(2), worst: +worst.toFixed(2), neighbours: others.length }); }
+      }
+    });
+    Object.assign(out, { bridgeEnds, endBad, tunnelEnds, endSamples });
+    // 2) 0 bậc: mọi cặp đỉnh liên tiếp của mảnh nâng có |Δy|/độ dài ≤ 8 % (cặp < 0,5 m: |Δy| ≤ 0,05 m).
+    let gradePairs = 0, steps = 0; const stepSamples = [];
+    for (const piece of net.elevatedPieces()) {
+      const c = piece.center;
+      for (let k = 0; k + 1 < c.length / 3; k++) {
+        const L = Math.hypot(c[k * 3 + 3] - c[k * 3], c[k * 3 + 5] - c[k * 3 + 2]), dy = Math.abs(c[k * 3 + 4] - c[k * 3 + 1]);
+        gradePairs++;
+        if (L >= 0.5 ? dy / L > 0.08 : dy > 0.05) { steps++; if (stepSamples.length < 6) stepSamples.push({ way: G.roads[piece.road].id, x: +c[k * 3].toFixed(1), z: +c[k * 3 + 2].toFixed(1), L: +L.toFixed(2), dy: +dy.toFixed(2) }); }
+      }
+    }
+    Object.assign(out, { gradePairs, steps, stepSamples });
+    // 3) Ba Son: đỉnh hộp signature khớp mặt đường profile (≤ 0,05 m) dọc tim, không đoạn hộp nào cao hơn mặt đường.
+    const ray = new T.Raycaster(), down = new T.Vector3(0, -1, 0), up = new T.Vector3(0, 1, 0);
+    const baSonDeck = [];
+    for (const sc of window.__probeScenes || []) sc.traverse(o => { if (o.isMesh && o.parent?.name === 'Cầu Ba Son · mặt cầu') baSonDeck.push(o); });
+    const bsRoad = G.roads.findIndex(r => r.id === 321564421), bsC = D.roads[bsRoad]?.c || [];
+    let bsSamples = 0, bsHits = 0, bsAbove = 0, bsWorst = 0;
+    for (let k = 0; k + 1 < bsC.length; k++) {
+      const L = Math.hypot(bsC[k + 1][0] - bsC[k][0], bsC[k + 1][1] - bsC[k][1]), n = Math.max(1, Math.ceil(L / 10));
+      for (let q = 0; q <= n; q++) {
+        const u = q / n, x = bsC[k][0] + (bsC[k + 1][0] - bsC[k][0]) * u, z = bsC[k][1] + (bsC[k + 1][1] - bsC[k][1]) * u, y = net.roadY(bsRoad, k, u);
+        bsSamples++;
+        ray.set(new T.Vector3(x, 60, z), down); ray.far = 80;
+        const hit = ray.intersectObjects(baSonDeck, false)[0];
+        if (!hit) continue;
+        bsHits++; bsWorst = Math.max(bsWorst, Math.abs(hit.point.y - y));
+        if (hit.point.y > y + 0.05) bsAbove++;
+      }
+    }
+    out.baSon = { deckMeshes: baSonDeck.length, samples: bsSamples, hits: bsHits, above: bsAbove, worst: +bsWorst.toFixed(3), decision: br.baSon?.decision };
+    // 4) Trụ/lan can là InstancedMesh có instance; ngân sách tam giác và số mesh mới.
+    out.meshes = api.meshes.map(m => ({ name: m.name, instanced: !!m.isInstancedMesh, count: m.isInstancedMesh ? m.count : 1, triangles: (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3 * (m.isInstancedMesh ? m.count : 1), inScene: !!m.parent }));
+    out.procedural = api.procedural.map(m => m.name);
+    // 5) 0 trụ trong mặt đường: tại tâm và 4 điểm biên trụ không có mặt đường nào thấp hơn đáy bản mặt.
+    let piersChecked = 0, piersInRoad = 0; const pierSamples = [];
+    for (const pier of api.piers) {
+      piersChecked++;
+      const pts = [[0, 0], [pier.radius, 0], [-pier.radius, 0], [0, pier.radius], [0, -pier.radius]];
+      const bad = pts.some(([dx, dz]) => net.surfaceYs(pier.x + dx, pier.z + dz).some(y => y < pier.top - 0.3));
+      if (bad) { piersInRoad++; if (pierSamples.length < 6) pierSamples.push(pier); }
+    }
+    Object.assign(out, { piersChecked, piersInRoad, pierSamples });
+    // 6) Bản mặt có mặt dưới: tia từ dưới lên tại giữa đoạn giữa của mảnh cầu phải gặp mặt dưới bản mặt ở y mặt − bề dày
+    //    (± 0,1 m) trong số các mặt trên đường tia.
+    const deckMesh = api.meshes.filter(m => m.name.includes('bản mặt'));
+    let undersideProbes = 0, undersideBad = 0; const undersideSamples = [];
+    G.roads.forEach((road, i) => {
+      if (!BRIDGE.has(road.elevationClass) || road.signature) return;
+      for (const piece of net.pieces(i)) {
+        const c = piece.center, n = c.length / 3; if (n < 2) continue;
+        const k = Math.floor((n - 1) / 2), x = (c[k * 3] + c[k * 3 + 3]) / 2, y = (c[k * 3 + 1] + c[k * 3 + 4]) / 2, z = (c[k * 3 + 2] + c[k * 3 + 5]) / 2, thick = api.thicknessOf(i);
+        if (y - thick < groundY + 0.5 || undersideProbes >= 400) continue;
+        undersideProbes++;
+        ray.set(new T.Vector3(x, groundY + 0.1, z), up); ray.far = y - groundY + 1;
+        const hits = ray.intersectObjects(deckMesh, false), hit = hits.find(h => Math.abs(h.point.y - (y - thick)) <= 0.1) || hits[0];
+        if (!hit || Math.abs(hit.point.y - (y - thick)) > 0.1) { undersideBad++; if (undersideSamples.length < 6) undersideSamples.push({ way: road.id, y: +y.toFixed(2), hit: hit ? +hit.point.y.toFixed(2) : null, thick }); }
+      }
+    });
+    Object.assign(out, { undersideProbes, undersideBad, undersideSamples });
+    // 7) 0 công trình giao mặt cầu: điểm mẫu (tim, mép, giữa) của mảnh nâng nằm trong footprint đang vẽ và chồng chiều cao.
+    //    Như bảng sửa lỗi: road cầu từ groundY + 1,5 m, dốc dẫn trên road mặt đất từ groundY + 4 m.
+    const reg = window.SIGNATURE_REGISTRY_31, signatureIds = new Set((reg?.entries || []).filter(e => e.kind === 'building').flatMap(e => e.ids.map(Number)));
+    const corr = new Map((C?.buildings || []).map(e => [Number(e.id), e]));
+    const cell = 40, grid = new Map();
+    D.buildings.forEach((b, bi) => {
+      const e = corr.get(Number(b.id)); if (e?.action === 'hide') return;
+      const ring = b.r[0], xs = ring.map(p => p[0]), zs = ring.map(p => p[1]);
+      for (let gx = Math.floor(Math.min(...xs) / cell); gx <= Math.floor(Math.max(...xs) / cell); gx++)
+        for (let gz = Math.floor(Math.min(...zs) / cell); gz <= Math.floor(Math.max(...zs) / cell); gz++) { const key = gx + ',' + gz; if (!grid.has(key)) grid.set(key, []); grid.get(key).push(bi); }
+    });
+    const inRing = (ring, x, z) => { let c = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const a = ring[i], b = ring[j]; if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
+    const FOOT = new Set(['footway', 'path', 'cycleway', 'steps', 'bridleway', 'corridor']);
+    const conflicts = new Map();
+    G.roads.forEach((road, i) => {
+      const floorY = groundY + (BRIDGE.has(road.elevationClass) ? 1.5 : 4.0), clear = FOOT.has(road.highway) ? 2.5 : 4.5;
+      for (const piece of net.pieces(i)) {
+        if (!piece.elevated) continue;
+        const n = piece.center.length / 3;
+        for (let k = 0; k < n; k++) {
+          const y = piece.center[k * 3 + 1]; if (y < floorY) continue;
+          for (const t of [0, 0.5, 1, 1.5, 2]) {
+            const a = t <= 1 ? piece.left : piece.right, w = t <= 1 ? 1 - t : t - 1;
+            const x = piece.center[k * 3] + (a[k * 3] - piece.center[k * 3]) * w * 0.98, z = piece.center[k * 3 + 2] + (a[k * 3 + 2] - piece.center[k * 3 + 2]) * w * 0.98;
+            for (const bi of grid.get(Math.floor(x / cell) + ',' + Math.floor(z / cell)) || []) {
+              const b = D.buildings[bi], e = corr.get(Number(b.id));
+              const base = (e?.setMin ?? b.min ?? 0) + 1.5, top = (e?.setH ?? b.h) + 1.5;
+              if (!(base < y + clear && top > y - 1.5)) continue;
+              if (!b.r.length || !inRing(b.r[0], x, z) || b.r.slice(1).some(h => inRing(h, x, z))) continue;
+              if (!conflicts.has(b.id)) conflicts.set(b.id, { id: b.id, way: road.id, y: +y.toFixed(2), signature: signatureIds.has(Number(b.id)) });
+            }
+          }
+        }
+      }
+    });
+    out.buildingConflicts = [...conflicts.values()];
+    // 8) Bảng sửa lỗi đã áp: số mục ẩn/chỉnh khớp bảng, không mục nào là signature, mọi mục có lý do.
+    out.corrections = {
+      status: status.buildingCorrections ? { ...status.buildingCorrections } : null,
+      table: C ? { entries: C.buildings.length, hide: C.buildings.filter(e => e.action === 'hide').length, adjust: C.buildings.filter(e => e.action !== 'hide').length,
+        noReason: C.buildings.filter(e => !e.reason).length, signature: C.buildings.filter(e => signatureIds.has(Number(e.id))).map(e => e.id),
+        plaza: C.buildings.filter(e => e.rule === 'nguyen-hue-plaza').length, reported: (C.nguyenHueReported || []).map(r => [r.id, r.decision]) } : null
+    };
+    // 9) Bạch Đằng: có mặt trong runtime WebGPU, hai đầu cầu dẫn chạm đất, đầu nhịp chính có mố.
+    out.bachDang = br.bachDang ? { ...br.bachDang } : null;
+    // 10) API bước D: deckY(x, z, nearY) và tilt(x, z, dirX, dirZ, nearY).
+    out.api = { deckY: typeof api.deckY, tilt: typeof api.tilt, signature: (api.signature || []).map(m => m.name) };
+    if (typeof api.deckY === 'function') {
+      const p = net.pieces(bsRoad)[0];
+      if (p) { const i = Math.floor(p.center.length / 6); out.api.sample = { got: api.deckY(p.center[i * 3], p.center[i * 3 + 2], p.center[i * 3 + 1]), want: p.center[i * 3 + 1], tilt: api.tilt(p.center[i * 3], p.center[i * 3 + 2], 1, 0, p.center[i * 3 + 1]) }; }
+    }
+    return out;
+  });
+}
+
 // polygonOffset có tác dụng thật trên backend đang chạy: hai mặt đồng phẳng ở xa 7 km, mặt vẽ trước có offset âm phải thắng.
 async function polygonOffsetProbe(page) {
   return page.evaluate(async () => {
@@ -184,6 +330,7 @@ async function runBackend(browser, backend) {
   await page.goto(`${BASE}?v=30b&view=overview${backend === 'webgl' ? '&backend=webgl' : ''}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.webgpuMaterials24?.state === 'ready' && document.querySelector('#loading')?.classList.contains('done'), null, { timeout: 240000 });
   const result = await inspect(page);
+  result.bridges = await inspectBridges(page);
   result.offsetProbe = await polygonOffsetProbe(page);
   result.actualBackend = await page.evaluate(() => window.webgpuMaterials24.backend);
   result.errors = errors;
@@ -246,12 +393,53 @@ async function runBackend(browser, backend) {
       check(tag + 'xe không chìm dưới mặt đường', () => { assert(r.motion.checked > 1000, JSON.stringify(r.motion)); assert.equal(r.motion.belowRoad, 0); });
       check(tag + 'nền đất bớt sáng so với #b9b29e (độ sáng tuyến tính < 90 %, > 50 %)', () => assert(r.groundLuma !== null && r.groundLuma < 0.9 && r.groundLuma > 0.5, `tỉ lệ ${r.groundLuma}`));
       check(tag + 'sampleY trả về y mặt cầu (≤ 0,05 m)', () => assert(r.sampleY && Math.abs(r.sampleY.got - r.sampleY.want) <= PROFILE_TOL_M, JSON.stringify(r.sampleY)));
+      // --- bridges (bước C) ---
+      const b = r.bridges || { missing: true };
+      check(tag + 'bridges: nhóm cầu đã dựng xong', () => assert(!b.missing, `bridges chưa sẵn sàng (state=${b.state})`));
+      if (!b.missing) {
+        check(tag + 'bridges: mọi đầu road cầu nối cạnh cùng cao độ (≤ 0,05 m) hoặc đầu cụt chạm đất', () => {
+          assert(b.bridgeEnds > 200, `chỉ ${b.bridgeEnds} đầu`); assert.equal(b.endBad, 0, JSON.stringify(b.endSamples));
+        });
+        check(tag + 'bridges: 0 bậc trên mặt nâng (|Δy|/độ dài ≤ 8 %)', () => { assert(b.gradePairs > 1000, `${b.gradePairs}`); assert.equal(b.steps, 0, JSON.stringify(b.stepSamples)); });
+        check(tag + 'bridges: Ba Son — mặt đường OSM khớp đỉnh hộp (≤ 0,05 m), không đoạn hộp nào cao hơn mặt đường', () => {
+          const s = b.baSon; assert(s.deckMeshes > 0, 'không thấy nhóm "Cầu Ba Son · mặt cầu"');
+          assert(s.hits >= 0.9 * s.samples, `hộp chỉ phủ ${s.hits}/${s.samples} mẫu`); assert.equal(s.above, 0, `${s.above} mẫu hộp cao hơn mặt đường`);
+          assert(s.worst <= 0.05, `lệch ${s.worst} m`);
+        });
+        check(tag + 'bridges: trụ và lan can là InstancedMesh có instance > 0', () => {
+          for (const key of ['trụ', 'lan can']) { const m = b.meshes.find(x => x.name.includes(key)); assert(m, `thiếu mesh ${key}`); assert(m.instanced && m.count > 0, JSON.stringify(m)); }
+        });
+        check(tag + 'bridges: 0 trụ nằm trong mặt đường', () => { assert(b.piersChecked > 50, `chỉ ${b.piersChecked} trụ`); assert.equal(b.piersInRoad, 0, JSON.stringify(b.pierSamples)); });
+        check(tag + 'bridges: bản mặt cầu thủ tục có mặt dưới đúng bề dày (± 0,1 m)', () => { assert(b.undersideProbes > 50, `${b.undersideProbes}`); assert.equal(b.undersideBad, 0, JSON.stringify(b.undersideSamples)); });
+        check(tag + 'bridges: 0 công trình giao mặt cầu/dốc dẫn cao', () => assert.deepEqual(b.buildingConflicts, []));
+        check(tag + 'bridges: bảng sửa lỗi đã áp, mọi mục có lý do, không đụng signature', () => {
+          const t = b.corrections.table, st = b.corrections.status; assert(t && st, 'thiếu BRIDGE_CORRECTIONS_31 hoặc status.buildingCorrections');
+          assert.equal(st.hidden, t.hide); assert.equal(st.adjusted, t.adjust); assert.equal(t.noReason, 0); assert.deepEqual(t.signature, []);
+          assert(t.plaza > 0, 'không ẩn footprint nào trong lòng phố đi bộ Nguyễn Huệ');
+        });
+        check(tag + 'bridges: Bạch Đằng có trong runtime WebGPU, hai đầu cầu dẫn chạm đất, đầu nhịp chính có mố', () => {
+          const s = b.bachDang; assert(s && s.meshes > 0, JSON.stringify(s));
+          assert(s.ends.length >= 2 && s.ends.every(e => Math.abs(e.y - e.groundY) <= 0.05), JSON.stringify(s.ends));
+          assert(s.abutments >= 2, `${s.abutments} mố`);
+        });
+        check(tag + 'bridges: status và UI có nhãn minh họa (illustrative)', () => {
+          assert.equal(b.classification, 'illustrative'); assert(/minh họa/.test(b.label), b.label); assert.equal(b.dataset, 'illustrative'); assert(/minh họa/.test(b.uiNote), `UI: ${b.uiNote}`);
+        });
+        check(tag + 'bridges: ≤ 150 000 tam giác, ≤ 6 mesh mới, danh sách mesh thủ tục cho bước E', () => {
+          const tris = b.meshes.reduce((s, m) => s + m.triangles, 0); assert(tris <= 150000, `${tris} tam giác`);
+          assert(b.meshes.length <= 6, `${b.meshes.length} mesh`); assert(b.meshes.every(m => m.inScene)); assert(b.procedural.length >= 3, JSON.stringify(b.procedural));
+        });
+        check(tag + 'bridges: API bước D deckY/tilt trả về y mặt cầu', () => {
+          assert.equal(b.api.deckY, 'function'); assert.equal(b.api.tilt, 'function');
+          assert(b.api.sample && Math.abs(b.api.sample.got - b.api.sample.want) <= PROFILE_TOL_M, JSON.stringify(b.api.sample));
+        });
+      }
       check(tag + 'console không có lỗi', () => assert.deepEqual(r.errors, []));
     }
   } finally {
     await browser.close();
-    const summary = Object.fromEntries(Object.entries(report).map(([k, r]) => [k, r.missing ? r : { stats: r.stats, junctionPolygons: r.junctionPolygons, bridgeRoadsDrawn: r.bridgeRoadsDrawn, bridgeVertices: r.bridgeVertices, profileWorst: r.profileWorst, worstOffsetRatio: r.worstOffsetRatio, markingPoints: r.markingPoints, meshes: r.meshes, offsetProbe: r.offsetProbe, motion: r.motion, groundLuma: r.groundLuma, errors: r.errors }]));
-    console.log(JSON.stringify({ suite: 'road-traffic-31 · road surface', passed: checks.length, failed: failures.length, checks, failures, summary }, null, 1));
+    const summary = Object.fromEntries(Object.entries(report).map(([k, r]) => [k, r.missing ? r : { stats: r.stats, junctionPolygons: r.junctionPolygons, bridgeRoadsDrawn: r.bridgeRoadsDrawn, bridgeVertices: r.bridgeVertices, profileWorst: r.profileWorst, worstOffsetRatio: r.worstOffsetRatio, markingPoints: r.markingPoints, meshes: r.meshes, offsetProbe: r.offsetProbe, motion: r.motion, groundLuma: r.groundLuma, bridges: r.bridges && { ...r.bridges, buildingConflicts: (r.bridges.buildingConflicts || []).slice(0, 12), conflictCount: (r.bridges.buildingConflicts || []).length }, errors: r.errors }]));
+    console.log(JSON.stringify({ suite: 'road-traffic-31 · road surface + bridges', passed: checks.length, failed: failures.length, checks, failures, summary }, null, 1));
     if (failures.length) process.exitCode = 1;
   }
 })().catch(error => { console.error(String(error?.stack || error)); process.exit(1); });
