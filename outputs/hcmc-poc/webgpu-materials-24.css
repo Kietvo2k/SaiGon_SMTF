@@ -392,6 +392,8 @@ button:focus-visible,select:focus-visible,a:focus-visible{
 .density-suggest p{margin:0;font-size:11px;line-height:1.4}
 .density-suggest div{display:flex;gap:6px;flex:none}
 .density-suggest button{min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:rgba(202,222,216,.06);color:var(--ink);font-size:11px;font-weight:700;cursor:pointer}
+.density-suggest button:hover{border-color:rgba(234,214,182,.5)}
+.density-suggest [data-density-apply]:hover{background:rgba(244,228,200,1)}
 .density-suggest [data-density-apply]{background:rgba(234,214,182,.92);border-color:transparent;color:#173138}
 body.ui-hidden .density-suggest{opacity:0;pointer-events:none}
 @media(max-width:540px){.density-suggest{left:var(--edge);right:var(--edge);transform:none;bottom:calc(var(--edge) + 40px);flex-wrap:wrap}}
