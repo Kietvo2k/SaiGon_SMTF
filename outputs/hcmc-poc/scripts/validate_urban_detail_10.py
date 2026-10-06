@@ -3,7 +3,7 @@ from pathlib import Path
 import json, hashlib
 
 ROOT=Path(__file__).resolve().parents[1]
-p=json.loads((ROOT/"data/urban-detail-10.json").read_text())
+p=json.loads((ROOT/"data/urban-detail-10.json").read_text(encoding='utf-8'))
 copy=dict(p); expected=copy.pop("sha256")
 actual=hashlib.sha256(json.dumps(copy,ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()).hexdigest()
 checks={
@@ -16,6 +16,6 @@ checks={
  "upgrade_contract":len(p["upgradeContract"])>=4
 }
 out={"status":"PASS" if all(checks.values()) else "FAIL","checks":checks,"sha256":expected}
-(ROOT/"research/urban-detail-10-validation.json").write_text(json.dumps(out,indent=2))
+(ROOT/"research/urban-detail-10-validation.json").write_text(json.dumps(out,indent=2), encoding='utf-8', newline='\n')
 print(json.dumps(out))
 raise SystemExit(0 if out["status"]=="PASS" else 1)

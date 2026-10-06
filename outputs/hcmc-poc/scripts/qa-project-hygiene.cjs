@@ -23,7 +23,10 @@ check('Accidental tile copies are ignored',()=>{
 check('Workspace cleanup is reproducible and leaves no allow-listed residue',()=>{
   const cleanup=path.join(project,'scripts/clean_workspace.py');
   assert(fs.existsSync(cleanup));
-  const dry=cp.execFileSync('python3',[cleanup],{cwd:project,encoding:'utf8'});
+  // Windows thường chỉ có `python` (python3 là alias Microsoft Store trả mã lỗi); cho phép ghi đè bằng PYTHON.
+  const python=[process.env.PYTHON,'python3','python'].find(command=>command&&cp.spawnSync(command,['--version']).status===0);
+  assert(python,'Không tìm thấy trình thông dịch Python (đặt biến PYTHON)');
+  const dry=cp.execFileSync(python,[cleanup],{cwd:project,encoding:'utf8'});
   assert(dry.includes('candidates=0'));
   for(const relative of ['work/archive-ui-pre-demo','work/v1-backup','work/RGBELoader.js','work/bitexco-model.html'])assert(!fs.existsSync(path.join(project,relative)));
 });

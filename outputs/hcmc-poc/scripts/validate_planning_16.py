@@ -39,8 +39,8 @@ def validate(doc):
 
 
 def run():
-    doc = json.loads((ROOT / 'data/planning-16.json').read_text())
-    bundle = (ROOT / 'data/planning-16.js').read_text()
+    doc = json.loads((ROOT / 'data/planning-16.json').read_text(encoding='utf-8'))
+    bundle = (ROOT / 'data/planning-16.js').read_text(encoding='utf-8')
     assert bundle.startswith('window.PLANNING_16=') and bundle.rstrip().endswith(';')
     assert json.loads(bundle[len('window.PLANNING_16='):].rstrip().removesuffix(';')) == doc
     count = validate(doc)
@@ -59,7 +59,7 @@ def run():
             rejected += 1
     assert rejected == len(mutations), 'Unsafe data passed validation'
     archive_count = 0
-    manifest = json.loads((RESEARCH / 'source-snapshots/manifest.json').read_text())
+    manifest = json.loads((RESEARCH / 'source-snapshots/manifest.json').read_text(encoding='utf-8'))
     for entry in manifest:
         if 'archive' in entry:
             raw = (RESEARCH / entry['archive']).read_bytes()
@@ -69,14 +69,14 @@ def run():
             assert entry.get('error'), 'Missing archive must disclose failure'
     evidence = RESEARCH / 'source-snapshots/verification-notes.json'
     assert evidence.exists(), 'Verification metadata is required even without HTML archive'
-    assert sha256(evidence.read_bytes()).hexdigest() == evidence.with_suffix('.sha256').read_text().split()[0]
-    notes = json.loads(evidence.read_text())
+    assert sha256(evidence.read_bytes()).hexdigest() == evidence.with_suffix('.sha256').read_text(encoding='utf-8').split()[0]
+    notes = json.loads(evidence.read_text(encoding='utf-8'))
     assert all(any(n['id'] == s['id'] and n['url'] == s['url'] for n in notes['sources']) for s in doc['sources'])
     result = {'status': 'PASS', 'sourceRecords': count, 'jsonJsIdentity': True,
               'invalidFixturesRejected': rejected, 'archivedHtmlHashChecks': archive_count,
               'planningGeometryLayers': 0, 'planningStages': 0,
               'limit': 'Validates provenance structure and fail-closed gate, not legal approval or cartographic accuracy.'}
-    (RESEARCH / 'planning-validation.json').write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
+    (RESEARCH / 'planning-validation.json').write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
     print(json.dumps(result, ensure_ascii=False))
 
 

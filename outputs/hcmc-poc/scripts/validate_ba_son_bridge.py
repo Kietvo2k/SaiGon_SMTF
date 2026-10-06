@@ -9,9 +9,9 @@ OUT = ROOT / "research" / "ba-son-bridge-validation.json"
 
 
 def main():
-    bridge = json.loads((ROOT / "data/ba-son-bridge-detail.json").read_text())
-    scene = json.loads((ROOT / "data/scene.json").read_text())
-    runtime = (ROOT / "bridge-detail.js").read_text()
+    bridge = json.loads((ROOT / "data/ba-son-bridge-detail.json").read_text(encoding='utf-8'))
+    scene = json.loads((ROOT / "data/scene.json").read_text(encoding='utf-8'))
+    runtime = (ROOT / "bridge-detail.js").read_text(encoding='utf-8')
     checks = {}
     checks["identity"] = bridge["name"] == "Cầu Ba Son" and bridge["formerName"] == "Cầu Thủ Thiêm 2"
     checks["mapped_carriageways"] = set(bridge["mappedRoadIds"]) == {321564421, 321564423}
@@ -43,7 +43,7 @@ def main():
         "sha256": bridge["sha256"],
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+    OUT.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding='utf-8', newline='\n')
     print(json.dumps(result, ensure_ascii=False))
     if result["status"] != "PASS":
         raise SystemExit(1)

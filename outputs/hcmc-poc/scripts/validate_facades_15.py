@@ -2,12 +2,12 @@
 from pathlib import Path
 import json,hashlib,math,base64,re
 ROOT=Path(__file__).resolve().parents[1];R=ROOT/'research/facades-15';A=ROOT/'assets/facades15'
-doc=json.loads((R/'manifest.json').read_text());entries=doc['entries'];D=json.loads((ROOT/'data/scene.json').read_text());checks={}
+doc=json.loads((R/'manifest.json').read_text(encoding='utf-8'));entries=doc['entries'];D=json.loads((ROOT/'data/scene.json').read_text(encoding='utf-8'));checks={}
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 assert len(entries)==20 and len({e['key']for e in entries})==20 and len({e['building_id']for e in entries})==20
 for e in entries:
  assert e['source_sha256']==sha(ROOT/e['source_file'])
- source=json.loads((R/'snapshots'/e['source_snapshot']).read_text());page=next(v for v in source['query']['pages'].values()if v['title']==e['source_title']);info=page['imageinfo'][0]
+ source=json.loads((R/'snapshots'/e['source_snapshot']).read_text(encoding='utf-8'));page=next(v for v in source['query']['pages'].values()if v['title']==e['source_title']);info=page['imageinfo'][0]
  assert info['descriptionurl']==e['source_url'] and info['extmetadata']['LicenseShortName']['value']==e['license']
  assert e['author'] and e['photo_date'] and e['license_url'] and e['observed_site_image'] and not e['surveyed_geometry']
  assert e['rectified_sha256']==sha(A/(e['key']+'-rectified.jpg'))
@@ -29,16 +29,16 @@ for e in entries:
  assert 0<=e['vertical'][0]<e['vertical'][1]<=1 and e['height_m']>0
  u,v,w,h=e['atlas_rect'];assert 0<=u<u+w<=1 and 0<=v<v+h<=1
 checks.update(unique_facades=20,unique_buildings=20,source_files_hashed=20,source_license_matches=20,convex_photo_quads=20,footprint_anchor_matches=20)
-bundle=json.loads((ROOT/'data/facades-15.js').read_text().removeprefix('window.FACADES_15=').rstrip(';\n'))
+bundle=json.loads((ROOT/'data/facades-15.js').read_text(encoding='utf-8').removeprefix('window.FACADES_15=').rstrip(';\n'))
 assert bundle['manifest']==doc
 for channel,filename in [('color','facade-atlas.jpg'),('mask','facade-mask.png')]:
  assert base64.b64decode(bundle[channel].split(',',1)[1])==(A/filename).read_bytes()
-for name,digest in json.loads((R/'snapshot-hashes.json').read_text()).items():assert sha(R/'snapshots'/name)==digest
+for name,digest in json.loads((R/'snapshot-hashes.json').read_text(encoding='utf-8')).items():assert sha(R/'snapshots'/name)==digest
 checks['embedded_atlas_byte_identity']=True
 checks['eligible_surfaces']=sum(e['surface_fit']['eligible'] for e in entries)
 checks['nonplanar_surfaces_held']=sum(not e['surface_fit']['eligible'] for e in entries)
 checks['podium_height_overrides']=0
-old=json.loads((R/'fixes/selections-15a.json').read_text())
+old=json.loads((R/'fixes/selections-15a.json').read_text(encoding='utf-8'))
 old_vcb=next(e for e in old['entries'] if e['key']=='vietcombank')
 assert next(b for b in D['buildings'] if b['id']==old_vcb['building_id'])['q']=='podium'
 vcb=next(e for e in entries if e['key']=='vietcombank')
@@ -51,13 +51,13 @@ captures=[]
 for e in entries:
  slug=re.sub('[0-9]','',e['key']);p=ROOT.parent/('poc-fifteen-facades-'+slug+'.metrics.json')
  if p.exists():
-  c=json.loads(p.read_text());status=c.get('facades15',{})
+  c=json.loads(p.read_text(encoding='utf-8'));status=c.get('facades15',{})
   if status.get('version')==doc['version']:
    assert status['selected']==e['key'] and status['ready'] and status['visible']==e['surface_fit']['eligible'] and not status['errors'];captures.append(e['key'])
 checks['runtime_captured_facades']=len(captures)
 on=ROOT.parent/'poc-fifteen-facades-vietcombank.metrics.json';off=ROOT.parent/'poc-fifteen-facades-vietcombank-no-photo.metrics.json'
 if on.exists() and off.exists():
- a=json.loads(on.read_text());b=json.loads(off.read_text())
+ a=json.loads(on.read_text(encoding='utf-8'));b=json.loads(off.read_text(encoding='utf-8'))
  if a.get('facades15',{}).get('version')==doc['version'] and b.get('facades15',{}).get('version')==doc['version']:
   assert a['captureCamera']==b['captureCamera']
   assert a['facades15']['visible'] and not b['facades15']['visible']
@@ -67,4 +67,4 @@ if on.exists() and off.exists():
   assert b['facades15']['geometryChecks']['baselineRestored']
   checks['same_camera_ab_and_geometry_restoration']=True
 report={'status':'PASS','checks':checks,'runtime_captures':captures,'classification':doc['classification'],'limit':'Source identity and geometry anchors validated. Metric accuracy, complete building reconstruction and current site condition are not verified.'}
-(R/'validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print(json.dumps(report,ensure_ascii=False))
+(R/'validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2), encoding='utf-8', newline='\n');print(json.dumps(report,ensure_ascii=False))

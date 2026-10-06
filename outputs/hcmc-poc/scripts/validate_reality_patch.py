@@ -3,11 +3,11 @@ import datetime, hashlib, json
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
-manifest = json.loads((DATA / "reality-patch-manifest.json").read_text())
-grid = json.loads((DATA / "reality-patch-grid.geojson").read_text())
-tileset = json.loads((DATA / "3dtiles/tileset-plan.json").read_text())
-registry = json.loads((ROOT / "research/reality-patch-sources.json").read_text())
-embedded = (DATA / "reality-patch.js").read_text().removeprefix("window.REALITY_PATCH=").removesuffix(";\n")
+manifest = json.loads((DATA / "reality-patch-manifest.json").read_text(encoding='utf-8'))
+grid = json.loads((DATA / "reality-patch-grid.geojson").read_text(encoding='utf-8'))
+tileset = json.loads((DATA / "3dtiles/tileset-plan.json").read_text(encoding='utf-8'))
+registry = json.loads((ROOT / "research/reality-patch-sources.json").read_text(encoding='utf-8'))
+embedded = (DATA / "reality-patch.js").read_text(encoding='utf-8').removeprefix("window.REALITY_PATCH=").removesuffix(";\n")
 
 tiles = manifest["tiles"]
 checks = {
@@ -30,5 +30,5 @@ report = {
     "realityMeshCoveragePercent": 0,
     "manifestSha256": hashlib.sha256((DATA / "reality-patch-manifest.json").read_bytes()).hexdigest(),
 }
-(ROOT / "research/reality-patch-validation.json").write_text(json.dumps(report, indent=2))
+(ROOT / "research/reality-patch-validation.json").write_text(json.dumps(report, indent=2), encoding='utf-8', newline='\n')
 print(json.dumps(report))

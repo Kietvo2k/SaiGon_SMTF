@@ -1,2 +1,10 @@
 # Preserve downloaded source snapshots byte-for-byte; whitespace is source evidence.
 research/vibecode-22-building-gap/snapshots/*.html -whitespace
+# Snapshot nguồn được validator so SHA-256 theo byte: tắt chuyển EOL (core.autocrlf=true trên Windows
+# sẽ đổi LF→CRLF khi checkout và làm sai hash). Chỉ áp cho đúng các thư mục bằng chứng này.
+outputs/hcmc-poc/research/facades-15/snapshots/** -text
+outputs/hcmc-poc/research/visual-14/snapshots/** -text
+outputs/hcmc-poc/research/vibecode-16/source-snapshots/** -text
+research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/** -text
+# validate_reality_patch.py ghi manifestSha256 theo byte của file này.
+outputs/hcmc-poc/data/reality-patch-manifest.json -text

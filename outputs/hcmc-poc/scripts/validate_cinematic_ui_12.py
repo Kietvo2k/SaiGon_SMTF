@@ -4,10 +4,10 @@ import json
 import re
 
 root = Path(__file__).resolve().parents[1]
-js = (root / "cinematic-night-12.js").read_text()
-css = (root / "style.css").read_text()
-app = (root / "app.js").read_text()
-index = (root / "index.html").read_text()
+js = (root / "cinematic-night-12.js").read_text(encoding='utf-8')
+css = (root / "style.css").read_text(encoding='utf-8')
+app = (root / "app.js").read_text(encoding='utf-8')
+index = (root / "index.html").read_text(encoding='utf-8')
 
 checks = {
     "three_button_map_first_dock": set(re.findall(r'data-panel="(views|controls|info)"', js)) == {"views", "controls", "info"},
@@ -19,7 +19,7 @@ checks = {
     "keyboard_navigation": "window.keyboardNavStatus" in app and "arrowup" in app and "target.addScaledVector" in app,
     "restrained_window_emission": "step(.85,roomHash)" in app and "*.28" in app,
     "continuous_street_light_layer": "streetLightSegments" in js and "streetLights.visible=active" in js and "asphalt.emissiveIntensity=.45" in js,
-    "bitexco_flared_helipad": "CylinderGeometry(22,15.5,2.4,64)" in app and "TorusGeometry(21.55" in (root / "architecture.js").read_text(),
+    "bitexco_flared_helipad": "CylinderGeometry(22,15.5,2.4,64)" in app and "TorusGeometry(21.55" in (root / "architecture.js").read_text(encoding='utf-8'),
     "cinematic_view_18": "<small>18</small> Cinematic Night" in js,
     "five_shot_45_second_director": js.count("label:'") >= 5 and "P12.time=(P12.time+dt)%45" in js,
     "light_trails_220": "p6Cars.slice(0,220)" in js,
@@ -28,7 +28,8 @@ checks = {
     "four_post_passes": all(token in js for token in ["brightRT", "blurA", "blurB", "compositeMat", "postPasses=4"]),
     "cinematic_render_hook": "window.renderCinematic&&window.renderCinematic(now)" in app,
     "data_classification_exposed": "illustrative_cinematic_postprocess_not_observed_conditions" in js,
-    "cinematic_module_retained_in_poc15": "DEMO BUILD · POC 15 / PHOTO FACADES" in index and "POC-12-CINEMATIC-MAP-UI.md" in index,
+    # Nhãn phase của shell cũ đổi theo từng PoC (hiện là POC 23); chỉ kiểm module cinematic vẫn được nạp và dẫn tài liệu.
+    "cinematic_module_retained_in_legacy_shell": "DEMO BUILD · POC " in index and "POC-12-CINEMATIC-MAP-UI.md" in index and '<script src="cinematic-night-12.js?v=' in index,
 }
 
 result = {
@@ -47,7 +48,7 @@ result = {
     },
 }
 out = root / "research" / "cinematic-ui-12-validation.json"
-out.write_text(json.dumps(result, ensure_ascii=False, indent=2))
+out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8', newline='\n')
 print(json.dumps(result, ensure_ascii=False, indent=2))
 if result["status"] != "PASS":
     raise SystemExit(1)

@@ -58,5 +58,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
    self.send_response(200);self.end_headers();self.wfile.write(b'OK')
   except Exception:self.send_error(400)
 if __name__=='__main__':
- print('Open http://127.0.0.1:8768/hcmc-poc/',flush=True)
- http.server.ThreadingHTTPServer(('127.0.0.1',8768),functools.partial(Handler,directory=str(ROOT))).serve_forever()
+ port=int(os.environ.get('PORT','8768'))  # PORT tùy chọn để chạy song song; mặc định giữ 8768
+ print(f'Open http://127.0.0.1:{port}/hcmc-poc/',flush=True)
+ # Backlog mặc định 5: trang chuyển hướng hủy hàng chục request rồi nạp lại làm Windows trả ERR_CONNECTION_REFUSED.
+ http.server.ThreadingHTTPServer.request_queue_size=128
+ http.server.ThreadingHTTPServer(('127.0.0.1',port),functools.partial(Handler,directory=str(ROOT))).serve_forever()

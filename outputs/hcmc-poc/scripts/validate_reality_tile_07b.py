@@ -12,8 +12,8 @@ glb = (TILE / "lod2.glb").read_bytes()
 magic, version, length = struct.unpack("<4sII", glb[:12])
 json_len, json_type = struct.unpack("<II", glb[12:20])
 doc = json.loads(glb[20:20 + json_len].decode().strip())
-prov = json.loads((TILE / "provenance.json").read_text())
-tileset = json.loads((ROOT / "data" / "3dtiles" / "tileset-07b.json").read_text())
+prov = json.loads((TILE / "provenance.json").read_text(encoding='utf-8'))
+tileset = json.loads((ROOT / "data" / "3dtiles" / "tileset-07b.json").read_text(encoding='utf-8'))
 sha = hashlib.sha256(glb).hexdigest()
 checks = {
     "valid_glb2_header": magic == b"glTF" and version == 2 and length == len(glb) and json_type == 0x4E4F534A,
@@ -27,6 +27,6 @@ checks = {
     "tileset_denies_survey_grade": tileset["root"]["extras"]["surveyedRealityMesh"] is False,
 }
 report = {"checkedAt": datetime.now(timezone.utc).isoformat(), "status": "PASS" if all(checks.values()) else "FAIL", "checks": checks, "tileId": "rp-r2c3", "bytes": len(glb), "sha256": sha}
-(ROOT / "research" / "reality-tile-07b-validation.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+(ROOT / "research" / "reality-tile-07b-validation.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding='utf-8', newline='\n')
 print(json.dumps(report, ensure_ascii=False))
 raise SystemExit(0 if report["status"] == "PASS" else 1)

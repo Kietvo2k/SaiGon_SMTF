@@ -25,22 +25,47 @@ class IndexAudit(HTMLParser):
             self.stylesheets.append(attrs["href"].split("?", 1)[0])
 
 
-index = (ROOT / "index.html").read_text()
-app = (ROOT / "app.js").read_text()
-cinematic = (ROOT / "cinematic-night-12.js").read_text()
-shell = (ROOT / "demo-shell.js").read_text()
-css = (ROOT / "style.css").read_text()
+index = (ROOT / "index.html").read_text(encoding='utf-8')
+app = (ROOT / "app.js").read_text(encoding='utf-8')
+cinematic = (ROOT / "cinematic-night-12.js").read_text(encoding='utf-8')
+shell = (ROOT / "demo-shell.js").read_text(encoding='utf-8')
+css = (ROOT / "style.css").read_text(encoding='utf-8')
+entry = (ROOT / "webgpu-entry-24.js").read_text(encoding='utf-8')
+# Nguồn chuẩn cho version runtime hiện hành (30B, sau này 31A): manifest của WebGPU renderer.
+runtime_version = json.loads((ROOT / "data" / "webgpu-materials-24.json").read_text(encoding='utf-8'))["version"]
 audit = IndexAudit()
 audit.feed(index)
+
+# index.html mặc định chuyển sang runtime WebGPU; phần shell WebGL cũ chỉ chạy với ?legacy=1.
+# Từ batch 18 trở đi, các add-on dưới đây được nạp sau demo-shell.js; mọi script khác phải nạp trước
+# để demo-shell trang trí được dock/drawer của shell cũ. Thêm script mới sau demo-shell phải cập nhật danh sách này.
+SCRIPTS_AFTER_DEMO_SHELL = {
+    "webgpu-entry-24.js",
+    "../shared/digital-twin-core/source-core.js",
+    "../shared/digital-twin-core/analysis-client.js",
+    "twin-analysis-17.js",
+    "vendor/GLTFLoader-r128.js",
+    "../shared/digital-twin-core/raster-client-18.js",
+    "../shared/digital-twin-core/lod-18.js",
+    "twin-surface-18.js",
+    "executive-story-19.js",
+}
+shell_position = audit.scripts.index("demo-shell.js") if "demo-shell.js" in audit.scripts else -1
 
 assets = audit.scripts + audit.stylesheets
 checks = {
     "static_ids_are_unique": len(audit.ids) == len(set(audit.ids)),
     "referenced_assets_exist": all((ROOT / asset).is_file() for asset in assets),
-    "demo_shell_loads_last": audit.scripts[-1] == "demo-shell.js",
+    "demo_shell_loads_after_legacy_shell": shell_position >= 0
+    and audit.scripts.count("demo-shell.js") == 1
+    and all(script in SCRIPTS_AFTER_DEMO_SHELL for script in audit.scripts[shell_position + 1:]),
     "cache_version_is_demo_build": all(token in index for token in [
-        "style.css?v=15b", "app.js?v=16d", "reality-enrichment-13.js?v=16c", "demo-shell.js?v=15b"
+        "style.css?v=15b", "app.js?v=23a", "reality-enrichment-13.js?v=16c", "demo-shell.js?v=15b"
     ]),
+    "runtime_redirect_matches_manifest_version": f"location.replace(`webgpu-materials-24.html?v={runtime_version}&" in index
+    and f"webgpu-entry-24.js?v={runtime_version}" in index
+    and "q.get('legacy')==='1'" in index
+    and set(re.findall(r"webgpu-materials-24\.html\?v=([a-z0-9]+)", index + entry)) == {runtime_version},
     "invalid_views_fail_safely": "if(!p)return false" in app,
     "map_keys_pause_behind_overlays": all(token in app for token in [
         "dialog[open]", "ui-views-open", "ui-controls-open", "ui-info-open"
@@ -79,7 +104,7 @@ result = {
     },
 }
 (ROOT / "research" / "demo-ready-validation.json").write_text(
-    json.dumps(result, ensure_ascii=False, indent=2)
+    json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8', newline='\n'
 )
 print(json.dumps(result, ensure_ascii=False, indent=2))
 if result["status"] != "PASS":

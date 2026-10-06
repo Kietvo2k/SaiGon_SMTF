@@ -9,8 +9,8 @@ IDS = {1504289918, 1504289919, 1504289920, 1504289921}
 
 
 def main():
-    data = json.loads((ROOT / "data/bach-dang-footbridge.json").read_text())
-    raw = json.loads((ROOT / "data/osm-raw.json").read_text())
+    data = json.loads((ROOT / "data/bach-dang-footbridge.json").read_text(encoding='utf-8'))
+    raw = json.loads((ROOT / "data/osm-raw.json").read_text(encoding='utf-8'))
     ways = {e["id"]: e for e in raw["elements"] if e.get("id") in IDS}
     checks = {
         "mapped_construction_ways": set(data["mappedConstructionWayIds"]) == IDS == set(ways),
@@ -24,7 +24,7 @@ def main():
     }
     result = {"status": "PASS" if all(checks.values()) else "FAIL", "checks": checks, "wayIds": sorted(IDS), "operational": False, "statusDate": data["statusDate"], "sha256": data["sha256"]}
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+    OUT.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding='utf-8', newline='\n')
     print(json.dumps(result, ensure_ascii=False))
     if result["status"] != "PASS":
         raise SystemExit(1)

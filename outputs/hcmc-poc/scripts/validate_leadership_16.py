@@ -15,13 +15,14 @@ class Assets(HTMLParser):
         attrs=dict(attrs)
         if tag=='script' and attrs.get('src'): self.scripts.append(attrs['src'].split('?')[0])
         if tag=='link' and attrs.get('rel')=='stylesheet': self.styles.append(attrs['href'].split('?')[0])
-a=Assets();a.feed((root/'index.html').read_text())
-js=(root/'leadership-16.js').read_text()
-css=(root/'leadership-16.css').read_text()
-manifest=json.loads((root/'research/facades-15/manifest.json').read_text())
+a=Assets();a.feed((root/'index.html').read_text(encoding='utf-8'))
+js=(root/'leadership-16.js').read_text(encoding='utf-8')
+css=(root/'leadership-16.css').read_text(encoding='utf-8')
+manifest=json.loads((root/'research/facades-15/manifest.json').read_text(encoding='utf-8'))
 checks={
  'all_entry_assets_exist': all((root/p).is_file() for p in a.scripts+a.styles),
- 'legacy_demo_shortcuts_load_last': a.scripts[-1]=='demo-shell.js',
+ # Shell WebGL cũ (?legacy=1) nạp thêm add-on 17–24 sau demo-shell; thứ tự đầy đủ do validate_demo_ready.py kiểm.
+ 'legacy_demo_shortcuts_load_after_leadership': a.scripts.count('demo-shell.js')==1 and a.scripts.index('leadership-16.js')<a.scripts.index('demo-shell.js'),
  'catalog_precedes_leadership': a.scripts.index('data/planning-16.js')<a.scripts.index('leadership-16.js'),
  'photo_runtime_precedes_leadership': a.scripts.index('photo-facades-15.js')<a.scripts.index('leadership-16.js'),
  'single_shell_instance': a.scripts.count('leadership-16.js')==1 and a.styles.count('leadership-16.css')==1,
@@ -39,9 +40,9 @@ node=subprocess.run(['node','--check',str(root/'leadership-16.js')],capture_outp
 checks['javascript_syntax']=node.returncode==0
 p=root/'data/planning-16.json'
 if p.exists():
-    planning=json.loads(p.read_text());checks['source_catalog_no_ready_geometry']=planning.get('geometryReady') is False
+    planning=json.loads(p.read_text(encoding='utf-8'));checks['source_catalog_no_ready_geometry']=planning.get('geometryReady') is False
 else: checks['source_catalog_no_ready_geometry']=False
 out={'version':'16a','staticChecks':checks,'passed':sum(checks.values()),'total':len(checks),'browserRequired':['default daylight overview','explicit view retention','one collapsible panel','same camera A/B and held facade disabled','tour next/back/end','research return cleanup','390px and desktop screenshot','fullscreen/presenter shortcuts']}
-(root/'research/vibecode-16/validation-ui.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n')
+(root/'research/vibecode-16/validation-ui.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n', encoding='utf-8', newline='\n')
 print(json.dumps(out,ensure_ascii=False,indent=2))
 raise SystemExit(0 if all(checks.values()) else 1)

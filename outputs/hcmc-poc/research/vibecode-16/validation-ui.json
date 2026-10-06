@@ -2,7 +2,7 @@
   "version": "16a",
   "staticChecks": {
     "all_entry_assets_exist": true,
-    "legacy_demo_shortcuts_load_last": true,
+    "legacy_demo_shortcuts_load_after_leadership": true,
     "catalog_precedes_leadership": true,
     "photo_runtime_precedes_leadership": true,
     "single_shell_instance": true,
