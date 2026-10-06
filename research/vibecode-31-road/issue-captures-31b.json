@@ -1,0 +1,407 @@
+[
+ {
+  "id": "01-vong-xoay-cau-vuot",
+  "base": "bason",
+  "pose": {
+   "position": [
+    713.4,
+    70,
+    -1244.2
+   ],
+   "target": [
+    518,
+    0,
+    -1122.9
+   ],
+   "fov": 42
+  },
+  "light": "day",
+  "file": "issues/31b-01-vong-xoay-cau-vuot.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 383,
+   "fpsAvg": 76.5,
+   "frameMsP50": 16.6,
+   "frameMsP95": 16.8,
+   "frameMsMax": 16.9,
+   "hudFps": 76,
+   "hudTriangles": "22.7M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22745124,
+    "drawCallsMedian": 451,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 33373
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9502202,
+     "draws": 280
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13242905,
+     "draws": 154
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 76,
+    "triangles": 22745124,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": [
+   {
+    "type": "warning",
+    "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+   }
+  ]
+ },
+ {
+  "id": "02-giao-lo-nhin-tren",
+  "base": "bason",
+  "pose": {
+   "position": [
+    625,
+    300,
+    -1204.8
+   ],
+   "target": [
+    605.8,
+    0,
+    -1188.8
+   ],
+   "fov": 42
+  },
+  "light": "day",
+  "file": "issues/31b-02-giao-lo-nhin-tren.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 401,
+   "fpsAvg": 80.2,
+   "frameMsP50": 8.5,
+   "frameMsP95": 16.8,
+   "frameMsMax": 16.8,
+   "hudFps": 80,
+   "hudTriangles": "22.7M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22737720,
+    "drawCallsMedian": 141,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 49939
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9497434,
+     "draws": 76
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13240269,
+     "draws": 48
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 80,
+    "triangles": 22737720,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "03-cau-lo-lung-xuyen-nha",
+  "base": "bason",
+  "pose": {
+   "position": [
+    1028.9,
+    20,
+    -397.1
+   ],
+   "target": [
+    856,
+    6,
+    -447
+   ],
+   "fov": 42
+  },
+  "light": "day",
+  "file": "issues/31b-03-cau-lo-lung-xuyen-nha.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 399,
+   "fpsAvg": 79.7,
+   "frameMsP50": 16.5,
+   "frameMsP95": 16.8,
+   "frameMsMax": 25,
+   "hudFps": 81,
+   "hudTriangles": "22.7M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22743592,
+    "drawCallsMedian": 405,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 66505
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9500810,
+     "draws": 238
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13242765,
+     "draws": 150
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 81,
+    "triangles": 22743592,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "04-vach-qua-duong-den",
+  "base": "bason",
+  "pose": {
+   "position": [
+    -1278.1,
+    75,
+    657.4
+   ],
+   "target": [
+    -1237.2,
+    0,
+    613.5
+   ],
+   "fov": 42
+  },
+  "light": "day",
+  "file": "issues/31b-04-vach-qua-duong-den.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 391,
+   "fpsAvg": 77.9,
+   "frameMsP50": 16.6,
+   "frameMsP95": 16.8,
+   "frameMsMax": 25,
+   "hudFps": 79,
+   "hudTriangles": "22.7M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22739048,
+    "drawCallsMedian": 191,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 82873
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9497434,
+     "draws": 76
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13241597,
+     "draws": 98
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 79,
+    "triangles": 22739048,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ },
+ {
+  "id": "05-dau-cau-ba-son",
+  "base": "bason",
+  "pose": {
+   "position": [
+    197.9,
+    60,
+    133.5
+   ],
+   "target": [
+    74.5,
+    0,
+    56.9
+   ],
+   "fov": 55
+  },
+  "light": "day",
+  "file": "issues/31b-05-dau-cau-ba-son.png",
+  "metrics": {
+   "seconds": 5,
+   "frames": 382,
+   "fpsAvg": 76.3,
+   "frameMsP50": 16.6,
+   "frameMsP95": 16.8,
+   "frameMsMax": 16.9,
+   "hudFps": 74,
+   "hudTriangles": "22.7M",
+   "hudMeshes": 196,
+   "info": {
+    "trianglesMedian": 22744572,
+    "drawCallsMedian": 426,
+    "frameCallsMedian": 22,
+    "renderCallsTotal": 98911
+   },
+   "passes": {
+    "post/other-scene": {
+     "passes": 17,
+     "tris": 17,
+     "draws": 17
+    },
+    "main": {
+     "passes": 2,
+     "tris": 9501730,
+     "draws": 254
+    },
+    "shadow-ortho": {
+     "passes": 3,
+     "tris": 13242825,
+     "draws": 155
+    }
+   },
+   "pixelRatio": 1,
+   "status": {
+    "fps": 74,
+    "triangles": 22744572,
+    "meshes": 196,
+    "light": "day",
+    "backend": "webgpu",
+    "profile": "presentation",
+    "pipeline": "City Visual Runtime 30 · Trình diễn",
+    "effects": [
+     "GTAO 8s @ 55%",
+     "TRAA velocity/depth",
+     "selective emissive bloom",
+     "grade",
+     "RCAS denoise"
+    ],
+    "shadows": {
+     "type": "cascaded",
+     "cascades": 3,
+     "mapSize": 2048,
+     "maxFar": 3400
+    },
+    "lod": "hero",
+    "corridor": "city",
+    "identity": false
+   }
+  },
+  "console": []
+ }
+]
