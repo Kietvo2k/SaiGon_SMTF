@@ -11,7 +11,7 @@ Khung tọa độ giống scene.js (x đông, z nam, y lên, mét); số làm tr
                boundaryVertices), edges[] chỉ số cạnh theo thứ tự đỉnh; oneway yes|-1|no, layer, maxspeed,
                lanes (+lanesInferred), junction, name, type, tag gốc bridge/tunnel/covered/indoor/highway;
                elevationClass ground|low|canal|overpass|river|skip, elevationReason, signature, override,
-               skipRender ('ground' = vẽ phẳng ở groundY, 'hide' = mesh signature thay thế).
+               skipRender ('ground' = vẽ phẳng ở groundY, 'hide' = mesh signature thay thế hoặc ẩn có hideReason).
   nodes[]      id, x, z, y, kind junction(bậc≥3)|connector(bậc 2)|end(bậc 1)|boundary(cắt bbox), degree,
                adj [[cạnh, đầu (0=from, 1=to), hướng° từ bắc theo chiều kim đồng hồ]].
   edges[i]     from/to (id nút), road (chỉ số D.roads), way, v0..v1 (khoảng đỉnh trong D.roads[road].c),
@@ -19,7 +19,8 @@ Khung tọa độ giống scene.js (x đông, z nam, y lên, mét); số làm tr
                profile [s0,y0,s1,y1,…] (mẫu dày theo chiều dài, s0=0, s cuối = length), rampOf (id cụm cầu
                khi cạnh mặt đất/skip mang dốc dẫn).
   bridges      clusters (chuỗi cầu nối liền), signature (Ba Son, Bạch Đằng), issue03, conflicts
-               (công trình × hành lang cầu, cho bước C), crossings (giao cắt không chung nút), config.
+               (công trình × hành lang cầu, cho bước C), crossings (giao cắt không chung nút, atGrade, clearanceM),
+               stacking (bước C: các trường nâng cục bộ để xếp tầng giao cắt), underpass, config.
 Runtime lấy y tại một điểm: từ roads[i] tìm cạnh chứa đoạn đỉnh, tính s dọc cạnh (cộng dồn từ c), nội
 suy tuyến tính profile; cạnh không có profile → frame.groundY.
 
@@ -28,6 +29,10 @@ t = clamp(D/R, 0, 1), R = 1,5·(H−g)/DESIGN_GRADE nên dốc lớn nhất = DE
 "neo mặt đất": đầu cụt của cụm, hoặc vành cách cụm R_out về phía đường mặt đất. R_in = min(R, độ sâu cụm −
 PLATEAU_HALF_M) phần dốc nằm trong cầu, R_out = R − R_in lan sang way mặt đất liền kề (cạnh có rampOf).
 D là hàm khoảng cách 1-Lipschitz nên y liên tục tại nút và dốc không vượt thiết kế; nhiều cụm lấy max.
+
+Xếp tầng (bước C): đo giao cắt không chung nút; mặt trên phải cách mặt dưới ≥ tĩnh không (xe 4,5 m, bộ hành 2,5 m,
+đường chui dạ cầu Hoàng Sa/Trường Sa 2,2 m) + bản mặt 1,5 m, hoặc chênh ≤ 0,05 m (giao cùng mức). Thiếu thì thêm trường
+nâng cục bộ cùng dạng smoothstep (phẳng quanh điểm giao, dốc ≤ DESIGN_GRADE) rồi đo lại, tối đa STACK_MAX_ROUNDS vòng.
 Không có ngẫu nhiên; SEED ghi để thống nhất với các builder khác.
 """
 import collections, hashlib, heapq, json, math, pathlib, re, sys
@@ -52,6 +57,14 @@ PROFILE_STEP_M = 4.0
 PROFILE_TOL_M = 0.01
 DECK_THICKNESS_M = 1.5
 CLEARANCE = {'vehicle': 4.5, 'foot': 2.5}
+# Đường ven kênh Nhiêu Lộc – Thị Nghè chui dạ cầu: tĩnh không thiết kế 2,2 m, cấm xe cao > 2 m (Thanh Niên 10/2/2015,
+# đường chui dạ cầu Điện Biên Phủ; khung hạn chế 1,8–2,2 m ở cầu Bùi Hữu Nghĩa, Hoàng Hoa Thám — VOH, Tiền Phong).
+UNDERPASS = {'names': ['Hoàng Sa', 'Trường Sa'], 'clearanceM': 2.2,
+             'source': 'https://thanhnien.vn/thong-xe-duong-chui-da-cau-dien-bien-phu-185448659.htm'}
+AT_GRADE_TOL_M = 0.05          # hai mặt chênh ≤ 5 cm tại giao cắt = giao cùng mức (không xuyên bản mặt)
+STACK_MARGIN_M = 0.1
+STACK_PLATEAU_EXTRA_M = 2.0    # mặt trên giữ phẳng thêm 2 m mỗi bên ngoài nửa bề rộng đường dưới
+STACK_MAX_ROUNDS = 8
 FOOT_HIGHWAYS = {'footway', 'path', 'pedestrian', 'cycleway', 'steps', 'bridleway', 'corridor'}
 ROAD_WIDTHS = {'motorway': 16, 'trunk': 15, 'primary': 14, 'secondary': 11, 'tertiary': 8, 'residential': 5,
                'living_street': 4, 'service': 3.5, 'unclassified': 5, 'footway': 2.5, 'pedestrian': 12,
@@ -156,6 +169,20 @@ def r2(v):
 def bearing(ax, az, bx, bz):
     b = round(math.degrees(math.atan2(bx - ax, -(bz - az))) % 360, 1)
     return 0.0 if b >= 360 else b
+
+
+def clearance_of(road):
+    if road['name'] in UNDERPASS['names']:
+        return UNDERPASS['clearanceM']
+    return CLEARANCE['foot' if road['highway'] in FOOT_HIGHWAYS else 'vehicle']
+
+
+def road_half_width(d):
+    """Nửa bề rộng mặt đường như city-road-network-31.js roadWidth31 (không gồm bó vỉa)."""
+    width = ROAD_WIDTHS.get(d['type'], 4)
+    if d.get('lanes'):
+        width = max(width, d['lanes'] * 3.1)
+    return width / 2
 
 
 def smooth(t):
@@ -494,24 +521,33 @@ def main():
         out[-2] = e['length']
         return out
 
-    ramp_edges = 0
-    for ei, e in enumerate(edges):
-        if not fields[ei]:
-            continue
-        ys = [r2(max(f(s) for _, f in fields[ei])) for s in vertex_s[ei]]
-        bridge_profile = e['elevationClass'] not in ('ground', 'skip')
-        if not bridge_profile and max(ys) <= g + 0.005:
-            continue
-        e['y'] = ys
-        e['profile'] = profile_of(ei)
-        if not bridge_profile:
-            mid = e['_len'] / 2
-            e['rampOf'] = max(fields[ei], key=lambda cf: cf[1](mid))[0]
-            ramp_edges += 1
-        for v, yv in ((e['from'], ys[0]), (e['to'], ys[-1])):
-            nodes[v]['y'] = max(nodes[v]['y'], yv)
+    cluster_of_edge = {ei: cl['id'] for cl in clusters for ei in cl['_edges']}
 
-    # --- 5. giao cắt không chung nút, xung đột công trình ---------------------------------------
+    def apply_fields():
+        """Ghi y/profile/rampOf cho mọi cạnh có trường cao độ (max các trường); trả về số cạnh dốc dẫn."""
+        for n in nodes.values():
+            n['y'] = g
+        ramps = 0
+        for ei, e in enumerate(edges):
+            for k in ('y', 'profile', 'rampOf'):
+                e.pop(k, None)
+            if not fields[ei]:
+                continue
+            ys = [r2(max(f(s) for _, f in fields[ei])) for s in vertex_s[ei]]
+            bridge_profile = e['elevationClass'] not in ('ground', 'skip')
+            if not bridge_profile and max(ys) <= g + 0.005:
+                continue
+            e['y'] = ys
+            e['profile'] = profile_of(ei)
+            if not bridge_profile:
+                mid = e['_len'] / 2
+                e['rampOf'] = max(fields[ei], key=lambda cf: cf[1](mid))[0]
+                ramps += 1
+            for v, yv in ((e['from'], ys[0]), (e['to'], ys[-1])):
+                nodes[v]['y'] = max(nodes[v]['y'], yv)
+        return ramps
+
+    # --- 5. giao cắt không chung nút, xếp tầng, xung đột công trình -------------------------------
 
     def y_on(ei, x, z):
         e = edges[ei]
@@ -524,44 +560,124 @@ def main():
                 return p[k + 1] + (p[k + 3] - p[k + 1]) * ((s - p[k]) / (p[k + 2] - p[k]) if p[k + 2] > p[k] else 0)
         return p[-1]
     tree = STRtree(lines_xz)
-    crossings = []
-    elevated = [ei for ei, e in enumerate(edges) if 'y' in e and not D['roads'][e['road']]['tunnel']]
-    for ei in elevated:
-        e = edges[ei]
-        for oi in tree.query(lines_xz[ei], predicate='intersects'):
-            oi = int(oi)
-            o = edges[oi]
-            if oi == ei or D['roads'][o['road']]['tunnel'] or {e['from'], e['to']} & {o['from'], o['to']}:
+
+    def hidden(ei):
+        return D['roads'][edges[ei]['road']]['tunnel'] or roads[edges[ei]['road']].get('skipRender') == 'hide'
+
+    def find_crossings():
+        out = []
+        for ei in [ei for ei, e in enumerate(edges) if 'y' in e and not hidden(ei)]:
+            e = edges[ei]
+            for oi in tree.query(lines_xz[ei], predicate='intersects'):
+                oi = int(oi)
+                o = edges[oi]
+                if oi == ei or hidden(oi) or {e['from'], e['to']} & {o['from'], o['to']}:
+                    continue
+                if 'y' in o and oi < ei:
+                    continue   # cặp hai cạnh cùng nâng chỉ ghi một lần
+                hit = lines_xz[ei].intersection(lines_xz[oi])
+                pts = [hit] if hit.geom_type == 'Point' else [gm for gm in getattr(hit, 'geoms', []) if gm.geom_type == 'Point']
+                if not pts:
+                    continue
+                p = pts[0]
+                ya, yb = y_on(ei, p.x, p.y), y_on(oi, p.x, p.y)
+                if max(ya, yb) <= g + 0.3:
+                    continue
+                up, lo = (ei, oi) if ya >= yb else (oi, ei)
+                sep = abs(ya - yb)
+                lower_road = roads[edges[lo]['road']]
+                clear = clearance_of(lower_road)
+                issue = None
+                if sep <= AT_GRADE_TOL_M:
+                    pass
+                elif sep < 0.3:
+                    issue = 'same-level'
+                elif sep < clear + DECK_THICKNESS_M:
+                    issue = 'low-clearance'
+                elif roads[edges[up]['road']]['layer'] < lower_road['layer']:
+                    issue = 'layer-order'
+                out.append({'edge': ei, 'other': oi, 'way': e['way'], 'otherWay': o['way'], 'x': r2(p.x), 'z': r2(p.y),
+                            'y': r2(ya), 'otherY': r2(yb), 'layer': roads[e['road']]['layer'],
+                            'otherLayer': roads[o['road']]['layer'], 'issue': issue, 'atGrade': sep <= AT_GRADE_TOL_M,
+                            'clearanceM': clear, '_up': up, '_lo': lo, '_p': (p.x, p.y)})
+        return out
+
+    # Neo đầu cụt cho trường xếp tầng: chỉ đầu cụt của chính cầu (như trường cụm), để mặt cầu cụt vẫn chạm đất.
+    bridge_dead = {n for n in nodes if nodes[n]['kind'] == 'end'
+                   and any(edges[ei]['elevationClass'] not in ('ground', 'skip') for ei, _, _ in adj[n])}
+    dd_bridge = dijkstra({n: 0.0 for n in bridge_dead}, adj, limit=400.0) if bridge_dead else {}
+
+    def stack_field(ei, s_p, H, half, cid):
+        """Trường nâng quanh điểm s_p trên cạnh ei: phẳng ở H trong bán kính `half`, rồi smoothstep về groundY trên
+        R = 1,5·(H−g)/DESIGN_GRADE theo khoảng cách đồ thị (1-Lipschitz như trường cụm) nên dốc ≤ DESIGN_GRADE."""
+        e, L = edges[ei], edges[ei]['_len']
+        R = SMOOTH_MAX_SLOPE * (H - g) / DESIGN_GRADE
+        reach = half + R
+        dist = dijkstra({e['from']: s_p, e['to']: L - s_p}, adj, limit=reach)
+        affected = {ei}
+        for n, dv in dist.items():
+            if dv < reach:
+                affected.update(k for k, _, _ in adj[n])
+        for k in affected:
+            ek, Lk = edges[k], edges[k]['_len']
+            da, db = dist.get(ek['from'], math.inf), dist.get(ek['to'], math.inf)
+            xa, xb = dd_bridge.get(ek['from'], math.inf), dd_bridge.get(ek['to'], math.inf)
+
+            def y_at(s, k=k, da=da, db=db, xa=xa, xb=xb, Lk=Lk, R=R, reach=reach, H=H):
+                d = min(da + s, db + Lk - s)
+                if k == ei:
+                    d = min(d, abs(s - s_p))
+                v = min(reach - d, xa + s, xb + Lk - s)
+                return g + (H - g) * smooth(v / R)
+            fields[k].append((cid, y_at))
+        return len(affected)
+
+    # Xếp tầng: mỗi vòng đo lại giao cắt. Thiếu tĩnh không: nâng cục bộ mặt trên tới y mặt dưới + tĩnh không + bản mặt
+    # (+ biên STACK_MARGIN_M). Gần cùng cao độ (< 0,3 m): kéo mặt dưới lên đúng mặt trên (giao cùng mức, không xuyên bản
+    # mặt). Cầu bộ hành skip (không có mesh, vẽ phẳng ở mặt đất) nằm dưới cạnh nâng thì ẩn thay vì nâng đường ô tô.
+    stacking = {'rounds': 0, 'raised': [], 'levelled': [], 'hiddenFootbridges': []}
+    ramp_edges = apply_fields()
+    for round_ in range(STACK_MAX_ROUNDS):
+        todo = [c for c in find_crossings() if c['issue'] in ('same-level', 'low-clearance')]
+        if not todo:
+            break
+        stacking['rounds'] = round_ + 1
+        for c in todo:
+            up, lo = c['_up'], c['_lo']
+            lo_road = roads[edges[lo]['road']]
+            if (c['issue'] == 'low-clearance' and lo_road['elevationClass'] == 'skip' and lo_road['highway'] in FOOT_HIGHWAYS
+                    and 'y' not in edges[lo]):
+                if lo_road.get('skipRender') != 'hide':
+                    lo_road['skipRender'] = 'hide'
+                    lo_road['hideReason'] = ('cầu bộ hành bridge=yes chưa có mesh; vẽ phẳng ở mặt đất sẽ thành lối đi băng ngang dưới '
+                                             f"way {edges[up]['way']} đang nâng — ẩn thay vì nâng đường (bước C xếp tầng)")
+                    stacking['hiddenFootbridges'].append({'way': lo_road['id'], 'road': lo_road['index'], 'underWay': edges[up]['way']})
                 continue
-            if 'y' in o and oi < ei:
-                continue   # cặp hai cạnh cùng nâng chỉ ghi một lần
-            hit = lines_xz[ei].intersection(lines_xz[oi])
-            pts = [hit] if hit.geom_type == 'Point' else [gm for gm in getattr(hit, 'geoms', []) if gm.geom_type == 'Point']
-            if not pts:
-                continue
-            p = pts[0]
-            ya, yb = y_on(ei, p.x, p.y), y_on(oi, p.x, p.y)
-            up, lo = (ei, oi) if ya >= yb else (oi, ei)
-            sep = abs(ya - yb)
-            lower_road = roads[edges[lo]['road']]
-            clear = CLEARANCE['foot' if lower_road['highway'] in FOOT_HIGHWAYS else 'vehicle']
-            issue = None
-            if max(ya, yb) <= g + 0.3:
-                continue
-            if sep < 0.3:
-                issue = 'same-level'
-            elif sep < clear + DECK_THICKNESS_M:
-                issue = 'low-clearance'
-            elif roads[edges[up]['road']]['layer'] < lower_road['layer']:
-                issue = 'layer-order'
-            crossings.append({'edge': ei, 'other': oi, 'way': e['way'], 'otherWay': o['way'], 'x': r2(p.x), 'z': r2(p.y),
-                              'y': r2(ya), 'otherY': r2(yb), 'layer': roads[e['road']]['layer'],
-                              'otherLayer': roads[o['road']]['layer'], 'issue': issue})
+            px, pz = c['_p']
+            if c['issue'] == 'same-level':
+                target, other, H, bucket = lo, up, y_on(up, px, pz), stacking['levelled']
+            else:
+                target, other, H, bucket = up, lo, y_on(lo, px, pz) + c['clearanceM'] + DECK_THICKNESS_M + STACK_MARGIN_M, stacking['raised']
+            te = edges[target]
+            cid = cluster_of_edge.get(target, te.get('rampOf'))
+            if cid is None:
+                cid = cluster_of_edge.get(other, edges[other].get('rampOf'))
+            half = road_half_width(D['roads'][edges[other]['road']]) + STACK_PLATEAU_EXTRA_M
+            n_aff = stack_field(target, lines_xz[target].project(Point(px, pz)), H, half, cid)
+            bucket.append({'round': round_ + 1, 'edge': target, 'way': te['way'], 'otherWay': edges[other]['way'], 'x': r2(px),
+                           'z': r2(pz), 'targetY': r2(H), 'issue': c['issue'], 'clearanceM': c['clearanceM'], 'affectedEdges': n_aff})
+        ramp_edges = apply_fields()
+    crossings = find_crossings()
+    for c in crossings:
+        for k in [k for k in c if k.startswith('_')]:
+            del c[k]
     bpolys = [Polygon(b['r'][0], b['r'][1:]).buffer(0) for b in D['buildings']]
     btree = STRtree(bpolys)
     conflicts = []
     for i in bridge_roads:
         r, d = roads[i], D['roads'][i]
+        if r.get('skipRender') == 'hide' and not r.get('signature'):
+            continue   # road bị ẩn (cầu bộ hành không mesh) không còn mặt để xung đột
         width = ROAD_WIDTHS.get(d['type'], 4)
         if d.get('lanes'):
             width = max(width, d['lanes'] * 3.1)
@@ -647,6 +763,9 @@ def main():
                                     if max(e['profile'][k + 1], e['profile'][k + 3]) > g + 0.01)),
         'conflicts': len(conflicts), 'conflictsVertical': sum(c['verticalOverlap'] for c in conflicts),
         'crossings': len(crossings), 'crossingIssues': dict(collections.Counter(c['issue'] for c in crossings if c['issue'])),
+        'crossingsAtGrade': sum(c['atGrade'] for c in crossings), 'stackRounds': stacking['rounds'],
+        'stackRaised': len(stacking['raised']), 'stackLevelled': len(stacking['levelled']),
+        'hiddenFootbridges': len(stacking['hiddenFootbridges']),
     }
     G = {
         'version': VERSION, 'batch': '31A', 'seed': SEED,
@@ -670,11 +789,14 @@ def main():
             'edges[].profile': '[s0,y0,…] mẫu dày dọc cạnh; runtime nội suy tuyến tính theo s',
             'edges[].rampOf': 'id cụm cầu khi cạnh mặt đất/skip mang dốc dẫn',
             'bridges.conflicts': 'công trình giao hành lang cầu (ribbon width+1,8) — bước C xử lý',
-            'bridges.crossings': 'cạnh nâng cắt cạnh khác không chung nút; issue same-level|low-clearance|layer-order',
+            'bridges.crossings': 'cạnh nâng cắt cạnh khác không chung nút; issue same-level|low-clearance|layer-order; '
+                                 'atGrade = hai mặt chênh ≤ 0,05 m (giao cùng mức); clearanceM = tĩnh không áp cho đường dưới',
+            'bridges.stacking': 'bước C xếp tầng: raised (nâng cục bộ mặt trên), levelled (kéo mặt dưới lên cùng mức), '
+                                'hiddenFootbridges (cầu bộ hành skip ẩn, roads[i].hideReason)',
         },
         'stats': stats, 'roads': roads, 'nodes': node_list, 'edges': out_edges,
         'bridges': {'clusters': clusters, 'signature': signature, 'issue03': issue03, 'conflicts': conflicts,
-                    'crossings': crossings, 'config': BRIDGE_CONFIG,
+                    'crossings': crossings, 'stacking': stacking, 'underpass': UNDERPASS, 'config': BRIDGE_CONFIG,
                     'classPeakY': CLASS_PEAK_Y, 'clearance': CLEARANCE, 'deckThicknessM': DECK_THICKNESS_M},
     }
     body = json.dumps(G, ensure_ascii=False, separators=(',', ':'))

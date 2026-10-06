@@ -23,6 +23,14 @@ BA_SON_WAYS = {321564421, 321564423}
 BACH_DANG_WAYS = {1504289918, 1504289919, 1504289920, 1504289921}
 ISSUE03_WAYS = {732142874, 732142875}   # "Cầu số 11 Đường N2", covered=yes, dưới building=roof 732220089
 BA_SON_DECK_TOP_Y = 11.25 + 3.2 / 2     # webgpu-materials-24.js: BoxGeometry(24,3.2,…) đặt tại y=11.25
+# Xếp tầng (bước C): tĩnh không tối thiểu dưới bản mặt dày 1,5 m. Đường ven kênh Hoàng Sa/Trường Sa chui dạ cầu với
+# tĩnh không thiết kế 2,2 m (Thanh Niên 10/2/2015: đường chui dạ cầu Điện Biên Phủ; khung hạn chế 1,8–2,2 m các cầu khác).
+DECK_THICKNESS_M = 1.5
+CLEARANCE_VEHICLE_M = 4.5
+CLEARANCE_FOOT_M = 2.5
+UNDERPASS_NAMES = {'Hoàng Sa', 'Trường Sa'}
+UNDERPASS_CLEARANCE_M = 2.2
+AT_GRADE_TOL = 0.05
 
 failures = []
 
@@ -100,6 +108,86 @@ def windowed_max_grade(s, y):
         if j < len(s):
             worst = max(worst, abs(y[j] - y[i]) / (s[j] - s[i]))
     return worst
+
+
+def profile_y(e, s, gy):
+    p = e.get('profile')
+    if not p:
+        return gy
+    if s <= p[0]:
+        return p[1]
+    for k in range(2, len(p), 2):
+        if s <= p[k]:
+            t = (s - p[k - 2]) / (p[k] - p[k - 2]) if p[k] > p[k - 2] else 0.0
+            return p[k - 1] + (p[k + 1] - p[k - 1]) * t
+    return p[-1]
+
+
+def measure_crossings(G, D):
+    """Giao cắt (không chung nút) giữa cạnh có y và cạnh bất kỳ đang được vẽ; trả về (lỗi, tổng, số cùng mức)."""
+    gy = G['frame']['groundY']
+    edges, roads = G['edges'], G['roads']
+    drawn = [not D['roads'][e['road']]['tunnel'] and roads[e['road']].get('skipRender') != 'hide' for e in edges]
+    segs = []   # (edge, x0, z0, x1, z1, s0, scale)
+    cell, grid = 40.0, collections.defaultdict(list)
+    for ei, e in enumerate(edges):
+        if not drawn[ei]:
+            continue
+        c = e['c']
+        total = polyline_length(c)
+        scale = e['length'] / total if total > 1e-9 else 1.0
+        s = 0.0
+        for k in range(0, len(c) - 2, 2):
+            x0, z0, x1, z1 = c[k], c[k + 1], c[k + 2], c[k + 3]
+            idx = len(segs)
+            segs.append((ei, x0, z0, x1, z1, s * scale, scale))
+            for gx in range(int(math.floor(min(x0, x1) / cell)), int(math.floor(max(x0, x1) / cell)) + 1):
+                for gz in range(int(math.floor(min(z0, z1) / cell)), int(math.floor(max(z0, z1) / cell)) + 1):
+                    grid[(gx, gz)].append(idx)
+            s += math.hypot(x1 - x0, z1 - z0)
+    seen, bad, at_grade = set(), [], 0
+    for idx_list in grid.values():
+        for a in idx_list:
+            ea = segs[a][0]
+            if not edges[ea].get('y'):
+                continue
+            for b in idx_list:
+                eb = segs[b][0]
+                if eb == ea or (a, b) in seen or (b, a) in seen:
+                    continue
+                A, B = edges[ea], edges[eb]
+                if {A['from'], A['to']} & {B['from'], B['to']}:
+                    continue
+                _, ax0, az0, ax1, az1, as0, asc = segs[a]
+                _, bx0, bz0, bx1, bz1, bs0, bsc = segs[b]
+                dax, daz, dbx, dbz = ax1 - ax0, az1 - az0, bx1 - bx0, bz1 - bz0
+                den = dax * dbz - daz * dbx
+                if abs(den) < 1e-12:
+                    continue
+                t = ((bx0 - ax0) * dbz - (bz0 - az0) * dbx) / den
+                u = ((bx0 - ax0) * daz - (bz0 - az0) * dax) / den
+                if not (0 <= t <= 1 and 0 <= u <= 1):
+                    continue
+                seen.add((a, b))
+                ya = profile_y(A, as0 + t * math.hypot(dax, daz) * asc, gy)
+                yb = profile_y(B, bs0 + u * math.hypot(dbx, dbz) * bsc, gy)
+                if max(ya, yb) <= gy + 0.3:
+                    continue
+                sep = abs(ya - yb)
+                if sep <= AT_GRADE_TOL:
+                    at_grade += 1
+                    continue
+                lower = roads[(B if ya >= yb else A)['road']]
+                need = clearance_of(lower) + DECK_THICKNESS_M
+                if sep < need:
+                    bad.append((A['way'], B['way'], round(ya, 2), round(yb, 2), round(ax0 + t * dax, 1), round(az0 + t * daz, 1)))
+    return bad, len(seen), at_grade
+
+
+def clearance_of(road):
+    if road['name'] in UNDERPASS_NAMES:
+        return UNDERPASS_CLEARANCE_M
+    return CLEARANCE_FOOT_M if road['highway'] in FOOT_HIGHWAYS else CLEARANCE_VEHICLE_M
 
 
 def main():
@@ -408,6 +496,14 @@ def main():
     cross = br.get('crossings', [])
     print(f"Giao cắt cạnh nâng ↔ cạnh khác (không chung nút): {len(cross)}; cần xử lý xếp tầng: {sum(1 for c in cross if c['issue'])} "
           f"({dict(collections.Counter(c['issue'] for c in cross if c['issue']))})")
+    # Bước C: tự đo lại mọi giao cắt (không tin trường issue của builder). Hai mặt cùng cao độ (≤ 0,05 m) là giao cùng
+    # mức; còn lại mặt trên phải cách mặt dưới ≥ tĩnh không + bề dày bản mặt.
+    bad_cross, n_cross, at_grade = measure_crossings(G, D)
+    check('xếp tầng: 0 giao cắt thiếu tĩnh không hoặc gần cùng cao độ (đo lại từ profile)', not bad_cross,
+          f'{len(bad_cross)}/{n_cross} giao cắt lỗi, ví dụ {bad_cross[:4]}')
+    print(f'Giao cắt đo lại: {n_cross}; cùng mức (|Δy| ≤ {AT_GRADE_TOL} m): {at_grade}')
+    hidden_ok = all(r.get('skipRender') != 'hide' or r.get('signature') or r.get('hideReason') for r in roads)
+    check("road skipRender='hide' có signature thay thế hoặc lý do ẩn", hidden_ok)
 
     print('KẾT QUẢ:', 'PASS' if not failures else f'FAIL ({len(failures)}): {failures}')
     return 1 if failures else 0
