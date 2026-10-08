@@ -83,9 +83,10 @@ async function inspect(page, hidden) {
       if (!j.elevated) junctionPolys.push(item);
     }
     // Mọi y asphalt tại (x, z).
-    const asphaltYs = (x, z) => {
+    const asphaltYs = (x, z, skipRoad = null) => {
       const ys = [];
       for (const item of grid.get(key(Math.floor(x / cell), Math.floor(z / cell))) || []) {
+        if (skipRoad && item.road !== undefined && skipRoad(item.road)) continue;
         // polygon giao lộ được vẽ thành quạt tam giác từ đỉnh 0 (y theo từng đỉnh, khác nhau trên dốc dẫn)
         if (item.poly) { if (inPoly(item.poly, x, z)) { let y = null; for (let k = 1; k < item.poly.length - 1 && y === null; k++) y = triY(item.poly[0], item.poly[k], item.poly[k + 1], x, z); ys.push(y ?? item.y); } continue; }
         const [a, b, c, d] = item.quad, y = triY(a, b, d, x, z) ?? triY(d, b, c, x, z);
@@ -137,6 +138,23 @@ async function inspect(page, hidden) {
       for (const zb of zebras) { const d = segDist(lamp.x, lamp.z, zb.a[0], zb.a[1], zb.b[0], zb.b[1]) - zb.halfWidth; if (d < limits.CROSSING_CLEAR_M) { push(bad.nearCrossing, lamp, { d: +d.toFixed(2) }); break; } }
     }
     out.bad = Object.fromEntries(Object.entries(bad).map(([k, v]) => [k, { count: v.count || 0, samples: v.slice() }]));
+    // --- Bước G: mọi InstancedMesh đèn/cột khác (đèn hero corridor 30 "Lam Son street lamps", …): 0 cột trong mặt
+    //     asphalt hoặc polygon giao lộ. Cột hình trụ đơn vị tâm ở giữa: chân = y − sy/2 (không thấp hơn groundY).
+    const otherPoles = meshesNamed(/street lamps|lamp poles|lamp posts|bollards/i).filter(m => m.isInstancedMesh && !poleMeshes.includes(m));
+    const otherBad = { onAsphalt: [], inJunction: [] };
+    out.otherLampMeshes = otherPoles.map(m => ({ name: m.name, count: m.count }));
+    for (const mesh of otherPoles) {
+      const m = mesh.instanceMatrix.array, e = mesh.matrixWorld.elements;
+      for (let i = 0; i < mesh.count; i++) {
+        const lamp = { x: m[i * 16 + 12] + e[12], y: Math.max(groundY, m[i * 16 + 13] - m[i * 16 + 5] / 2 + e[13]), z: m[i * 16 + 14] + e[14], mesh: mesh.name };
+        let hit = false;
+        for (const [dx, dz] of [[0, 0], [limits.POLE_RADIUS_M, 0], [-limits.POLE_RADIUS_M, 0], [0, limits.POLE_RADIUS_M], [0, -limits.POLE_RADIUS_M]])
+          if (asphaltYs(lamp.x + dx, lamp.z + dz).some(y => Math.abs(y - lamp.y) < 1)) hit = true;
+        if (hit) push(otherBad.onAsphalt, lamp, { mesh: mesh.name, i });
+        if (nearestJunction(lamp.x, lamp.z) < limits.POLE_RADIUS_M) push(otherBad.inJunction, lamp, { mesh: mesh.name, i });
+      }
+    }
+    out.otherLampBad = Object.fromEntries(Object.entries(otherBad).map(([k, v]) => [k, { count: v.count || 0, samples: v.slice() }]));
     out.roundabouts = roundabouts.length;
 
     // --- Đèn signature: đếm trên vị trí thật bằng registry (module ES nạp trong trang).
@@ -185,15 +203,30 @@ async function inspect(page, hidden) {
     for (const r of hidden.crossings) if (api.pieces(r).length) crossingDrawn++;
     for (const r of hidden.hidden) if (api.pieces(r).length) hiddenDrawn++;
     for (let r = 0; r < D.roads.length; r++) {
-      // Cầu bộ hành (bridge=yes) do bước C quyết định vẽ phẳng/nâng; báo riêng, không tính vào tiêu chí E2.
-      if (D.roads[r].type !== 'footway') continue;
+      // Cầu bộ hành (bridge=yes) kiểm riêng ở vòng dưới (bước G); vòng này chỉ tính footway thường cho tiêu chí E2.
+      if (D.roads[r].type !== 'footway' || D.roads[r].bridge) continue;
       const pieces = api.pieces(r); if (!pieces.length) continue;
       let n = 0, on = 0;
       for (const piece of pieces) { const c = piece.center; for (let k = 0; k < c.length / 3 - 1; k++) for (const t of [.25, .75]) { const x = c[k * 3] + (c[k * 3 + 3] - c[k * 3]) * t, z = c[k * 3 + 2] + (c[k * 3 + 5] - c[k * 3 + 2]) * t, y = c[k * 3 + 1]; n++; if (asphaltYs(x, z).some(v => Math.abs(v - y) < 1)) on++; } }
-      if (n && on / n >= limits.FOOTWAY_ON_ROAD_SHARE && D.roads[r].bridge) { (out.footbridgesOnRoad = out.footbridgesOnRoad || []).push({ road: r, way: D.roads[r].id, name: D.roads[r].name, share: +(on / n).toFixed(2) }); continue; }
       if (n && on / n >= limits.FOOTWAY_ON_ROAD_SHARE) { footwayOnRoad++; if (footSamples.length < 6) footSamples.push({ road: r, way: D.roads[r].id, share: +(on / n).toFixed(2), crossing: crossingSet.has(r) }); }
     }
     Object.assign(out, { crossingDrawn, hiddenDrawn, footwayOnRoad, footSamples });
+    // --- Bước G: mọi footway/path/cycleway/pedestrian/steps bridge=yes còn vẽ ribbon mà ≥ 60 % tim nằm phẳng trên
+    //     asphalt đường xe (cùng cao độ ±1 m) = cầu bộ hành bị "dán" lên lòng đường. Phải bằng 0: hoặc nâng thành
+    //     cầu vượt đi bộ thủ tục, hoặc ẩn có lý do.
+    const FOOT = new Set(['footway', 'pedestrian', 'path', 'cycleway', 'steps', 'bridleway', 'corridor']);
+    const footRoad = i => FOOT.has(D.roads[i].type);
+    out.footbridgesOnRoad = []; out.footbridgesChecked = 0;
+    for (let r = 0; r < D.roads.length; r++) {
+      if (!D.roads[r].bridge || !footRoad(r)) continue;
+      const pieces = api.pieces(r); if (!pieces.length) continue;
+      out.footbridgesChecked++;
+      let n = 0, on = 0;
+      for (const piece of pieces) { const c = piece.center; for (let k = 0; k < c.length / 3 - 1; k++) for (const t of [.25, .75]) { const x = c[k * 3] + (c[k * 3 + 3] - c[k * 3]) * t, z = c[k * 3 + 2] + (c[k * 3 + 5] - c[k * 3 + 2]) * t, y = c[k * 3 + 1] + (c[k * 3 + 4] - c[k * 3 + 1]) * t; n++; if (asphaltYs(x, z, footRoad).some(v => Math.abs(v - y) < 1)) on++; } }
+      if (n && on / n >= limits.FOOTWAY_ON_ROAD_SHARE) out.footbridgesOnRoad.push({ road: r, way: D.roads[r].id, type: D.roads[r].type, name: D.roads[r].name, share: +(on / n).toFixed(2) });
+    }
+    const fb = status.bridges?.footbridges;
+    out.footbridges = fb ? { state: fb.state, count: fb.count, hidden: fb.hidden, stairs: fb.stairs, clearanceMin: fb.clearanceMin, ways: fb.ways } : null;
 
     // --- API cho bước E: danh sách instance có cờ signature; setVisibleFraction thưa đều, không giảm signature.
     if (sf?.api) {
@@ -268,6 +301,11 @@ async function runBackend(browser, backend, hidden) {
         assert(r.lampCount * per <= r.legacyLamps * 40, `${r.lampCount}×${per} > ${r.legacyLamps}×40`);
       });
       check(tag + '0 cột đèn nằm trên mặt asphalt hoặc polygon giao lộ (bán kính cột 0,3 m)', () => assert.equal(r.bad.onAsphalt.count, 0, JSON.stringify(r.bad.onAsphalt)));
+      check(tag + 'đèn/cột InstancedMesh khác (hero corridor 30…): 0 cột trong mặt asphalt hoặc giao lộ (bước G)', () => {
+        assert(r.otherLampMeshes.some(m => m.name === 'Lam Son street lamps' && m.count > 0), JSON.stringify(r.otherLampMeshes));
+        assert.equal(r.otherLampBad.onAsphalt.count, 0, JSON.stringify(r.otherLampBad.onAsphalt));
+        assert.equal(r.otherLampBad.inJunction.count, 0, JSON.stringify(r.otherLampBad.inJunction));
+      });
       check(tag + '0 cột đèn trong vòng xoay', () => { assert(r.roundabouts >= 5, `chỉ ${r.roundabouts} vòng xoay`); assert.equal(r.bad.inRoundabout.count, 0, JSON.stringify(r.bad.inRoundabout)); });
       check(tag + '0 cột đèn trên cầu hoặc xuyên mặt cầu', () => assert.equal(r.bad.onBridge.count, 0, JSON.stringify(r.bad.onBridge)));
       check(tag + `cột đèn cách polygon giao lộ ≥ ${JUNCTION_CLEAR_M} m`, () => assert.equal(r.bad.nearJunction.count, 0, JSON.stringify(r.bad.nearJunction)));
@@ -286,6 +324,16 @@ async function runBackend(browser, backend, hidden) {
         assert(hidden.crossings.length > 0, 'thiếu danh sách crossing');
         assert.equal(r.crossingDrawn, 0); assert.equal(r.hiddenDrawn, 0);
         assert.equal(r.footwayOnRoad, 0, JSON.stringify(r.footSamples));
+      });
+      check(tag + 'cầu bộ hành bridge=yes (footway/path/cycleway…) không còn vẽ phẳng trên lòng đường xe (bước G)', () => {
+        assert(r.footbridgesChecked > 0, 'không có cầu bộ hành nào được kiểm');
+        assert.deepEqual(r.footbridgesOnRoad, []);
+      });
+      check(tag + 'cầu vượt đi bộ Văn Thánh dựng nâng, tĩnh không ≥ 4,5 m, có cầu thang (bước G)', () => {
+        assert(r.footbridges && r.footbridges.state === 'ready', JSON.stringify(r.footbridges));
+        const vt = r.footbridges.ways.find(w => w.way === 292941640);
+        assert(vt && vt.mode === 'elevated', JSON.stringify(r.footbridges.ways));
+        assert(vt.clearance >= 4.5, `tĩnh không ${vt.clearance}`); assert(vt.stairs >= 2, `cầu thang ${vt.stairs}`);
       });
       check(tag + 'API bước E: instances có cờ signature, setVisibleFraction thưa đều và giữ signature', () => {
         assert(r.api, 'thiếu streetFurniture.api');

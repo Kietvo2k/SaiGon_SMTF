@@ -54,7 +54,22 @@ function ribbon(points,width,y,tileMeters=6){
   return geometry;
 }
 
-export function createHeroCorridor30({scene,roads,nightLevel,status={}}){
+// Bước G 31A: phép thử "cột đèn chạm mặt asphalt/giao lộ của city-road-network-31" trong một bbox (chỉ mảnh nhóm
+// asphalt mặt đất, như qa-street-furniture-31). Cột bán kính r: thử tâm + 4 điểm trên chu vi.
+function asphaltProbe(net,roadCount,[x0,z0,x1,z1]){
+  const quads=[],polys=[],inside=(poly,x,z)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+  const near=pts=>pts.some(([x,z])=>x>=x0&&x<=x1&&z>=z0&&z<=z1);
+  for(let r=0;r<roadCount;r++)for(const piece of net.pieces(r)){
+    if(piece.group!=='asphalt'||piece.elevated)continue;
+    const L=piece.left,R=piece.right;
+    for(let k=0;k+1<L.length/3;k++){const q=[[L[k*3],L[k*3+2]],[R[k*3],R[k*3+2]],[R[k*3+3],R[k*3+5]],[L[k*3+3],L[k*3+5]]];if(near(q))quads.push(q);}
+  }
+  for(const j of net.junctions())if(j.group==='asphalt'&&!j.elevated){const poly=j.polygon.map(p=>[p[0],p[2]]);if(near(poly))polys.push(poly);}
+  const hit=(x,z)=>quads.some(q=>inside(q,x,z))||polys.some(q=>inside(q,x,z));
+  return (x,z,r=.3)=>[[0,0],[r,0],[-r,0],[0,r],[0,-r]].some(([dx,dz])=>hit(x+dx,z+dz));
+}
+
+export function createHeroCorridor30({scene,roads,nightLevel,roadNetwork=null,status={}}){
   const root=new THREE.Group();root.name='Hero Corridor 30B · sourced identity geometry + CC0 PBR public realm';root.visible=false;scene.add(root);
   const architecture=new THREE.Group();architecture.name='Sourced landmark envelopes';root.add(architecture);
   const publicRealm=new THREE.Group();publicRealm.name='OSM-aligned public realm proxy';root.add(publicRealm);
@@ -153,16 +168,27 @@ export function createHeroCorridor30({scene,roads,nightLevel,status={}}){
     mesh(publicRealm,ribbon(road.c,.15,1.51),marking,`Hero corridor centreline ${road.id}`);
   }
   const furniture=[];
+  // Bước G 31A: đèn đặt ±7 m theo tim, nhưng mặt đường 31 (bề rộng theo làn) và polygon giao lộ có thể phủ tới đó. Đèn
+  // chạm asphalt được dời tới ô trống gần nhất (ra mép ngoài cùng phía ≤ +6 m, trượt dọc ≤ 8 m) — giữ số lượng và phía.
+  const corridorPts=corridorRoads.flatMap(road=>road.c),pad=30,xs=corridorPts.map(p=>p[0]),zs=corridorPts.map(p=>p[1]);
+  const onAsphalt=roadNetwork&&corridorPts.length?asphaltProbe(roadNetwork,roads.length,[Math.min(...xs)-pad,Math.min(...zs)-pad,Math.max(...xs)+pad,Math.max(...zs)+pad]):()=>false;
+  // Ô ứng viên theo độ dời tăng dần: ra mép ngoài 7…13 m, rồi trượt dọc tim ≤ 8 m (mép giao lộ) — nhịp ~28 m giữ nguyên.
+  const lampSlots=[];for(let out=7;out<=13;out+=.25)for(let along=0;along<=8;along+=.5)for(const sign of along?[1,-1]:[1])lampSlots.push([out,along*sign]);
+  lampSlots.sort((a,b)=>(a[0]-7)+Math.abs(a[1])-((b[0]-7)+Math.abs(b[1]))||Math.abs(a[1])-Math.abs(b[1])||a[1]-b[1]||a[0]-b[0]);
+  let movedLamps=0,blockedLamps=0;
   for(const road of corridorRoads){
     for(let i=0;i<road.c.length-1;i++){
       const a=road.c[i],b=road.c[i+1],dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz);if(length<8)continue;
       const count=Math.max(1,Math.floor(length/28)),nx=-dz/length,nz=dx/length;
       for(let n=0;n<count;n++){
         const t=(n+.5)/count,x=a[0]+dx*t,z=a[1]+dz*t,side=n%2?1:-1;
-        furniture.push({x:x+nx*7*side,y:3.5,z:z+nz*7*side,sx:.11,sy:7,sz:.11});
+        const ux=dx/length,uz=dz/length,best=lampSlots.find(([out,along])=>!onAsphalt(x+nx*out*side+ux*along,z+nz*out*side+uz*along));
+        const [out,along]=best||[7,0];if(!best)blockedLamps++;else if(out!==7||along!==0)movedLamps++;
+        furniture.push({x:x+nx*out*side+ux*along,y:3.5,z:z+nz*out*side+uz*along,sx:.11,sy:7,sz:.11});
       }
     }
   }
+  status.lamps={count:furniture.length,moved:movedLamps,blocked:blockedLamps,rule:'±7 m theo tim; chạm asphalt/giao lộ 31 thì dời ít nhất: ra mép ngoài ≤ +6 m, trượt dọc ≤ 8 m'};
   instanced(publicRealm,'Lam Son street lamps',new THREE.CylinderGeometry(1,1,1,9),dark,furniture);
   instanced(publicRealm,'Lam Son lamp glow',new THREE.SphereGeometry(1,10,8),warm,furniture.map(item=>({...item,y:7.15,sx:.34,sy:.34,sz:.34})));
 

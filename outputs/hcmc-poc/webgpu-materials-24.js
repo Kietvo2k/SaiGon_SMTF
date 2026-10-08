@@ -10,7 +10,7 @@ import {
   resolveVisualQuality, smoothDampScalar, smoothDampVector
 } from './city-visual-runtime-30.js?v=30b';
 import { createCityDetailRuntime } from './city-detail-runtime-28.js?v=30b-31e2';
-import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b';
+import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b-31g';
 import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
 import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=30b-31g';
 import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=30b-31e2';
@@ -799,7 +799,7 @@ fixtures.castShadow=true;scene.add(fixtures);
 materialStatus.heroDetail={};
 const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))&&!building.hiddenByCorrection),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
 materialStatus.heroCorridor={};
-const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,status:materialStatus.heroCorridor});
+const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetwork,status:materialStatus.heroCorridor});
 // Bước E2: cột đèn theo mép đường hợp nhất + vạch zebra (thay đèn đặt theo tim từng way của runtime 28).
 materialStatus.streetFurniture={};
 const streetFurniture=createStreetFurniture31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,data:window.STREET_FURNITURE_31,widths,nightLevel,status:materialStatus.streetFurniture});
