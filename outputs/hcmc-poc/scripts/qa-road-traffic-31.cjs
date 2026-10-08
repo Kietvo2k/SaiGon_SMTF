@@ -131,6 +131,11 @@ async function inspect(page) {
         }
       }
       Object.assign(out, { curbProbes, curbOnTop, curbSamples });
+      // 3c) Bước G lỗi 5/6: khe đất kín giữa hai chiều đường đôi phía nam vòng xoay Ba Son (camera 01 của 30B) đã lấp;
+      // đảo tròn vòng xoay vẫn để trống. Điểm lấy từ raster 1 m của hình học trước sửa (thành phần kín 197 ô).
+      const probe = ([x, z]) => { ray.set(new T.Vector3(x, groundY + 2, z), new T.Vector3(0, -1, 0)); ray.far = 4; return ray.intersectObjects(meshes, false).map(h => h.object.name); };
+      const gapPoints = [[574.5, -1164.5], [571.5, -1161.5], [567.5, -1159.5]], islandPoint = [554.5, -1143.5];
+      out.medianGap = { open: gapPoints.filter(p => !probe(p).length), islandHits: probe(islandPoint) };
     }
     // 4) Thứ tự vẽ: polygonOffset đặt trên vật liệu thật của từng mesh đường.
     out.meshes = api.meshes.map(mesh => ({ name: mesh.name, polygonOffset: mesh.material.polygonOffset, factor: mesh.material.polygonOffsetFactor, units: mesh.material.polygonOffsetUnits, renderOrder: mesh.renderOrder, triangles: mesh.geometry.attributes.position.count / 3, inScene: !!mesh.parent }));
@@ -207,7 +212,28 @@ async function inspectBridges(page) {
         if (hit.point.y > y + 0.05) bsAbove++;
       }
     }
-    out.baSon = { deckMeshes: baSonDeck.length, samples: bsSamples, hits: bsHits, above: bsAbove, worst: +bsWorst.toFixed(3), decision: br.baSon?.decision };
+    // 3b) Bước G: ở cầu dẫn (mặt đường thấp hơn đỉnh hộp nhịp phẳng 12,85 m quá 0,6 m — đoạn chuyển tiếp 24 m từ hộp
+    // 24 m về mép thật nằm trong 0,6 m đầu của dốc smoothstep) hộp
+    // không được thò ra ngoài mặt đường OSM: mọi điểm hộp chiếu thẳng xuống phải có mặt đường cùng cao độ (± 0,3 m)
+    // trong vòng 1,2 m ngang (bó vỉa 0,9 m + sai số). Quét ngang −24…+24 m mỗi 0,5 m, dọc tim mỗi 5 m.
+    let overhang = 0, rampSamples = 0; const overhangSamples = [];
+    for (let k = 0; k + 1 < bsC.length; k++) {
+      const dx = bsC[k + 1][0] - bsC[k][0], dz = bsC[k + 1][1] - bsC[k][1], L = Math.hypot(dx, dz), n = Math.max(1, Math.ceil(L / 5)), px = -dz / L, pz = dx / L;
+      for (let q = 0; q <= n; q++) {
+        const u = q / n, x = bsC[k][0] + dx * u, z = bsC[k][1] + dz * u, y = net.roadY(bsRoad, k, u);
+        if (y >= 12.85 - 0.6) continue;
+        rampSamples++;
+        for (let off = -24; off <= 24; off += 0.5) {
+          const sx = x + px * off, sz = z + pz * off;
+          ray.set(new T.Vector3(sx, 60, sz), down); ray.far = 80;
+          const hit = ray.intersectObjects(baSonDeck, false)[0];
+          if (!hit || hit.point.y < groundY + 0.2) continue;
+          const covered = [0, 1.2, -1.2].some(d => net.surfaceYs(sx + px * d, sz + pz * d).some(v => Math.abs(v - hit.point.y) < 0.3));
+          if (!covered) { overhang++; if (overhangSamples.length < 6) overhangSamples.push({ x: +sx.toFixed(1), z: +sz.toFixed(1), off, y: +hit.point.y.toFixed(2) }); }
+        }
+      }
+    }
+    out.baSon = { deckMeshes: baSonDeck.length, samples: bsSamples, hits: bsHits, above: bsAbove, worst: +bsWorst.toFixed(3), decision: br.baSon?.decision, rampSamples, overhang, overhangSamples };
     // 4) Trụ/lan can là InstancedMesh có instance; ngân sách tam giác và số mesh mới.
     out.meshes = api.meshes.map(m => ({ name: m.name, instanced: !!m.isInstancedMesh, count: m.isInstancedMesh ? m.count : 1, triangles: (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3 * (m.isInstancedMesh ? m.count : 1), inScene: !!m.parent }));
     out.procedural = api.procedural.map(m => m.name);
@@ -374,6 +400,13 @@ async function runBackend(browser, backend) {
       check(tag + 'bó vỉa dốc dẫn không nhô lên mặt giao lộ (0 tia gặp bó vỉa trước asphalt)', () => {
         assert(r.curbProbes > 50, `chỉ ${r.curbProbes} tia`); assert.equal(r.curbOnTop, 0, JSON.stringify(r.curbSamples));
       });
+      check(tag + 'khe đất kín giữa hai chiều đường đôi đã lấp, không lấp khối nhà/đảo vòng xoay (bước G)', () => {
+        const s = r.stats;
+        assert(s.medianHoles >= 300, `chỉ lấp ${s.medianHoles} khe`);
+        assert(s.medianHoleRejected?.building > 0 && s.medianHoleRejected?.roundabout > 0, JSON.stringify(s.medianHoleRejected));
+        assert.deepEqual(r.medianGap.open, [], 'điểm khe phía nam vòng xoay còn trống');
+        assert.deepEqual(r.medianGap.islandHits, [], 'đảo tròn vòng xoay bị lấp');
+      });
       check(tag + 'polygonOffset đặt trên mọi mesh đường, thứ tự median < bó vỉa < vỉa hè < asphalt < vạch', () => {
         assert(r.meshes.length >= 5 && r.meshes.length <= 12, `${r.meshes.length} mesh`);
         for (const m of r.meshes) { assert(m.polygonOffset === true, m.name); assert(m.inScene, m.name); }
@@ -405,6 +438,10 @@ async function runBackend(browser, backend) {
           const s = b.baSon; assert(s.deckMeshes > 0, 'không thấy nhóm "Cầu Ba Son · mặt cầu"');
           assert(s.hits >= 0.9 * s.samples, `hộp chỉ phủ ${s.hits}/${s.samples} mẫu`); assert.equal(s.above, 0, `${s.above} mẫu hộp cao hơn mặt đường`);
           assert(s.worst <= 0.05, `lệch ${s.worst} m`);
+        });
+        check(tag + 'bridges: Ba Son — hộp cầu dẫn không thò ra ngoài mặt đường OSM (bước G)', () => {
+          const s = b.baSon; assert(s.rampSamples >= 20, `chỉ ${s.rampSamples} mẫu cầu dẫn`);
+          assert.equal(s.overhang, 0, `${s.overhang} điểm hộp ngoài mặt đường ${JSON.stringify(s.overhangSamples)}`);
         });
         check(tag + 'bridges: trụ và lan can là InstancedMesh có instance > 0', () => {
           for (const key of ['trụ', 'lan can']) { const m = b.meshes.find(x => x.name.includes(key)); assert(m, `thiếu mesh ${key}`); assert(m.instanced && m.count > 0, JSON.stringify(m)); }

@@ -186,7 +186,7 @@ function buildStrip(points,halfWidth,dirIn,dirOut,emit){
 function pushTri(out,a,b,c){out.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);}
 
 // hiddenRoads (bước E2): chỉ số road không vẽ ribbon, ví dụ footway=crossing (thay bằng zebra) và footway trùng lòng đường.
-export async function buildRoadNetwork31({roads,graph,widths,hiddenRoads=null,yieldMain=async()=>{},onProgress=()=>{}}){
+export async function buildRoadNetwork31({roads,graph,widths,hiddenRoads=null,buildings=null,yieldMain=async()=>{},onProgress=()=>{}}){
   const started=performance.now();
   const groundY=graph.frame.groundY,nodeById=new Map(graph.nodes.map(node=>[node.id,node]));
   const buckets=Object.fromEntries(LAYERS.map(layer=>[layer.key,[]]));
@@ -437,6 +437,7 @@ export async function buildRoadNetwork31({roads,graph,widths,hiddenRoads=null,yi
       }
     }
   }
+  const holesStarted=performance.now(),holes=await fillEnclosedHoles({roads,graph,drawn,groupOf,vertexY,isElevated,buckets,groundY,buildings,yieldMain}),holesMs=Math.round(performance.now()-holesStarted);
   onProgress(1);
   const triangles=Object.fromEntries(LAYERS.map(layer=>[layer.key,buckets[layer.key].length/9]));
   const elevatedRoads=graph.roads.filter((road,index)=>piecesByRoad[index].some(piece=>piece.elevated)).length;
@@ -444,10 +445,166 @@ export async function buildRoadNetwork31({roads,graph,widths,hiddenRoads=null,yi
     groundY,buckets,junctions,piecesByRoad,markingPieces,vertexY,roadY,
     stats:{
       roadsDrawn:piecesByRoad.filter(list=>list.length).length,pieces:pieceCount,curbChains,junctionCandidates,junctionPolygons:junctions.length,
-      medianQuads,medianPairs:medianPairs.size,elevatedRoads,markingPieces:markingPieces.length,
+      medianQuads,medianPairs:medianPairs.size,medianHoles:holes.filled,medianHoleCells:holes.cells,medianHoleTailCells:holes.tailCells,medianHoleRejected:holes.rejected,medianHoleMs:holesMs,elevatedRoads,markingPieces:markingPieces.length,
       triangles,totalTriangles:Object.values(triangles).reduce((sum,value)=>sum+value,0),buildMs:Math.round(performance.now()-started)
     }
   };
+}
+
+// 3b) Bước G: khe đất KÍN giữa hai chiều đường đôi mà bước 3 bỏ sót (khác tên, khe > 12 m, mũi nhọn sát giao lộ/cửa
+// hầm). Raster 1 m quanh các cặp way một chiều ngược chiều (≤ HOLE_PAIR_M): ô không có mặt đường/bó vỉa/vỉa hè/median
+// nào phủ, gom 8-liên thông; chỉ lấp thành median khi thành phần (a) kín — không chạm biên cửa sổ, (b) không chứa ô của
+// footprint công trình, (c) nửa bề rộng ≤ HOLE_MAX_HALF_M, (d) không nằm trong vòng xoay (đảo tròn giữ nguyên).
+// Xác định: thứ tự duyệt cố định theo ô, không ngẫu nhiên. Ô lấp nở HOLE_DILATE_M để mép khớp kín dưới asphalt.
+const HOLE_CELL_M=1,HOLE_TILE_M=32,HOLE_MAX_HALF_M=8,HOLE_PAIR_M=30,HOLE_DILATE_M=.6,HOLE_TAIL_CELLS=2,HOLE_SLICE_MS=24;
+async function fillEnclosedHoles({roads,graph,drawn,groupOf,vertexY,isElevated,buckets,groundY,buildings,yieldMain=async()=>{}}){
+  const T=HOLE_TILE_M,tileKey=(tx,tz)=>`${tx},${tz}`;
+  // Nhường luồng chính khi một lát chạy quá HOLE_SLICE_MS (không đổi kết quả, chỉ tránh khung dài).
+  let slice=performance.now();const pace=async()=>{if(performance.now()-slice>HOLE_SLICE_MS){await yieldMain();slice=performance.now();}};
+  // a) Đoạn tim một chiều ở mặt đất, lưới theo ô T.
+  const segs=[],segGrid=new Map();
+  roads.forEach((road,index)=>{
+    const g=graph.roads[index];
+    if(!drawn(index)||groupOf(index)!=='asphalt'||(g.oneway!=='yes'&&g.oneway!=='-1'))return;
+    const c=road.c,ys=vertexY[index],sign=g.oneway==='-1'?-1:1;
+    for(let k=0;k+1<c.length;k++){
+      if(isElevated(ys[k])||isElevated(ys[k+1]))continue;
+      const ax=c[k][0],az=c[k][1],bx=c[k+1][0],bz=c[k+1][1],len=Math.hypot(bx-ax,bz-az);if(len<.1)continue;
+      const seg={index,ax,az,bx,bz,len,ux:(bx-ax)/len*sign,uz:(bz-az)/len*sign};segs.push(seg);
+      for(let tx=Math.floor(Math.min(ax,bx)/T);tx<=Math.floor(Math.max(ax,bx)/T);tx++)for(let tz=Math.floor(Math.min(az,bz)/T);tz<=Math.floor(Math.max(az,bz)/T);tz++){const key=tileKey(tx,tz);if(!segGrid.has(key))segGrid.set(key,[]);segGrid.get(key).push(seg);}
+    }
+  });
+  // b) Ô có cặp ngược chiều: mẫu mỗi 8 m, tìm đoạn ngược chiều (cos < −0,85) trong HOLE_PAIR_M; đánh dấu ô của trung điểm.
+  const tiles=new Set();
+  for(const s of segs){
+    const steps=Math.max(1,Math.ceil(s.len/8));
+    for(let j=0;j<=steps;j++){
+      const px=s.ax+(s.bx-s.ax)*j/steps,pz=s.az+(s.bz-s.az)*j/steps,tx=Math.floor(px/T),tz=Math.floor(pz/T);
+      let hit=null;
+      for(let dx=-1;dx<=1&&!hit;dx++)for(let dz=-1;dz<=1&&!hit;dz++)for(const o of segGrid.get(tileKey(tx+dx,tz+dz))||[]){
+        if(o.index===s.index||s.ux*o.ux+s.uz*o.uz>-.85)continue;
+        const sx=o.bx-o.ax,sz=o.bz-o.az,t=Math.min(1,Math.max(0,((px-o.ax)*sx+(pz-o.az)*sz)/(sx*sx+sz*sz))),qx=o.ax+sx*t,qz=o.az+sz*t;
+        if(Math.hypot(qx-px,qz-pz)<=HOLE_PAIR_M){hit=[(px+qx)/2,(pz+qz)/2];break;}
+      }
+      if(hit)tiles.add(tileKey(Math.floor(hit[0]/T),Math.floor(hit[1]/T)));
+    }
+  }
+  const out={filled:0,cells:0,tailCells:0,rejected:{open:0,building:0,wide:0,roundabout:0},tiles:tiles.size};
+  if(!tiles.size)return out;
+  // c) Tam giác mặt đất đã vẽ (median, bó vỉa, vỉa hè, asphalt) và footprint công trình, lưới theo ô cho các cửa sổ cần.
+  const need=new Set();
+  for(const key of tiles){const [tx,tz]=key.split(',').map(Number);for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)need.add(tileKey(tx+dx,tz+dz));}
+  // Raster một lần theo ô T (L×L ô 1 m), cửa sổ 3×3 ô ghép lại từ đó: 0 trống, 1 có mặt, 2 công trình, 3 median (bit 1 = có mặt).
+  const C=HOLE_CELL_M,L=Math.round(T/C),raster=new Map();
+  for(const key of need)raster.set(key,new Uint8Array(L*L));
+  // Tô các ô 1 m trong bbox [gx0..gx1]×[gz0..gz1] thỏa test; tra tile theo cột ô T để khỏi tạo khóa chuỗi mỗi ô.
+  const paint=(gx0,gz0,gx1,gz1,value,test)=>{
+    for(let tz=Math.floor(gz0/L);tz<=Math.floor(gz1/L);tz++)for(let tx=Math.floor(gx0/L);tx<=Math.floor(gx1/L);tx++){
+      const tile=raster.get(tileKey(tx,tz));if(!tile)continue;
+      const r0=Math.max(gz0,tz*L),r1=Math.min(gz1,tz*L+L-1),c0=Math.max(gx0,tx*L),c1=Math.min(gx1,tx*L+L-1);
+      for(let gz=r0;gz<=r1;gz++){const row=(gz-tz*L)*L-tx*L,z=(gz+.5)*C;for(let gx=c0;gx<=c1;gx++){const id=row+gx;if((tile[id]&1)||tile[id]===value)continue;if(test((gx+.5)*C,z))tile[id]=value;}}
+    }
+  };
+  const near=(x0,z0,x1,z1)=>{for(let tx=Math.floor(x0/T);tx<=Math.floor(x1/T);tx++)for(let tz=Math.floor(z0/T);tz<=Math.floor(z1/T);tz++)if(need.has(tileKey(tx,tz)))return true;return false;};
+  for(const layer of ['median','edge','pedestrian','asphalt']){
+    const a=buckets[layer];
+    for(let i=0;i<a.length;i+=9){
+      if(i%4608===0)await pace();
+      const x0=a[i],z0=a[i+2],x1=a[i+3],z1=a[i+5],x2=a[i+6],z2=a[i+8],d=(z1-z2)*(x0-x2)+(x2-x1)*(z0-z2);if(Math.abs(d)<1e-9)continue;
+      const bx0=Math.min(x0,x1,x2),bz0=Math.min(z0,z1,z2),bx1=Math.max(x0,x1,x2),bz1=Math.max(z0,z1,z2);if(!near(bx0,bz0,bx1,bz1))continue;
+      const inTri=(x,z)=>{const w0=((z1-z2)*(x-x2)+(x2-x1)*(z-z2))/d,w1=((z2-z0)*(x-x2)+(x0-x2)*(z-z2))/d;return w0>=-1e-6&&w1>=-1e-6&&w0+w1<=1+1e-6;};
+      paint(Math.floor(bx0/C),Math.floor(bz0/C),Math.floor(bx1/C),Math.floor(bz1/C),layer==='median'?3:1,inTri);
+    }
+  }
+  const inRing=(ring,x,z)=>{let c=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],b=ring[j];if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+  let built=0;
+  for(const b of buildings||[]){
+    if(++built%512===0)await pace();
+    const ring=b.r?.[0];if(!ring||ring.length<3)continue;
+    let bx0=Infinity,bz0=Infinity,bx1=-Infinity,bz1=-Infinity;for(const p of ring){bx0=Math.min(bx0,p[0]);bx1=Math.max(bx1,p[0]);bz0=Math.min(bz0,p[1]);bz1=Math.max(bz1,p[1]);}
+    if(!near(bx0,bz0,bx1,bz1))continue;
+    paint(Math.floor(bx0/C),Math.floor(bz0/C),Math.floor(bx1/C),Math.floor(bz1/C),2,(x,z)=>inRing(ring,x,z));
+  }
+  // Vòng xoay: bao lồi tim các road junction=roundabout|circular nối nhau qua nút chung.
+  const parent=new Map(),find=a=>{while(parent.get(a)!==a){parent.set(a,parent.get(parent.get(a)));a=parent.get(a);}return a;};
+  const rb=graph.roads.filter(r=>r.junction==='roundabout'||r.junction==='circular');
+  for(const r of rb)for(const n of r.nodes||[])if(!parent.has(n))parent.set(n,n);
+  for(const r of rb)for(let k=1;k<(r.nodes||[]).length;k++){const a=find(r.nodes[0]),b=find(r.nodes[k]);if(a!==b)parent.set(a,b);}
+  const rbPts=new Map();for(const r of rb){if(!r.nodes?.length)continue;const key=find(r.nodes[0]);if(!rbPts.has(key))rbPts.set(key,[]);rbPts.get(key).push(...roads[r.index].c);}
+  const rbHulls=[...rbPts.values()].map(hull2d).filter(h=>h.length>=3);
+  const N=3*L,lo=L,hi=2*L,fill=[],tail=[];
+  for(const key of [...tiles].sort()){
+    await pace();
+    const [tx,tz]=key.split(',').map(Number),wx=(tx-1)*T,wz=(tz-1)*T,grid=new Uint8Array(N*N);
+    for(let dx=0;dx<3;dx++)for(let dz=0;dz<3;dz++){const tile=raster.get(tileKey(tx+dx-1,tz+dz-1));for(let r=0;r<L;r++)grid.set(tile.subarray(r*L,(r+1)*L),(dz*L+r)*N+dx*L);}
+    const seen=new Uint8Array(N*N);
+    // Chỉ khởi loang từ ô giữa; thành phần thuộc cửa sổ có ô nhỏ nhất (theo hàng) nằm trong ô giữa → không lấp hai lần.
+    for(let sr=lo;sr<hi;sr++)for(let sc=lo;sc<hi;sc++){
+      const start=sr*N+sc;
+      if((grid[start]&1)||seen[start])continue;
+      const comp=[start];seen[start]=1;let open=false,building=false,minId=start;
+      for(let q=0;q<comp.length;q++){
+        const id=comp[q],r=Math.floor(id/N),cc=id-r*N;
+        if(id<minId)minId=id;
+        if(grid[id]===2)building=true;
+        if(r===0||cc===0||r===N-1||cc===N-1)open=true;
+        for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const rr=r+dr,c2=cc+dc;if(rr<0||c2<0||rr>=N||c2>=N)continue;const n=rr*N+c2;if(!(grid[n]&1)&&!seen[n]){seen[n]=1;comp.push(n);}}
+      }
+      {const mr=Math.floor(minId/N),mc=minId-mr*N;if(mr<lo||mr>=hi||mc<lo||mc>=hi)continue;}
+      if(open){out.rejected.open++;continue;}
+      if(building){out.rejected.building++;continue;}
+      // Nửa bề rộng: BFS (chessboard) từ các ô kề mặt đường vào trong thành phần.
+      // level: 255 thuộc thành phần chưa đo, k = khoảng cách (ô) tới mặt đường.
+      const level=new Uint8Array(N*N);for(const id of comp)level[id]=255;
+      let frontier=[],depth=1;
+      for(const id of comp){const r=Math.floor(id/N),cc=id-r*N;let edge=false;for(let dr=-1;dr<=1&&!edge;dr++)for(let dc=-1;dc<=1;dc++)if(grid[(r+dr)*N+cc+dc]&1){edge=true;break;}if(edge){level[id]=1;frontier.push(id);}}
+      while(frontier.length){const next=[];for(const id of frontier){const r=Math.floor(id/N),cc=id-r*N;for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const n=(r+dr)*N+cc+dc;if(level[n]===255){level[n]=Math.min(254,depth+1);next.push(n);}}}if(next.length)depth++;frontier=next;}
+      if(depth*C>HOLE_MAX_HALF_M){out.rejected.wide++;continue;}
+      let sx=0,sz=0;for(const id of comp){sx+=wx+((id%N)+.5)*C;sz+=wz+(Math.floor(id/N)+.5)*C;}
+      if(rbHulls.some(h=>inRing(h,sx/comp.length,sz/comp.length))){out.rejected.roundabout++;continue;}
+      // Ô mảnh (level 1, không có ô level ≥ 2 trong bán kính HOLE_TAIL_CELLS) là đuôi nhọn/khe vụn giữa hai ribbon
+      // → lấp asphalt để không thành vệt nhọn; phần lõi và ô kề median sẵn có lấp median (asphalt vẽ đè median, không được lấn).
+      const thin=id=>{if(level[id]!==1)return false;const r=Math.floor(id/N),cc=id-r*N;for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)if(grid[(r+dr)*N+cc+dc]===3)return false;for(let dr=-HOLE_TAIL_CELLS;dr<=HOLE_TAIL_CELLS;dr++)for(let dc=-HOLE_TAIL_CELLS;dc<=HOLE_TAIL_CELLS;dc++){const rr=r+dr,c2=cc+dc;if(rr>=0&&c2>=0&&rr<N&&c2<N&&level[rr*N+c2]>=2&&level[rr*N+c2]!==255)return false;}return true;};
+      // Lấp: gộp ô liền kề cùng loại theo hàng thành đoạn; chữ nhật median của hàng trước kéo dài xuống khi mọi ô dưới nó
+      // là ô lõi của thành phần hoặc ô đã có mặt (nằm dưới asphalt/bó vỉa, không lộ); chữ nhật đuôi chỉ kéo qua ô đuôi.
+      // Bớt tam giác. Nở HOLE_DILATE_M.
+      const kind=new Map();for(const id of comp)kind.set(id,thin(id)?2:1);   // 1 lõi (median), 2 đuôi mảnh (asphalt)
+      const rows=new Map();for(const id of comp){const r=Math.floor(id/N);if(!rows.has(r))rows.set(r,[]);rows.get(r).push(id-r*N);}
+      let active=[];const rects=[];
+      for(const [r,cols] of [...rows].sort((a,b)=>a[0]-b[0])){
+        const used=new Set(),carried=[];
+        for(const rect of active){
+          if(rect.r1!==r-1)continue;
+          let ok=true;for(let c=rect.c0;c<=rect.c1&&ok;c++){const id=r*N+c,k=kind.get(id);ok=rect.thin?k===2:k===1||(k===undefined&&(grid[id]&1));}
+          if(!ok)continue;
+          rect.r1=r;carried.push(rect);for(let c=rect.c0;c<=rect.c1;c++)if(kind.get(r*N+c)===(rect.thin?2:1))used.add(c);if(rect.thin)out.tailCells+=rect.c1-rect.c0+1;
+        }
+        const free=cols.filter(c=>!used.has(c)).sort((a,b)=>a-b),next=[...carried];
+        for(let i=0;i<free.length;){
+          const t=kind.get(r*N+free[i]);let j=i;while(j+1<free.length&&free[j+1]===free[j]+1&&kind.get(r*N+free[j+1])===t)j++;
+          const rect={c0:free[i],c1:free[j],r0:r,r1:r,thin:t===2};rects.push(rect);next.push(rect);if(rect.thin)out.tailCells+=j-i+1;
+          i=j+1;
+        }
+        active=next;
+      }
+      for(const {c0,c1,r0,r1,thin:t} of rects){
+        const x0=wx+c0*C-HOLE_DILATE_M,x1=wx+(c1+1)*C+HOLE_DILATE_M,z0=wz+r0*C-HOLE_DILATE_M,z1=wz+(r1+1)*C+HOLE_DILATE_M;
+        (t?tail:fill).push(x0,groundY,z0,x0,groundY,z1,x1,groundY,z1,x0,groundY,z0,x1,groundY,z1,x1,groundY,z0);
+      }
+      out.filled++;out.cells+=comp.length;
+    }
+  }
+  for(const v of fill)buckets.median.push(v);
+  for(const v of tail)buckets.asphalt.push(v);
+  return out;
+}
+
+function hull2d(points){
+  const p=points.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);if(p.length<3)return p;
+  const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),lower=[],upper=[];
+  for(const q of p){while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],q)<=0)lower.pop();lower.push(q);}
+  for(let i=p.length-1;i>=0;i--){const q=p[i];while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],q)<=0)upper.pop();upper.push(q);}
+  return lower.slice(0,-1).concat(upper.slice(0,-1));
 }
 
 // Lưới tra cứu mặt đường (mảnh + polygon giao lộ) cho sampleY và lọc mép hợp nhất; dựng lười khi gọi lần đầu.
@@ -490,10 +647,10 @@ function createSurfaceIndex(data){
   };
 }
 
-export async function createRoadNetwork31({scene,roads,graph,widths,colors,hiddenRoads,yieldMain,onProgress,status={}}){
+export async function createRoadNetwork31({scene,roads,graph,widths,colors,hiddenRoads,buildings=null,yieldMain,onProgress,status={}}){
   if(!graph?.roads||graph.roads.length!==roads.length)throw new Error('ROAD_GRAPH_31 không khả dụng hoặc lệch CITY_DATA.roads');
   status.version=ROAD_NETWORK_31_VERSION;status.state='building';
-  const data=await buildRoadNetwork31({roads,graph,widths,hiddenRoads,yieldMain,onProgress});
+  const data=await buildRoadNetwork31({roads,graph,widths,hiddenRoads,buildings,yieldMain,onProgress});
   const root=new THREE.Group();root.name='Road network 31 · mặt đường liền mạch';scene.add(root);
   const palette={median:'#55654a',...colors};
   const meshes=[];
