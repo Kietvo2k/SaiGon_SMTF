@@ -80,6 +80,76 @@ def r2(v):
     return round(v + 0.0, 2)
 
 
+# --- Bước G · cầu vượt đi bộ ---------------------------------------------------------------------
+# build_road_graph_31.py xếp footway/path bridge=yes vào lớp skip (vẽ phẳng ở groundY) vì không có mesh riêng. Cầu nào
+# có ≥ FOOTBRIDGE_ROAD_SHARE chiều dài tim nằm trên lòng đường xe mặt đất là cầu vượt đi bộ bị "dán" lên lòng đường:
+#   - hai đầu nối way highway=steps trong OSM → mode 'elevated': runtime (city-bridges-31.js) ẩn ribbon phẳng, dựng bản
+#     mặt ở tĩnh không xe + bản mặt và cầu thang theo đúng polyline steps OSM (các way steps không có trong scene.js);
+#   - thiếu dữ liệu cầu thang → mode 'hidden' (ẩn ribbon, có lý do) thay vì vẽ phẳng sai.
+FOOTBRIDGE_ROAD_SHARE = 0.5
+FOOTBRIDGE_DECK_M = 0.6          # = FOOT_THICKNESS_M của city-bridges-31.js
+FOOTBRIDGE_MARGIN_M = 0.3        # dư trên tĩnh không xe của road-graph-31 (bridges.clearance.vehicle)
+FOOT_BRIDGE_TYPES = FOOT_TYPES | {'pedestrian'}
+
+
+def pedestrian_overpasses(D, roads_g, drawn, elevated_edges, gy, clear):
+    osm = json.loads((ROOT / 'data/osm-raw.json').read_text(encoding='utf-8'))
+    ways = {e['id']: e for e in osm['elements'] if e['type'] == 'way'}
+    by_node = collections.defaultdict(list)
+    for w in ways.values():
+        for n in (w.get('nodes') or [])[:1] + (w.get('nodes') or [])[-1:]:
+            by_node[n].append(w['id'])
+    car = []
+    for ri, d in enumerate(D['roads']):
+        if not drawn(ri) or d['type'] in FOOT_BRIDGE_TYPES or len(d['c']) < 2:
+            continue
+        if any(ei in elevated_edges for ei in roads_g[ri]['edges']):
+            continue
+        car.append(LineString(d['c']).buffer(road_width(d) / 2, cap_style=2, join_style=2))
+    car_tree = STRtree(car)
+    deck_top = gy + clear['vehicle'] + FOOTBRIDGE_MARGIN_M + FOOTBRIDGE_DECK_M
+    found = []
+    for ri, d in enumerate(D['roads']):
+        if not d['bridge'] or d['type'] not in FOOT_BRIDGE_TYPES or roads_g[ri]['elevationClass'] != 'skip':
+            continue
+        if not drawn(ri) or len(d['c']) < 2 or any(ei in elevated_edges for ei in roads_g[ri]['edges']):
+            continue   # đã được nâng theo dốc dẫn của cầu xe kề bên (bước C vẽ bản mặt thủ tục)
+        line = LineString(d['c'])
+        near = [car[int(k)] for k in car_tree.query(line, predicate='intersects')]
+        share = line.intersection(unary_union(near)).length / max(line.length, 1e-6) if near else 0.0
+        if share < FOOTBRIDGE_ROAD_SHARE:
+            continue
+        w = ways.get(d['id'])
+        stairs = []
+        if w and w.get('geometry') and len(w['nodes']) >= 2:
+            for end, node, anchor in ((0, w['nodes'][0], d['c'][0]), (1, w['nodes'][-1], d['c'][-1])):
+                g0 = w['geometry'][0 if end == 0 else -1]
+                k = 111320 * math.cos(math.radians(g0['lat']))
+                for sid in sorted(by_node[node]):
+                    s = ways[sid]
+                    if sid == d['id'] or s.get('tags', {}).get('highway') != 'steps':
+                        continue
+                    geo = s['geometry'] if s['nodes'][0] == node else s['geometry'][::-1]
+                    # Tọa độ scene: x = đông, z = nam (m), neo tại đầu cầu đã có trong scene.js (phép chiếu cục bộ, sai số
+                    # < 1 cm trên vài chục mét).
+                    pts = [[r2(anchor[0] + (q['lon'] - g0['lon']) * k), r2(anchor[1] - (q['lat'] - g0['lat']) * 110540)] for q in geo]
+                    stairs.append({'way': sid, 'end': end, 'points': pts, 'lengthM': r2(LineString(pts).length)})
+        ends = {s['end'] for s in stairs}
+        item = {'road': ri, 'way': d['id'], 'name': d.get('name') or '', 'type': d['type'], 'roadShare': r2(share),
+                'lengthM': r2(line.length)}
+        if ends == {0, 1}:
+            item.update({'mode': 'elevated', 'deckTopY': r2(deck_top), 'stairs': stairs,
+                         'reason': f'cầu vượt đi bộ qua lòng đường xe ({share:.0%} chiều dài): bản mặt ở tĩnh không xe '
+                                   f'{clear["vehicle"]} m + {FOOTBRIDGE_MARGIN_M} m, cầu thang theo {len(stairs)} way steps OSM'})
+        else:
+            item.update({'mode': 'hidden', 'stairs': stairs,
+                         'reason': 'cầu bộ hành nằm trên lòng đường xe nhưng OSM thiếu way steps ở ít nhất một đầu (không đủ dữ liệu dựng cầu thang): ẩn ribbon phẳng thay vì dán lên lòng đường'})
+        found.append(item)
+    return {'policy': {'roadShare': FOOTBRIDGE_ROAD_SHARE, 'deckM': FOOTBRIDGE_DECK_M, 'marginM': FOOTBRIDGE_MARGIN_M,
+                       'source': 'data/osm-raw.json (way steps nối đầu cầu)', 'classification': 'illustrative'},
+            'ways': found}
+
+
 def main():
     D = load_js_json(ROOT / 'data/scene.js')
     G = json.loads((ROOT / 'data/road-graph-31.json').read_text(encoding='utf-8'))
@@ -232,11 +302,13 @@ def main():
             add(b, {'rule': 'in-road-surface', 'action': 'hide', 'share': r2(share),
                     'reason': f'footprint Overture ước lượng nằm {share:.0%} trong mặt đường đang vẽ ở mặt đất'})
 
+    footbridges = pedestrian_overpasses(D, roads_g, drawn, elevated_edges, gy, clear)
+
     entries = [out[k] for k in sorted(out)]
     by_action = dict(sorted(collections.Counter(e['action'] for e in entries).items()))
     by_rule = dict(sorted(collections.Counter(e['rule'] for e in entries).items()))
     inputs = [{'path': p, 'sha256': sha_lf(ROOT / p)} for p in
-              ('data/scene.js', 'data/road-graph-31.json', 'data/signature-registry-31.json')]
+              ('data/scene.js', 'data/road-graph-31.json', 'data/signature-registry-31.json', 'data/osm-raw.json')]
     data = {
         'schema': 'rtr.city-lab.bridge-corrections.v1', 'version': '31C',
         'generated': {'script': 'scripts/build_bridge_corrections_31.py', 'deterministic': True, 'inputs': inputs},
@@ -249,6 +321,7 @@ def main():
         'buildings': entries,
         'signatureSkipped': skipped_signature,
         'nguyenHueReported': reported,
+        'footbridges': footbridges,
     }
     text = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
     OUT_JSON.write_text(json.dumps(data, ensure_ascii=False, indent=1) + '\n', encoding='utf-8', newline='\n')
@@ -257,6 +330,9 @@ def main():
     print(f'Signature bỏ qua: {skipped_signature}')
     for r in reported:
         print('Nguyễn Huệ được báo:', r)
+    for f in footbridges['ways']:
+        print(f"Cầu bộ hành {f['way']} {f['name']!r}: {f['mode']} · trên lòng đường {f['roadShare']:.0%} · "
+              f"{len(f.get('stairs', []))} cầu thang · {f['reason']}")
     for e in entries:
         if e['rule'] != 'in-road-surface':
             print(f"  {e['id']} {e['action']} [{e['rule']}] {e['reason']}")

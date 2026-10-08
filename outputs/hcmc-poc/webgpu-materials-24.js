@@ -12,9 +12,9 @@ import {
 import { createCityDetailRuntime } from './city-detail-runtime-28.js?v=30b-31e2';
 import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b';
 import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
-import { createRoadNetwork31 } from './city-road-network-31.js?v=30b-31e2';
+import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=30b-31g';
 import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=30b-31e2';
-import { createBridges31, loftStrip } from './city-bridges-31.js?v=30b-31c';
+import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=30b-31g';
 import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31e';
 
 const D=window.CITY_DATA;
@@ -415,7 +415,7 @@ function ribbon(coords,width,y,target){
 const roadColors={edge:'#8c9188',asphalt:'#293534',pedestrian:'#c8ad84',marking:'#f4db80'};
 setProgress(58,'Đang dựng mạng đường liền mạch…');
 materialStatus.roadNetwork={};
-const roadNetwork=await createRoadNetwork31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,widths,colors:roadColors,hiddenRoads:hiddenFootwayRoads(D.roads,window.STREET_FURNITURE_31),yieldMain,status:materialStatus.roadNetwork,
+const roadNetwork=await createRoadNetwork31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,widths,colors:roadColors,hiddenRoads:new Set([...hiddenFootwayRoads(D.roads,window.STREET_FURNITURE_31),...footbridgeRoads31(D.roads,window.BRIDGE_CORRECTIONS_31)]),buildings:D.buildings,yieldMain,status:materialStatus.roadNetwork,
   onProgress:value=>setProgress(58+value*12,`Đang dựng mạng đường liền mạch · ${Math.round(value*100)}%`)});
 
 // Flood 25A visual calibration layer. The ribbons follow named OSM road centrelines
@@ -494,7 +494,10 @@ function baSonDeckTop(x,z){
   }
   return Math.min(BA_SON_TOP,top);
 }
-const baSonJoin={decision:'profile-match-box-top',rampSegments:0,piersSkipped:[],anchorsLowered:0};
+const baSonJoin={decision:'profile-match-box-top',rampSegments:0,piersSkipped:[],anchorsLowered:0,rampFit:'road-edges'};
+// Bước G: cầu dẫn thu bề ngang theo hợp mặt đường hai way mapped (fitRampToRoads), nhịp phẳng giữ hộp 24 m.
+const baSonRampFit={roads:D.roads,mainRoad:baSonRoad,pairRoads:BS.mappedRoadIds.slice(1).map(id=>D.roads.findIndex(road=>road.id===id)).filter(i=>i>=0),
+  halfWidthOf:i=>roadWidth31(D.roads[i],widths)/2+.9,boxTop:BA_SON_TOP,joints:baSonRoad<0?[]:flatJoints(BS.centerline,baSonDeckTop,BA_SON_TOP),groundY:window.ROAD_GRAPH_31.frame.groundY};
 const baSonRampStrips=[];
 const bridgeConcrete=new THREE.MeshStandardNodeMaterial({color:'#888e89',roughness:.76,metalness:.05});
 const bridgeUnderside=new THREE.MeshStandardNodeMaterial({color:'#455256',roughness:.68,metalness:.18});
@@ -511,7 +514,7 @@ function bridgeBeam(a,b,radius,material,parent=bridgeSupportGroup,radial=8){
 function bridgeDeckSegment(a,b){
   const dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz),n=Math.max(1,Math.ceil(length/4)),strip=[];
   for(let k=0;k<=n;k++){const x=a[0]+dx*k/n,z=a[1]+dz*k/n,top=baSonDeckTop(x,z);strip.push({x,z,top,bottom:top-3.2});}
-  if(strip.some(point=>point.top<BA_SON_TOP-.005)){baSonRampStrips.push(...loftStrip(strip,24));baSonJoin.rampSegments++;return;}
+  if(strip.some(point=>point.top<BA_SON_TOP-.005)){baSonRampStrips.push(...loftStrip(baSonRoad<0?strip:fitRampToRoads(strip,baSonRampFit),24));baSonJoin.rampSegments++;return;}
   const mesh=new THREE.Mesh(new THREE.BoxGeometry(24,3.2,length),bridgeUnderside);
   mesh.position.set((a[0]+b[0])*.5,11.25,(a[1]+b[1])*.5);mesh.rotation.y=Math.atan2(dx,dz);mesh.castShadow=true;mesh.receiveShadow=true;bridgeDeckGroup.add(mesh);
 }
@@ -554,7 +557,7 @@ for(const side of [-1,1]){
 
 // Bước C 31A: kết cấu cầu thủ tục (bản mặt dày, trụ, lan can — minh họa) và Bạch Đằng dựng lại trong runtime WebGPU.
 materialStatus.bridges={};
-createBridges31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,water:D.water,bachDang:window.BACH_DANG_FOOTBRIDGE,status:materialStatus.bridges});
+createBridges31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,water:D.water,bachDang:window.BACH_DANG_FOOTBRIDGE,footbridges:window.BRIDGE_CORRECTIONS_31,status:materialStatus.bridges});
 materialStatus.bridges.baSon=baSonJoin;
 
 // Marina Central Tower: official 240 m / 55 floors, anchored to three current OSM building parts.
@@ -569,7 +572,14 @@ for(let i=0;i<6;i++){
   band.position.set(marinaCenter.x,height,marinaCenter.z);band.rotation.y=marinaRotation;band.castShadow=true;marinaDetail.add(band);
 }
 const marinaCrown=new THREE.Mesh(new THREE.BoxGeometry(47,2.2,35),marinaCanopyMaterial);marinaCrown.position.set(marinaCenter.x,240.6,marinaCenter.z);marinaCrown.rotation.y=marinaRotation;marinaCrown.castShadow=true;marinaDetail.add(marinaCrown);
-const marinaCanopy=new THREE.Mesh(new THREE.BoxGeometry(55,1.2,9),marinaCanopyMaterial);marinaCanopy.position.set(marinaCenter.x+18,23,marinaCenter.z+18);marinaCanopy.rotation.set(0,marinaRotation,-Math.PI/6);marinaCanopy.castShadow=true;marinaDetail.add(marinaCanopy);
+// Bước G: mái đón nghiêng (schematic inclined retail canopy, ba-son-marina-24.json) trước đây xoay quanh trục DỌC 55 m
+// (rotation.z, thứ tự XYZ) nên thành tấm xiên đứng lẻ cao ~27 m cạnh tháp. Sửa: giữ kích thước 55×1,2×9 m, cao độ 23 m
+// và độ nghiêng 30°, nhưng nghiêng theo chiều SÂU 9 m (quanh trục dọc mặt đứng, thứ tự YXZ) và gắn vào mặt đứng đông
+// bắc của tháp (cạnh OSM 1432358258 cách tâm 19,5 m theo trục z cục bộ), mép ngoài thấp hơn mép tựa tường.
+const MARINA_FACADE_M=19.52,marinaCanopyTilt=Math.PI/6,marinaOut=new THREE.Vector3(Math.sin(marinaRotation),0,Math.cos(marinaRotation));
+const marinaCanopy=new THREE.Mesh(new THREE.BoxGeometry(55,1.2,9),marinaCanopyMaterial);
+marinaCanopy.position.copy(marinaCenter).addScaledVector(marinaOut,MARINA_FACADE_M+4.5*Math.cos(marinaCanopyTilt)).setY(23);
+marinaCanopy.rotation.set(marinaCanopyTilt,marinaRotation,0,'YXZ');marinaCanopy.castShadow=true;marinaDetail.add(marinaCanopy);
 
 // Grand Marina residential cluster: identity details sit on the corrected open footprints.
 const grandMarinaDetail=new THREE.Group();grandMarinaDetail.name='Grand Marina Residences · cụm 4 tháp hiện hữu';scene.add(grandMarinaDetail);

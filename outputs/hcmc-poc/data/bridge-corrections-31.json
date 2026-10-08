@@ -15,7 +15,11 @@
    },
    {
     "path": "data/signature-registry-31.json",
-    "sha256": "0119738bc077e243341bd2029e50cc0062cc50a6c577dcf791868976c444ad3a"
+    "sha256": "b801080c358a512cc6853b32349839a9e2991a4de38e26bf37e75e67c03eb095"
+   },
+   {
+    "path": "data/osm-raw.json",
+    "sha256": "3124e5bafe27958e47aa763b88b02fd60b893b56ec0a2329dda439d6d6aaf087"
    }
   ]
  },
@@ -2536,5 +2540,217 @@
    "decision": "keep",
    "reason": "nằm trong khối nhà phía đông lòng đường 377881079 (Đông Du–Nguyễn Thiệp–Đồng Khởi), không nằm trong lòng phố đi bộ; không có mặt đường nào phủ"
   }
- ]
+ ],
+ "footbridges": {
+  "policy": {
+   "roadShare": 0.5,
+   "deckM": 0.6,
+   "marginM": 0.3,
+   "source": "data/osm-raw.json (way steps nối đầu cầu)",
+   "classification": "illustrative"
+  },
+  "ways": [
+   {
+    "road": 2437,
+    "way": 292941640,
+    "name": "Cầu vượt đi bộ Văn Thánh",
+    "type": "footway",
+    "roadShare": 0.9,
+    "lengthM": 61.47,
+    "mode": "elevated",
+    "deckTopY": 6.4,
+    "stairs": [
+     {
+      "way": 292941641,
+      "end": 0,
+      "points": [
+       [
+        772.62,
+        -2272.23
+       ],
+       [
+        795.04,
+        -2260.5
+       ]
+      ],
+      "lengthM": 25.3
+     },
+     {
+      "way": 292941642,
+      "end": 0,
+      "points": [
+       [
+        772.62,
+        -2272.23
+       ],
+       [
+        758.2,
+        -2275.66
+       ]
+      ],
+      "lengthM": 14.82
+     },
+     {
+      "way": 292941643,
+      "end": 1,
+      "points": [
+       [
+        741.03,
+        -2219.5
+       ],
+       [
+        761.05,
+        -2216.54
+       ]
+      ],
+      "lengthM": 20.24
+     },
+     {
+      "way": 292941644,
+      "end": 1,
+      "points": [
+       [
+        741.03,
+        -2219.5
+       ],
+       [
+        725.34,
+        -2237.74
+       ]
+      ],
+      "lengthM": 24.06
+     }
+    ],
+    "reason": "cầu vượt đi bộ qua lòng đường xe (90% chiều dài): bản mặt ở tĩnh không xe 4.5 m + 0.3 m, cầu thang theo 4 way steps OSM"
+   },
+   {
+    "road": 7092,
+    "way": 809048420,
+    "name": "",
+    "type": "footway",
+    "roadShare": 0.55,
+    "lengthM": 30.64,
+    "mode": "elevated",
+    "deckTopY": 6.4,
+    "stairs": [
+     {
+      "way": 892584431,
+      "end": 0,
+      "points": [
+       [
+        1193.49,
+        -1699.38
+       ],
+       [
+        1193.45,
+        -1702.18
+       ],
+       [
+        1190.37,
+        -1702.18
+       ],
+       [
+        1188.77,
+        -1700.16
+       ],
+       [
+        1188.16,
+        -1698.15
+       ],
+       [
+        1189.88,
+        -1696.32
+       ],
+       [
+        1191.97,
+        -1695.22
+       ]
+      ],
+      "lengthM": 15.43
+     },
+     {
+      "way": 892584430,
+      "end": 1,
+      "points": [
+       [
+        1224.05,
+        -1701.63
+       ],
+       [
+        1228.93,
+        -1702.04
+       ],
+       [
+        1230.18,
+        -1699.07
+       ],
+       [
+        1228.14,
+        -1697.03
+       ],
+       [
+        1220.46,
+        -1697.29
+       ]
+      ],
+      "lengthM": 18.69
+     }
+    ],
+    "reason": "cầu vượt đi bộ qua lòng đường xe (55% chiều dài): bản mặt ở tĩnh không xe 4.5 m + 0.3 m, cầu thang theo 2 way steps OSM"
+   },
+   {
+    "road": 7097,
+    "way": 809048426,
+    "name": "",
+    "type": "footway",
+    "roadShare": 0.74,
+    "lengthM": 21.32,
+    "mode": "hidden",
+    "stairs": [],
+    "reason": "cầu bộ hành nằm trên lòng đường xe nhưng OSM thiếu way steps ở ít nhất một đầu (không đủ dữ liệu dựng cầu thang): ẩn ribbon phẳng thay vì dán lên lòng đường"
+   },
+   {
+    "road": 11415,
+    "way": 1408239738,
+    "name": "",
+    "type": "footway",
+    "roadShare": 0.54,
+    "lengthM": 49.35,
+    "mode": "hidden",
+    "stairs": [
+     {
+      "way": 1408239739,
+      "end": 1,
+      "points": [
+       [
+        1230.2,
+        -2227.09
+       ],
+       [
+        1199.16,
+        -2223.81
+       ]
+      ],
+      "lengthM": 31.21
+     },
+     {
+      "way": 1408239740,
+      "end": 1,
+      "points": [
+       [
+        1230.2,
+        -2227.09
+       ],
+       [
+        1262.43,
+        -2230.0
+       ]
+      ],
+      "lengthM": 32.36
+     }
+    ],
+    "reason": "cầu bộ hành nằm trên lòng đường xe nhưng OSM thiếu way steps ở ít nhất một đầu (không đủ dữ liệu dựng cầu thang): ẩn ribbon phẳng thay vì dán lên lòng đường"
+   }
+  ]
+ }
 }

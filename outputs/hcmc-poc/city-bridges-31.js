@@ -24,21 +24,30 @@ const PARAPET_H = 1.05, PARAPET_W = 0.28, PARAPET_MIN_LIFT_M = 2.5;
 const RAMP_PARAPET_LIFT_M = 4.0;
 export const BRIDGE_LABEL = 'Kết cấu cầu: minh họa (illustrative) — dầm, trụ, lan can suy luận theo lớp cầu, không khảo sát';
 
+// Hướng ngang (trái) đơn vị tại từng đỉnh polyline: vuông góc với dây cung hai đỉnh kề (như loftStrip).
+function sideUnits(points) {
+  const n = points.length, out = [];
+  for (let i = 0; i < n; i++) {
+    const a = points[Math.max(0, i - 1)], b = points[Math.min(n - 1, i + 1)];
+    let dx = b.x - a.x, dz = b.z - a.z; const L = Math.hypot(dx, dz) || 1; dx /= L; dz /= L;
+    out.push([-dz, dx]);
+  }
+  return out;
+}
+
 // Dải hộp chạy theo polyline: points [{x, z, top, bottom}] (bottom có thể khác nhau theo đỉnh), bề rộng width.
+// Đỉnh có thể mang l/r (m, về phía trái/phải tim) để hộp lệch tâm theo mép đường thật; thiếu thì dùng width/2.
 // Trả về mảng vị trí tam giác (không index) gồm mặt trên, mặt dưới, hai vách và hai nắp đầu.
 export function loftStrip(points, width, { top = true, caps = true } = {}) {
   const out = [], half = width / 2, n = points.length;
   if (n < 2) return out;
-  const side = [];
-  for (let i = 0; i < n; i++) {
-    const a = points[Math.max(0, i - 1)], b = points[Math.min(n - 1, i + 1)];
-    let dx = b.x - a.x, dz = b.z - a.z; const L = Math.hypot(dx, dz) || 1; dx /= L; dz /= L;
-    side.push([-dz * half, dx * half]);
-  }
+  const units = sideUnits(points);
+  const left = points.map((p, i) => [units[i][0] * (p.l ?? half), units[i][1] * (p.l ?? half)]);
+  const right = points.map((p, i) => [units[i][0] * (p.r ?? half), units[i][1] * (p.r ?? half)]);
   const quad = (p, q, r, s) => out.push(...p, ...s, ...r, ...p, ...r, ...q);   // pháp tuyến hướng ra ngoài
   for (let i = 0; i < n - 1; i++) {
-    const A = points[i], B = points[i + 1], sa = side[i], sb = side[i + 1];
-    const aLt = [A.x + sa[0], A.top, A.z + sa[1]], aRt = [A.x - sa[0], A.top, A.z - sa[1]], bLt = [B.x + sb[0], B.top, B.z + sb[1]], bRt = [B.x - sb[0], B.top, B.z - sb[1]];
+    const A = points[i], B = points[i + 1], la = left[i], lb = left[i + 1], ra = right[i], rb = right[i + 1];
+    const aLt = [A.x + la[0], A.top, A.z + la[1]], aRt = [A.x - ra[0], A.top, A.z - ra[1]], bLt = [B.x + lb[0], B.top, B.z + lb[1]], bRt = [B.x - rb[0], B.top, B.z - rb[1]];
     const aLb = [aLt[0], A.bottom, aLt[2]], aRb = [aRt[0], A.bottom, aRt[2]], bLb = [bLt[0], B.bottom, bLt[2]], bRb = [bRt[0], B.bottom, bRt[2]];
     if (top) quad(aLt, aRt, bRt, bLt);
     quad(aLb, bLb, bRb, aRb);
@@ -46,11 +55,139 @@ export function loftStrip(points, width, { top = true, caps = true } = {}) {
     quad(aRt, aRb, bRb, bRt);
   }
   if (caps) {
-    const A = points[0], Z = points[n - 1], sa = side[0], sz = side[n - 1];
-    quad([A.x + sa[0], A.top, A.z + sa[1]], [A.x + sa[0], A.bottom, A.z + sa[1]], [A.x - sa[0], A.bottom, A.z - sa[1]], [A.x - sa[0], A.top, A.z - sa[1]]);
-    quad([Z.x - sz[0], Z.top, Z.z - sz[1]], [Z.x - sz[0], Z.bottom, Z.z - sz[1]], [Z.x + sz[0], Z.bottom, Z.z + sz[1]], [Z.x + sz[0], Z.top, Z.z + sz[1]]);
+    const A = points[0], Z = points[n - 1], la = left[0], ra = right[0], lz = left[n - 1], rz = right[n - 1];
+    quad([A.x + la[0], A.top, A.z + la[1]], [A.x + la[0], A.bottom, A.z + la[1]], [A.x - ra[0], A.bottom, A.z - ra[1]], [A.x - ra[0], A.top, A.z - ra[1]]);
+    quad([Z.x - rz[0], Z.top, Z.z - rz[1]], [Z.x - rz[0], Z.bottom, Z.z - rz[1]], [Z.x + lz[0], Z.bottom, Z.z + lz[1]], [Z.x + lz[0], Z.top, Z.z + lz[1]]);
   }
   return out;
+}
+
+// Bước G · cầu dẫn Ba Son: hộp signature 24 m căn trên tim way 321564421 thò ~7 m ra ngoài mép đường ở cầu dẫn
+// (OSM vẽ hai chiều là hai way một chiều lệch ~9 m) thành dải xám có nắp đứng ở đầu. Ở cầu dẫn, bề ngang hộp được
+// thu về đúng hợp các mặt đường của các way mapped (bề rộng + bó vỉa), chuyển dần từ 24 m tại mối nối nhịp phẳng
+// (taperM) để không có bậc; đáy hộp thấp dưới groundY + 0,3 thì chạy xuống nền (nền đắp/mố chạm đất, không treo).
+// Nhịp chính (hộp BoxGeometry 24 m), dây văng và pylon không đổi.
+export function fitRampToRoads(strip, { roads, mainRoad, pairRoads = [], halfWidthOf, boxHalfWidth = 12, boxTop, joints = [], taperM = 24, groundY, maxPairOffsetM = 25 }) {
+  const units = sideUnits(strip), polylines = pairRoads.map(i => ({ c: roads[i].c, hw: halfWidthOf(i) }));
+  const mainHw = halfWidthOf(mainRoad);
+  let along = 0;
+  return strip.map((p, i) => {
+    if (i) along += Math.hypot(p.x - strip[i - 1].x, p.z - strip[i - 1].z);
+    const [ux, uz] = units[i];
+    let lo = -mainHw, hi = mainHw;
+    for (const { c, hw } of polylines) {
+      let best = Infinity, off = 0;
+      for (let k = 0; k + 1 < c.length; k++) {
+        const ax = c[k][0], az = c[k][1], dx = c[k + 1][0] - ax, dz = c[k + 1][1] - az, l = dx * dx + dz * dz;
+        const t = l ? Math.max(0, Math.min(1, ((p.x - ax) * dx + (p.z - az) * dz) / l)) : 0, qx = ax + dx * t - p.x, qz = az + dz * t - p.z, d = Math.hypot(qx, qz);
+        if (d < best) { best = d; off = qx * ux + qz * uz; }
+      }
+      if (best <= maxPairOffsetM) { lo = Math.min(lo, off - hw); hi = Math.max(hi, off + hw); }
+    }
+    // Đoạn mặt đường đã ở cao độ nhịp phẳng giữ hộp 24 m; từ điểm bắt đầu dốc (joints) nội suy 24 m → mép thật trong taperM.
+    const dj = Math.min(Infinity, ...joints.map(j => Math.hypot(p.x - j[0], p.z - j[1])));
+    const w = p.top >= boxTop - 0.005 ? 0 : Math.min(1, dj / taperM);
+    const l = boxHalfWidth + (hi - boxHalfWidth) * w, r = boxHalfWidth + (-lo - boxHalfWidth) * w;
+    const bottom = p.bottom < groundY + 0.3 ? VISIBLE_GROUND_Y : p.bottom;
+    return { ...p, l, r, bottom };
+  });
+}
+
+// Điểm trên polyline mà cao độ mặt đường topAt(x, z) bắt đầu rời cao độ nhịp phẳng boxTop (mẫu mỗi 1 m).
+export function flatJoints(centerline, topAt, boxTop) {
+  const out = []; let prev = null;
+  for (let k = 0; k + 1 < centerline.length; k++) {
+    const [ax, az] = centerline[k], [bx, bz] = centerline[k + 1], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az)));
+    for (let q = k ? 1 : 0; q <= n; q++) {
+      const x = ax + (bx - ax) * q / n, z = az + (bz - az) * q / n, flat = topAt(x, z) >= boxTop - 0.005;
+      if (prev && flat !== prev.flat) out.push(flat ? [x, z] : [prev.x, prev.z]);
+      prev = { x, z, flat };
+    }
+  }
+  return out;
+}
+
+// Bước G · cầu vượt đi bộ (BRIDGE_CORRECTIONS_31.footbridges, build_bridge_corrections_31.py): footway bridge=yes lớp
+// skip mà tim nằm trên lòng đường xe mặt đất. mode 'elevated' → ẩn ribbon phẳng, dựng bản mặt ở deckTopY (tĩnh không xe
+// + bản mặt), lan can, cột ở hai đầu và ở dải phân cách (chỗ không có mặt đường), cầu thang bậc theo polyline way steps
+// OSM; mode 'hidden' → chỉ ẩn ribbon (thiếu dữ liệu cầu thang). Gộp vào mesh bản mặt thủ tục: không thêm draw call.
+const FOOTBRIDGE_W = 3.0, FOOTBRIDGE_STAIR_W = 2.0, STAIR_RISE_M = 0.18, FOOT_RAIL_H = 1.1, FOOT_RAIL_W = 0.12, FOOT_COLUMN_M = 0.6;
+
+export function footbridgeRoads31(roads, table) {
+  const out = new Set();
+  for (const f of table?.footbridges?.ways || []) if (roads[f.road]?.id === f.way) out.add(f.road);
+  return out;
+}
+
+// Điểm cách đầu polyline [[x, z]…] một khoảng s (m).
+function along(pts, s) {
+  for (let k = 0; k + 1 < pts.length; k++) {
+    const [ax, az] = pts[k], [bx, bz] = pts[k + 1], L = Math.hypot(bx - ax, bz - az);
+    if (s <= L || k + 2 === pts.length) { const u = L ? Math.min(1, s / L) : 0; return [ax + (bx - ax) * u, az + (bz - az) * u]; }
+    s -= L;
+  }
+  return pts[pts.length - 1];
+}
+const lengthOf = pts => pts.reduce((sum, p, k) => k ? sum + Math.hypot(p[0] - pts[k - 1][0], p[1] - pts[k - 1][1]) : 0, 0);
+// Lan can đặc ở mép trái/phải của dải (l/r theo quy ước loftStrip).
+const railStrip = (points, width, sign) => points.map(p => sign > 0 ? { ...p, l: width / 2, r: -(width / 2 - FOOT_RAIL_W) } : { ...p, l: -(width / 2 - FOOT_RAIL_W), r: width / 2 });
+
+function buildFootbridges({ table, roads, net, groundY, deckThick, out }) {
+  const ways = [];
+  let stairs = 0;
+  for (const f of table?.footbridges?.ways || []) {
+    if (roads[f.road]?.id !== f.way) continue;
+    if (f.mode !== 'elevated') { ways.push({ way: f.way, road: f.road, mode: f.mode, reason: f.reason }); continue; }
+    const top = f.deckTopY, bottom = top - deckThick, c = roads[f.road].c;
+    const deckPts = c.map(([x, z]) => ({ x, z, top, bottom }));
+    out.push(...loftStrip(deckPts, FOOTBRIDGE_W));
+    for (const sign of [1, -1]) out.push(...loftStrip(railStrip(deckPts.map(p => ({ ...p, top: top + FOOT_RAIL_H, bottom: top })), FOOTBRIDGE_W, sign), FOOTBRIDGE_W));
+    // Tĩnh không và cột: lấy mẫu mỗi 1 m dọc tim; chỗ không có mặt đường nào trong bán kính cột = dải phân cách/vỉa hè.
+    const L = lengthOf(c), free = [];
+    let clearance = Infinity;
+    for (let s = 0; s <= L; s += 1) {
+      const [x, z] = along(c, s), ys = net.surfaceYs(x, z).filter(y => y < bottom);
+      if (ys.length) clearance = Math.min(clearance, bottom - Math.max(...ys));
+      const r = FOOT_COLUMN_M;
+      free.push(![[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]].some(([dx, dz]) => net.surfaceYs(x + dx, z + dz).length));
+    }
+    // Hai đầu luôn có cột (đầu cầu là nơi nối cầu thang trên vỉa hè); giữa nhịp chỉ đặt ở dải trống ≥ 2 m.
+    const columns = [0.5, L - 0.5];
+    for (let k = 0; k < free.length;) {
+      if (!free[k]) { k++; continue; }
+      let e = k; while (e + 1 < free.length && free[e + 1]) e++;
+      if (e - k >= 1 && k > 2 && e < free.length - 3) columns.push((k + e) / 2);
+      k = e + 1;
+    }
+    for (const s of columns) {
+      const [x, z] = along(c, Math.max(0, s - FOOT_COLUMN_M / 2)), [x2, z2] = along(c, Math.min(L, s + FOOT_COLUMN_M / 2));
+      out.push(...loftStrip([{ x, z, top: bottom, bottom: VISIBLE_GROUND_Y }, { x: x2, z: z2, top: bottom, bottom: VISIBLE_GROUND_Y }], FOOT_COLUMN_M));
+    }
+    // Cầu thang: bậc đều (≤ STAIR_RISE_M) từ mặt cầu xuống đất theo polyline steps; mặt dưới dốc thẳng tới nền.
+    let wayStairs = 0;
+    for (const st of f.stairs || []) {
+      const pts = st.points, SL = lengthOf(pts); if (pts.length < 2 || SL < 1) continue;
+      const n = Math.max(1, Math.ceil((top - groundY) / STAIR_RISE_M)), rise = (top - groundY) / n, tread = SL / n;
+      const soffit = s => Math.min(top - deckThick - (top - deckThick - VISIBLE_GROUND_Y) * s / SL, top - (s / tread | 0) * rise - 0.15);
+      const steps = [];
+      for (let i = 0; i < n; i++) {
+        const y = top - i * rise;
+        for (const s of [i * tread, (i + 1) * tread]) { const [x, z] = along(pts, s); steps.push({ x, z, top: y, bottom: soffit(s) }); }
+      }
+      out.push(...loftStrip(steps, FOOTBRIDGE_STAIR_W));
+      const rail = steps.filter((p, i) => i % 2 === 0 || i === steps.length - 1).map((p, i, all) => {
+        const s = Math.min(SL, (i === all.length - 1 ? n : i) * tread), t = top + FOOT_RAIL_H - (top - groundY) * s / SL;
+        return { ...p, top: t, bottom: soffit(s) };
+      });
+      for (const sign of [1, -1]) out.push(...loftStrip(railStrip(rail, FOOTBRIDGE_STAIR_W, sign), FOOTBRIDGE_STAIR_W));
+      wayStairs++;
+    }
+    stairs += wayStairs;
+    ways.push({ way: f.way, road: f.road, mode: 'elevated', deckTopY: top, clearance: Number.isFinite(clearance) ? +clearance.toFixed(2) : null, columns: columns.length, stairs: wayStairs, reason: f.reason });
+  }
+  const elevated = ways.filter(w => w.mode === 'elevated'), clear = elevated.map(w => w.clearance).filter(v => v !== null);
+  return { state: 'ready', count: elevated.length, hidden: ways.length - elevated.length, stairs, clearanceMin: clear.length ? Math.min(...clear) : null,
+    source: 'data/bridge-corrections-31.js · footbridges', classification: 'illustrative', ways };
 }
 
 function geometryOf(positions, colors) {
@@ -143,7 +280,7 @@ function buildBachDang({ BD, groundY, concrete, design }) {
   return { meshes: [builtMesh, designMesh], ends, abutments };
 }
 
-export function createBridges31({ scene, roads, graph, roadNetwork, water, bachDang, status = {} }) {
+export function createBridges31({ scene, roads, graph, roadNetwork, water, bachDang, footbridges = null, status = {} }) {
   status.version = BRIDGES_31_VERSION; status.state = 'building';
   const started = performance.now();
   const net = roadNetwork, groundY = graph.frame.groundY, waterY = graph.frame.waterY ?? 0.7;
@@ -196,6 +333,7 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
     for (let k = 1; k + 1 < poly.length; k++) deck.push(poly[0][0], bottom, poly[0][2], poly[k + 1][0], bottom, poly[k + 1][2], poly[k][0], bottom, poly[k][2]);
     junctionUndersides++;
   }
+  status.footbridges = buildFootbridges({ table: footbridges, roads, net, groundY, deckThick: FOOT_THICKNESS_M, out: deck });
   const deckMesh = new THREE.Mesh(geometryOf(deck), concrete);
   deckMesh.name = 'Cầu 31C · bản mặt và dầm (thủ tục)'; deckMesh.castShadow = true; deckMesh.receiveShadow = true;
 
