@@ -1,0 +1,197 @@
+{
+ "generated": "2026-10-06T16:31:35.052Z",
+ "page": "tmp31d-base.html",
+ "runs": [
+  {
+   "round": 0,
+   "view": "overview",
+   "light": "day",
+   "fpsAvg": 52.9,
+   "frameMsP50": 16.7,
+   "cpu": {
+    "samples": 319,
+    "p50": 0,
+    "p95": 2,
+    "max": 2.9,
+    "mean": 0.556
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "overview",
+   "light": "night",
+   "fpsAvg": 52.8,
+   "frameMsP50": 16.7,
+   "cpu": {
+    "samples": 318,
+    "p50": 0,
+    "p95": 2.1,
+    "max": 2.4,
+    "mean": 0.545
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "materials",
+   "light": "day",
+   "fpsAvg": 30.7,
+   "frameMsP50": 33.3,
+   "cpu": {
+    "samples": 185,
+    "p50": 1.1,
+    "p95": 2.2,
+    "max": 2.9,
+    "mean": 0.881
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "materials",
+   "light": "night",
+   "fpsAvg": 30.7,
+   "frameMsP50": 33.3,
+   "cpu": {
+    "samples": 186,
+    "p50": 1,
+    "p95": 2.1,
+    "max": 2.8,
+    "mean": 0.81
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "river",
+   "light": "day",
+   "fpsAvg": 78.8,
+   "frameMsP50": 16.5,
+   "cpu": {
+    "samples": 475,
+    "p50": 1,
+    "p95": 2.1,
+    "max": 2.4,
+    "mean": 0.809
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "river",
+   "light": "night",
+   "fpsAvg": 78.8,
+   "frameMsP50": 16.5,
+   "cpu": {
+    "samples": 474,
+    "p50": 1,
+    "p95": 2.1,
+    "max": 2.4,
+    "mean": 0.8
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "boulevard",
+   "light": "day",
+   "fpsAvg": 78.3,
+   "frameMsP50": 16.6,
+   "cpu": {
+    "samples": 471,
+    "p50": 0.1,
+    "p95": 2.1,
+    "max": 3.5,
+    "mean": 0.806
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "boulevard",
+   "light": "night",
+   "fpsAvg": 78,
+   "frameMsP50": 16.6,
+   "cpu": {
+    "samples": 469,
+    "p50": 1,
+    "p95": 2.2,
+    "max": 4.1,
+    "mean": 0.84
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "bason",
+   "light": "day",
+   "fpsAvg": 79.9,
+   "frameMsP50": 16.5,
+   "cpu": {
+    "samples": 481,
+    "p50": 1,
+    "p95": 2.1,
+    "max": 2.8,
+    "mean": 0.817
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "bason",
+   "light": "night",
+   "fpsAvg": 79.9,
+   "frameMsP50": 16.5,
+   "cpu": {
+    "samples": 481,
+    "p50": 1,
+    "p95": 2.2,
+    "max": 2.8,
+    "mean": 0.81
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "corridor",
+   "light": "day",
+   "fpsAvg": 76,
+   "frameMsP50": 16.6,
+   "cpu": {
+    "samples": 457,
+    "p50": 1.7,
+    "p95": 2.3,
+    "max": 4,
+    "mean": 1.698
+   },
+   "traffic": null
+  },
+  {
+   "round": 0,
+   "view": "corridor",
+   "light": "night",
+   "fpsAvg": 77.6,
+   "frameMsP50": 16.6,
+   "cpu": {
+    "samples": 467,
+    "p50": 1.7,
+    "p95": 2.3,
+    "max": 4.7,
+    "mean": 1.73
+   },
+   "traffic": null
+  }
+ ],
+ "console": [
+  {
+   "type": "warning",
+   "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+  }
+ ],
+ "summary": {
+  "medianOfP50": 1,
+  "maxP95": 2.3,
+  "meanOfMeans": 0.925
+ }
+}

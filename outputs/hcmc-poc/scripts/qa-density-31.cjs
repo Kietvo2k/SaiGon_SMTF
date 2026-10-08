@@ -259,6 +259,8 @@ async function runBackend(browser, backend) {
       if (!real) { s.traffic = s.traffic || {}; Object.defineProperty(s.traffic, 'api', { value: { total: 1000, setVisibleFraction: f => { calls.push(f); return Math.round(1000 * f); } }, configurable: true }); }
       await frames(4);
       const d = s.density, out = { real, calls, level: d.level, fraction: d.fractions.vehicles, via: d.vehiclesVia, vehicles: d.counts.vehicles, total: d.totals.vehicles, dataset: document.body.dataset.densityVehicles };
+      // API thật: số xe trả về là số xe đang hoạt động (mật độ còn nhân hệ số giờ trong ngày, giữ xe trên cầu signature).
+      if (real) { const a = s.traffic.api, snap = a.snapshot(); out.active = snap.active.reduce((n, v) => n + v, 0); out.lightFactor = a.sim.lightFactor; out.signature = a.instances().filter(x => x.signature).length; }
       if (!real) delete s.traffic.api;
       return out;
     });
@@ -394,7 +396,9 @@ async function runBackend(browser, backend) {
         const t = r.traffic; assert(t, 'thiếu số liệu');
         assert.equal(t.via, 'traffic.api.setVisibleFraction', JSON.stringify(t));
         if (!t.real) { assert.deepEqual(t.calls, [t.fraction], JSON.stringify(t)); assert.equal(t.total, 1000); }
-        assert.equal(t.vehicles, Math.round(t.total * t.fraction), JSON.stringify(t)); assert.equal(t.dataset, String(t.vehicles));
+        if (t.real) { assert(Math.abs(t.vehicles - t.active) <= t.total * .01, JSON.stringify(t)); assert(Math.abs(t.vehicles - t.total * t.fraction * t.lightFactor) <= t.total * .03 + t.signature, JSON.stringify(t)); }
+        else assert.equal(t.vehicles, Math.round(t.total * t.fraction), JSON.stringify(t));
+        assert.equal(t.dataset, String(t.vehicles));
       });
       check(tag + 'console không có lỗi', () => assert.deepEqual(r.errors, []));
     }

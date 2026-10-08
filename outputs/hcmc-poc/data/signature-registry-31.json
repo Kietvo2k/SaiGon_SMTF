@@ -8,11 +8,11 @@
   "inputs": [
    {
     "path": "webgpu-materials-24.js",
-    "sha256": "0670d1f1b123c36aebb95e2e77df6fc023a4e1738091e00aa1ad7e1f398b24fb"
+    "sha256": "e04e05e8130adfc6e3c50ca5d41bc4e67a744d68ed2617585312ee93caecc913"
    },
    {
     "path": "city-hero-corridor-30.js",
-    "sha256": "58f3f23650d409b4b72ee1e77b665333f7da8023888435cf6b3d17dab3a8bd16"
+    "sha256": "20f6fe3737175986c908e3112cb5a9bcbbb3ba4b0a36f613383f84e8a9507fab"
    },
    {
     "path": "city-identity-facades-30.js",
@@ -86,7 +86,7 @@
    "ids": [
     801710792
    ],
-   "source": "webgpu-materials-24.js:203",
+   "source": "webgpu-materials-24.js:204",
    "reason": "Hero envelope có nguồn ảnh thay proxy gộp; footprint bị loại khỏi city mesh nên không được giảm hay ẩn thêm."
   },
   {
@@ -97,7 +97,7 @@
    "ids": [
     2000032897
    ],
-   "source": "webgpu-materials-24.js:203",
+   "source": "webgpu-materials-24.js:204",
    "reason": "Hero envelope có nguồn ảnh thay proxy gộp; footprint bị loại khỏi city mesh nên không được giảm hay ẩn thêm."
   },
   {
@@ -108,7 +108,7 @@
    "ids": [
     39598465
    ],
-   "source": "webgpu-materials-24.js:203",
+   "source": "webgpu-materials-24.js:204",
    "reason": "Hero envelope có nguồn ảnh thay proxy gộp; footprint bị loại khỏi city mesh nên không được giảm hay ẩn thêm."
   },
   {
@@ -129,7 +129,7 @@
    "kind": "module",
    "label": "Cầu Ba Son · kết cấu dây văng",
    "module": "webgpu-materials-24.js#bridgeGroup",
-   "source": "webgpu-materials-24.js:480",
+   "source": "webgpu-materials-24.js:481",
    "reason": "Toàn bộ trụ, tháp và 28 dây văng của cầu Ba Son là nhận diện chính; không được lược dây hay trụ.",
    "ids": []
   },
@@ -349,7 +349,7 @@
    "kind": "module",
    "label": "Marina Central · dải giật cấp + vương miện",
    "module": "webgpu-materials-24.js#marinaDetail",
-   "source": "webgpu-materials-24.js:562",
+   "source": "webgpu-materials-24.js:566",
    "reason": "Chi tiết nhận diện có nguồn của cụm Marina; không được lược ở mức mật độ thấp.",
    "ids": []
   },
@@ -359,7 +359,7 @@
    "kind": "module",
    "label": "Grand Marina · vương miện + khung",
    "module": "webgpu-materials-24.js#grandMarinaDetail",
-   "source": "webgpu-materials-24.js:575",
+   "source": "webgpu-materials-24.js:586",
    "reason": "Chi tiết nhận diện có nguồn của cụm Marina; không được lược ở mức mật độ thấp.",
    "ids": []
   },
@@ -409,7 +409,7 @@
     1278461439,
     1343964589
    ],
-   "source": "city-hero-corridor-30.js:148",
+   "source": "city-hero-corridor-30.js:163",
    "reason": "Sáu tim đường OSM neo mặt đường PBR, curb, vạch và đèn phố của corridor."
   },
   {
@@ -418,7 +418,7 @@
    "kind": "module",
    "label": "Hero Corridor 30B",
    "module": "city-hero-corridor-30.js#createHeroCorridor30",
-   "source": "webgpu-materials-24.js:792",
+   "source": "webgpu-materials-24.js:722",
    "reason": "Toàn bộ lớp hero corridor (vỏ công trình, public realm, đèn) giữ nguyên ở mọi mức mật độ.",
    "ids": []
   },
@@ -2214,7 +2214,7 @@
     ]
    },
    "method": "Đệm 30 m quanh từng đoạn tim đường corridor + đệm 10 m quanh 3 footprint hero + công viên Lam Sơn (OSM).",
-   "source": "city-hero-corridor-30.js:148",
+   "source": "city-hero-corridor-30.js:163",
    "reason": "Cây và đèn phố trong corridor là một phần cảnh hero; bộ lọc mật độ không được bỏ.",
    "ids": []
   },
@@ -4703,7 +4703,7 @@
     -781.89,
     818.25
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     804073951,
     1222241871
@@ -4720,7 +4720,7 @@
     -874.85,
     431.24
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     341504312,
     377881079,
@@ -4741,7 +4741,7 @@
     -524.91,
     309.61
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "zone": {
     "protects": [
      "tree",
@@ -5358,7 +5358,7 @@
     -896.72,
     276.43
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     801710792
    ],
@@ -5374,7 +5374,7 @@
     -929.52,
     243.26
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     35112941,
     35114970,
@@ -5392,7 +5392,7 @@
     -962.33,
     154.8
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     666609822,
     1278461434,
@@ -5413,7 +5413,7 @@
     1137.3,
     -1758.13
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     622296615
    ],
@@ -5429,7 +5429,7 @@
     -401.77,
     -353.62
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     1151026868,
     1432358258,
@@ -5448,7 +5448,7 @@
     -278.86,
     -632.48
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     1151026866
    ],
@@ -5464,7 +5464,7 @@
     -84.2,
     -29.85
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     321564421,
     321564423
@@ -5481,7 +5481,7 @@
     2154.31,
     -2731.18
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     256667238,
     604108243,
@@ -5501,7 +5501,7 @@
     2263.67,
     -2808.58
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     32577094,
     32580686,
@@ -5525,7 +5525,7 @@
     1826.24,
     -2565.32
    ],
-   "source": "webgpu-materials-24.js:822",
+   "source": "webgpu-materials-24.js:752",
    "ids": [
     604163756,
     785535443,
@@ -5597,7 +5597,7 @@
    "kind": "module",
    "label": "Identity Facades 30B",
    "module": "city-identity-facades-30.js#createIdentityFacades30",
-   "source": "webgpu-materials-24.js:797",
+   "source": "webgpu-materials-24.js:727",
    "reason": "Lớp mặt đứng ảnh nhận diện; mật độ không được ẩn lớp này.",
    "ids": []
   }

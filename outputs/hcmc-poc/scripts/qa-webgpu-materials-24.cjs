@@ -83,7 +83,7 @@ check('Visual Runtime 30B uses official temporal, AO and cascade primitives',()=
   assert(js.includes("from './city-visual-runtime-30.js?v=30b'"));
   assert(js.includes("from './city-detail-runtime-28.js?v=30b-31e2'"));
   assert(js.includes("from './city-street-furniture-31.js?v=30b-31e2'"));
-  assert(js.includes("from './city-hero-corridor-30.js?v=30b'"));
+  assert(js.includes("from './city-hero-corridor-30.js?v=30b-31g'"));
   assert(js.includes("from './city-identity-facades-30.js?v=30b'"));
   assert(js.includes('createCityRenderPipeline(renderer,scene,camera,visualQuality)'));
   assert(js.includes('createCityDetailRuntime({scene,buildings:renderBuildings.filter'));
@@ -117,11 +117,13 @@ check('Facade, vegetation and water receive multi-scale detail',()=>{
   assert(js.includes('const waterFresnel='));
   assert(!js.includes('createPropWash'));
 });
-check('Urban motion 26B stays on audited roads and inside the river',()=>{
+check('Urban motion: xe 31D chạy trên đồ thị đường, tàu 26B trong lòng sông',()=>{
   assert(js.includes("trafficGroup.name='Dense Vietnamese road traffic · illustrative'"));
-  assert(js.includes('trafficItems.length>=3200'));
-  assert(js.includes("kind=roll<.8?'motorbike':roll<.985?'car':'bus'"));
-  assert(js.includes('roadSegmentClear(segment.a,segment.b'));
+  // Xe minh họa bước D 31A: module city-traffic-31.js (QA hành vi chi tiết ở qa-traffic-31.cjs).
+  assert(js.includes("import { createTraffic31 } from './city-traffic-31.js?v=30b-31d'"));
+  assert(js.includes('const traffic=createTraffic31({scene:trafficGroup,graph:window.ROAD_GRAPH_31'));
+  assert(js.includes('traffic.update(now,cameraDistance,updateFrame)'));
+  assert(!js.includes('trafficItems'), 'xe đoạn thẳng 26B phải được thay hoàn toàn');
   assert(js.includes('function createWakeBand(startX,endX,spread,width)'));
   assert(js.includes("createWakeBand(-11,-47,18,.82)"));
   assert(js.includes('const wakeUv=uv(),headFade='));
