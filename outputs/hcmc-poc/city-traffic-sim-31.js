@@ -566,11 +566,11 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     lane[i] = l; s[i] = si; v[i] = vel; lat[i] = lanes.offset[l] + jit[i]; prevLane[i] = -1; stopT[i] = 0; waiting[i] = 0;
     insertSorted(l, i); fillPath(i); active[i] = 1; pending[i] = 0;
   }
-  function respawn(i, breaker) {
+  function respawn(i, breaker, maxTries = 8) {
     if (active[i]) { removeFrom(lane[i], i); releaseAll(i); }
     gen[i]++; counters.respawns++; if (breaker) counters.breakerRespawns++;
     active[i] = 0;
-    for (let tries = 0; tries < 8; tries++) {
+    for (let tries = 0; tries < maxTries; tries++) {
       const l = spawnLanes[Math.floor(rand(i) * spawnLanes.length)];
       if (kind[i] >= HEAVY && lanes.rank[l] < 2) continue;
       const si = Math.min(lanes.length[l] * .5, len[i] / 2 + .8 + (needsLock[lanes.from[l]] ? Rz[lanes.from[l]] : 0));
@@ -599,11 +599,15 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   function deactivate(i) { if (!active[i]) return; removeFrom(lane[i], i); releaseAll(i); active[i] = 0; waiting[i] = 0; }
 
-  // ---- Chọn tập xe hoạt động theo tỉ lệ F: trong mỗi ô 200 m (theo vị trí ở bước hiện tại) giữ đúng floor(F·n + u_ô) xe,
-  // u_ô = hash(ô) ∈ [0, 1) → kỳ vọng tổng đúng F·N, không ô nào bị làm trống, tập lồng nhau khi F đổi.
-  // Thứ tự trong ô: xe đang chạy trước (giảm F giữ xe đang thấy), rồi theo hash(id). Hạng nhớ theo bước nên gọi lại cùng f
-  // trong cùng bước → cùng tập. Giữ xe đang trên cầu signature.
+  // ---- Chọn tập xe hoạt động theo tỉ lệ F.
+  // Hạng không gian: trong mỗi ô 200 m (theo vị trí ở bước hiện tại) xe được xếp hạng (xe đang chạy trước, rồi theo hash(id)),
+  // selRank = (k + 1 − u_ô)/n_ô với u_ô = hash(ô) ∈ [0, 1) → ngưỡng F lấy ≈ F·n_ô xe mỗi ô, không ô nào bị làm trống, tập lồng nhau khi F đổi.
+  // Tổng số xe KHÔNG phụ thuộc vị trí: lấy đúng Q = round(F·N) xe có hạng thấp nhất toàn cục (xe signature đang trên cầu luôn được giữ
+  // và tính vào Q; chỉ khi số xe signature > Q mới vượt Q). Nhờ vậy setFraction(1) hoặc đưa F về giá trị cũ khôi phục đúng tổng cũ
+  // dù mô phỏng đã chạy bao lâu; trước đây tổng = Σ_ô floor(F·n_ô + u_ô) đổi theo cách xe phân bố vào ô nên trôi vài chục xe.
+  // Hạng nhớ theo bước nên gọi lại cùng F trong cùng bước → cùng tập.
   let rankStep = -1;
+  const order = Array.from({ length: N }, (_, i) => i);
   function rankCells() {
     const cells = new Map();
     for (let i = 0; i < N; i++) { const c = cellOf(i); let a = cells.get(c); if (!a) cells.set(c, a = []); a.push(i); }
@@ -616,13 +620,20 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   function cellOf(i) { const e = lanes.edge[lane[i]], o = net.geo.off[e]; const c = E[e].c, n = c.length / 2; const t = Math.min(1, Math.max(0, s[i] / lanes.length[lane[i]])), k = Math.min(n - 1, Math.round(t * (n - 1))); return Math.floor(net.geo.x[o + k] / 200) * 100000 + Math.floor(net.geo.z[o + k] / 200); }
   function isSignature(i) { return !!(active[i] && net.signatureEdge[lanes.edge[lane[i]]]); }
+  // Đánh dấu wanted: xe signature đang hoạt động trước (hạng −1), rồi theo selRank, hoà theo id; lấy max(Q, số signature) xe đầu.
+  function chooseWanted(F, keepSignature) {
+    const Q = Math.round(F * N), key = i => (keepSignature && isSignature(i) ? -1 : selRank[i]);
+    order.sort((x, y) => (key(x) - key(y)) || (x - y));
+    let take = Q; if (keepSignature) { let sig = 0; for (let i = 0; i < N; i++) if (isSignature(i)) sig++; take = Math.max(Q, sig); }
+    wanted.fill(0); for (let k = 0; k < take; k++) wanted[order[k]] = 1;
+  }
   function select() {
     const F = Math.max(0, Math.min(1, fraction * lightFactor));
     if (rankStep !== counters.step) rankCells();
-    for (let i = 0; i < N; i++) wanted[i] = selRank[i] <= F || isSignature(i) ? 1 : 0;
+    chooseWanted(F, true);
     for (let i = 0; i < N; i++) if (!wanted[i] && (active[i] || pending[i])) { deactivate(i); pending[i] = 0; }
     // Không kích hoạt lại tại chỗ được (xe khác đã tới) → tái sinh ngay ở nút biên để số xe khớp tỉ lệ ngay lập tức.
-    for (let i = 0; i < N; i++) if (wanted[i] && !active[i]) { if (reactivate(i)) { pLane[i] = lane[i]; pS[i] = s[i]; pGen[i] = gen[i]; } else if (!respawn(i, false)) pending[i] = 1; }
+    for (let i = 0; i < N; i++) if (wanted[i] && !active[i]) { if (reactivate(i)) { pLane[i] = lane[i]; pS[i] = s[i]; pGen[i] = gen[i]; } else if (!respawn(i, false, 48)) pending[i] = 1; }
     return activeCount();
   }
   function activeCount() { let n = 0; for (let i = 0; i < N; i++) n += active[i]; return n; }
@@ -643,9 +654,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       fillPath(i);
     }
     // Chọn tập theo tỉ lệ hiện tại (ban đầu chưa xe nào hoạt động nên kích hoạt từ trạng thái gốc).
-    const F = Math.max(0, Math.min(1, fraction * lightFactor));
     rankCells();
-    for (let i = 0; i < N; i++) wanted[i] = selRank[i] <= F ? 1 : 0;
+    chooseWanted(Math.max(0, Math.min(1, fraction * lightFactor)), false);
     for (let i = 0; i < N; i++) if (wanted[i]) { if (claimInside(i, lane[i], s[i])) { insertSorted(lane[i], i); active[i] = 1; } else pending[i] = 1; }
     for (let i = 0; i < N; i++) { pLane[i] = lane[i]; pS[i] = s[i]; pGen[i] = gen[i]; }
   }
@@ -745,7 +755,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     pLane.set(lane); pS.set(s); pGen.set(gen);
     swapReq();
     // Tái sinh xe chờ chỗ (tất định theo chỉ số).
-    for (let i = 0; i < N; i++) if (pending[i] && wanted[i]) { if (!(gen[i] === pGen[i] && reactivate(i))) respawn(i, false); }
+    for (let i = 0; i < N; i++) if (pending[i] && wanted[i]) { if (!(gen[i] === pGen[i] && reactivate(i))) respawn(i, false, 32); }
     stepLanes = activeLanes.slice(); stepPos = 0; inStep = true;
   }
   // Cập nhật tiếp các làn của bước đang dở, dừng ở ranh giới làn khi đã cập nhật ≥ maxCars xe; trả về true khi xong bước.
@@ -791,7 +801,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   reset();
   return {
     N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters,
-    step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,
+    step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, wantedCount: () => { let n = 0; for (let i = 0; i < N; i++) n += wanted[i]; return n; }, pendingCount: () => { let n = 0; for (let i = 0; i < N; i++) n += pending[i]; return n; }, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,
     setFraction(f) { finishStep(); fraction = Math.max(0, Math.min(1, f)); return select(); },
     setLightFactor(f) { if (Math.abs(f - lightFactor) < 1e-9) return activeCount(); finishStep(); lightFactor = f; return select(); },
     get fraction() { return fraction; }, get lightFactor() { return lightFactor; }

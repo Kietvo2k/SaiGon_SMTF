@@ -571,6 +571,12 @@ async function fillEnclosedHoles({roads,graph,drawn,groupOf,vertexY,isElevated,b
       const kind=new Map();for(const id of comp)kind.set(id,thin(id)?2:1);   // 1 lõi (median), 2 đuôi mảnh (asphalt)
       const rows=new Map();for(const id of comp){const r=Math.floor(id/N);if(!rows.has(r))rows.set(r,[]);rows.get(r).push(id-r*N);}
       let active=[];const rects=[];
+      // Thành phần không có đuôi mảnh mà hộp bao kín toàn ô lõi hoặc ô đã có mặt (nằm dưới asphalt/bó vỉa/vỉa hè, không lộ) → một chữ nhật.
+      let bc0=N,bc1=-1,br0=N,br1=-1,hasTail=false;
+      for(const id of comp){const r=Math.floor(id/N),cc=id-r*N;if(kind.get(id)===2)hasTail=true;if(cc<bc0)bc0=cc;if(cc>bc1)bc1=cc;if(r<br0)br0=r;if(r>br1)br1=r;}
+      let single=!hasTail;
+      for(let r=br0;r<=br1&&single;r++)for(let c=bc0;c<=bc1;c++){const id=r*N+c;if(kind.get(id)!==1&&!(grid[id]&1)){single=false;break;}}
+      if(single){rects.push({c0:bc0,c1:bc1,r0:br0,r1:br1,thin:false});rows.clear();}
       for(const [r,cols] of [...rows].sort((a,b)=>a[0]-b[0])){
         const used=new Set(),carried=[];
         for(const rect of active){

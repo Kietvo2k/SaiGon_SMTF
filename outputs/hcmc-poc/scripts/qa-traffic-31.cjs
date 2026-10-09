@@ -299,6 +299,18 @@ async function inspect(page) {
     api.advance(2); const settled = activeCount();
     const viaTraffic = window.webgpuMaterials24.traffic?.api === api, retHalf = api.setVisibleFraction(.5), countHalf = activeCount(); api.setDensity('full');
     out.densityApi = { viaTraffic, returned, retHalf, countHalf, total: api.total, full, half: halfIds.length, halfSame: JSON.stringify(halfIds) === JSON.stringify(halfIds2), sigTotal, sigHalf, zero, restored, settled, emptied: [...cells.values()].filter(c => c.all >= 8 && c.half / c.all < .25).length, hasSetDensity: typeof api.setDensity === 'function', instances: inst.length, instanceKeys: Object.keys(inst[0] || {}) };
+    // Khôi phục đúng tổng bất kể sim chạy/tái sinh bao lâu: F → thấp → chạy → F cũ phải cho đúng số xe đích (wanted) và số xe hoạt động cũ.
+    const lf = api.sim.lightFactor, targetOf = f => Math.round(Math.min(1, f * lf) * api.total);
+    out.restore = [];
+    for (const [hi, lo, T] of [[1, .5, 0], [1, .35, 7], [1, .15, 40], [.6, .3, 25], [1, 0, 60]]) {
+      const a = api.setVisibleFraction(hi), wa = api.sim.wantedCount(); api.advance(T);
+      api.setVisibleFraction(lo); const wl = api.sim.wantedCount(); api.advance(T / 2);
+      const b = api.setVisibleFraction(hi), wb = api.sim.wantedCount(), pend = api.sim.pendingCount();
+      // Xe không còn chỗ cũ chờ tái sinh ở nút biên (mỗi làn vào nhận lần lượt từng xe): phải hết chờ trong ≤ 5 s.
+      let settleS = 0; while (api.sim.pendingCount() > 0 && settleS < 6) { api.advance(.1); settleS += .1; }
+      out.restore.push({ hi, lo, T, a, b, wa, wb, wl, target: targetOf(hi), targetLo: targetOf(lo), pend, settleS: +settleS.toFixed(1), settled: activeCount() });
+    }
+    api.setVisibleFraction(1);
     // Tất định: reset + advance(20 s) hai lần → cùng hash.
     api.reset(); api.advance(20); const h1 = api.stateHash(), t1 = api.snapshot().t;
     api.reset(); api.advance(20); const h2 = api.stateHash();
@@ -394,6 +406,17 @@ const pct = (list, p) => { const s = list.slice().sort((a, b) => a - b); return 
         assert(d.viaTraffic, 'webgpuMaterials24.traffic.api phải là cùng API (bộ điều phối mật độ E/F gọi đường này)');
         assert(d.returned === d.restored && d.retHalf === d.countHalf, 'setDensity/setVisibleFraction phải trả về số xe đang hoạt động: ' + JSON.stringify(d));
         assert(d.total >= d.full, 'api.total phải là sức chứa pool xe');
+      });
+      check(tag + 'API bước E: F → thấp → F cũ khôi phục đúng tổng xe dù sim đã chạy 0–60 s', () => {
+        assert(r.restore?.length === 5, 'thiếu dữ liệu restore');
+        for (const x of r.restore) {
+          const j = JSON.stringify(x);
+          assert.equal(x.wa, x.target, 'số xe đích F=' + x.hi + ' phải = round(F·tổng·ánh sáng): ' + j);
+          assert.equal(x.wb, x.wa, 'số xe đích sau khôi phục lệch: ' + j);
+          assert(x.lo === 0 ? x.wl >= 0 : x.wl === x.targetLo, 'số xe đích khi thưa lệch round(F·N): ' + j);
+          assert(x.b <= x.wb && x.b >= x.wb * .998 && x.b + x.pend === x.wb, 'sau khôi phục số xe hoạt động + xe chờ chỗ phải = số xe đích (xe chờ chỗ ≤ 0,2 %): ' + j);
+          assert(x.settleS <= 5 && x.settled === x.wb, 'sau tối đa 5 s mọi xe đích phải có chỗ, tổng khôi phục đúng ' + x.wb + ': ' + j);
+        }
       });
       check(tag + 'hình xe: 4 loại tỉ lệ thật, tam giác hợp lý, InstancedMesh ít draw call', () => {
         assert.deepEqual(r.kinds.map(k => k.name), ['motorbike', 'car', 'bus', 'truck']);
