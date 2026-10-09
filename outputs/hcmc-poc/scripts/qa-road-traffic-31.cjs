@@ -308,6 +308,22 @@ async function inspectBridges(page) {
     };
     // 9) Bạch Đằng: có mặt trong runtime WebGPU, hai đầu cầu dẫn chạm đất, đầu nhịp chính có mố.
     out.bachDang = br.bachDang ? { ...br.bachDang } : null;
+    // 9b) Bước J: đèn lan can — mỗi đèn đứng trên mặt cầu thật (y khớp mặt đường dưới chân ≤ 0,3 m), trên cầu sông/cầu vượt,
+    //     không thuộc cầu signature, instance khớp danh sách, đầu đèn phát sáng theo nút ánh sáng.
+    {
+      const lm = br.meshes.find(m => /đèn lan can/.test(m.name)) || (api.procedural || []).find(m => /đèn lan can/.test(m.name));
+      const mesh = (api.procedural || []).find(m => /đèn lan can/.test(m.name));
+      const lamps = api.lamps || []; let offDeck = 0, low = 0, signature = 0, wrongClass = 0, nearEachOther = 0; const samples = [];
+      for (const l of lamps) {
+        const ys = net.surfaceYs(l.x, l.z);
+        if (!ys.some(y => Math.abs(y - l.y) < 0.3)) { offDeck++; if (samples.length < 6) samples.push({ x: +l.x.toFixed(1), z: +l.z.toFixed(1), y: +l.y.toFixed(2) }); }
+        if (l.y - groundY < 3.5) low++;
+        if (G.roads[l.road].signature) signature++;
+        if (!['river', 'overpass'].includes(G.roads[l.road].elevationClass)) wrongClass++;
+      }
+      for (let i = 0; i < Math.min(lamps.length, 3000); i++) for (let j = i + 1; j < Math.min(lamps.length, 3000); j++) if (lamps[i].road === lamps[j].road && Math.hypot(lamps[i].x - lamps[j].x, lamps[i].z - lamps[j].z) < 8 && Math.abs(lamps[i].y - lamps[j].y) < 1) { nearEachOther++; break; }
+      out.lamps = { count: lamps.length, offDeck, low, signature, wrongClass, nearEachOther, samples, meshCount: mesh ? mesh.count : 0, instanced: !!mesh?.isInstancedMesh, castShadow: mesh?.castShadow, hasOnBeforeRender: !!(mesh && mesh.onBeforeRender && mesh.onBeforeRender.toString().length > 40), triangles: mesh ? mesh.geometry.attributes.position.count / 3 * mesh.count : 0, listed: !!lm };
+    }
     // 10) API bước D: deckY(x, z, nearY) và tilt(x, z, dirX, dirZ, nearY).
     out.api = { deckY: typeof api.deckY, tilt: typeof api.tilt, signature: (api.signature || []).map(m => m.name) };
     if (typeof api.deckY === 'function') {
@@ -445,6 +461,11 @@ async function runBackend(browser, backend) {
         });
         check(tag + 'bridges: trụ và lan can là InstancedMesh có instance > 0', () => {
           for (const key of ['trụ', 'lan can']) { const m = b.meshes.find(x => x.name.includes(key)); assert(m, `thiếu mesh ${key}`); assert(m.instanced && m.count > 0, JSON.stringify(m)); }
+        });
+        check(tag + 'bridges: đèn lan can (bước J) — InstancedMesh, ≥ 200 đèn, đứng trên mặt cầu, cầu sông/cầu vượt, không signature', () => {
+          const l = b.lamps; assert(l.instanced && l.meshCount === l.count && l.count >= 200, JSON.stringify(l));
+          assert.equal(l.offDeck, 0, JSON.stringify(l.samples)); assert.equal(l.low, 0); assert.equal(l.signature, 0); assert.equal(l.wrongClass, 0); assert.equal(l.nearEachOther, 0);
+          assert(l.hasOnBeforeRender && !l.castShadow, 'đèn không đọc mức đêm hoặc đổ bóng'); assert(l.triangles <= 60000, `${l.triangles} tam giác đèn`);
         });
         check(tag + 'bridges: 0 trụ nằm trong mặt đường', () => { assert(b.piersChecked > 50, `chỉ ${b.piersChecked} trụ`); assert.equal(b.piersInRoad, 0, JSON.stringify(b.pierSamples)); });
         check(tag + 'bridges: bản mặt cầu thủ tục có mặt dưới đúng bề dày (± 0,1 m)', () => { assert(b.undersideProbes > 50, `${b.undersideProbes}`); assert.equal(b.undersideBad, 0, JSON.stringify(b.undersideSamples)); });

@@ -10,8 +10,9 @@
 // Cầu có mô hình chi tiết (road có signature, ví dụ Ba Son) không thêm trụ/lan can thủ tục.
 // Toàn bộ là minh họa (illustrative), không phải hình học khảo sát.
 import * as THREE from 'three/webgpu';
+import { attribute, uniform } from 'three/tsl';
 
-export const BRIDGES_31_VERSION = '31C';
+export const BRIDGES_31_VERSION = '31J';
 export const BRIDGE_CLASSES = new Set(['river', 'canal', 'overpass', 'low']);
 const THICKNESS = { river: 1.5, overpass: 1.5, canal: 0.9, low: 0.9 };
 const FOOT_THICKNESS_M = 0.6, RAMP_THICKNESS_M = 1.2;
@@ -22,6 +23,10 @@ const PIER_SPACING = { river: 36, overpass: 30, canal: 22, low: 22 };
 const PIER_MIN_CLEAR_M = 1.5, SHORT_CANAL_M = 30;
 const PARAPET_H = 1.05, PARAPET_W = 0.28, PARAPET_MIN_LIFT_M = 2.5;
 const RAMP_PARAPET_LIFT_M = 4.0;
+// Bước J: đèn gắn lan can trên cầu sông và cầu vượt (đêm sáng theo nút Ngày/Giờ vàng/Đêm), minh họa, không phải khảo sát.
+const LAMP_SPACING = { river: 36, overpass: 30 };
+const LAMP_MIN_LIFT_M = 3.5, LAMP_POLE_H = 6.4, LAMP_ARM_M = 1.7;
+const LAMP_NIGHT = { day: 0, golden: .08, night: 1 };
 export const BRIDGE_LABEL = 'Kết cấu cầu: minh họa (illustrative) — dầm, trụ, lan can suy luận theo lớp cầu, không khảo sát';
 
 // Hướng ngang (trái) đơn vị tại từng đỉnh polyline: vuông góc với dây cung hai đỉnh kề (như loftStrip).
@@ -280,7 +285,7 @@ function buildBachDang({ BD, groundY, concrete, design }) {
   return { meshes: [builtMesh, designMesh], ends, abutments };
 }
 
-export function createBridges31({ scene, roads, graph, roadNetwork, water, bachDang, footbridges = null, status = {} }) {
+export function createBridges31({ scene, roads, graph, roadNetwork, water, bachDang, footbridges = null, nightLevel = null, status = {} }) {
   status.version = BRIDGES_31_VERSION; status.state = 'building';
   const started = performance.now();
   const net = roadNetwork, groundY = graph.frame.groundY, waterY = graph.frame.waterY ?? 0.7;
@@ -398,7 +403,7 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
           const pa = [a[0] + inset[0], a[1], a[2] + inset[1]], pb = [b[0] + inset[0], b[1], b[2] + inset[1]];
           const heading = Math.atan2(dx, dz), grade = (b[1] - a[1]) / L;
           if (run && Math.abs(Math.atan2(Math.sin(heading - run.heading), Math.cos(heading - run.heading))) < 0.052 && Math.abs(grade - run.grade) < 0.01 && run.len < 40) { run.b = pb; run.len += L; }
-          else { flush(); run = { a: pa, b: pb, heading, grade, len: L, road: i }; }
+          else { flush(); run = { a: pa, b: pb, heading, grade, len: L, road: i, side: sign, out: [ox, oz] }; }
         }
         flush();
       }
@@ -427,7 +432,62 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
     railMesh.instanceMatrix.needsUpdate = true;
   }
 
-  const procedural = [deckMesh, pierMesh, railMesh];
+  // 3b) Đèn lan can (bước J): mỗi mép cầu sông/cầu vượt một cột đèn mỗi ~30–36 m, so le hai mép, cánh tay hướng vào mặt cầu.
+  const lamps = [], lampCarry = new Map();
+  for (const r of rails) {
+    const cls = classOf(r.road), spacing = LAMP_SPACING[cls];
+    if (!spacing || !isBridge(r.road)) continue;
+    const key = r.road + ':' + r.side;
+    let at = lampCarry.has(key) ? lampCarry.get(key) : (r.side > 0 ? spacing / 2 : spacing);
+    for (; at <= r.len; at += spacing) {
+      const t = at / r.len, x = r.a[0] + (r.b[0] - r.a[0]) * t, z = r.a[2] + (r.b[2] - r.a[2]) * t, guess = r.a[1] + (r.b[1] - r.a[1]) * t;
+      // Chân cột bám đúng mặt đường vẽ tại chỗ (đoạn lan can gộp ≤ 40 m nên nội suy tuyến tính có thể lệch dốc); không có mặt đường thì bỏ đèn.
+      const ys = net.surfaceYs(x, z).filter(v => Math.abs(v - guess) < 0.6);
+      if (!ys.length) continue;
+      const y = Math.max(...ys);
+      if (y - groundY < LAMP_MIN_LIFT_M) continue;
+      if (lamps.some(o => o.road === r.road && Math.abs(o.y - y) < 1 && Math.hypot(o.x - x, o.z - z) < 8)) continue;   // khúc cua: hai mép/hai đoạn gộp chồng nhau
+      lamps.push({ x, y, z, yaw: Math.atan2(r.out[1], -r.out[0]), road: r.road });
+    }
+    lampCarry.set(key, at - r.len);
+  }
+  const lampPositions = [], lampColors = [], lampEmit = [];
+  {
+    // Cột + cánh tay + đầu đèn (hộp), cánh tay hướng +x cục bộ; phần đầu đèn phát sáng.
+    const part = (cx, cy, cz, sx, sy, sz, c, e) => {
+      for (const [n, a, b] of [[[1, 0, 0], 1, 2], [[-1, 0, 0], 1, 2], [[0, 1, 0], 0, 2], [[0, 0, 1], 0, 1], [[0, 0, -1], 0, 1]]) {
+        const ax = n.findIndex(v => v !== 0), half = [sx / 2, sy / 2, sz / 2], ctr = [cx, cy, cz];
+        const corner = (ua, ub) => { const p = ctr.slice(); p[ax] += n[ax] * half[ax]; p[a] += ua * half[a]; p[b] += ub * half[b]; return p; };
+        const q = [corner(-1, -1), corner(1, -1), corner(1, 1), corner(-1, 1)];
+        const u = [q[1][0] - q[0][0], q[1][1] - q[0][1], q[1][2] - q[0][2]], v = [q[2][0] - q[0][0], q[2][1] - q[0][1], q[2][2] - q[0][2]];
+        const dot = (u[1] * v[2] - u[2] * v[1]) * n[0] + (u[2] * v[0] - u[0] * v[2]) * n[1] + (u[0] * v[1] - u[1] * v[0]) * n[2];
+        for (const k of dot >= 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]) { lampPositions.push(...q[k]); lampColors.push(...c); lampEmit.push(...e); }
+      }
+    };
+    const POLE = [.2, .21, .22], HEAD = [.95, .93, .86], NO = [0, 0, 0];
+    part(0, LAMP_POLE_H / 2, 0, .2, LAMP_POLE_H, .2, POLE, NO);
+    part(LAMP_ARM_M / 2, LAMP_POLE_H - .1, 0, LAMP_ARM_M, .1, .1, POLE, NO);
+    part(LAMP_ARM_M - .05, LAMP_POLE_H - .22, 0, .65, .12, .28, HEAD, [3.2, 2.5, 1.5]);
+  }
+  const lampGeometry = new THREE.BufferGeometry();
+  lampGeometry.setAttribute('position', new THREE.Float32BufferAttribute(lampPositions, 3));
+  lampGeometry.setAttribute('color', new THREE.Float32BufferAttribute(lampColors, 3));
+  lampGeometry.setAttribute('emit', new THREE.Float32BufferAttribute(lampEmit, 3));
+  lampGeometry.computeVertexNormals();
+  // Mức đêm: dùng nightLevel của app nếu được truyền; không thì đọc nút ánh sáng đang bật (không cần sửa app).
+  const lampNight = nightLevel || uniform(0);
+  const lampMaterial = new THREE.MeshStandardNodeMaterial({ vertexColors: true, roughness: .55, metalness: .35 });
+  lampMaterial.emissiveNode = attribute('emit', 'vec3').mul(lampNight);
+  const lampMesh = new THREE.InstancedMesh(lampGeometry, lampMaterial, Math.max(1, lamps.length));
+  lampMesh.name = 'Cầu 31J · đèn lan can (thủ tục)'; lampMesh.count = lamps.length; lampMesh.castShadow = false; lampMesh.receiveShadow = false;
+  if (!nightLevel) lampMesh.onBeforeRender = () => { lampNight.value = LAMP_NIGHT[document.querySelector('[data-light].active')?.dataset.light] ?? 0; };
+  {
+    const m = new THREE.Matrix4();
+    lamps.forEach((l, k) => { m.makeRotationY(l.yaw); m.setPosition(l.x, l.y, l.z); lampMesh.setMatrixAt(k, m); });
+    lampMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  const procedural = [deckMesh, pierMesh, railMesh, lampMesh];
   root.add(...procedural);
   let bd = null;
   if (bachDang?.mainPath?.length) { bd = buildBachDang({ BD: bachDang, groundY, concrete, design: designMaterial }); root.add(...bd.meshes); }
@@ -442,10 +502,10 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
     return { y, grade, pitch: Math.atan(grade) };
   };
   const triangles = meshes.reduce((s, m) => s + m.geometry.attributes.position.count / 3 * (m.isInstancedMesh ? m.count : 1), 0);
-  const api = { version: BRIDGES_31_VERSION, root, meshes, procedural, signature: bd ? bd.meshes : [], piers, rails: rails.length, thicknessOf, deckY, tilt };
+  const api = { version: BRIDGES_31_VERSION, root, meshes, procedural, signature: bd ? bd.meshes : [], piers, rails: rails.length, lamps, thicknessOf, deckY, tilt };
   Object.assign(status, {
     state: 'ready', classification: 'illustrative', label: BRIDGE_LABEL,
-    stats: { deckPieces, junctionUndersides, embankmentVertices, piers: piers.length, piersOnWater: piers.filter(p => p.water).length, parapets: rails.length, triangles, meshes: meshes.length, buildMs: Math.round(performance.now() - started) },
+    stats: { deckPieces, junctionUndersides, embankmentVertices, piers: piers.length, piersOnWater: piers.filter(p => p.water).length, parapets: rails.length, lamps: lamps.length, triangles, meshes: meshes.length, buildMs: Math.round(performance.now() - started) },
     meshes: meshes.map(m => ({ name: m.name, instanced: !!m.isInstancedMesh, count: m.isInstancedMesh ? m.count : 1, triangles: m.geometry.attributes.position.count / 3 * (m.isInstancedMesh ? m.count : 1) })),
     thicknessM: { ...THICKNESS, footway: FOOT_THICKNESS_M, ramp: RAMP_THICKNESS_M },
     bachDang: bd ? { built: true, meshes: bd.meshes.length, ends: bd.ends, abutments: bd.abutments, source: 'data/bach-dang-footbridge.json',

@@ -4,77 +4,144 @@ import * as THREE from 'three/webgpu';
 import { attribute, mix, vec3 } from 'three/tsl';
 import { TRAFFIC_31_VERSION, TRAFFIC_KINDS, LIGHT_FACTOR, STEP, MAX_STEPS_PER_FRAME, SEED, hashU32, buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=30b-31d';
 
-// ---------------------------------------------------------------- hình xe: hộp ghép tỉ lệ thật, màu đỉnh + mặt nạ sơn + phát sáng
-// Hộp: [x dọc xe, y, z ngang, dài, cao, rộng, màu đỉnh, phát sáng, mặt nạ sơn]. Mặt nạ 1 = nhân màu sơn riêng từng xe,
-// 0 = giữ màu cố định (lốp, kính, người lái) để xe đọc rõ ở 30–60 m; mỗi loại vẫn là một InstancedMesh.
-const TYRE = [.045, .045, .05], TRIM = [.09, .09, .1], GLASS = [.07, .1, .13], SEAT = [.12, .11, .11], PAINT = [1, 1, 1];
-const SHIRT = [.34, .38, .46], PANTS = [.16, .17, .2], SKIN = [.62, .48, .38], ROOFBOX = [.78, .8, .8], CARGO = [.86, .86, .83];
-const HEADC = [.95, .95, .9], TAILC = [.55, .05, .04], HEAD = [1, .9, .72], TAIL = [.42, .004, .002], NONE = [0, 0, 0];
-const KIND_BOXES = [
-  [ // xe máy ~1,9 × 0,7 m: 2 bánh tối, thân xe tay ga sơn, yếm trước, yên, tay lái; người lái (chân, thân, tay, mũ bảo hiểm sơn)
-    [.66, .29, 0, .56, .56, .11, TYRE, NONE, 0], [-.66, .29, 0, .56, .56, .11, TYRE, NONE, 0],
-    [0, .55, 0, 1.15, .34, .3, PAINT, NONE, 1], [.62, .8, 0, .16, .62, .34, PAINT, NONE, 1],
-    [-.34, .78, 0, .66, .1, .3, SEAT, NONE, 0], [.55, 1.08, 0, .08, .05, .66, TRIM, NONE, 0],
-    [-.06, .84, 0, .5, .2, .56, PANTS, NONE, 0], [-.24, 1.16, 0, .3, .52, .42, SHIRT, NONE, 0],
-    [.16, 1.2, 0, .5, .1, .54, SKIN, NONE, 0], [-.2, 1.49, 0, .28, .26, .27, PAINT, NONE, 1],
-    [.71, .94, 0, .05, .12, .18, HEADC, HEAD, 0], [-.93, .72, 0, .05, .08, .2, TAILC, TAIL, 0]
-  ],
-  [ // ô tô ~4,5 × 1,8 m: thân dưới sơn, cản trước/sau tối, cabin kính tối, nóc sơn, 4 bánh tối, đèn trước/sau
-    [0, .6, 0, 4.46, .62, 1.8, PAINT, NONE, 1], [2.2, .42, 0, .12, .26, 1.76, TRIM, NONE, 0], [-2.2, .42, 0, .12, .26, 1.76, TRIM, NONE, 0],
-    [-.2, 1.13, 0, 2.4, .46, 1.66, GLASS, NONE, 0], [-.28, 1.4, 0, 2.0, .08, 1.6, PAINT, NONE, 1],
-    [1.42, .33, .78, .66, .66, .26, TYRE, NONE, 0], [1.42, .33, -.78, .66, .66, .26, TYRE, NONE, 0],
-    [-1.4, .33, .78, .66, .66, .26, TYRE, NONE, 0], [-1.4, .33, -.78, .66, .66, .26, TYRE, NONE, 0],
-    [2.255, .76, .62, .04, .14, .36, HEADC, HEAD, 0], [2.255, .76, -.62, .04, .14, .36, HEADC, HEAD, 0],
-    [-2.255, .8, .64, .04, .14, .38, TAILC, TAIL, 0], [-2.255, .8, -.64, .04, .14, .38, TAILC, TAIL, 0]
-  ],
-  [ // xe buýt ~12 × 2,5 m: thân sơn, dải cửa sổ dài (sáng nhẹ ban đêm), cửa, kính lái, bảng tuyến, máy lạnh nóc, 2 trục bánh, đèn
-    [0, 1.8, 0, 12, 2.6, 2.5, PAINT, NONE, 1], [.15, 2.25, 0, 11.5, .95, 2.54, GLASS, [.16, .14, .1], 0],
-    [3.4, 1.5, 0, 1.0, 1.9, 2.56, TRIM, NONE, 0], [6.005, 2.0, 0, .04, 1.5, 2.2, GLASS, NONE, 0],
-    [6.01, 2.93, 0, .05, .22, 1.6, [.9, .6, .15], [.9, .55, .1], 0], [-1, 3.19, 0, 3, .18, 1.6, ROOFBOX, NONE, 0],
-    [4.1, .5, 0, 1.0, 1.0, 2.56, TYRE, NONE, 0], [-3.6, .5, 0, 1.0, 1.0, 2.56, TYRE, NONE, 0],
-    [6.02, .85, .85, .05, .2, .5, HEADC, HEAD, 0], [6.02, .85, -.85, .05, .2, .5, HEADC, HEAD, 0],
-    [-6.02, .95, .95, .05, .3, .35, TAILC, TAIL, 0], [-6.02, .95, -.95, .05, .3, .35, TAILC, TAIL, 0]
-  ],
-  [ // xe tải ~7,4 × 2,3 m: cabin sơn + kính, thùng hàng sáng (ánh nhẹ màu sơn), khung gầm tối, 3 trục bánh, đèn
-    [2.95, 1.45, 0, 1.5, 1.9, 2.3, PAINT, NONE, 1], [3.705, 1.85, 0, .04, .7, 2.1, GLASS, NONE, 0], [3.1, 1.85, 0, 1.0, .6, 2.34, GLASS, NONE, 0],
-    [-.85, 1.75, 0, 5.6, 2.6, 2.3, CARGO, NONE, .25], [0, .55, 0, 7.2, .3, 1.9, TRIM, NONE, 0],
-    [2.9, .48, 0, .96, .96, 2.36, TYRE, NONE, 0], [-1.5, .48, 0, .96, .96, 2.36, TYRE, NONE, 0], [-2.6, .48, 0, .96, .96, 2.36, TYRE, NONE, 0],
-    [3.72, .8, .85, .05, .2, .45, HEADC, HEAD, 0], [3.72, .8, -.85, .05, .2, .45, HEADC, HEAD, 0],
-    [-3.67, .75, .9, .05, .25, .3, TAILC, TAIL, 0], [-3.67, .75, -.9, .05, .25, .3, TAILC, TAIL, 0]
-  ]
+// ---------------------------------------------------------------- hình xe: khối đa diện có vát + bánh lăng trụ, màu đỉnh + mặt nạ sơn + phát sáng
+// Mỗi khối là tập mặt lồi; pháp tuyến hướng ra ngoài theo tâm khối nên không phụ thuộc thứ tự đỉnh. Bỏ mặt đáy và mặt khuất.
+// Mặt nạ sơn pm: 1 = nhân màu sơn riêng từng xe, 0 = giữ màu cố định (lốp, kính, quần áo) để xe đọc rõ ở 30–60 m;
+// mỗi loại xe vẫn là đúng một InstancedMesh (một draw call).
+const TYRE = [.04, .04, .045], TRIM = [.09, .09, .1], GLASS = [.08, .12, .16], SEAT = [.12, .11, .11], PAINT = [1, 1, 1], HUB = [.5, .52, .55];
+const SHIRT = [.34, .38, .46], PANTS = [.16, .17, .2], ROOFBOX = [.78, .8, .8], CARGO = [.86, .86, .83], MIRROR = [.12, .12, .13];
+const HEADC = [.95, .95, .9], TAILC = [.55, .05, .04], HEAD = [1, .9, .72], TAIL = [.42, .004, .002], NONE = [0, 0, 0], WINDOW_GLOW = [.16, .14, .1], SIGN = [.9, .55, .1];
+const pick = (spec, face) => Array.isArray(spec) || typeof spec === 'number' ? spec : spec[face] ?? spec.side ?? spec.all;
+function createModel() {
+  const pos = [], nor = [], col = [], emi = [], pm = [];
+  // Một mặt lồi: pháp tuyến Newell, lật thứ tự đỉnh nếu hướng vào trong (so với tâm khối), quạt tam giác.
+  function poly(verts, centre, c, e, m) {
+    let nx = 0, ny = 0, nz = 0; const n = verts.length;
+    for (let i = 0; i < n; i++) { const a = verts[i], b = verts[(i + 1) % n]; nx += (a[1] - b[1]) * (a[2] + b[2]); ny += (a[2] - b[2]) * (a[0] + b[0]); nz += (a[0] - b[0]) * (a[1] + b[1]); }
+    const len = Math.hypot(nx, ny, nz) || 1; nx /= len; ny /= len; nz /= len;
+    let fx = 0, fy = 0, fz = 0; for (const v of verts) { fx += v[0] / n; fy += v[1] / n; fz += v[2] / n; }
+    let vs = verts;
+    if ((fx - centre[0]) * nx + (fy - centre[1]) * ny + (fz - centre[2]) * nz < 0) { vs = verts.slice().reverse(); nx = -nx; ny = -ny; nz = -nz; }
+    for (let k = 1; k + 1 < n; k++) for (const v of [vs[0], vs[k], vs[k + 1]]) { pos.push(v[0], v[1], v[2]); nor.push(nx, ny, nz); col.push(c[0], c[1], c[2]); emi.push(e[0], e[1], e[2]); pm.push(m); }
+  }
+  // Hình chóp cụt chữ nhật: đáy l0×w0 ở y0, đỉnh l1×w1 ở y0+h, lệch (sx, sz). faces chọn mặt phát ra (mặc định trừ đáy).
+  function frustum({ x = 0, y0, z = 0, l0, w0, l1 = l0, w1 = w0, h, sx = 0, sz = 0, c, e = NONE, m = 0, faces = ['front', 'back', 'left', 'right', 'top'] }) {
+    const S = [[1, 1], [1, -1], [-1, -1], [-1, 1]];
+    const B = S.map(([a, b]) => [x + a * l0 / 2, y0, z + b * w0 / 2]), T = S.map(([a, b]) => [x + sx + a * l1 / 2, y0 + h, z + sz + b * w1 / 2]);
+    const centre = [0, 1, 2].map(i => (B.reduce((s, v) => s + v[i], 0) + T.reduce((s, v) => s + v[i], 0)) / 8);
+    const face = { front: [B[0], B[1], T[1], T[0]], back: [B[2], B[3], T[3], T[2]], left: [B[3], B[0], T[0], T[3]], right: [B[1], B[2], T[2], T[1]], top: T, bottom: B };
+    for (const f of faces) poly(face[f], centre, pick(c, f), pick(e, f), pick(m, f));
+  }
+  const box = ({ l, w, ...o }) => frustum({ ...o, l0: l, w0: w, y0: o.y - o.h / 2 });
+  // Bánh lăng trụ trục z (n cạnh): mặt bên lốp, nắp lốp + nắp hub xám nhỏ ở phía ngoài (caps '+', '-' hoặc 'both').
+  function wheel({ x, y, z = 0, r, w, sides = 8, caps = 'both', tyre = TYRE, hub = HUB }) {
+    const ring = zz => Array.from({ length: sides }, (_, k) => [x + r * Math.cos(2 * Math.PI * (k + .5) / sides), y + r * Math.sin(2 * Math.PI * (k + .5) / sides), zz]);
+    const a = ring(z + w / 2), b = ring(z - w / 2), centre = [x, y, z];
+    for (let k = 0; k < sides; k++) poly([a[k], a[(k + 1) % sides], b[(k + 1) % sides], b[k]], centre, tyre, NONE, 0);
+    for (const s of caps === 'both' ? [1, -1] : [caps === '+' ? 1 : -1]) {
+      poly(s > 0 ? a : b, centre, tyre, NONE, 0);
+      const zz = z + s * (w / 2 + .006);
+      poly(Array.from({ length: 6 }, (_, k) => [x + r * .55 * Math.cos(Math.PI * k / 3), y + r * .55 * Math.sin(Math.PI * k / 3), zz]), centre, hub, NONE, 0);
+    }
+  }
+  // Mũ bảo hiểm: lăng trụ đứng n cạnh, bán kính đổi dần r0 → r1, có nắp trên.
+  function cylinder({ x, y0, z = 0, r0, r1 = r0, h, sides = 8, c, m = 0 }) {
+    const ring = (r, y) => Array.from({ length: sides }, (_, k) => [x + r * Math.cos(2 * Math.PI * (k + .5) / sides), y, z + r * Math.sin(2 * Math.PI * (k + .5) / sides)]);
+    const a = ring(r0, y0), b = ring(r1, y0 + h), centre = [x, y0 + h / 2, z];
+    for (let k = 0; k < sides; k++) poly([a[k], a[(k + 1) % sides], b[(k + 1) % sides], b[k]], centre, pick(c, 'side'), NONE, m);
+    poly(b, centre, pick(c, 'top'), NONE, m);
+  }
+  const geometry = () => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setAttribute('emit', new THREE.Float32BufferAttribute(emi, 3)); g.setAttribute('pm', new THREE.Float32BufferAttribute(pm, 1));
+    g.computeBoundingSphere(); return g;
+  };
+  return { frustum, box, wheel, cylinder, geometry };
+}
+const FRONT = ['front'], BACK = ['back'], SIDES = ['left', 'right'], ALL4 = ['front', 'back', 'left', 'right'], NOBOTTOM = ['front', 'back', 'left', 'right', 'top'];
+const MODELS = [
+  // xe máy tay ga ~1,9 × 0,7 m: 2 bánh có hub, yếm + thân sau + yên, tay lái, đèn; người lái (chân, thân, hai tay, mũ sơn có kính)
+  S => {
+    S.wheel({ x: .62, y: .29, r: .29, w: .09 }); S.wheel({ x: -.62, y: .29, r: .29, w: .12 });
+    S.frustum({ x: .6, y0: .3, l0: .07, w0: .07, h: .7, sx: -.1, c: TRIM, faces: ALL4 });                                  // càng trước nghiêng
+    S.box({ x: .63, y: .62, l: .5, h: .05, w: .13, c: PAINT, m: 1 });                                                       // chắn bùn
+    S.frustum({ x: .5, y0: .36, l0: .2, w0: .4, l1: .1, w1: .36, h: .62, sx: -.06, c: PAINT, m: 1 });                      // yếm
+    S.box({ x: .1, y: .335, l: .62, h: .05, w: .34, c: TRIM });                                                             // sàn để chân
+    S.frustum({ x: -.42, y0: .34, l0: .8, w0: .32, l1: .5, w1: .28, h: .46, sx: -.1, c: PAINT, m: 1 });                    // thân sau
+    S.box({ x: -.3, y: .845, l: .6, h: .09, w: .28, c: SEAT });                                                             // yên
+    S.box({ x: .45, y: 1.0, l: .07, h: .05, w: .64, c: TRIM });                                                             // tay lái
+    S.box({ x: .62, y: .9, l: .06, h: .12, w: .2, c: HEADC, e: HEAD, faces: FRONT.concat(SIDES, ['top']) });                // đèn pha
+    S.box({ x: -.9, y: .72, l: .05, h: .07, w: .22, c: TAILC, e: TAIL, faces: BACK.concat(SIDES, ['top']) });               // đèn hậu
+    for (const z of [.14, -.14]) {
+      S.box({ x: -.1, y: .95, z, l: .5, h: .14, w: .13, c: PANTS });                                                        // đùi
+      S.frustum({ x: .3, y0: .38, z: z * 1.15, l0: .12, w0: .12, h: .55, sx: -.14, c: PANTS, faces: ALL4 });               // cẳng chân
+    }
+    S.frustum({ x: -.28, y0: .98, l0: .26, w0: .36, l1: .22, w1: .42, h: .5, sx: .05, c: SHIRT, m: .4 });                  // thân
+    for (const z of [.25, -.25]) S.frustum({ x: .44, y0: 1.02, z, l0: .09, w0: .09, l1: .1, w1: .1, h: .38, sx: -.6, c: SHIRT, m: .4 });   // tay
+    S.cylinder({ x: -.2, y0: 1.47, r0: .135, r1: .115, h: .17, c: PAINT, m: 1 });                                          // mũ bảo hiểm
+    S.box({ x: -.08, y: 1.56, l: .02, h: .07, w: .16, c: GLASS, faces: FRONT });                                            // kính mũ
+  },
+  // ô tô ~4,5 × 1,8 m: thân dưới sơn, cabin kính vát (kính trước/sau dốc), nóc sơn, cột B/C, cản, đèn, 4 bánh
+  S => {
+    S.frustum({ x: 0, y0: .36, l0: 4.46, w0: 1.72, l1: 4.34, w1: 1.68, h: .5, c: PAINT, m: 1 });                            // thân dưới
+    S.frustum({ x: -.2, y0: .86, l0: 2.5, w0: 1.62, l1: 1.62, w1: 1.52, h: .56, sx: -.22, c: { all: GLASS, top: PAINT }, m: { all: 0, top: 1 } });   // cabin kính
+    for (const x of [-.12, -.95]) S.box({ x, y: 1.14, l: .09, h: .56, w: 1.64, c: PAINT, m: 1, faces: SIDES });             // cột B, C (dải sơn hai bên)
+    for (const s of [1, -1]) S.box({ x: s * 2.24, y: .5, l: .1, h: .22, w: 1.72, c: TRIM });                                // cản
+    for (const z of [.62, -.62]) {
+      S.box({ x: 2.221, y: .72, z, l: .02, h: .13, w: .38, c: HEADC, e: HEAD, faces: FRONT });
+      S.box({ x: -2.221, y: .76, z, l: .02, h: .14, w: .4, c: TAILC, e: TAIL, faces: BACK });
+    }
+    for (const [x, z] of [[1.42, .8], [1.42, -.8], [-1.4, .8], [-1.4, -.8]]) S.wheel({ x, y: .34, z, r: .34, w: .24, caps: z > 0 ? '+' : '-' });
+  },
+  // xe buýt ~12 × 2,5 m: thân sơn, 7 ô cửa sổ mỗi bên (ban đêm sáng nhẹ), cửa, kính lái + bảng tuyến, máy lạnh nóc, gương, 4 bánh
+  S => {
+    S.frustum({ x: 0, y0: .55, l0: 12, w0: 2.5, l1: 11.9, w1: 2.46, h: 2.55, c: PAINT, m: 1 });                            // thân
+    S.box({ x: 0, y: .42, l: 11.7, h: .3, w: 2.3, c: TRIM });                                                               // gầm
+    for (const s of [1, -1]) {
+      for (let k = 0; k < 7; k++) S.box({ x: -4.9 + k * 1.55, y: 2.25, z: s * 1.243, l: 1.3, h: .95, w: .03, c: GLASS, e: WINDOW_GLOW, faces: [s > 0 ? 'left' : 'right'] });   // cửa sổ
+      S.box({ x: 4.2, y: 1.55, z: s * 1.243, l: 1.0, h: 1.85, w: .03, c: TRIM, faces: [s > 0 ? 'left' : 'right'] });         // cửa
+      S.box({ x: 5.55, y: 1.95, z: s * 1.4, l: .12, h: .26, w: .12, c: MIRROR });                                           // gương
+    }
+    S.box({ x: 6.004, y: 2.15, l: .02, h: 1.1, w: 2.3, c: GLASS, e: WINDOW_GLOW, faces: FRONT });                           // kính lái
+    S.box({ x: 6.004, y: 3.0, l: .02, h: .22, w: 1.6, c: SIGN, e: SIGN, faces: FRONT });                                    // bảng tuyến
+    S.box({ x: -6.004, y: 2.3, l: .02, h: .9, w: 2.0, c: GLASS, faces: BACK });                                             // kính sau
+    S.box({ x: -1, y: 3.27, l: 3, h: .2, w: 1.6, c: ROOFBOX });                                                              // máy lạnh
+    for (const s of [1, -1]) {
+      S.box({ x: 6.006, y: .96, z: s * .85, l: .02, h: .18, w: .5, c: HEADC, e: HEAD, faces: FRONT });
+      S.box({ x: -6.006, y: .95, z: s * .95, l: .02, h: .3, w: .35, c: TAILC, e: TAIL, faces: BACK });
+    }
+    S.box({ x: 6.02, y: .5, l: .1, h: .3, w: 2.5, c: TRIM }); S.box({ x: -6.02, y: .5, l: .1, h: .3, w: 2.5, c: TRIM });  // cản
+    for (const [x, w] of [[3.9, .3], [-3.6, .4]]) for (const s of [1, -1]) S.wheel({ x, y: .5, z: s * 1.1, r: .5, w, sides: 10, caps: s > 0 ? '+' : '-' });
+  },
+  // xe tải ~7,4 × 2,3 m: khung gầm, cabin sơn + kính vát, thùng hàng sáng với dải sơn, gương, 3 trục (6 bánh), đèn
+  S => {
+    S.box({ x: 0, y: .65, l: 7.2, h: .3, w: 1.9, c: TRIM });                                                                // khung gầm
+    S.box({ x: 2.95, y: 1.22, l: 1.5, h: .75, w: 2.3, c: PAINT, m: 1 });                                                    // cabin dưới
+    S.frustum({ x: 2.95, y0: 1.6, l0: 1.5, w0: 2.3, l1: 1.1, w1: 2.2, h: 1.0, sx: -.17, c: { all: GLASS, top: PAINT }, m: { all: 0, top: 1 } });   // cabin kính vát
+    S.box({ x: -.85, y: 1.95, l: 5.4, h: 2.2, w: 2.3, c: CARGO, m: .25 });                                                  // thùng hàng
+    for (const s of [1, -1]) {
+      S.box({ x: -.85, y: 1.35, z: s * 1.153, l: 5.3, h: .22, w: .01, c: PAINT, m: 1, faces: [s > 0 ? 'left' : 'right'] });   // dải sơn bên thùng
+      S.box({ x: 3.7, y: 1.95, z: s * 1.28, l: .12, h: .3, w: .14, c: MIRROR });                                            // gương
+    }
+    for (const z of [.85, -.85]) {
+      S.box({ x: 3.71, y: .98, z, l: .02, h: .2, w: .45, c: HEADC, e: HEAD, faces: FRONT });
+      S.box({ x: -3.705, y: .95, z, l: .02, h: .26, w: .3, c: TAILC, e: TAIL, faces: BACK });
+    }
+    S.box({ x: 3.74, y: .72, l: .1, h: .25, w: 2.2, c: TRIM }); S.box({ x: -3.7, y: .72, l: .1, h: .25, w: 2.0, c: TRIM });  // cản
+    for (const x of [2.9, -1.5, -2.6]) for (const s of [1, -1]) S.wheel({ x, y: .5, z: s * 1.05, r: .5, w: .34, sides: 10, caps: s > 0 ? '+' : '-' });
+  }
 ];
+function vehicleGeometry(kind) { const S = createModel(); MODELS[kind](S); return S.geometry(); }
+
 // Màu sơn chọn theo hash(id, SEED): xác định, đa dạng (xe máy nhiều màu; ô tô thiên trắng/bạc/đen; buýt xanh lá; tải xanh/trắng/đỏ).
 const PALETTES = [
   ['#b3262a', '#1f4f9a', '#1d1f22', '#e8e6e0', '#9aa1a6', '#c8862a', '#2f6b3f', '#7a2f6b', '#d8c23a', '#3a8fb7'],
-  ['#f0efea', '#c2c6c9', '#202326', '#6b7075', '#9e2b25', '#2d4f7c', '#f2f1ec', '#3e8f4f', '#8a6a3a', '#b8bcc0'],
+  ['#f0efea', '#c2c6c9', '#202326', '#6b7075', '#9e2b25', '#2d4f7c', '#f2f1ec', '#3e8f4f', '#d9b92e', '#b8bcc0'],
   ['#2f8a4c', '#2a7f47', '#f0eee6', '#d24b2c', '#2c6fb0'],
   ['#2d5fa0', '#e9e7e0', '#b63a2a', '#3f7d4a', '#d9a227']
 ];
 const paintOf = (kind, i) => { const p = PALETTES[kind]; return p[hashU32((i * 31 + 7) ^ SEED) % p.length]; };
-function boxGeometry(boxes) {
-  const pos = [], nor = [], col = [], emi = [], pm = [];
-  const faces = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
-  for (const [cx, cy, cz, sx, sy, sz, c, e, m] of boxes) {
-    for (const n of faces) {
-      const a = n[0] ? 1 : n[1] ? 2 : 0, b = n[0] ? 2 : n[1] ? 0 : 1, half = [sx / 2, sy / 2, sz / 2], centre = [cx, cy, cz];
-      const corner = (ua, ub) => { const p = centre.slice(); const ax = n.findIndex(v => v !== 0); p[ax] += n[ax] * half[ax]; p[a] += ua * half[a]; p[b] += ub * half[b]; return p; };
-      // thứ tự ngược chiều kim đồng hồ nhìn từ ngoài
-      const quad = [corner(-1, -1), corner(1, -1), corner(1, 1), corner(-1, 1)];
-      const [p0, p1, p2] = quad, u = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], v = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
-      const dotN = (u[1] * v[2] - u[2] * v[1]) * n[0] + (u[2] * v[0] - u[0] * v[2]) * n[1] + (u[0] * v[1] - u[1] * v[0]) * n[2];
-      const order = dotN >= 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2];
-      for (const k of order) { pos.push(...quad[k]); nor.push(...n); col.push(...c); emi.push(...e); pm.push(m); }
-    }
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
-  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-  g.setAttribute('emit', new THREE.Float32BufferAttribute(emi, 3));
-  g.setAttribute('pm', new THREE.Float32BufferAttribute(pm, 1));
-  g.computeBoundingSphere();
-  return g;
-}
 
 // ---------------------------------------------------------------- pose (hình học) + vẽ
 export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null }) {
@@ -124,7 +191,7 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
   const emitScale = nightLevel.mul(2.6).add(.12);
   const capacity = TRAFFIC_KINDS.map(() => 0); for (let i = 0; i < sim.N; i++) capacity[sim.kind[i]]++;
   const meshes = TRAFFIC_KINDS.map((k, ki) => {
-    const geometry = boxGeometry(KIND_BOXES[ki]), cap = Math.max(1, capacity[ki]);
+    const geometry = vehicleGeometry(ki), cap = Math.max(1, capacity[ki]);
     // Màu sơn theo instance: thuộc tính instanced riêng (instanceColor sẽ nhân lên mọi phần, kể cả lốp/kính/người lái).
     const paint = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3).fill(1), 3); paint.setUsage(THREE.DynamicDrawUsage);
     geometry.setAttribute('paint', paint);

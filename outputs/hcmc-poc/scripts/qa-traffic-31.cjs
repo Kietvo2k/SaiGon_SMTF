@@ -272,6 +272,19 @@ async function inspect(page) {
     const out = { motion: Object.fromEntries(Object.entries(motion).filter(([k, v]) => typeof v !== 'object' || v === null || Array.isArray(v)).map(([k, v]) => [k, Array.isArray(v) ? v.slice(0, 8) : v])), dataset: { ...document.body.dataset } };
     if (!api) return out;
     out.kinds = api.kinds.map(k => ({ name: k.name, length: k.length, width: k.width, height: k.height, triangles: k.triangles }));
+    // Bước J: kiểm hình học từng loại xe (kích thước hộp bao, số màu đỉnh, đỉnh sơn/phát sáng) và tổng tam giác theo pool.
+    out.geo = api.meshes.map(m => {
+      const g = m.geometry, p = g.attributes.position, c = g.attributes.color, e = g.attributes.emit, pm = g.attributes.pm, mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9], colours = new Set();
+      let emissiveVerts = 0, paintVerts = 0;
+      for (let i = 0; i < p.count; i++) {
+        for (let a = 0; a < 3; a++) { const v = p.array[i * 3 + a]; mn[a] = Math.min(mn[a], v); mx[a] = Math.max(mx[a], v); }
+        colours.add([c.array[i * 3], c.array[i * 3 + 1], c.array[i * 3 + 2]].map(v => v.toFixed(2)).join());
+        if (e.array[i * 3] + e.array[i * 3 + 1] + e.array[i * 3 + 2] > 0) emissiveVerts++;
+        if (pm.array[i] > 0) paintVerts++;
+      }
+      return { x: +(mx[0] - mn[0]).toFixed(2), y: +(mx[1] - mn[1]).toFixed(2), z: +(mx[2] - mn[2]).toFixed(2), colours: colours.size, emissiveVerts, paintVerts, triangles: p.count / 3, minY: +mn[1].toFixed(3) };
+    });
+    out.kindPool = api.kinds.map(() => 0); { const kk = api.snapshot().kind; for (let i = 0; i < kk.length; i++) out.kindPool[kk[i]]++; }
     out.meshes = api.drawn().map(d => ({ name: d.mesh.name, count: d.count, capacity: d.mesh.instanceMatrix.count, frustumCulled: d.mesh.frustumCulled, triangles: (d.mesh.geometry.index ? d.mesh.geometry.index.count : d.mesh.geometry.attributes.position.count) / 3, castShadow: d.mesh.castShadow }));
     // Mật độ theo thứ bậc: xe / km làn theo loại đường (trạng thái hiện tại).
     const lanes = api.lanes(), snap = api.snapshot(), perType = {};
@@ -420,8 +433,17 @@ const pct = (list, p) => { const s = list.slice().sort((a, b) => a - b); return 
       });
       check(tag + 'hình xe: 4 loại tỉ lệ thật, tam giác hợp lý, InstancedMesh ít draw call', () => {
         assert.deepEqual(r.kinds.map(k => k.name), ['motorbike', 'car', 'bus', 'truck']);
-        assert(r.kinds.every(k => k.triangles <= 200), JSON.stringify(r.kinds));
+        assert(r.kinds.every(k => k.triangles <= 300), JSON.stringify(r.kinds));   // bước J: tối đa ~2× mô hình hộp 30B/31D (≈ 150)
+        const BASE_TRI = [144, 156, 144, 144], pool = r.kindPool;                 // mô hình hộp cũ, tổng theo pool xe thật
+        const before = pool.reduce((a, n, k) => a + n * BASE_TRI[k], 0), after = pool.reduce((a, n, k) => a + n * r.kinds[k].triangles, 0);
+        assert(after <= 2 * before, `tổng tam giác xe ${after} > 2 × ${before}`);
         assert(r.meshes.length === r.kinds.length, JSON.stringify(r.meshes));
+        // Bước J: mỗi loại là một khối có nhiều màu (xe máy có người lái, ô tô có cabin kính, buýt có dải cửa sổ, tải có cabin + thùng),
+        // đèn phát sáng, vùng sơn riêng từng xe; hộp bao còn trong kích thước mô phỏng.
+        const [gm, gc, gb, gt] = r.geo;
+        assert(gm.colours >= 8 && gc.colours >= 6 && gb.colours >= 6 && gt.colours >= 6, JSON.stringify(r.geo.map(g => g.colours)));
+        assert(r.geo.every(g => g.emissiveVerts > 0 && g.paintVerts > 0 && g.minY >= -.001), JSON.stringify(r.geo));
+        assert(gm.x > 1.7 && gm.x < 2.2 && gm.z < .8 && gm.y > 1.5 && gm.y < 1.75 && gc.x > 4.3 && gc.x < 4.7 && gc.z > 1.7 && gc.z < 1.95 && gc.y > 1.3 && gc.y < 1.6 && gb.x > 11.8 && gb.x < 12.3 && gb.z < 3 && gt.x > 7.1 && gt.x < 7.7 && gt.z < 2.8, JSON.stringify(r.geo));
         const [m, c, b, t] = r.kinds; assert(Math.abs(m.length - 1.9) < .15 && m.width <= .8 && Math.abs(c.length - 4.5) < .3 && Math.abs(c.width - 1.8) < .1 && Math.abs(b.length - 12) < .6 && Math.abs(b.width - 2.5) < .1 && t.length > 6 && t.length < 9, JSON.stringify(r.kinds));
       });
       check(tag + `CPU vòng cập nhật xe ≤ baseline (trung bình, p95)`, () => {
@@ -449,7 +471,7 @@ const pct = (list, p) => { const s = list.slice().sort((a, b) => a - b); return 
     await browser.close();
     const summary = Object.fromEntries(Object.entries(report).map(([k, r]) => [k, {
       windows: Object.fromEntries(Object.entries(r.windows || {}).map(([id, w]) => [id, { frames: w.frames, drawnMax: w.drawnMax, active: [w.activeMin, w.activeMax], matrixPairs: w.matrixPairs, matrixJumps: w.matrixJumps, obbChecks: w.obbChecks, obbOverlaps: w.obbOverlaps, allObbOverlaps: w.allObbOverlaps, graph: { ...w.graph, samples: undefined }, oneway: w.oneway.bad, heading: [w.heading.checked, w.heading.bad], right: [w.right.checked, w.right.bad], gap: { pairs: w.gap.pairs, cross: w.gap.crossEdge, bad: w.gap.bad }, bridge: { ...w.bridge, yBad: undefined } }])),
-      determinism: r.determinism, longRun: r.longRun, densityPerLaneKm: r.densityPerLaneKm, kindShares: r.kindShares, light: r.light, densityApi: r.densityApi, kinds: r.kinds, meshes: r.meshes, cpu: r.cpuSummary, motion: r.motion, errors: r.errors
+      determinism: r.determinism, longRun: r.longRun, densityPerLaneKm: r.densityPerLaneKm, kindShares: r.kindShares, light: r.light, densityApi: r.densityApi, kinds: r.kinds, geo: r.geo, kindPool: r.kindPool, meshes: r.meshes, cpu: r.cpuSummary, motion: r.motion, errors: r.errors
     }]));
     console.log(JSON.stringify({ suite: 'traffic-31 · D', passed: checks.length, failed: failures.length, checks, failures, summary }, null, 1));
     if (failures.length) process.exitCode = 1;

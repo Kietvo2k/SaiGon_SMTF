@@ -21,6 +21,7 @@ const MARKING_HALF_WIDTH_M=.08;
 const MEDIAN_MAX_GAP_M=12;        // khe đường đôi tối đa được lấp
 const MEDIAN_MIN_GAP_M=.2;
 const MEDIAN_SAMPLE_M=8;
+const SHORT_LINK_BODY_M=20;       // road nối hai giao lộ có thân asphalt ngắn hơn mức này không vẽ bó vỉa riêng (bước J)
 const CURB_EXTRA_M=1.8;           // bó vỉa = bề rộng + 1,8 m như 30B
 const ELEVATED_EPS_M=.05;
 const PROFILE_TOL_M=.03;          // sai số giản lược profile khi chèn đỉnh dọc cạnh nâng (QA chặn 0,05 m)
@@ -331,7 +332,12 @@ export async function buildRoadNetwork31({roads,graph,widths,hiddenRoads=null,bu
       }
     }
     const anyDrawn=()=>true;
-    if(buildStrip(curbPoints,hw+CURB_EXTRA_M/2,neighbourDir(firstEdge.from,edgeList[0],0,anyDrawn),neighbourDir(lastEdge.to,edgeList[edgeList.length-1],1,anyDrawn),emitTo('edge')))curbChains++;
+    // Bước J: road ngắn nối hai giao lộ (thân asphalt còn lại ngắn) chỉ để lại viền bó vỉa bị polygon hai đầu che dở, thành các
+    // mảnh răng cưa quanh đảo giao thông nhỏ; thân asphalt vẫn vẽ nên bỏ bó vỉa của nó (không xét road trên cao).
+    const bodyM=edgeList.reduce((sum,edgeIndex)=>sum+Math.max(0,graph.edges[edgeIndex].length-(armTrim.get(`${edgeIndex}:0`)?.t||0)-(armTrim.get(`${edgeIndex}:1`)?.t||0)),0);
+    const bothJunction=armTrim.has(`${edgeList[0]}:0`)&&armTrim.has(`${edgeList[edgeList.length-1]}:1`);
+    const skipCurb=bothJunction&&bodyM<SHORT_LINK_BODY_M&&!vertexY[index].some(isElevated);
+    if(!skipCurb&&buildStrip(curbPoints,hw+CURB_EXTRA_M/2,neighbourDir(firstEdge.from,edgeList[0],0,anyDrawn),neighbourDir(lastEdge.to,edgeList[edgeList.length-1],1,anyDrawn),emitTo('edge')))curbChains++;
     // Mặt đường: tách mảnh tại giao lộ cùng nhóm.
     const sameGroup=road=>groupOf(road)===group;
     let points=[],start=null;
