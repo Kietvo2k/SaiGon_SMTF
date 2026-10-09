@@ -25,11 +25,15 @@ const SUGGEST_SNOOZE_S=120;    // bỏ qua đề xuất thì không hỏi lại 
 
 // Tỉ lệ giữ lại phần KHÔNG signature của từng nhóm (signature/vùng bảo vệ luôn giữ 100 %).
 export const DENSITY_LEVELS_31=Object.freeze([
-  Object.freeze({id:'full',label:'Đầy đủ',buildings:1,trees:1,details:1,fixtures:1,lamps:1,vehicles:1,vessels:1,bridgeRails:true}),
-  Object.freeze({id:'balanced',label:'Cân bằng',buildings:.55,trees:.6,details:.6,fixtures:.5,lamps:.65,vehicles:.6,vessels:.7,bridgeRails:true}),
-  Object.freeze({id:'light',label:'Nhẹ',buildings:.32,trees:.38,details:.3,fixtures:.25,lamps:.4,vehicles:.35,vessels:.45,bridgeRails:false}),
-  Object.freeze({id:'minimal',label:'Tối thiểu',buildings:.16,trees:.2,details:0,fixtures:0,lamps:.15,vehicles:.15,vessels:.25,bridgeRails:false})
+  Object.freeze({id:'full',label:'Đầy đủ',buildings:1,trees:1,details:1,fixtures:1,lamps:1,vehicles:1,vessels:1,bridgeRails:true,minorShadows:true,ambientOcclusion:true,bloom:true,mergedBuildings:false}),
+  Object.freeze({id:'balanced',label:'Cân bằng',buildings:.55,trees:.6,details:.6,fixtures:.5,lamps:.65,vehicles:.6,vessels:.7,bridgeRails:true,minorShadows:true,ambientOcclusion:true,bloom:true,mergedBuildings:false}),
+  Object.freeze({id:'light',label:'Nhẹ',buildings:.32,trees:.38,details:.3,fixtures:.25,lamps:.4,vehicles:.35,vessels:.45,bridgeRails:false,minorShadows:true,ambientOcclusion:true,bloom:true,mergedBuildings:false}),
+  Object.freeze({id:'minimal',label:'Tối thiểu',buildings:.16,trees:.2,details:0,fixtures:0,lamps:.15,vehicles:.15,vessels:.25,bridgeRails:false,minorShadows:false,ambientOcclusion:false,bloom:false,mergedBuildings:true})
 ]);
+// Bước G: minorShadows = nhóm phụ (cây, chi tiết 28, thiết bị mái, đèn, xe, tàu) có đổ bóng; ambientOcclusion = GTAO
+// (pass pháp tuyến + quad AO); bloom = bloom emissive; mergedBuildings = công trình vẽ bằng một mesh gộp thay các chunk.
+// Tất cả chỉ đổi cờ/camera/visible/updateBefore nên không biên dịch lại pipeline; công trình signature vẫn giữ đủ.
+const MERGED_BUILDING_FRACTION=DENSITY_LEVELS_31.find(level=>level.mergedBuildings)?.buildings??null;
 const levelById=new Map(DENSITY_LEVELS_31.map((level,index)=>[level.id,{...level,index}]));
 
 const clamp01=v=>Math.max(0,Math.min(1,v));
@@ -90,7 +94,7 @@ export function scoreBuildings31({buildings,roads,isSignature=()=>false}){
 }
 
 // Chia công trình thành chunk lưới; arrays là mảng đỉnh theo thứ tự công trình, faceEnds[i] = tam giác cuối (lũy kế).
-export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,material,roads,gate,cellSize=2500,name='Công trình 31E'}){
+export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,material,roads,gate,cellSize=2500,name='Công trình 31E',mergeFraction=MERGED_BUILDING_FRACTION}){
   const started=performance.now(),n=buildings.length,faceStart=i=>i?faceEnds[i-1]:0;
   const scores=scoreBuildings31({buildings,roads,isSignature:id=>gate.isSignatureBuilding(id)});
   const drawable=[];for(let i=0;i<n;i++)if(faceEnds[i]>faceStart(i))drawable.push(i);
@@ -120,26 +124,50 @@ export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,mate
     mesh.userData.densityChunk={cell:key,buildings:Int32Array.from(list),vertexEnds,ranks,signatureCount:signatureCount<0?list.length:signatureCount};
     group.add(mesh);meshes.push(mesh);
   }
-  let shown=drawable.length;
+  const prefixOf=(chunk,f)=>f>=1?chunk.buildings.length:chunk.signatureCount+countBelow(chunk.ranks,f,chunk.signatureCount);
+  // Mesh gộp (bước G): đúng tập công trình của từng chunk ở tỉ lệ mergeFraction, nối thành một mesh cùng vật liệu →
+  // cùng pipeline, đổi qua lại chỉ là visible. Chỉ dùng khi tỉ lệ yêu cầu đúng bằng mergeFraction (mức Tối thiểu).
+  let merged=null;
+  if(mergeFraction!==null&&mergeFraction<1&&meshes.length>1){
+    const parts=meshes.map(mesh=>{const chunk=mesh.userData.densityChunk,k=prefixOf(chunk,mergeFraction);return {mesh,chunk,k,count:k?chunk.vertexEnds[k-1]:0};});
+    const vertices=parts.reduce((sum,part)=>sum+part.count,0),geometry=new THREE.BufferGeometry();
+    for(const [attribute,source] of Object.entries(meshes[0].geometry.attributes)){
+      const size=source.itemSize,target=new Float32Array(vertices*size);let offset=0;
+      for(const part of parts){if(!part.count)continue;target.set(part.mesh.geometry.attributes[attribute].array.subarray(0,part.count*size),offset);offset+=part.count*size;}
+      geometry.setAttribute(attribute,new THREE.Float32BufferAttribute(target,size));
+    }
+    geometry.computeBoundingSphere();geometry.computeBoundingBox();
+    const ids=[],ends=[];let base=0;
+    for(const part of parts){for(let k=0;k<part.k;k++){ids.push(part.chunk.buildings[k]);ends.push(base+part.chunk.vertexEnds[k]);}base+=part.count;}
+    const mesh=new THREE.Mesh(geometry,material);
+    mesh.name=`${name} · gộp mức ${mergeFraction}`;mesh.castShadow=meshes[0].castShadow;mesh.receiveShadow=meshes[0].receiveShadow;mesh.visible=false;
+    mesh.userData.densityChunk={cell:'merged',buildings:Int32Array.from(ids),vertexEnds:Int32Array.from(ends),ranks:new Float32Array(ids.length),signatureCount:ids.length};
+    group.add(mesh);merged=mesh;
+  }
+  let shown=drawable.length,useMerged=false;
   const setFraction=f=>{
     shown=0;let triangles=0;
+    useMerged=!!merged&&Math.abs(f-mergeFraction)<1e-9;
     for(const mesh of meshes){
-      const chunk=mesh.userData.densityChunk,k=f>=1?chunk.buildings.length:chunk.signatureCount+countBelow(chunk.ranks,f,chunk.signatureCount);
+      const chunk=mesh.userData.densityChunk,k=prefixOf(chunk,f);
       const count=k?chunk.vertexEnds[k-1]:0;
-      mesh.geometry.setDrawRange(0,count);mesh.visible=count>0;shown+=k;triangles+=count/3;
+      mesh.geometry.setDrawRange(0,count);mesh.visible=count>0&&!useMerged;shown+=k;triangles+=count/3;
     }
-    return {buildings:shown,triangles};
+    if(merged)merged.visible=useMerged;
+    return {buildings:shown,triangles,merged:useMerged};
   };
+  const pickable=()=>useMerged?[merged]:meshes;
   // Chọn công trình: raycast tôn trọng drawRange; tam giác → công trình bằng tìm nhị phân trên vertexEnds.
   const pick=raycaster=>{
-    const hit=raycaster.intersectObjects(meshes,false)[0];if(!hit)return null;
+    const hit=raycaster.intersectObjects(pickable(),false)[0];if(!hit)return null;
     const chunk=hit.object.userData.densityChunk,vertex=hit.faceIndex*3;let lo=0,hi=chunk.vertexEnds.length-1;
     while(lo<hi){const mid=(lo+hi)>>1;if(chunk.vertexEnds[mid]>vertex)hi=mid;else lo=mid+1;}
     return chunk.buildings[lo];
   };
-  const shownIds=()=>{const ids=[];for(const mesh of meshes){const chunk=mesh.userData.densityChunk,count=mesh.visible?mesh.geometry.drawRange.count:0;for(let k=0;k<chunk.buildings.length&&chunk.vertexEnds[k]<=count;k++)ids.push(Number(buildings[chunk.buildings[k]].id));}return ids;};
-  const stats={chunks:meshes.length,cellSizeM:cellSize,drawable:drawable.length,signature:drawable.length-ordinary.length,triangles:faceEnds[n-1]||0,buildMs:Math.round(performance.now()-started)};
-  return {group,meshes,setFraction,pick,shownIds,stats,total:drawable.length,shown:()=>shown};
+  const shownIds=()=>{const ids=[];for(const mesh of pickable()){const chunk=mesh.userData.densityChunk,count=mesh.visible?mesh.geometry.drawRange.count:0;for(let k=0;k<chunk.buildings.length&&chunk.vertexEnds[k]<=count;k++)ids.push(Number(buildings[chunk.buildings[k]].id));}return ids;};
+  const stats={chunks:meshes.length,cellSizeM:cellSize,drawable:drawable.length,signature:drawable.length-ordinary.length,triangles:faceEnds[n-1]||0,
+    merged:merged?{fraction:mergeFraction,buildings:merged.userData.densityChunk.buildings.length,triangles:merged.geometry.attributes.position.count/3}:null,buildMs:Math.round(performance.now()-started)};
+  return {group,meshes,merged,setFraction,pick,shownIds,stats,total:drawable.length,shown:()=>shown};
 }
 
 // Thưa đều instance (cây, chi tiết runtime 28, thiết bị mái). Hạng phân tầng theo ô 300 m: trong ô có m mục (thứ tự
@@ -205,7 +233,8 @@ export function createInstanceDensity31({sources,items,isProtected=()=>false,str
     for(const {mesh,stride} of inPlace)mesh.count=shown*stride;
     return shown;
   };
-  return {setFraction,total:n,protected:protectedTotal,chunks:cells.reduce((s,c)=>s+c.meshes.length,0),shown:()=>shown};
+  const meshes=[...cells.flatMap(cell=>cell.meshes.map(entry=>entry.chunk)),...inPlace.map(entry=>entry.mesh)];
+  return {setFraction,meshes,total:n,protected:protectedTotal,chunks:cells.reduce((s,c)=>s+c.meshes.length,0),shown:()=>shown};
 }
 
 // Vị trí instance đọc từ ma trận (cho mesh không lộ danh sách mục: chi tiết runtime 28, thiết bị mái).
@@ -258,17 +287,20 @@ export function createDensityController31({
   const vehicleTotal=()=>traffic?.api?.()?.total??trafficFallback[0]?.userData.densityCapacity??0;
   const fmt=v=>Number(v||0).toLocaleString('vi-VN');
 
+  // API xe đang dùng: luôn gọi qua api.setVisibleFraction (không giữ tham chiếu hàm); update() so sánh đối tượng API
+  // mỗi khung — API xuất hiện sau, được thay hay bị gỡ thì đồng bộ lại mức hiện tại.
+  let vehicleApi=null;
   function setVehicles(f){
-    const api=traffic?.api?.();
+    const api=traffic?.api?.();vehicleApi=api??null;
     if(typeof api?.setVisibleFraction==='function'){const shown=api.setVisibleFraction(f);return {shown:typeof shown==='number'?shown:Math.round(vehicleTotal()*f),via:'traffic.api.setVisibleFraction'};}
     if(typeof api?.setDensity==='function'){const shown=api.setDensity(f);return {shown:typeof shown==='number'?shown:Math.round(vehicleTotal()*f),via:'traffic.api.setDensity'};}
     // Dự phòng (chưa có API bước D): xe đã xếp theo điểm đoạn đường giảm dần → cắt đuôi giữ trục chính/trung tâm.
     let shown=0;for(const mesh of trafficFallback){mesh.count=Math.ceil(mesh.userData.densityCapacity*f);shown=mesh.count;}
     return {shown,via:'fallback mesh.count'};
   }
-  const hasTrafficApi=()=>{const api=traffic?.api?.();return typeof api?.setVisibleFraction==='function'||typeof api?.setDensity==='function';};
+  const trafficApiChanged=()=>(traffic?.api?.()??null)!==vehicleApi;
   function syncVehicles(){
-    for(const mesh of trafficFallback)mesh.count=mesh.userData.densityCapacity;   // trả mesh cũ về nguyên trạng
+    if(status.vehiclesVia==='fallback mesh.count')for(const mesh of trafficFallback)mesh.count=mesh.userData.densityCapacity;   // trả mesh cũ về nguyên trạng
     const vehicles=setVehicles(current.vehicles);
     status.counts.vehicles=vehicles.shown;status.totals.vehicles=vehicleTotal();status.vehiclesVia=vehicles.via;
     document.body.dataset.densityVehicles=String(vehicles.shown);
@@ -282,6 +314,39 @@ export function createDensityController31({
     return registry.auditSignatureVisibility({buildings:[...buildingChunks.shownIds(),...(auditInputs.extraBuildingIds?.()||[])],ways:auditInputs.ways?.()||[],modules});
   }
 
+  // Bóng nhóm phụ: gom mesh mỗi lần áp (xe/tàu có thể dựng sau); chỉ đụng mesh vốn đổ bóng.
+  // InstancedMesh KHÔNG tắt castShadow (bật lại sẽ dựng render object/pipeline bóng cho mọi mesh mới vào khung → khung
+  // đứng hình > 1 s khi về Đầy đủ sau khi đổi góc nhìn): trong pass bóng đặt count = 0 rồi trả lại ngay sau đó ⇒ three
+  // r186 vẫn dựng pipeline nhưng bỏ qua draw (getDrawParameters → null). Mesh thường thì tắt castShadow.
+  const hideInShadow=function(){this.userData.densityShadowCount=this.count;this.count=0;};
+  const restoreAfterShadow=function(){if(this.userData.densityShadowCount!==undefined){this.count=this.userData.densityShadowCount;this.userData.densityShadowCount=undefined;}};
+  function setMinorShadows(on){
+    const list=[...(treeDensity?.meshes||[]),...detailDensity.flatMap(set=>set.meshes||[]),...(fixtureDensity?.meshes||[]),streetFurniture?.lampMesh,streetFurniture?.headMesh];
+    for(const root of [traffic?.group,vesselGroup])root?.traverse(o=>{if(o.isMesh)list.push(o);});
+    let toggled=0;
+    for(const mesh of new Set(list.filter(Boolean))){
+      const data=mesh.userData;
+      if(data.densityCastShadow===undefined){
+        data.densityCastShadow=mesh.castShadow;
+        if(mesh.isInstancedMesh){data.densityOnBeforeShadow=mesh.onBeforeShadow;data.densityOnAfterShadow=mesh.onAfterShadow;}
+      }
+      if(!data.densityCastShadow)continue;
+      if(mesh.isInstancedMesh){
+        mesh.onBeforeShadow=on?data.densityOnBeforeShadow:hideInShadow;
+        mesh.onAfterShadow=on?data.densityOnAfterShadow:restoreAfterShadow;
+      }else mesh.castShadow=on;
+      toggled++;
+    }
+    return toggled;
+  }
+  let pipeline=null;
+  const applyPostEffects=()=>{
+    const ambientOcclusion=current&&typeof pipeline?.setAmbientOcclusion==='function'?pipeline.setAmbientOcclusion(current.ambientOcclusion):false;
+    const bloom=current&&typeof pipeline?.setBloom==='function'?pipeline.setBloom(current.bloom):false;
+    if(status.render)Object.assign(status.render,{ambientOcclusionActive:ambientOcclusion,bloomActive:bloom});
+    return {ambientOcclusion,bloom};
+  };
+
   let current=null,source='default',suggestion=null,lowFor=0,snoozeUntil=0,simulatedFps=null,clock=0;
   function apply(id,from){
     const level=levelById.get(id);if(!level)return false;
@@ -294,6 +359,7 @@ export function createDensityController31({
     const vehicles=setVehicles(level.vehicles);
     let vessels=0;for(const mesh of vesselMeshes){mesh.count=Math.max(1,Math.ceil(mesh.userData.densityCapacity*level.vessels));vessels=Math.max(vessels,mesh.count);}
     for(const rail of bridgeRails){rail.visible=level.bridgeRails;level.bridgeRails?disabled.delete(rail):disabled.add(rail);}
+    const minorShadowMeshes=setMinorShadows(level.minorShadows);
     current=level;source=from;
     const audit=runAudit();
     const applyMs=+(performance.now()-started).toFixed(2);
@@ -303,8 +369,10 @@ export function createDensityController31({
       counts:{buildings:built.buildings,buildingTriangles:built.triangles,trees,details,fixtures,lamps,vehicles:vehicles.shown,vessels},
       totals:{buildings:buildingChunks.total,trees:treeDensity?.total||0,lamps:streetFurniture?.instances?.().length||0,vehicles:vehicleTotal(),vessels:vesselMeshes[0]?.userData.densityCapacity||0},
       vehiclesVia:vehicles.via,
+      render:{minorShadows:level.minorShadows,minorShadowMeshes,ambientOcclusion:level.ambientOcclusion,ambientOcclusionActive:false,bloom:level.bloom,bloomActive:false,mergedBuildings:!!built.merged},
       audit:{complete:audit.complete,total:audit.total,visible:audit.visible,missing:audit.missing}
     });
+    applyPostEffects();
     const body=document.body.dataset;
     body.densityLevel=level.id;body.densityAudit=audit.complete?'complete':'incomplete';
     body.densityBuildings=String(built.buildings);body.densityTrees=String(trees);body.densityLamps=String(lamps);body.densityVehicles=String(vehicles.shown);
@@ -362,7 +430,9 @@ export function createDensityController31({
     setLevel:(id,from='api')=>{choose(id,from);return status.level===id;},
     // QA: giả lập FPS đọc được (null = dùng FPS thật của adaptive quality).
     simulateFps:value=>{simulatedFps=value===null?null:Number(value);lowFor=0;},
-    audit:runAudit
+    audit:runAudit,
+    // Pipeline hậu kỳ dựng sau bộ điều phối: gắn vào thì áp ngay cờ GTAO/bloom của mức hiện tại.
+    attachPipeline:value=>{pipeline=value||null;return applyPostEffects();}
   };
   Object.defineProperty(status,'api',{value:api,enumerable:false,configurable:true});
   return {
@@ -370,8 +440,8 @@ export function createDensityController31({
     get level(){return current.id;},
     update(dt){
       clock+=dt;
-      // API xe của bước D có thể khởi tạo sau bộ điều phối: khi xuất hiện thì đồng bộ ngay mức hiện tại.
-      if(status.vehiclesVia==='fallback mesh.count'&&hasTrafficApi())syncVehicles();
+      // API xe của bước D có thể khởi tạo sau bộ điều phối hoặc được thay: đối tượng API đổi thì đồng bộ ngay mức hiện tại.
+      if(trafficApiChanged())syncVehicles();
       const fps=simulatedFps??getFps();
       lowFor=fps<lowFps?lowFor+dt:0;
       if(!suggestion&&lowFor>=SUGGEST_AFTER_S&&clock>=snoozeUntil&&current.index<DENSITY_LEVELS_31.length-1)showSuggestion(levelById.get(DENSITY_LEVELS_31[current.index+1].id),fps);

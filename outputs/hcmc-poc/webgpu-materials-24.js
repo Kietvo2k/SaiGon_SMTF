@@ -8,14 +8,14 @@ import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import {
   createAdaptiveQuality, createCityRenderPipeline, createCityShadowSystem,
   resolveVisualQuality, smoothDampScalar, smoothDampVector
-} from './city-visual-runtime-30.js?v=30b';
+} from './city-visual-runtime-30.js?v=30b-31g';
 import { createCityDetailRuntime } from './city-detail-runtime-28.js?v=30b-31e2';
 import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b-31g';
 import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
 import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=30b-31g';
 import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=30b-31e2';
 import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=30b-31g';
-import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31e';
+import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31g';
 import { createTraffic31 } from './city-traffic-31.js?v=30b-31d';
 
 const D=window.CITY_DATA;
@@ -876,6 +876,8 @@ Object.assign(materialStatus,{
 
 let visualPipeline=null,pipelineFault=false;
 try{visualPipeline=createCityRenderPipeline(renderer,scene,camera,visualQuality);}catch(error){pipelineFault=true;console.warn('City Visual Runtime 30 unavailable; direct rendering retained.',error);}
+// Mật độ Tối thiểu tạm dừng GTAO và bloom (bước G); pipeline dựng sau bộ điều phối nên gắn tại đây.
+cityDensity.attachPipeline(visualPipeline);
 const adaptiveQuality=createAdaptiveQuality(renderer,{minRatio:visualQuality.minPixelRatio,maxRatio:visualQuality.maxPixelRatio,lowFps:visualQuality.targetLowFps,highFps:visualQuality.targetHighFps});
 materialStatus.visualRuntime={
   version:'30b',profile:visualQuality.id,pipeline:visualPipeline?.name||'direct fallback',effects:visualPipeline?.effects||[],shadows:{type:shadowSystem.type,cascades:shadowSystem.cascades,mapSize:shadowSystem.mapSize,maxFar:shadowSystem.maxFar},adaptiveResolution:true,

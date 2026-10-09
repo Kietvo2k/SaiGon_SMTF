@@ -23,12 +23,16 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 // Ngưỡng nghiệm thu (đặc tả E mục 5; QA đặt độc lập với module).
 const LEVELS = ['full', 'balanced', 'light', 'minimal'];
 const LABELS = ['Đầy đủ', 'Cân bằng', 'Nhẹ', 'Tối thiểu'];
-const MIN_REDUCTION = .6;                 // Tối thiểu giảm ≥ 60 % tam giác so với Đầy đủ (draw call: xem chú thích ở check)
+const MIN_REDUCTION = .6;                 // Tối thiểu giảm ≥ 60 % cả tam giác lẫn draw call so với Đầy đủ (bước G)
+// WebGL 2 fallback: không có GTAO/TRAA/bloom, bóng một tầng, Đầy đủ chỉ ~95–136 draw call; sàn ~51 draw call cảnh là
+// mặt đường (9 vật liệu), nền, cầu/Marina signature và xe/tàu ⇒ 60 % không đạt được nếu không ẩn signature. QA giữ
+// mức giảm đo được tối thiểu 35 % (đo bước G: overview 39 %, ảnh 02 57 %).
+const MIN_DRAW_REDUCTION = { webgpu: MIN_REDUCTION, webgl: .35 };
 // Draw call median 30B (research/baseline-30b/baseline-30b-metrics.json): overview 289; cận cảnh 30B 431–455 (pose02 lấy 431).
 const DRAW_CALLS_30B = { overview: 289, pose02: 431 };
 const BUDGET_02 = { full: 9.1e6, balanced: 5e6, minimal: 3e6 };  // tổng renderer.info ở camera ảnh 02 (WebGPU presentation)
 const SWITCH_MS = 300;                    // click → khung đầu tiên đã áp dụng
-const MAX_FRAME_MS = 250;                 // khung dài nhất quanh lúc đổi mức (không đứng hình)
+const MAX_FRAME_MS = 300;                 // khung dài nhất quanh lúc đổi mức (không đứng hình; đặc tả bước G ≤ 300 ms)
 const CITY_TRIANGLES_31C = 831620;        // tam giác city mesh sau bước C (bridge-31c-metrics.json)
 const TREE_CELL_M = 300;
 const POSE_02 = { base: 'bason', position: [625, 300, -1204.8], target: [605.8, 0, -1188.8], fov: 42 };
@@ -36,10 +40,11 @@ const POSE_02 = { base: 'bason', position: [625, 300, -1204.8], target: [605.8, 
 const checks = [], failures = [];
 const check = (name, fn) => { try { fn(); checks.push(name); } catch (error) { failures.push({ name, error: String(error?.message || error).slice(0, 700) }); } };
 
-check('mã nguồn: module city-density-31.js được nạp với khóa cache 30b-31e, HTML có điều khiển mật độ', () => {
+check('mã nguồn: module city-density-31.js được nạp với khóa cache 30b-31g, HTML có điều khiển mật độ', () => {
   assert(fs.existsSync(path.join(root, 'city-density-31.js')), 'thiếu city-density-31.js');
   const app = read('webgpu-materials-24.js'), html = read('webgpu-materials-24.html'), mod = read('city-density-31.js');
-  assert(/from '\.\/city-density-31\.js\?v=30b-31e[^']*'/.test(app), 'webgpu-materials-24.js chưa import city-density-31.js?v=30b-31e…');
+  assert(/from '\.\/city-density-31\.js\?v=30b-31g[^']*'/.test(app), 'webgpu-materials-24.js chưa import city-density-31.js?v=30b-31g…');
+  assert(app.includes('cityDensity.attachPipeline(visualPipeline)'), 'pipeline hậu kỳ chưa gắn vào bộ điều phối mật độ (AO theo mức)');
   assert(/signature-registry-31\.js/.test(mod), 'bộ lọc mật độ phải đi qua signature-registry-31.js');
   assert(/role="radiogroup"/.test(html) && LEVELS.every(level => html.includes(`data-density="${level}"`)), 'HTML thiếu radiogroup data-density');
   assert(/id="densitySuggest"[^>]*aria-live="polite"|aria-live="polite"[^>]*id="densitySuggest"/.test(html), 'thiếu thông báo đề xuất aria-live');
@@ -47,7 +52,12 @@ check('mã nguồn: module city-density-31.js được nạp với khóa cache 3
 
 // Probe: gom Scene/Renderer qua __THREE_DEVTOOLS__, ghi tổng renderer.info mỗi khung, ghi đè pose camera chính.
 function initProbe() {
-  const probe = window.__probe = { scenes: [], renderers: [], camera: null, pose: null, frames: [], frameTimes: [] };
+  const probe = window.__probe = { scenes: [], renderers: [], camera: null, pose: null, frames: [], frameTimes: [], pipelines: 0, pipelineLabels: [] };
+  // Đếm lần dựng pipeline/chương trình GPU (WebGPU: createRenderPipeline[Async]/createComputePipeline[Async]; WebGL: linkProgram):
+  // đổi mức mật độ không được biên dịch lại gì sau khi các mức đã được dùng một lần.
+  const countCalls = (proto, names) => { for (const name of names) { const original = proto?.[name]; if (typeof original !== 'function') continue; proto[name] = function (...args) { probe.pipelines++; probe.pipelineLabels.push(String(args[0]?.label || name)); return original.apply(this, args); }; } };
+  if (typeof GPUDevice !== 'undefined') countCalls(GPUDevice.prototype, ['createRenderPipeline', 'createRenderPipelineAsync', 'createComputePipeline', 'createComputePipelineAsync']);
+  if (typeof WebGL2RenderingContext !== 'undefined') countCalls(WebGL2RenderingContext.prototype, ['linkProgram']);
   const hook = new EventTarget();
   hook.addEventListener('observe', event => {
     const object = event.detail;
@@ -138,7 +148,7 @@ async function sceneState(page) {
     }
     const sf = status.streetFurniture?.api, lamps = sf ? { mesh: sf.lampMesh.count, total: sf.instances().length, signature: sf.instances().filter(l => l.signature).length } : null;
     return {
-      level: status.density?.level, source: status.density?.source, audit: status.density?.audit, counts: status.density?.counts,
+      level: status.density?.level, source: status.density?.source, audit: status.density?.audit, counts: status.density?.counts, render: status.density?.render,
       dataset: { level: document.body.dataset.densityLevel, audit: document.body.dataset.densityAudit, buildings: document.body.dataset.densityBuildings },
       cityMeshes, cityVisible, triangles, shown: shownIdx.size, expected, sigMissing,
       trees: { all: treesAll, shown: treesShown, protAll, protShown, chunks: treeChunks.length, cells: [...cells.values()] },
@@ -216,6 +226,23 @@ async function runBackend(browser, backend) {
         const state = camera === 'overview' ? await sceneState(page) : null;
         out.levels[`${camera}:${level}`] = { timing, info, state };
       }
+      // Đổi qua lại nhiều lần (đã dùng đủ 4 mức ở góc này). (A) giữa Đầy đủ/Cân bằng/Nhẹ: chỉ drawRange/count nên KHÔNG dựng
+      // pipeline nào. (B) có Tối thiểu: tạm dừng/bật lại GTAO + bloom + camera pass pháp tuyến; three r186 dựng lại pipeline
+      // của pass nền/GTAO và (biên dịch bất đồng bộ trước khi chuyển camera) pass pháp tuyến cho mesh, nhưng không khung nào dừng.
+      {
+        const cycle = async levels => {
+          const before = await page.evaluate(() => window.__probe.pipelines), timings = [];
+          for (const level of levels) timings.push(await clickLevel(page, level));
+          const after = await page.evaluate(() => window.__probe.pipelines);
+          const labels = await page.evaluate(n => window.__probe.pipelineLabels.slice(n ? -n : Infinity).map(l => l.replace(/_\d+$/, '')), after - before);
+          const histogram = {}; for (const label of labels) histogram[label] = (histogram[label] || 0) + 1;
+          return { newPipelines: after - before, histogram, maxFrameMs: Math.max(...timings.map(t => t.maxFrameMs)), maxSwitchMs: Math.max(...timings.map(t => t.switchMs ?? 1e9)) };
+        };
+        await clickLevel(page, 'full'); await sleep(2500);       // về Đầy đủ, chờ biên dịch bất đồng bộ (nếu có) xong
+        out.cycle = out.cycle || {};
+        out.cycle[camera] = { withoutMinimal: await cycle(['balanced', 'full', 'light', 'full', 'balanced', 'light', 'full']), withMinimal: await cycle(['minimal', 'full', 'light', 'minimal', 'balanced', 'full', 'minimal', 'full']) };
+        await clickLevel(page, 'minimal');                       // giữ kết thúc ở Tối thiểu như trước khi thêm vòng lặp này
+      }
     }
     await page.evaluate(() => { window.__probe.pose = null; });
     // Chọn bằng chuột vẫn chạy: click tâm màn hình ở Nguyễn Huệ (mức Đầy đủ) mở bảng công trình.
@@ -229,6 +256,40 @@ async function runBackend(browser, backend) {
       if (picked.visible) break;
     }
     out.pick = picked;
+    // Chọn công trình ở mức Tối thiểu (mesh gộp): chọn tòa từ danh sách của mesh gộp, chiếu điểm đỉnh mái lên màn hình rồi
+    // click thật. Kết quả luôn phải là công trình đang hiển thị ở mức này; phần lớn lần click phải trúng đúng tòa.
+    await clickLevel(page, 'minimal'); await sleep(1200);
+    const candidates = await page.evaluate(() => {
+      const D = window.CITY_DATA, camera = window.__probe.camera, merged = [];
+      for (const scene of window.__probe.scenes) scene.traverse(o => { if (o.userData?.densityChunk?.cell === 'merged' && o.visible) merged.push(o); });
+      if (merged.length !== 1) return { error: `mesh gộp đang hiển thị: ${merged.length}` };
+      const mesh = merged[0], { buildings, vertexEnds } = mesh.userData.densityChunk, pos = mesh.geometry.attributes.position.array, V = camera.position.constructor;
+      const shownNames = {}, cands = [];
+      for (let k = 0; k < buildings.length; k++) {
+        const b = D.buildings[buildings[k]], name = b.name || `Công trình ${b.id}`; shownNames[name] = (shownNames[name] || 0) + 1;
+        const from = k ? vertexEnds[k - 1] : 0, to = vertexEnds[k];
+        let best = from; for (let v = from; v < to; v++) if (pos[v * 3 + 1] > pos[best * 3 + 1]) best = v;
+        const tri = Math.floor(best / 3) * 3, c = new V(0, 0, 0);
+        for (let v = tri; v < tri + 3; v++) c.add(new V(pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]));
+        c.multiplyScalar(1 / 3).applyMatrix4(mesh.matrixWorld);
+        const dist = c.distanceTo(camera.position); c.project(camera);
+        if (!b.name && Math.abs(c.x) < .8 && Math.abs(c.y) < .8 && c.z > -1 && c.z < 1) cands.push({ name, dist, x: (c.x + 1) / 2 * innerWidth, y: (1 - c.y) / 2 * innerHeight });
+      }
+      cands.sort((a, c2) => a.dist - c2.dist);
+      return { total: buildings.length, shownNames, cands: cands.slice(0, 14) };
+    });
+    const minimalPick = { candidates: 0, matched: 0, notShown: [], mismatches: [] };
+    if (candidates.error) minimalPick.error = candidates.error;
+    else for (const cand of candidates.cands) {
+      await page.evaluate(() => { document.querySelector('#selection').hidden = true; });
+      await page.mouse.click(cand.x, cand.y); await sleep(150);
+      const got = await page.evaluate(() => ({ visible: !document.querySelector('#selection').hidden, name: document.querySelector('#selectedName').textContent }));
+      minimalPick.candidates++;
+      if (!got.visible) { minimalPick.mismatches.push({ expected: cand.name, got: null }); continue; }
+      if (got.name === cand.name) minimalPick.matched++; else minimalPick.mismatches.push({ expected: cand.name, got: got.name });
+      if (!(got.name in candidates.shownNames)) minimalPick.notShown.push(got.name);
+    }
+    out.minimalPick = minimalPick;
     await page.evaluate(() => document.body.classList.remove('ui-hidden'));
     // Đề xuất hạ mức: người dùng đã chọn thủ công "Đầy đủ"; giả lập FPS thấp → hiện đề xuất, KHÔNG tự hạ.
     await clickLevel(page, 'full');
@@ -251,17 +312,23 @@ async function runBackend(browser, backend) {
     await page.evaluate(() => window.webgpuMaterials24.density.api.simulateFps(null));
     out.suggest = suggest;
     out.countsText = await page.evaluate(() => document.querySelector('#densityCounts')?.textContent.trim().replace(/\s+/g, ' '));
-    // Xe: API bước D có thể sẵn sàng SAU bộ điều phối (thứ tự khởi tạo). Chưa có API thật thì gắn API giả và kiểm bộ
-    // điều phối tự đồng bộ mức hiện tại trong vài khung (không cần người dùng bấm lại).
+    // Xe: API bước D có thể sẵn sàng SAU bộ điều phối (thứ tự khởi tạo) hoặc bị thay. Luôn gắn API giả che API thật
+    // (spy) và kiểm bộ điều phối tự gọi setVisibleFraction với mức hiện tại trong vài khung (không cần bấm lại); rồi gỡ
+    // API giả, kiểm bộ điều phối quay về API thật (hoặc dự phòng mesh.count nếu không có) và số xe khớp.
     out.traffic = await page.evaluate(async () => {
       const s = window.webgpuMaterials24, frames = n => new Promise(r => { const t = () => (n-- <= 0 ? r() : requestAnimationFrame(t)); requestAnimationFrame(t); });
-      const real = typeof s.traffic?.api?.setVisibleFraction === 'function', calls = [];
-      if (!real) { s.traffic = s.traffic || {}; Object.defineProperty(s.traffic, 'api', { value: { total: 1000, setVisibleFraction: f => { calls.push(f); return Math.round(1000 * f); } }, configurable: true }); }
+      const realApi = s.traffic?.api ?? s.motion?.api, real = typeof realApi?.setVisibleFraction === 'function', calls = [];
+      s.traffic = s.traffic || {};
+      const own = Object.getOwnPropertyDescriptor(s.traffic, 'api');
+      Object.defineProperty(s.traffic, 'api', { value: { total: 1000, setVisibleFraction: f => { calls.push(f); return Math.round(1000 * f); } }, configurable: true });
       await frames(4);
-      const d = s.density, out = { real, calls, level: d.level, fraction: d.fractions.vehicles, via: d.vehiclesVia, vehicles: d.counts.vehicles, total: d.totals.vehicles, dataset: document.body.dataset.densityVehicles };
+      const read = () => { const d = s.density; return { level: d.level, fraction: d.fractions.vehicles, via: d.vehiclesVia, vehicles: d.counts.vehicles, total: d.totals.vehicles, dataset: document.body.dataset.densityVehicles }; };
+      const spy = { calls: calls.slice(), ...read() };
+      if (own) Object.defineProperty(s.traffic, 'api', own); else delete s.traffic.api;
+      await frames(4);
+      const out = { real, spy, callsAfterRestore: calls.length - spy.calls.length, ...read() };
       // API thật: số xe trả về là số xe đang hoạt động (mật độ còn nhân hệ số giờ trong ngày, giữ xe trên cầu signature).
-      if (real) { const a = s.traffic.api, snap = a.snapshot(); out.active = snap.active.reduce((n, v) => n + v, 0); out.lightFactor = a.sim.lightFactor; out.signature = a.instances().filter(x => x.signature).length; }
-      if (!real) delete s.traffic.api;
+      if (real) { const a = realApi, snap = a.snapshot(); out.active = snap.active.reduce((n, v) => n + v, 0); out.lightFactor = a.sim.lightFactor; out.signature = a.instances().filter(x => x.signature).length; }
       return out;
     });
     out.errors.push(...errors);
@@ -361,10 +428,21 @@ async function runBackend(browser, backend) {
           const full = L[`${camera}:full`].info, min = L[`${camera}:minimal`].info;
           assert(min.triangles <= full.triangles * (1 - MIN_REDUCTION), `${min.triangles} / ${full.triangles} = ${(min.triangles / full.triangles).toFixed(3)}`);
         });
-        // Draw call: tiêu chí "giảm ≥ 60 %" KHÔNG đạt được bằng mật độ — phần lớn draw call là sàn cố định (hậu kỳ, mặt
-        // đường, cầu/Marina signature, xe/tàu của bước D) và chunk công trình giữ nguyên ở mọi mức (mỗi mức chỉ là
-        // drawRange). Phân tích ghi trong báo cáo 31E. QA giữ hai bất biến đo được: giảm mức không bao giờ tăng draw
-        // call, và Đầy đủ không vượt draw call 30B (chia chunk không được làm nặng hơn bản gộp cũ).
+        // Draw call (bước G): Tối thiểu bỏ draw bóng của nhóm phụ, tạm dừng GTAO (pass pháp tuyến + quad) và bloom
+        // (WebGPU), vẽ công trình bằng một mesh gộp. renderer.info gồm mọi pass (bóng, pháp tuyến, cảnh, hậu kỳ).
+        const drawReduction = MIN_DRAW_REDUCTION[backend] ?? MIN_REDUCTION;
+        if (camera === 'overview') check(tag + 'Tối thiểu: công trình vẽ bằng mesh gộp, bóng nhóm phụ tắt, GTAO/bloom tạm dừng (WebGPU); Đầy đủ bật lại', () => {
+          const full = L['overview:full'].state.render, min = L['overview:minimal'].state.render;
+          assert(full && min, 'thiếu status.density.render');
+          assert(min.mergedBuildings === true && full.mergedBuildings === false, JSON.stringify({ full, min }));
+          assert(min.minorShadows === false && min.minorShadowMeshes > 0 && full.minorShadows === true, JSON.stringify({ full, min }));
+          const webgpu = backend === 'webgpu';
+          assert.equal(full.ambientOcclusionActive, webgpu); assert.equal(full.bloomActive, webgpu); assert.equal(min.ambientOcclusionActive, false); assert.equal(min.bloomActive, false);
+        });
+        check(tag + `${camera}: Tối thiểu giảm ≥ ${Math.round(drawReduction * 100)}% draw call so với Đầy đủ`, () => {
+          const full = L[`${camera}:full`].info, min = L[`${camera}:minimal`].info;
+          assert(min.drawCalls <= full.drawCalls * (1 - drawReduction), `${min.drawCalls} / ${full.drawCalls} = ${(min.drawCalls / full.drawCalls).toFixed(3)}`);
+        });
         check(tag + `${camera}: draw call không tăng khi hạ mức; Đầy đủ không vượt 30B`, () => {
           const calls = LEVELS.map(level => L[`${camera}:${level}`].info.drawCalls);
           for (let i = 1; i < calls.length; i++) assert(calls[i] <= calls[i - 1], `${LEVELS[i]} ${calls[i]} > ${LEVELS[i - 1]} ${calls[i - 1]}`);
@@ -381,6 +459,23 @@ async function runBackend(browser, backend) {
         }
       });
       check(tag + 'chọn công trình bằng chuột vẫn hoạt động trên chunk', () => assert(r.pick?.visible && r.pick.name.length > 0, JSON.stringify(r.pick)));
+      check(tag + 'chọn công trình ở mức Tối thiểu (mesh gộp): luôn ra công trình đang hiển thị, phần lớn trúng đúng tòa', () => {
+        const p = r.minimalPick; assert(p && !p.error, JSON.stringify(p));
+        assert(p.candidates >= 8, JSON.stringify(p));
+        assert.deepEqual(p.notShown, [], JSON.stringify(p));
+        assert(p.matched >= Math.ceil(p.candidates * .6), JSON.stringify(p));
+      });
+      check(tag + 'đổi qua lại giữa các mức: Đầy đủ/Cân bằng/Nhẹ không dựng pipeline nào; có Tối thiểu chỉ dựng lại pass nền/GTAO/pháp tuyến, không khung nào > 300 ms', () => {
+        const allowed = /^renderPipeline_(Background\.material|GTAO|Mesh\w*NodeMaterial)$/;
+        for (const camera of ['overview', 'pose02']) {
+          const c = r.cycle?.[camera]; assert(c, `thiếu số liệu ${camera}`);
+          assert.equal(c.withoutMinimal.newPipelines, 0, `${camera}: ${JSON.stringify(c.withoutMinimal)}`);
+          for (const key of ['withoutMinimal', 'withMinimal']) {
+            assert(c[key].maxFrameMs <= MAX_FRAME_MS && c[key].maxSwitchMs <= SWITCH_MS, `${camera}/${key}: ${JSON.stringify(c[key])}`);
+            for (const label of Object.keys(c[key].histogram)) assert(allowed.test(label), `${camera}/${key}: pipeline lạ ${label} ${JSON.stringify(c[key])}`);
+          }
+        }
+      });
       check(tag + 'FPS thấp kéo dài: hiện đề xuất (aria-live, nút áp dụng), KHÔNG tự hạ khi đã chọn thủ công; bấm áp dụng thì hạ 1 mức', () => {
         const s = r.suggest; assert(s.shownAt !== null, 'không hiện đề xuất'); assert.equal(s.live, 'polite'); assert(s.apply, 'thiếu nút áp dụng');
         assert.equal(s.level, 'full'); assert.equal(s.levelAfterWait, 'full', 'đã tự hạ mức');
@@ -394,10 +489,17 @@ async function runBackend(browser, backend) {
       });
       check(tag + 'xe: bộ điều phối dùng API bước D (setVisibleFraction) kể cả khi API có sau, tự đồng bộ mức hiện tại', () => {
         const t = r.traffic; assert(t, 'thiếu số liệu');
-        assert.equal(t.via, 'traffic.api.setVisibleFraction', JSON.stringify(t));
-        if (!t.real) { assert.deepEqual(t.calls, [t.fraction], JSON.stringify(t)); assert.equal(t.total, 1000); }
-        if (t.real) { assert(Math.abs(t.vehicles - t.active) <= t.total * .01, JSON.stringify(t)); assert(Math.abs(t.vehicles - t.total * t.fraction * t.lightFactor) <= t.total * .03 + t.signature, JSON.stringify(t)); }
-        else assert.equal(t.vehicles, Math.round(t.total * t.fraction), JSON.stringify(t));
+        const spy = t.spy;
+        assert.equal(spy.via, 'traffic.api.setVisibleFraction', JSON.stringify(t));
+        assert.deepEqual(spy.calls, [spy.fraction], JSON.stringify(t));
+        assert.equal(spy.total, 1000); assert.equal(spy.vehicles, Math.round(1000 * spy.fraction), JSON.stringify(t));
+        assert.equal(spy.dataset, String(spy.vehicles));
+        assert.equal(t.callsAfterRestore, 0, JSON.stringify(t));
+        if (t.real) {
+          assert.equal(t.via, 'traffic.api.setVisibleFraction', JSON.stringify(t));
+          assert(Math.abs(t.vehicles - t.active) <= t.total * .01, JSON.stringify(t));
+          assert(Math.abs(t.vehicles - t.total * t.fraction * t.lightFactor) <= t.total * .03 + t.signature, JSON.stringify(t));
+        } else assert.equal(t.via, 'fallback mesh.count', JSON.stringify(t));
         assert.equal(t.dataset, String(t.vehicles));
       });
       check(tag + 'console không có lỗi', () => assert.deepEqual(r.errors, []));
@@ -406,7 +508,7 @@ async function runBackend(browser, backend) {
     await browser.close();
     const summary = Object.fromEntries(Object.entries(report).map(([k, r]) => [k, {
       levels: Object.fromEntries(Object.entries(r.levels || {}).map(([key, v]) => [key, { info: v.info, timing: v.timing, counts: v.state?.counts, audit: v.state?.audit && { complete: v.state.audit.complete, total: v.state.audit.total, visible: v.state.audit.visible }, shown: v.state?.shown, expected: v.state?.expected, cityTriangles: v.state?.triangles, cityMeshes: v.state?.cityMeshes, trees: v.state && { all: v.state.trees.all, shown: v.state.trees.shown, protAll: v.state.trees.protAll, protShown: v.state.trees.protShown, chunks: v.state.trees.chunks } }])),
-      keyboard: r.keyboard, pick: r.pick, suggest: r.suggest, reload: r.reload, urlWins: r.urlWins, urlAfterView: r.urlAfterView, countsText: r.countsText, traffic: r.traffic, errors: r.errors
+      keyboard: r.keyboard, pick: r.pick, minimalPick: r.minimalPick, cycle: r.cycle, suggest: r.suggest, reload: r.reload, urlWins: r.urlWins, urlAfterView: r.urlAfterView, countsText: r.countsText, traffic: r.traffic, errors: r.errors
     }]));
     console.log(JSON.stringify({ suite: 'density-31 · E/F', passed: checks.length, failed: failures.length, checks, failures, summary }, null, 1));
     if (failures.length) process.exitCode = 1;

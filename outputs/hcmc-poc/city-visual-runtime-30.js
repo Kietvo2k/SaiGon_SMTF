@@ -107,6 +107,10 @@ export function createCityRenderPipeline(renderer, scene, camera, quality = PROF
       name: `City Visual Runtime 30 · ${quality.label}`,
       profile: quality,
       effects: fallback.effects,
+      ambientOcclusion: false,
+      setAmbientOcclusion: () => false,
+      bloom: false,
+      setBloom: () => false,
       render: () => fallback.pipeline.render(),
       dispose: () => fallback.pipeline.dispose()
     };
@@ -146,9 +150,10 @@ export function createCityRenderPipeline(renderer, scene, camera, quality = PROF
     composed = temporalPass;
   }
 
+  let bloomPass = null;
   if (quality.bloom) {
     const emissiveTexture = scenePass.getTextureNode('emissive');
-    const bloomPass = bloom(emissiveTexture, quality.bloomStrength, .28, .72);
+    bloomPass = bloom(emissiveTexture, quality.bloomStrength, .28, .72);
     bloomPass.smoothWidth.value = .22;
     composed = composed.add(bloomPass);
   }
@@ -158,6 +163,54 @@ export function createCityRenderPipeline(renderer, scene, camera, quality = PROF
 
   const pipeline = new THREE.RenderPipeline(renderer);
   pipeline.outputNode = composed;
+
+  // Mật độ "Tối thiểu" (bước G 31A) tắt GTAO mà không dựng lại graph: pass pháp tuyến chuyển sang camera bản sao
+  // không bật layer nào → không vẽ vật thể (bớt một lượt draw call cho mọi mesh), độ sâu trống nên AO = 1. Camera
+  // bản sao có danh sách render riêng (dùng chung camera chính với layers khác làm hỏng render list của three r186).
+  // Không biên dịch lại: graph, vật liệu và render target giữ nguyên.
+  // Bật lại: mesh vào khung nhìn lúc AO tắt chưa có pipeline pass pháp tuyến → biên dịch bất đồng bộ trước
+  // (Renderer.compileAsync, phần đồng bộ chỉ chụp render context của pass) rồi mới chuyển camera, tránh khung đứng hình.
+  // Tạm dừng hiệu ứng hậu kỳ (GTAO, bloom) không đổi graph: chạy thêm PAUSE_FRAMES khung để texture ra giá trị trung
+  // tính (AO = 1 vì độ sâu trống; bloom = 0 vì strength 0) rồi thay updateBefore bằng hàm rỗng ⇒ không vẽ quad nào.
+  const PAUSE_FRAMES = 2, skipUpdate = () => {};
+  const pausable = node => node && { node, pending: 0 };
+  const pauseEffect = (effect, paused) => {
+    if (!effect) return;
+    if (paused) effect.pending = PAUSE_FRAMES;
+    else { effect.pending = 0; delete effect.node.updateBefore; }
+  };
+  const aoEffect = pausable(aoPass), bloomEffect = pausable(bloomPass);
+  const bloomStrength = bloomPass ? bloomPass.strength.value : 0;
+  let bloomEnabled = !!bloomPass;
+  const setBloom = enabled => {
+    if (!bloomPass) return false;
+    bloomEnabled = !!enabled;
+    bloomPass.strength.value = bloomEnabled ? bloomStrength : 0;
+    pauseEffect(bloomEffect, !bloomEnabled);
+    return bloomEnabled;
+  };
+  const aoCamera = camera.clone();
+  let aoEnabled = !!aoPass, aoToken = 0;
+  const useMainCamera = token => { if (token === aoToken && aoEnabled) normalPass.camera = camera; };
+  const setAmbientOcclusion = enabled => {
+    if (!aoPass) return false;
+    const next = !!enabled;
+    if (next === aoEnabled) return aoEnabled;
+    aoEnabled = next;
+    const token = ++aoToken;
+    if (!aoEnabled) { normalPass.camera = aoCamera; pauseEffect(aoEffect, true); return false; }
+    pauseEffect(aoEffect, false);
+    let compiling = null;
+    const target = renderer.getRenderTarget(), activeMrt = renderer.getMRT();
+    try {
+      renderer.setRenderTarget(normalPass.renderTarget); renderer.setMRT(normalPass.getMRT());
+      compiling = renderer.compileAsync(scene, camera);
+    } catch (error) { console.warn('GTAO: biên dịch trước pass pháp tuyến lỗi, bật trực tiếp.', error); }
+    finally { renderer.setRenderTarget(target); renderer.setMRT(activeMrt); }
+    if (compiling) compiling.then(() => useMainCamera(token), () => useMainCamera(token));
+    else useMainCamera(token);
+    return true;
+  };
   const effects = [
     quality.gtao && `GTAO ${quality.gtaoSamples}s @ ${Math.round(quality.gtaoScale * 100)}%`,
     quality.temporalAA && 'TRAA velocity/depth',
@@ -169,7 +222,15 @@ export function createCityRenderPipeline(renderer, scene, camera, quality = PROF
     name: `City Visual Runtime 30 · ${quality.label}`,
     profile: quality,
     effects,
-    render: () => pipeline.render(),
+    get ambientOcclusion() { return aoEnabled; },
+    setAmbientOcclusion,
+    get bloom() { return bloomEnabled; },
+    setBloom,
+    render: () => {
+      if (aoPass && normalPass.camera === aoCamera) { aoCamera.copy(camera); aoCamera.layers.disableAll(); }
+      pipeline.render();
+      for (const effect of [aoEffect, bloomEffect]) if (effect?.pending && --effect.pending === 0) effect.node.updateBefore = skipUpdate;
+    },
     dispose: () => pipeline.dispose()
   };
 }
