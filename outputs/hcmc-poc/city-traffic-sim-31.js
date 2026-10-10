@@ -388,6 +388,11 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   const CZ = net.cross, zoneHold = new Map(), zTok = new Int32Array(N * 2).fill(-1), zLane = new Int32Array(N * 2), zRem = new Float32Array(N * 2);
   const counters = { t: 0, step: 0, edgeTransitions: 0, teleports: 0, onewayViolations: 0, gapViolations: 0, respawns: 0, breakerRespawns: 0, waitsTotal: 0, maxStopS: 0, perSecond: new Int32Array(32), lastSecond: 0, pendingFails: 0 };
   let fraction = 1, lightFactor = 1;
+  // ---- Khu mô phỏng (bước H): region = null → toàn thành phố; {id, poly[x0,z0,x1,z1…]} → chỉ xe trên cạnh nằm hẳn trong đa giác.
+  // insideLane: làn thuộc cạnh mà mọi đỉnh nằm trong khu; spawnList: làn điểm tái sinh (nút biên thật hoặc nút trong khu kề nút ngoài khu);
+  // elig: xe được tính vào khu (đặt theo vị trí lúc setRegion; xe đang chờ chỗ giữ nguyên, xe đặt/tái sinh trong khu luôn hợp lệ).
+  let region = null, spawnList = spawnLanes;
+  const insideLane = new Uint8Array(NL).fill(1), elig = new Uint8Array(N).fill(1);
 
   const laneList = l => { let a = laneCars[l]; if (!a) { a = laneCars[l] = []; } if (!laneActive[l]) { laneActive[l] = 1; activeLanes.push(l); } return a; };
   const insertSorted = (l, i) => { const a = laneList(l); let k = 0; while (k < a.length && s[a[k]] < s[i]) k++; a.splice(k, 0, i); };
@@ -414,7 +419,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
 
   // Lập lộ trình: chọn trạng thái kế + làn đích theo góc rẽ.
   function planNext(i, l) {
-    const st = lanes.st[l], cands = nextSt[st];
+    const st = lanes.st[l]; let cands = nextSt[st];
+    if (region && cands) cands = cands.filter(c => insideLane[lanesOfSt[c.st]]);   // ra khỏi khu = nút biên
     if (!cands || !cands.length) return -2;   // tới nút biên → tái sinh
     let total = 0; const w = [];
     // Xe buýt (2,5 m) không chui đường nội bộ làn 2,7 m: thân dài quét sang làn ngược chiều khi rẽ; chỉ đi khi không còn lối khác.
@@ -563,15 +569,15 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     return true;
   }
   function place(i, l, si, vel) {
-    lane[i] = l; s[i] = si; v[i] = vel; lat[i] = lanes.offset[l] + jit[i]; prevLane[i] = -1; stopT[i] = 0; waiting[i] = 0;
+    lane[i] = l; s[i] = si; v[i] = vel; lat[i] = lanes.offset[l] + jit[i]; prevLane[i] = -1; stopT[i] = 0; waiting[i] = 0; elig[i] = 1;
     insertSorted(l, i); fillPath(i); active[i] = 1; pending[i] = 0;
   }
   function respawn(i, breaker, maxTries = 8) {
     if (active[i]) { removeFrom(lane[i], i); releaseAll(i); }
     gen[i]++; counters.respawns++; if (breaker) counters.breakerRespawns++;
     active[i] = 0;
-    for (let tries = 0; tries < maxTries; tries++) {
-      const l = spawnLanes[Math.floor(rand(i) * spawnLanes.length)];
+    for (let tries = 0; tries < maxTries && spawnList.length; tries++) {
+      const l = spawnList[Math.floor(rand(i) * spawnList.length)];
       if (kind[i] >= HEAVY && lanes.rank[l] < 2) continue;
       const si = Math.min(lanes.length[l] * .5, len[i] / 2 + .8 + (needsLock[lanes.from[l]] ? Rz[lanes.from[l]] : 0));
       if (si + len[i] / 2 > zoneEnd(l, 0) + .6) continue;
@@ -610,7 +616,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   const order = Array.from({ length: N }, (_, i) => i);
   function rankCells() {
     const cells = new Map();
-    for (let i = 0; i < N; i++) { const c = cellOf(i); let a = cells.get(c); if (!a) cells.set(c, a = []); a.push(i); }
+    for (let i = 0; i < N; i++) { if (!elig[i]) { selRank[i] = Infinity; continue; } const c = cellOf(i); let a = cells.get(c); if (!a) cells.set(c, a = []); a.push(i); }
     for (const [c, a] of cells) {
       a.sort((x, y) => (active[y] - active[x]) || (hashU32(x + SEED) - hashU32(y + SEED)));
       const u = hashU32((c ^ SEED) >>> 0) / 4294967296, n = a.length;
@@ -622,9 +628,10 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   function isSignature(i) { return !!(active[i] && net.signatureEdge[lanes.edge[lane[i]]]); }
   // Đánh dấu wanted: xe signature đang hoạt động trước (hạng −1), rồi theo selRank, hoà theo id; lấy max(Q, số signature) xe đầu.
   function chooseWanted(F, keepSignature) {
-    const Q = Math.round(F * N), key = i => (keepSignature && isSignature(i) ? -1 : selRank[i]);
-    order.sort((x, y) => (key(x) - key(y)) || (x - y));
-    let take = Q; if (keepSignature) { let sig = 0; for (let i = 0; i < N; i++) if (isSignature(i)) sig++; take = Math.max(Q, sig); }
+    let nElig = 0; for (let i = 0; i < N; i++) nElig += elig[i];
+    const Q = Math.round(F * nElig), key = i => (!elig[i] ? Infinity : keepSignature && isSignature(i) ? -1 : selRank[i]);
+    order.sort((x, y) => { const a = key(x), b = key(y); return a < b ? -1 : a > b ? 1 : x - y; });
+    let take = Q; if (keepSignature) { let sig = 0; for (let i = 0; i < N; i++) if (elig[i] && isSignature(i)) sig++; take = Math.min(nElig, Math.max(Q, sig)); }
     wanted.fill(0); for (let k = 0; k < take; k++) wanted[order[k]] = 1;
   }
   function select() {
@@ -637,6 +644,47 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     return activeCount();
   }
   function activeCount() { let n = 0; for (let i = 0; i < N; i++) n += active[i]; return n; }
+
+  // ---- Khu mô phỏng (bước H). Hợp đồng: setRegion(null) = toàn thành phố; setRegion({id, polygon:[[x,z],…]}) tọa độ cảnh.
+  // Xe ngoài khu bị tắt; xe chỉ sinh/tái sinh ở nút trong khu kề nút ngoài khu (hoặc nút biên thật trong khu); đi tới cạnh không nằm hẳn trong khu
+  // thì coi như tới nút biên (tái sinh trong khu). F áp lên tập xe thuộc khu: Q = round(F·n_khu), cùng tính chất khôi phục của setFraction.
+  const nodeIdx = new Map(); G.nodes.forEach((n, k) => nodeIdx.set(n.id, k));
+  const inPoly = (poly, x, z) => { let c = false; for (let a = 0, b = poly.length - 2; a < poly.length; b = a, a += 2) { const xa = poly[a], za = poly[a + 1], xb = poly[b], zb = poly[b + 1]; if ((za > z) !== (zb > z) && x < (xb - xa) * (z - za) / (zb - za) + xa) c = !c; } return c; };
+  function setRegion(reg) {
+    finishStep();
+    if (!reg) { region = null; insideLane.fill(1); spawnList = spawnLanes; }
+    else {
+      const pts = reg.polygon;
+      if (typeof reg.id !== 'string' || !Array.isArray(pts) || pts.length < 3 || !pts.every(p => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]))) throw new TypeError('setRegion: cần {id: string, polygon: [[x, z], …≥ 3 điểm]} hoặc null');
+      const poly = new Float64Array(pts.length * 2); pts.forEach((p, k) => { poly[k * 2] = p[0]; poly[k * 2 + 1] = p[1]; });
+      const inNode = new Uint8Array(G.nodes.length); for (let n = 0; n < inNode.length; n++) inNode[n] = inPoly(poly, G.nodes[n].x, G.nodes[n].z) ? 1 : 0;
+      const inEdge = new Uint8Array(net.NE);
+      for (let e = 0; e < net.NE; e++) { const c = E[e].c; let ok = inNode[nodeIdx.get(E[e].from)] && inNode[nodeIdx.get(E[e].to)]; for (let k = 0; ok && k < c.length; k += 2) ok = inPoly(poly, c[k], c[k + 1]); inEdge[e] = ok ? 1 : 0; }
+      for (let l = 0; l < NL; l++) insideLane[l] = inEdge[lanes.edge[l]];
+      const edgeNode = (e2, end) => nodeIdx.get(end === 0 ? E[e2].to : E[e2].from);
+      spawnList = [];
+      for (let l = 0; l < NL; l++) {
+        if (!insideLane[l]) continue;
+        const n = lanes.from[l], nd = G.nodes[n];
+        if (nd.kind === 'boundary' || nd.adj.some(([e2, end]) => !inNode[edgeNode(e2, end)])) spawnList.push(l);
+      }
+      region = { id: reg.id, poly };
+    }
+    for (let i = 0; i < N; i++) elig[i] = !region || pending[i] ? 1 : insideLane[lane[i]];
+    // Lộ trình: giữ đoạn còn hợp lệ, lập lại đoạn trỏ ra ngoài khu (hoặc đoạn -2 nay đi tiếp được); xe đã giữ khóa nút không đổi làn kế.
+    for (let i = 0; i < N; i++) {
+      if (!active[i]) { fillPath(i); continue; }
+      let holdsLock = false; for (let k = 0; k < 3; k++) if (lockNode[i * 3 + k] >= 0) holdsLock = true;
+      for (let p = 0; p < 3; p++) {
+        const prev = p === 0 ? lane[i] : path[i * 3 + p - 1], cur = path[i * 3 + p];
+        if (cur >= 0 && (!region || insideLane[cur])) continue;
+        path[i * 3 + p] = prev < 0 ? -2 : (p === 0 && holdsLock) ? -2 : planNext(i, prev);
+      }
+      next[i] = path[i * 3];
+    }
+    rankStep = -1;
+    return select();
+  }
 
   function reset() {
     activeLanes.forEach(l => { laneCars[l] = []; laneActive[l] = 0; }); activeLanes = [];
@@ -653,6 +701,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       lane[i] = l; s[i] = si; prevLane[i] = -1; v[i] = lanes.speed[l] * vf[i] * .7; lat[i] = lanes.offset[l] + jit[i]; stopT[i] = 0; waiting[i] = 0;
       fillPath(i);
     }
+    for (let i = 0; i < N; i++) elig[i] = region ? insideLane[lane[i]] : 1;
     // Chọn tập theo tỉ lệ hiện tại (ban đầu chưa xe nào hoạt động nên kích hoạt từ trạng thái gốc).
     rankCells();
     chooseWanted(Math.max(0, Math.min(1, fraction * lightFactor)), false);
@@ -802,6 +851,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   return {
     N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters,
     step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, wantedCount: () => { let n = 0; for (let i = 0; i < N; i++) n += wanted[i]; return n; }, pendingCount: () => { let n = 0; for (let i = 0; i < N; i++) n += pending[i]; return n; }, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,
+    setRegion, get region() { return region ? { id: region.id, active: true, lanes: insideLane.reduce((a, b) => a + b, 0), spawnLanes: spawnList.length } : { id: null, active: false, lanes: NL, spawnLanes: spawnLanes.length }; },
+    eligibleCount: () => { let n = 0; for (let i = 0; i < N; i++) n += elig[i]; return n; }, isEligible: i => !!elig[i], insideLaneOf: l => !!insideLane[l],
     setFraction(f) { finishStep(); fraction = Math.max(0, Math.min(1, f)); return select(); },
     setLightFactor(f) { if (Math.abs(f - lightFactor) < 1e-9) return activeCount(); finishStep(); lightFactor = f; return select(); },
     get fraction() { return fraction; }, get lightFactor() { return lightFactor; }

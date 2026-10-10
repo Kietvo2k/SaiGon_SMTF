@@ -266,6 +266,44 @@ async function sample(page, seconds, limits) {
   }, { seconds, limits });
 }
 
+// Bước H: setRegion(null | {id, polygon}) — khu thử tự định nghĩa (nửa tây / nửa đông theo bbox đồ thị), chạy trong trình duyệt.
+function regionProbe() {
+  const api = window.webgpuMaterials24.motion.api, G = window.ROAD_GRAPH_31;
+  const ext = G.frame.extent, M = 60, midX = 0;
+  const rects = { tay: [ext[0] - M, ext[2] - M, midX, ext[3] + M], dong: [midX, ext[2] - M, ext[1] + M, ext[3] + M] };
+  const polyOf = ([x0, z0, x1, z1]) => [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
+  const activeCount = () => { const s = api.snapshot(); let n = 0; for (let i = 0; i < s.active.length; i++) n += s.active[i]; return n; };
+  const lf = api.sim.lightFactor, out = { hasApi: typeof api.setRegion === 'function', lf, items: [] };
+  if (!out.hasApi) return out;
+  const overshoot = (r, P, i) => Math.max(r[0] - P[i * 5], P[i * 5] - r[2], r[1] - P[i * 5 + 2], P[i * 5 + 2] - r[3]);
+  const outsideStats = r => { const P = api.poses(), s = api.snapshot(); let strict = 0, worst = -1e9, n = 0; for (let i = 0; i < s.active.length; i++) if (s.active[i]) { n++; const o = overshoot(r, P, i); if (o > 0) strict++; worst = Math.max(worst, o); } return { n, strict, worst: +worst.toFixed(2) }; };
+  const sigIds = api.instances().map((x, i) => (x.signature ? i : -1)).filter(i => i >= 0);
+  const full0 = activeCount(); api.setVisibleFraction(1);
+  for (const [id, r] of Object.entries(rects)) {
+    const before = api.stats(), n0 = api.setRegion({ id, polygon: polyOf(r) }), reg = api.getRegion(), set0 = outsideStats(r);
+    let trans0 = api.stats().edgeTransitions;
+    const items = { id, n0, reg, eligible: reg.eligible, afterSet: set0, motion: { ...window.webgpuMaterials24.motion.region }, dataset: document.body.dataset.motionRegion + '/' + document.body.dataset.motionRegionActive };
+    let worst = -1e9, strictMax = 0, minActive = 1e9, maxActive = 0;
+    for (let k = 0; k < 20; k++) { api.advance(1); const o = outsideStats(r); worst = Math.max(worst, o.worst); strictMax = Math.max(strictMax, o.strict); minActive = Math.min(minActive, o.n); maxActive = Math.max(maxActive, o.n); }
+    const st = api.stats(); items.after20 = { active: st.active, worst, strictMax, minActive, maxActive, trans: st.edgeTransitions - trans0, gap: st.gapViolations - before.gapViolations, oneway: st.onewayViolations - before.onewayViolations, teleports: st.teleports - before.teleports };
+    const sigActive = sigIds.filter(i => api.snapshot().active[i]).length, P = api.poses(); items.signature = { total: sigIds.length, active: sigActive, activeOutside: sigIds.filter(i => api.snapshot().active[i] && overshoot(r, P, i) > 6).length };
+    const eligible = reg.eligible; api.setVisibleFraction(.5); const half = activeCount(); api.setVisibleFraction(1);
+    items.fraction = { eligible, half, full: activeCount() };
+    out.items.push(items);
+  }
+  // Khôi phục toàn thành phố: đúng tổng round(F·N) (hạng nhớ theo bước), hết xe chờ chỗ ≤ 2 s.
+  const target = Math.round(Math.min(1, lf) * api.total), back = api.setRegion(null), wantedBack = api.sim.wantedCount();
+  let settleS = 0; while (api.sim.pendingCount() > 0 && settleS < 4) { api.advance(.1); settleS += .1; }
+  out.restore = { back, wantedBack, target, full0, pendingAfter: api.sim.pendingCount(), settleS: +settleS.toFixed(1), region: { ...window.webgpuMaterials24.motion.region }, dataset: document.body.dataset.motionRegion + '/' + document.body.dataset.motionRegionActive, active: activeCount() };
+  // Tất định: reset + khu + 20 s hai lần.
+  const run = () => { api.setRegion(null); api.reset(); api.setRegion({ id: 'tay', polygon: polyOf(rects.tay) }); api.advance(20); return api.stateHash(); };
+  out.determinism = { h1: run(), h2: run() };
+  // Đa giác sai phải ném lỗi, không làm hỏng trạng thái.
+  out.invalid = ['x', { id: 'a', polygon: [[0, 0]] }, { polygon: polyOf(rects.tay) }].map(v => { try { api.setRegion(v); return false; } catch (e) { return e instanceof TypeError; } });
+  api.setRegion(null); api.reset();
+  return out;
+}
+
 async function inspect(page) {
   return page.evaluate(async () => {
     const status = window.webgpuMaterials24, motion = status.motion || {}, api = motion.api, G = window.ROAD_GRAPH_31, D = window.CITY_DATA;
@@ -366,6 +404,7 @@ async function runBackend(browser, backend) {
   await page.evaluate(() => { window.__probe.pose = null; });
   result.light = await lightDensity(page);
   Object.assign(result, await inspect(page));
+  result.region = await page.evaluate(regionProbe);
   result.actualBackend = await page.evaluate(() => window.webgpuMaterials24.backend);
   result.errors = errors;
   await context.close();
@@ -406,6 +445,25 @@ const pct = (list, p) => { const s = list.slice().sort((a, b) => a - b); return 
       check(tag + 'mật độ theo thứ bậc: trục chính đông hơn đường nội bộ', () => { const d = r.densityPerLaneKm; assert(d.primary > d.residential * 2 && d.trunk > d.residential * 2 && d.secondary > d.residential, JSON.stringify(d)); });
       check(tag + 'xe máy chiếm đa số, có ô tô, xe buýt và xe tải', () => { const k = r.kindShares, total = Object.values(k).reduce((a, b) => a + b, 0); assert(k.motorbike / total > .55 && k.car > 0 && k.bus > 0 && k.truck > 0, JSON.stringify(k)); });
       check(tag + 'mật độ theo giờ: giờ vàng ≥ ngày > đêm, đêm xe phát sáng', () => { const l = r.light; assert(l.day && l.golden.active >= l.day.active && l.night.active < l.day.active * .8, JSON.stringify(l)); assert(l.night.emissive > l.day.emissive, JSON.stringify(l)); });
+            check(tag + 'API bước H setRegion: xe ngoài khu tắt, có chuyển cạnh, 0 vi phạm gap/oneway/teleport, F áp lên xe trong khu, khôi phục setRegion(null), tất định', () => {
+        const g = r.region; assert(g && g.hasApi, 'thiếu api.setRegion');
+        assert.equal(g.items.length, 2, JSON.stringify(g.items.map(x => x.id)));
+        for (const it of g.items) {
+          assert(it.reg.active && it.reg.id === it.id && it.motion.active && it.motion.id === it.id && it.dataset === it.id + '/1', 'motion.region/dataset sai: ' + JSON.stringify(it));
+          assert(it.eligible > 150 && it.eligible < r.densityApi.total, 'số xe trong khu bất thường: ' + it.eligible);
+          assert(it.after20.worst <= 6, it.id + ': xe vượt ra ngoài khu ' + it.after20.worst + ' m (' + it.after20.strictMax + ' xe lấn tối đa)');
+          const want = Math.round(it.eligible * Math.min(1, g.lf)); assert(it.after20.minActive >= want * .97 && it.after20.maxActive <= want * 1.01 + 2, it.id + ': số xe trong khu tụt: ' + JSON.stringify(it.after20));
+          assert(it.after20.trans > 200, it.id + ': ít chuyển cạnh: ' + it.after20.trans);
+          assert.equal(it.after20.gap, 0, it.id + ' gap'); assert.equal(it.after20.oneway, 0, it.id + ' oneway'); assert.equal(it.after20.teleports, 0, it.id + ' teleport');
+          assert.equal(it.signature.activeOutside, 0, it.id + ': xe signature ngoài khu vẫn chạy');
+          assert(Math.abs(it.fraction.half - want / 2) <= want * .08 + 2 && it.fraction.full >= want * .97, 'F=0,5 trong khu: ' + JSON.stringify(it.fraction));
+        }
+        assert.equal(g.items[0].eligible + g.items[1].eligible <= r.densityApi.total, true);
+        const t = g.restore; assert.equal(t.wantedBack, t.target, 'setRegion(null) không khôi phục đúng tổng round(F·N): ' + JSON.stringify(t));
+        assert(t.back >= t.target * .98 && t.pendingAfter === 0 && t.settleS <= 2 && t.active >= t.target * .995 && !t.region.active && t.dataset === '/0', JSON.stringify(t));
+        assert(g.determinism.h1 && g.determinism.h1 === g.determinism.h2, 'setRegion không tất định: ' + JSON.stringify(g.determinism));
+        assert.deepEqual(g.invalid, [true, true, true], 'đầu vào sai phải ném TypeError');
+      });
       check(tag + 'API bước E: setVisibleFraction thưa đều, xác định, giữ signature; setDensity khôi phục', () => {
         const d = r.densityApi; assert(d, 'thiếu');
         assert(d.hasSetDensity && d.instances >= d.full && d.instanceKeys.includes('signature'), JSON.stringify(d));

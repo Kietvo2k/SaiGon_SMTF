@@ -2,7 +2,7 @@
 // nội suy giữa hai bước mô phỏng. Lõi mô phỏng tất định ở city-traffic-sim-31.js.
 import * as THREE from 'three/webgpu';
 import { attribute, mix, vec3 } from 'three/tsl';
-import { TRAFFIC_31_VERSION, TRAFFIC_KINDS, LIGHT_FACTOR, STEP, MAX_STEPS_PER_FRAME, SEED, hashU32, buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=30b-31d';
+import { TRAFFIC_31_VERSION, TRAFFIC_KINDS, LIGHT_FACTOR, STEP, MAX_STEPS_PER_FRAME, SEED, hashU32, buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=30b-31h';
 
 // ---------------------------------------------------------------- hình xe: khối đa diện có vát + bánh lăng trụ, màu đỉnh + mặt nạ sơn + phát sáng
 // Mỗi khối là tập mặt lồi; pháp tuyến hướng ra ngoài theo tâm khối nên không phụ thuộc thứ tự đỉnh. Bỏ mặt đáy và mặt khuất.
@@ -280,14 +280,14 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
       active: st.active, total: st.total, drawn: drawnTotal, edgeTransitions: st.edgeTransitions, edgeTransitionsLast30s: st.edgeTransitionsLast30s,
       gapViolations: st.gapViolations, onewayViolations: st.onewayViolations, teleports: st.teleports, onBridge: st.onBridge, respawns: st.respawns, breakerRespawns: st.breakerRespawns,
       waitingNow: st.waitingNow, maxStopS: st.maxStopS, signals: st.signals, controlledNodes: st.controlledNodes, simTime: st.t,
-      cpuMsP50: +pct(recent, .5).toFixed(3), cpuMsP95: +pct(recent, .95).toFixed(3), lightFactor: sim.lightFactor, fraction: sim.fraction
+      cpuMsP50: +pct(recent, .5).toFixed(3), cpuMsP95: +pct(recent, .95).toFixed(3), lightFactor: sim.lightFactor, fraction: sim.fraction, region: { id: sim.region.id, active: sim.region.active }, regionEligible: sim.eligibleCount()
     };
     Object.assign(status, fields);
     if (motionStatus) Object.assign(motionStatus, fields);
     const ds = document.body.dataset;
     ds.motionTraffic = String(st.total); ds.motionActive = String(st.active); ds.motionEdgeTransitions = String(st.edgeTransitions);
     ds.motionGapViolations = String(st.gapViolations); ds.motionOnewayViolations = String(st.onewayViolations); ds.motionTeleports = String(st.teleports);
-    ds.motionOnBridge = String(st.onBridge); ds.motionCpuP95 = String(fields.cpuMsP95);
+    ds.motionRegion = sim.region.id || ''; ds.motionRegionActive = sim.region.active ? '1' : '0'; ds.motionOnBridge = String(st.onBridge); ds.motionCpuP95 = String(fields.cpuMsP95);
     lastStatus = now;
   }
   let lastDistance = 2000;
@@ -326,6 +326,10 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
     advance: seconds => { sim.finishStep(); const n = Math.round(seconds / STEP); for (let k = 0; k < n; k++) sim.step(); rebase(); acc = 0; return sim.stats(); },
     // Mật độ (bước E/F): giảm đều theo ô 200 m, tất định; trả về số xe đang hoạt động.
     setVisibleFraction: f => { const n = sim.setFraction(Number(f)); rebase(); publish(performance.now()); return n; },
+    // Khu mô phỏng (bước H): null = toàn thành phố; {id: string, polygon: [[x, z], …]} tọa độ cảnh (cùng hệ ROAD_GRAPH_31/CITY_DATA).
+    // Xe ngoài đa giác tắt; sinh/tái sinh chỉ ở nút trong khu; setVisibleFraction áp lên tập xe trong khu. Trả về số xe đang hoạt động.
+    setRegion: region => { const n = sim.setRegion(region); rebase(); publish(performance.now()); return n; },
+    getRegion: () => ({ ...sim.region, eligible: sim.eligibleCount() }),
     setDensity: level => {
       const named = { full: 1, high: 1, balanced: .6, light: .35, minimal: .15 };
       const f = typeof level === 'number' ? level : named[level] ?? 1;
