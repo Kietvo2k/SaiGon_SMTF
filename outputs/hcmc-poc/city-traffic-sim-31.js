@@ -17,13 +17,20 @@ export const SEED = 31031;
 export const STEP = 1 / 10;   // s, bước cố định 10 Hz (vẽ nội suy giữa hai bước)
 export const MAX_STEPS_PER_FRAME = 5;
 const POOL_TARGET = 3600;
+const PN = 4, LK = 5;   // PN: số làn lập sẵn lộ trình = số nút tối đa xin khóa một lượt (cụm nút kề nhau); LK: chỗ giữ khóa (thêm 1 cho nút vừa qua chưa nhả)
+
 const HARD_GAP = .55;          // m, khe hở cứng tối thiểu đầu xe sau – đuôi xe trước (QA đòi ≥ 0,3)
+const PATIENCE_S = 12;         // s dừng liên tục trước khi xe bỏ quy tắc chừa đủ chỗ thoát hộp nút
+const REL_F = .6;              // đuôi xe qua REL_F·Rz sau nút thì nhả khóa (trước đây cả Rz: giữ khóa ~5,3 s/xe, giao lộ bão hòa dù mật độ thấp)
+const PRED_S = 1;              // s: đầu làn ra tính theo vị trí dự báo (xe đang chạy sẽ rời trước khi xe chờ vào tới nơi)
+const RELOCATE_M = 60, RELOCATE_STEP = 2;   // m: tầm tìm chỗ trống quanh vị trí cũ khi kích hoạt lại
 const BREAKER_S = 50;          // s, dừng liên tục quá ngưỡng → tái sinh (bộ phá kẹt)
 const LANE_W_MIN = 2.7, LANE_W_MAX = 3.6, LANE_W_SQUEEZE = 2.6;
 const DRIVE_RANK = { trunk: 5, primary: 4, secondary: 3, tertiary: 2, residential: 1, unclassified: 1, living_street: 1, road: 1 };
 const SPEED_BY_RANK = [0, 5.5, 8, 9.5, 11, 13.5];             // m/s
 const DENSITY_BY_RANK = [0, 2.5, 9, 16, 24, 26];              // xe / km làn (trước hệ số trung tâm và chuẩn hóa pool)
 export const LIGHT_FACTOR = { day: .85, golden: 1, night: .5 };       // giờ vàng = cao điểm chiều; đêm thưa
+const SIGNAL_CLUSTER_M = 80;                                   // m: đèn gần hơn ngưỡng này chung pha
 const SIGNAL_CYCLE = 44;                                       // s: xanh nhóm 0 22 s, đỏ chung 3 s, xanh nhóm 1 16 s, đỏ chung 3 s
 
 export const TRAFFIC_KINDS = [
@@ -223,6 +230,12 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     const axis = arriveHead(axisSt);
     for (const st of sts) arriveGroup[st] = Math.abs(Math.cos(arriveHead(st) - axis)) > .5 ? 0 : 1;
   }
+  // Đèn các nút gần nhau (< 80 m) cùng một pha: xe xin khóa chuỗi nút kề nhau (liên kết ngắn) cần xanh ở tất cả nút cùng lúc, nếu lệch pha ngẫu nhiên
+  // thì có xe chờ cả chục giây dù cả cụm đã xanh (một nguyên nhân bộ phá kẹt).
+  { const sg = []; for (let n = 0; n < NN; n++) if (signal[n]) sg.push(n);
+    const root = new Map(sg.map(n => [n, n])), find = n => { while (root.get(n) !== n) n = root.get(n); return n; };
+    for (let a = 0; a < sg.length; a++) for (let b = a + 1; b < sg.length; b++) if (Math.hypot(G.nodes[sg[a]].x - G.nodes[sg[b]].x, G.nodes[sg[a]].z - G.nodes[sg[b]].z) < SIGNAL_CLUSTER_M) { const ra = find(sg[a]), rb = find(sg[b]); if (ra !== rb) root.set(Math.max(ra, rb), Math.min(ra, rb)); }
+    for (const n of sg) signalOffset[n] = signalOffset[find(n)]; }
   // Làn xuất phát từ nút biên (điểm tái sinh), sắp theo chỉ số.
   const spawnLanes = []; for (let l = 0; l < NL; l++) if (boundary(lanes.from[l])) spawnLanes.push(l);
   // Hình học cạnh: polyline phẳng, độ dài cộng dồn, pháp tuyến đỉnh (trung bình hai đoạn kề, hướng phải của chiều vẽ).
@@ -358,9 +371,9 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   // ---- Trạng thái xe.
   const lane = new Int32Array(N), s = new Float64Array(N), v = new Float32Array(N), lat = new Float32Array(N), jit = new Float32Array(N);
   const gen = new Uint32Array(N), active = new Uint8Array(N), wanted = new Uint8Array(N), selRank = new Float32Array(N), pending = new Uint8Array(N), kind = new Uint8Array(N), len = new Float32Array(N), wid = new Float32Array(N);
-  const vf = new Float32Array(N), rng = new Uint32Array(N), path = new Int32Array(N * 3), next = new Int32Array(N), prevLane = new Int32Array(N);
+  const vf = new Float32Array(N), rng = new Uint32Array(N), path = new Int32Array(N * PN), next = new Int32Array(N), prevLane = new Int32Array(N);
   const pLane = new Int32Array(N), pS = new Float64Array(N), pGen = new Uint32Array(N), stopT = new Float32Array(N), lastStep = new Int32Array(N), waiting = new Uint8Array(N);
-  const lockNode = new Int32Array(N * 3), lockIn = new Int32Array(N * 3), lockOut = new Int32Array(N * 3), lockRemain = new Float32Array(N * 3);
+  const lockNode = new Int32Array(N * LK), lockIn = new Int32Array(N * LK), lockOut = new Int32Array(N * LK), lockRemain = new Float32Array(N * LK);
   const rand = i => { let x = rng[i]; x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; rng[i] = x; return x / 4294967296; };
   const laneCars = new Array(NL); const laneActive = new Uint8Array(NL); let activeLanes = [];
   // Khoảng cách thật (theo pose) khi xe dẫn đang cắt góc trong vùng nút: quãng s không phản ánh đúng hình học Bezier rẽ gắt.
@@ -438,12 +451,13 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const k2 = Math.abs(c.turn) < .6 ? Math.min(lanes.k[l], n2 - 1) : c.turn > 0 ? 0 : n2 - 1;
     return base + k2;
   }
-  function fillPath(i) { for (let p = 0; p < 3; p++) { const prev = p === 0 ? lane[i] : path[i * 3 + p - 1]; path[i * 3 + p] = prev >= 0 ? planNext(i, prev) : -2; } next[i] = path[i * 3]; }
-  function shiftPath(i) { path[i * 3] = path[i * 3 + 1]; path[i * 3 + 1] = path[i * 3 + 2]; const prev = path[i * 3 + 1]; path[i * 3 + 2] = prev >= 0 ? planNext(i, prev) : -2; next[i] = path[i * 3]; }
+  function fillPath(i) { for (let p = 0; p < PN; p++) { const prev = p === 0 ? lane[i] : path[i * PN + p - 1]; path[i * PN + p] = prev >= 0 ? planNext(i, prev) : -2; } next[i] = path[i * PN]; }
+  function shiftPath(i) { for (let p = 0; p < PN - 1; p++) path[i * PN + p] = path[i * PN + p + 1]; const prev = path[i * PN + PN - 2]; path[i * PN + PN - 1] = prev >= 0 ? planNext(i, prev) : -2; next[i] = path[i * PN]; }
   const straightMove = (inL, outL) => { const c = nextSt[lanes.st[inL]]?.find(x => x.st === lanes.st[outL]); return !!c && Math.abs(c.turn) < .87; };
 
   // ---- Khóa nút.
-  const holdsFor = (i, node) => { for (let k = 0; k < 3; k++) if (lockNode[i * 3 + k] === node) return k; return -1; };
+  const relR = n => Rz[n] * REL_F;   // bán kính tính từ nút mà đuôi xe qua thì nhả khóa
+  const holdsFor = (i, node) => { for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] === node) return k; return -1; };
   // Biên ngang của xe khi đổi làn qua nút: nửa rộng + lệch xe máy + đuôi xe xoay (≈ 10 % chiều dài, xe buýt ~1 m).
   const sideMargin = i => i < 0 ? 1 : wid[i] / 2 + Math.abs(jit[i]) + .1 * len[i];
   const sweepApart = (a1, b1, m1, a2, b2, m2) => {
@@ -468,25 +482,30 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const t = (counters.t + signalOffset[node]) % SIGNAL_CYCLE, g = arriveGroup[st];
     return g === 0 ? t < 22 : t >= 25 && t < 41;
   }
-  const firstRear = (l, i, shiftJit) => { const a = laneCars[l]; if (!a) return Infinity; for (const j of a) { if (j === i) continue; if (!shiftJit || blocks(i, j)) return s[j] - len[j] / 2; } return Infinity; };
+  const firstRear = (l, i, shiftJit, pred = 0) => { const a = laneCars[l]; if (!a) return Infinity; for (const j of a) { if (j === i) continue; if (!shiftJit || blocks(i, j)) return s[j] - len[j] / 2 + v[j] * pred; } return Infinity; };
+  const sigHeld = (i, plan) => { for (const p of plan) if (signal[p.node]) return true; for (let k = 0; k < LK; k++) { const n = lockNode[i * LK + k]; if (n >= 0 && signal[n]) return true; } return false; };
   // Thử lấy khóa cho chuyển động (inL → outL) tại nút cuối inL, kèm chuỗi nút kế nếu làn ra quá ngắn để dừng.
   function tryAcquire(i, inL, depth, plan, ignorePriority) {
-    const node = lanes.to[inL], outL = depth === 0 ? path[i * 3] : path[i * 3 + depth];
+    const node = lanes.to[inL], outL = depth === 0 ? path[i * PN] : path[i * PN + depth];
     if (outL < 0) return true;
     if (!needsLock[node]) { return true; }
     if (holdsFor(i, node) >= 0) return true;
     const st = lanes.st[inL];
-    if (!ignorePriority && !green(node, st)) return false;
+    // Đèn chỉ chặn ở nút có đèn đầu tiên trên chuỗi khóa: chuỗi nút kề nhau (liên kết ngắn) có đèn lệch nhóm (xanh nhóm 0 / nhóm 1 không bao giờ trùng)
+    // sẽ không bao giờ có đủ xanh cùng lúc → xe đứng vĩnh viễn; xe đã giữ/đang xin một nút có đèn coi cả cụm là một giao lộ.
+    if (!ignorePriority && !green(node, st) && !sigHeld(i, plan)) return false;
     const hs = holders.get(node) || [];
     for (const h of hs) if (h.car !== i && !compatible(inL, outL, h, i)) return false;
     for (const p of plan) if (p.node === node && !(p.inL === inL) && !compatible(inL, outL, { car: i, inL: p.inL, outL: p.outL, straight: straightMove(p.inL, p.outL) }, i)) return false;
     // Chỗ trống ở làn ra: đuôi xe đầu tiên (cùng dải ngang) phải đủ xa để xe lọt hẳn khỏi vạch nút.
-    const need = Math.min(lanes.length[outL] - .2, Rz[node] + len[i] + 1.5);
-    if (firstRear(outL, i, true) < need) return false;
+    // Chờ quá PATIENCE_S thì nhượng bộ quy tắc "không vào hộp nếu chưa thoát được" (vòng/cụm nút ngắn có hai xe là tự chặn nhau):
+    // chỉ cần chỗ cho thân xe nối đuôi xe đầu làn ra; va chạm vẫn do IDM + kẹp khe cứng bảo đảm.
+    const need = stopT[i] > PATIENCE_S ? len[i] + HARD_GAP + 1.5 : Math.min(lanes.length[outL] - .2, Rz[node] + len[i] + 1.5);
+    if (firstRear(outL, i, true, PRED_S) < need) return false;
     plan.push({ node, inL, outL });
     // Chỗ dừng trên làn ra (trước vạch nút kế) phải để đuôi xe ra khỏi vùng nút này, nếu không xe đứng chắn giữa nút: xin luôn khóa nút kế.
     const node2 = lanes.to[outL], stop2 = lanes.length[outL] - Rz[node2] - len[i] / 2;
-    if (needsLock[node2] && stop2 - len[i] / 2 < Rz[node] + .3 && depth < 2) { if (!tryAcquire(i, outL, depth + 1, plan, ignorePriority)) return false; }
+    if (needsLock[node2] && stop2 - len[i] / 2 < Rz[node] + .3 && depth < PN - 1) { if (!tryAcquire(i, outL, depth + 1, plan, ignorePriority)) return false; }
     // Nhường ở nút không đèn: chỉ xe đã "sẵn sàng" (tương thích + có chỗ + chuỗi nút kế thông) mới tranh lượt, theo cấp đường + thời gian chờ;
     // xe chưa đi được thì không giữ lượt (tránh chặn vô hạn).
     if (!ignorePriority && !signal[node] && depth === 0) {
@@ -501,20 +520,20 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const plan = [];
     if (!tryAcquire(i, inL, depth, plan, ignorePriority)) return false;
     for (const p of plan) {
-      let slot = -1; for (let k = 0; k < 3; k++) if (lockNode[i * 3 + k] < 0) { slot = k; break; }
+      let slot = -1; for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] < 0) { slot = k; break; }
       if (slot < 0) return true;
-      lockNode[i * 3 + slot] = p.node; lockIn[i * 3 + slot] = p.inL; lockOut[i * 3 + slot] = p.outL; lockRemain[i * 3 + slot] = Infinity;
+      lockNode[i * LK + slot] = p.node; lockIn[i * LK + slot] = p.inL; lockOut[i * LK + slot] = p.outL; lockRemain[i * LK + slot] = Infinity;
       let hs = holders.get(p.node); if (!hs) holders.set(p.node, hs = []);
       hs.push({ car: i, inL: p.inL, outL: p.outL, straight: straightMove(p.inL, p.outL) }); if (p.inL >= 0) inHold[p.inL]++;
     }
     return true;
   }
   function releaseSlot(i, k) {
-    const node = lockNode[i * 3 + k]; if (node < 0) return;
+    const node = lockNode[i * LK + k]; if (node < 0) return;
     const hs = holders.get(node); if (hs) { const idx = hs.findIndex(h => h.car === i); if (idx >= 0) { if (hs[idx].inL >= 0) inHold[hs[idx].inL]--; hs.splice(idx, 1); } if (!hs.length) holders.delete(node); }
-    lockNode[i * 3 + k] = -1; lockRemain[i * 3 + k] = Infinity;
+    lockNode[i * LK + k] = -1; lockRemain[i * LK + k] = Infinity;
   }
-  const releaseAll = i => { for (let k = 0; k < 3; k++) releaseSlot(i, k); for (let k = 0; k < 2; k++) dropZone(i, k); };
+  const releaseAll = i => { for (let k = 0; k < LK; k++) releaseSlot(i, k); for (let k = 0; k < 2; k++) dropZone(i, k); };
 
   // ---- Token vùng giao cắt không nút.
   const holdsZone = (i, z) => zTok[i * 2] === z || zTok[i * 2 + 1] === z;
@@ -533,8 +552,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   // Khoảng tới đầu vùng chưa xin được (Infinity nếu đường thông); xin token cho các vùng trong tầm phanh.
   function crossGate(i, l, si, Li, reach) {
     let base = 0, ln = l;
-    for (let p = -1; p < 3; p++) {
-      if (p >= 0) { base += lanes.length[ln]; ln = path[i * 3 + p]; if (ln < 0) break; }
+    for (let p = -1; p < PN; p++) {
+      if (p >= 0) { base += lanes.length[ln]; ln = path[i * PN + p]; if (ln < 0) break; }
       if (base - (si + Li / 2) > reach) break;
       for (let q = CZ.off[ln]; q < CZ.off[ln + 1]; q++) {
         const a = base + CZ.a[q], b = base + CZ.b[q], z = CZ.zone[q];
@@ -586,20 +605,36 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     }
     pending[i] = 1; return false;
   }
+  // Chỗ cũ đã bị xe khác chiếm: tìm chỗ trống gần nhất trong tầm RELOCATE_M cùng làn (rồi các làn cùng trạng thái), ngoài vùng nút,
+  // để xe hồi tức thì thay vì chờ tái sinh ở nút biên (sau sim dài ~2 % xe không còn chỗ cũ).
+  function relocate(i) {
+    const l0 = lane[i], s0 = s[i], st = lanes.st[l0], base = lanesOfSt[st], n = laneCountOfSt[st], vel = Math.min(v[i], lanes.speed[l0] * .6);
+    for (let q = 0; q < n; q++) {
+      const l = q === 0 ? l0 : base + (l0 - base + q) % n;
+      if ((region && !insideLane[l]) || (kind[i] >= HEAVY && lanes.rank[l] < 2)) continue;
+      const a = zoneStart(l, len[i]), b = zoneEnd(l, len[i]); if (b <= a) continue;
+      const c = Math.max(a, Math.min(b, s0));
+      for (let d = 0; d <= RELOCATE_M; d += RELOCATE_STEP) for (let sg = d ? -1 : 1; sg <= 1; sg += 2) {
+        const si = c + sg * d; if (si < a || si > b) continue;
+        if (spotFree(i, l, si) && claimInside(i, l, si)) { place(i, l, si, vel); pLane[i] = lane[i]; pS[i] = s[i]; pGen[i] = gen[i]; return true; }
+      }
+    }
+    return false;
+  }
   // Kích hoạt lại tại chỗ cũ (trạng thái đóng băng); trong vùng nút phải lấy lại khóa (bỏ qua ưu tiên/đèn).
   function reactivate(i) {
     const l = lane[i];
     if (!spotFree(i, l, s[i], true) || !claimInside(i, l, s[i])) return false;
     const node = lanes.to[l], stopPos = lanes.length[l] - Rz[node] - len[i] / 2;
     insertSorted(l, i); active[i] = 1; pending[i] = 0;
-    if (needsLock[node] && s[i] > stopPos && path[i * 3] >= 0 && !acquire(i, true)) { removeFrom(l, i); releaseAll(i); active[i] = 0; return false; }
+    if (needsLock[node] && s[i] > stopPos && path[i * PN] >= 0 && !acquire(i, true)) { removeFrom(l, i); releaseAll(i); active[i] = 0; return false; }
     // Đang trong vùng sau nút (đuôi chưa qua): lấy lại khóa nút đầu làn.
     const n0 = lanes.from[l];
     if (needsLock[n0] && prevLane[i] >= 0 && s[i] - len[i] / 2 < Rz[n0] && holdsFor(i, n0) < 0) {
       const hs = holders.get(n0) || [];
       if (hs.some(h => h.car !== i && !compatible(prevLane[i], l, h, i))) { removeFrom(l, i); releaseAll(i); active[i] = 0; return false; }
-      let slot = -1; for (let k = 0; k < 3; k++) if (lockNode[i * 3 + k] < 0) { slot = k; break; }
-      if (slot >= 0) { lockNode[i * 3 + slot] = n0; lockIn[i * 3 + slot] = prevLane[i]; lockOut[i * 3 + slot] = l; lockRemain[i * 3 + slot] = Rz[n0] + len[i] / 2 - s[i]; let h2 = holders.get(n0); if (!h2) holders.set(n0, h2 = []); h2.push({ car: i, inL: prevLane[i], outL: l, straight: straightMove(prevLane[i], l) }); if (prevLane[i] >= 0) inHold[prevLane[i]]++; }
+      let slot = -1; for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] < 0) { slot = k; break; }
+      if (slot >= 0) { lockNode[i * LK + slot] = n0; lockIn[i * LK + slot] = prevLane[i]; lockOut[i * LK + slot] = l; lockRemain[i * LK + slot] = relR(n0) + len[i] / 2 - s[i]; let h2 = holders.get(n0); if (!h2) holders.set(n0, h2 = []); h2.push({ car: i, inL: prevLane[i], outL: l, straight: straightMove(prevLane[i], l) }); if (prevLane[i] >= 0) inHold[prevLane[i]]++; }
     }
     return true;
   }
@@ -640,7 +675,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     chooseWanted(F, true);
     for (let i = 0; i < N; i++) if (!wanted[i] && (active[i] || pending[i])) { deactivate(i); pending[i] = 0; }
     // Không kích hoạt lại tại chỗ được (xe khác đã tới) → tái sinh ngay ở nút biên để số xe khớp tỉ lệ ngay lập tức.
-    for (let i = 0; i < N; i++) if (wanted[i] && !active[i]) { if (reactivate(i)) { pLane[i] = lane[i]; pS[i] = s[i]; pGen[i] = gen[i]; } else if (!respawn(i, false, 48)) pending[i] = 1; }
+    for (let i = 0; i < N; i++) if (wanted[i] && !active[i]) { if (reactivate(i)) { pLane[i] = lane[i]; pS[i] = s[i]; pGen[i] = gen[i]; } else if (!relocate(i) && !respawn(i, false, 48)) pending[i] = 1; }
     return activeCount();
   }
   function activeCount() { let n = 0; for (let i = 0; i < N; i++) n += active[i]; return n; }
@@ -674,13 +709,13 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     // Lộ trình: giữ đoạn còn hợp lệ, lập lại đoạn trỏ ra ngoài khu (hoặc đoạn -2 nay đi tiếp được); xe đã giữ khóa nút không đổi làn kế.
     for (let i = 0; i < N; i++) {
       if (!active[i]) { fillPath(i); continue; }
-      let holdsLock = false; for (let k = 0; k < 3; k++) if (lockNode[i * 3 + k] >= 0) holdsLock = true;
-      for (let p = 0; p < 3; p++) {
-        const prev = p === 0 ? lane[i] : path[i * 3 + p - 1], cur = path[i * 3 + p];
+      let holdsLock = false; for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] >= 0) holdsLock = true;
+      for (let p = 0; p < PN; p++) {
+        const prev = p === 0 ? lane[i] : path[i * PN + p - 1], cur = path[i * PN + p];
         if (cur >= 0 && (!region || insideLane[cur])) continue;
-        path[i * 3 + p] = prev < 0 ? -2 : (p === 0 && holdsLock) ? -2 : planNext(i, prev);
+        path[i * PN + p] = prev < 0 ? -2 : (p === 0 && holdsLock) ? -2 : planNext(i, prev);
       }
-      next[i] = path[i * 3];
+      next[i] = path[i * PN];
     }
     rankStep = -1;
     return select();
@@ -726,7 +761,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     let gap = Infinity, vl = 0;
     for (let j = idx + 1; j < list.length && j <= idx + 8; j++) { const o = list[j]; if (blocks(i, o)) { gap = s[o] - len[o] / 2 - (si + Li / 2) - lanes.pinch[l] - (inCorner(o) ? cornerPad(i, o) : 0); if (gap < 12 && next[o] !== next[i] && s[o] > laneLen - Rz[lanes.to[l]]) gap = Math.min(gap, geoGap(i, o)); vl = v[o]; break; } }
     // Nhìn qua ranh giới cạnh theo lộ trình (tối đa 3 làn, 70 m).
-    const node = lanes.to[l], out0 = path[i * 3];
+    const node = lanes.to[l], out0 = path[i * PN];
     // Xe cùng làn vào đã qua nút nhưng chưa nhả khóa (đang cắt góc) vẫn là xe dẫn, dù khác hướng ra.
     if (inHold[l] > 0 && needsLock[node] && laneLen - si < 60) { const hs = holders.get(node); if (hs) for (const h of hs) { const o = h.car; if (o === i || h.inL !== l || lane[o] === l || !active[o]) continue; const past = s[o] + (lane[o] !== h.outL ? lanes.length[h.outL] : 0); let g = laneLen - (si + Li / 2) + past - len[o] / 2 - cornerPad(i, o, h.inL, h.outL); if (g < 12) g = Math.min(g, geoGap(i, o)); if (g < gap) { gap = g; vl = v[o]; } } }
     let holding = out0 < 0 || !needsLock[node] || holdsFor(i, node) >= 0;
@@ -734,15 +769,15 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     if (!holding && out0 >= 0 && front > laneLen - Rz[node] - (vi * vi / (2 * K.b) + 6)) holding = acquire(i);
     if (gap === Infinity) {
       let dist = laneLen - front;
-      for (let p = 0; p < 3 && dist < 70; p++) {
-        const nl = path[i * 3 + p]; if (nl < 0) break;
+      for (let p = 0; p < PN && dist < 70; p++) {
+        const nl = path[i * PN + p]; if (nl < 0) break;
         // vạch dừng của nút cuối làn kế (khi chưa giữ khóa) cũng là vật cản.
         const a = laneCars[nl];
         let found = false;
-        if (a) for (const o of a) { if (o !== i && blocks(i, o)) { const g = Math.min(dist + s[o] - len[o] / 2 - Math.max(lanes.pinch[l], lanes.pinch[nl]) - cornerPad(i, o, p === 0 ? l : path[i * 3 + p - 1], nl), dist + s[o] < 14 && (p > 0 || (prevLane[o] >= 0 && prevLane[o] !== l)) ? geoGap(i, o) : Infinity); if (g < gap) { gap = g; vl = v[o]; } found = true; break; } }
+        if (a) for (const o of a) { if (o !== i && blocks(i, o)) { const g = Math.min(dist + s[o] - len[o] / 2 - Math.max(lanes.pinch[l], lanes.pinch[nl]) - cornerPad(i, o, p === 0 ? l : path[i * PN + p - 1], nl), dist + s[o] < 14 && (p > 0 || (prevLane[o] >= 0 && prevLane[o] !== l)) ? geoGap(i, o) : Infinity); if (g < gap) { gap = g; vl = v[o]; } found = true; break; } }
         if (found) break;
-        const n2 = lanes.to[nl], nn = path[i * 3 + p + 1];
-        if (p < 2 && nn !== undefined && nn >= 0 && needsLock[n2] && holdsFor(i, n2) < 0) {
+        const n2 = lanes.to[nl], nn = path[i * PN + p + 1];
+        if (holding && p < PN - 1 && nn !== undefined && nn >= 0 && needsLock[n2] && holdsFor(i, n2) < 0) {
           const g = dist + lanes.length[nl] - Rz[n2];
           // Vạch dừng nút kế đã trong tầm phanh: xin khóa luôn từ đây, nếu không xe sẽ đứng chờ mãi ở làn trước (khóa chỉ xin ở làn cuối nút).
           if (!(holding && g < vi * vi / (2 * K.b) + 6 && acquire(i, false, nl, p + 1))) { if (g < gap) { gap = g; vl = 0; } break; }
@@ -765,11 +800,11 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     if (si + ds > stopLimit) { ds = Math.max(0, stopLimit - si); vn = Math.min(vn, ds / STEP); }
     si += ds;
     // Giảm quãng còn lại của khóa đã qua nút; nhả khi đuôi xe rời vùng nút.
-    for (let k = 0; k < 3; k++) if (lockNode[i * 3 + k] >= 0 && lockRemain[i * 3 + k] !== Infinity) { lockRemain[i * 3 + k] -= ds; if (lockRemain[i * 3 + k] <= 0) releaseSlot(i, k); }
+    for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] >= 0 && lockRemain[i * LK + k] !== Infinity) { lockRemain[i * LK + k] -= ds; if (lockRemain[i * LK + k] <= 0) releaseSlot(i, k); }
     for (let k = 0; k < 2; k++) if (zTok[i * 2 + k] >= 0) { zRem[i * 2 + k] -= ds; if (zRem[i * 2 + k] <= 0) dropZone(i, k); }
     // Chuyển cạnh.
     while (si >= laneLen) {
-      const nl = path[i * 3];
+      const nl = path[i * PN];
       if (nl === -2) { v[i] = vn; respawn(i, false); return; }
       const nodeX = lanes.to[l];
       if (lanes.from[nl] !== nodeX) counters.teleports++;
@@ -779,7 +814,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       prevLane[i] = l; lane[i] = nl; s[i] = carryS; si = carryS;
       lat[i] = lanes.offset[nl] + jit[i];
       insertSorted(nl, i);
-      const k = holdsFor(i, nodeX); if (k >= 0) { lockRemain[i * 3 + k] = Rz[nodeX] + Li / 2 - carryS; if (lockRemain[i * 3 + k] <= 0) releaseSlot(i, k); }
+      const k = holdsFor(i, nodeX); if (k >= 0) { lockRemain[i * LK + k] = relR(nodeX) + Li / 2 - carryS; if (lockRemain[i * LK + k] <= 0) releaseSlot(i, k); }
       shiftPath(i);
       counters.edgeTransitions++; counters.perSecond[counters.lastSecond & 31]++;
       l = nl; laneLen = lanes.length[nl];
@@ -804,7 +839,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     pLane.set(lane); pS.set(s); pGen.set(gen);
     swapReq();
     // Tái sinh xe chờ chỗ (tất định theo chỉ số).
-    for (let i = 0; i < N; i++) if (pending[i] && wanted[i]) { if (!(gen[i] === pGen[i] && reactivate(i))) respawn(i, false, 32); }
+    for (let i = 0; i < N; i++) if (pending[i] && wanted[i]) { if (!(gen[i] === pGen[i] && reactivate(i)) && !relocate(i)) respawn(i, false, 32); }
     stepLanes = activeLanes.slice(); stepPos = 0; inStep = true;
   }
   // Cập nhật tiếp các làn của bước đang dở, dừng ở ranh giới làn khi đã cập nhật ≥ maxCars xe; trả về true khi xong bước.

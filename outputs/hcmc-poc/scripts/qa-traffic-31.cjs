@@ -12,7 +12,9 @@
  *  - có xe trên cầu (elevationClass ≠ ground) và y xe khớp profile mặt đường ≤ 0,05 m;
  *  - tất định: reset + advance cùng thời gian → cùng hash, giữa hai lần và giữa WebGPU/WebGL;
  *  - CPU vòng cập nhật xe ≤ baseline 30B/31 đo trước khi sửa (research/vibecode-31-traffic/cpu-base30b.json);
- *  - mật độ theo thứ bậc + giờ trong cảnh, API setDensity/setVisibleFraction cho bước E, trạng thái motion/dataset.
+ *  - mật độ theo thứ bậc + giờ trong cảnh, API setDensity/setVisibleFraction cho bước E, trạng thái motion/dataset;
+ *  - API setRegion (bước H): khu thử nửa tây/nửa đông, xe ngoài khu tắt, setRegion(null) khôi phục, tất định;
+ *  - sim dài 600 s: tần suất phá kẹt, tỉ lệ xe chờ, hồi đủ xe ngay (≤ 0,5 % chờ chỗ, hết ≤ 2 s) khi về Đầy đủ sau sim dài.
  *
  * Chạy (serve.py đang chạy):  node outputs/hcmc-poc/scripts/qa-traffic-31.cjs [webgpu|webgl]
  * Biến môi trường: PORT (mặc định 8768) hoặc CITY_URL, PW_MODULE, PW_CHROME, SAMPLE_S (mặc định 20).
@@ -304,6 +306,25 @@ function regionProbe() {
   return out;
 }
 
+// Sim dài 600 s: bộ phá kẹt không còn dày đặc, xe chờ chỗ khi về Đầy đủ gần như không còn, vẫn 0 vi phạm.
+function longProbe() {
+  const api = window.webgpuMaterials24.motion.api, sim = api.sim;
+  api.setRegion(null); api.setVisibleFraction(1); api.reset();
+  const chunks = []; let prev = api.stats().breakerRespawns;
+  for (let c = 0; c < 10; c++) { api.advance(60); const st = api.stats(); chunks.push({ t: st.t, breakerPerMin: st.breakerRespawns - prev, waitingNow: st.waitingNow, active: st.active }); prev = st.breakerRespawns; }
+  const st = api.stats(), lf = sim.lightFactor, target = Math.round(Math.min(1, lf) * api.total), restore = [];
+  for (const lo of [.5, .15]) {
+    api.setVisibleFraction(lo); api.advance(3);
+    const n = api.setVisibleFraction(1), pending = sim.pendingCount(); let settleS = 0;
+    while (sim.pendingCount() > 0 && settleS < 6) { api.advance(.1); settleS += .1; }
+    restore.push({ lo, active: n, target, pending, settleS: +settleS.toFixed(1) });
+  }
+  const after = api.stats(), last = chunks.slice(-2);
+  const out = { chunks, breakerPerMinLast2: last.reduce((a, c) => a + c.breakerPerMin, 0) / last.length, waitingPctLast2: 100 * last.reduce((a, c) => a + c.waitingNow / c.active, 0) / last.length, long: st, restore, after: { gap: after.gapViolations, oneway: after.onewayViolations, teleports: after.teleports, transLast30: after.edgeTransitionsLast30s, maxStopS: after.maxStopS } };
+  api.setRegion(null); api.reset();
+  return out;
+}
+
 async function inspect(page) {
   return page.evaluate(async () => {
     const status = window.webgpuMaterials24, motion = status.motion || {}, api = motion.api, G = window.ROAD_GRAPH_31, D = window.CITY_DATA;
@@ -405,6 +426,7 @@ async function runBackend(browser, backend) {
   result.light = await lightDensity(page);
   Object.assign(result, await inspect(page));
   result.region = await page.evaluate(regionProbe);
+  result.longProbe = await page.evaluate(longProbe);
   result.actualBackend = await page.evaluate(() => window.webgpuMaterials24.backend);
   result.errors = errors;
   await context.close();
@@ -463,6 +485,15 @@ const pct = (list, p) => { const s = list.slice().sort((a, b) => a - b); return 
         assert(t.back >= t.target * .98 && t.pendingAfter === 0 && t.settleS <= 2 && t.active >= t.target * .995 && !t.region.active && t.dataset === '/0', JSON.stringify(t));
         assert(g.determinism.h1 && g.determinism.h1 === g.determinism.h2, 'setRegion không tất định: ' + JSON.stringify(g.determinism));
         assert.deepEqual(g.invalid, [true, true, true], 'đầu vào sai phải ném TypeError');
+      });
+            check(tag + 'sim dài 600 s: phá kẹt thưa, ít xe chờ, hồi đủ xe ngay khi về Đầy đủ, 0 vi phạm gap/oneway/teleport', () => {
+        const g = r.longProbe; assert(g, 'thiếu longProbe');
+        assert.equal(g.after.gap, 0, 'gap'); assert.equal(g.after.oneway, 0, 'oneway'); assert.equal(g.after.teleports, 0, 'teleport');
+        assert(g.after.transLast30 > 3000, 'ít chuyển cạnh sau 600 s: ' + g.after.transLast30);
+        // Trước khi sửa: 130–190 lần phá kẹt/phút, 17–21 % xe chờ (ngày, ~3059 xe).
+        assert(g.breakerPerMinLast2 <= 115, 'phá kẹt quá dày: ' + g.breakerPerMinLast2 + ' lần/phút: ' + JSON.stringify(g.chunks));
+        assert(g.waitingPctLast2 <= 17, 'xe chờ quá nhiều: ' + g.waitingPctLast2.toFixed(1) + ' %');
+        for (const x of g.restore) { assert(x.pending <= x.target * .005, `F ${x.lo} → 1 sau 600 s: ${x.pending} xe chờ chỗ (> 0,5 %): ` + JSON.stringify(x)); assert(x.settleS <= 2 && x.active >= x.target * .995, JSON.stringify(x)); }
       });
       check(tag + 'API bước E: setVisibleFraction thưa đều, xác định, giữ signature; setDensity khôi phục', () => {
         const d = r.densityApi; assert(d, 'thiếu');
