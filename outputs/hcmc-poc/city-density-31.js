@@ -25,17 +25,24 @@ const SUGGEST_SNOOZE_S=120;    // bỏ qua đề xuất thì không hỏi lại 
 
 // Tỉ lệ giữ lại phần KHÔNG signature của từng nhóm (signature/vùng bảo vệ luôn giữ 100 %).
 export const DENSITY_LEVELS_31=Object.freeze([
-  Object.freeze({id:'full',label:'Đầy đủ',buildings:1,trees:1,details:1,fixtures:1,lamps:1,vehicles:1,vessels:1,bridgeRails:true,minorShadows:true,ambientOcclusion:true,bloom:true,mergedBuildings:false}),
-  Object.freeze({id:'balanced',label:'Cân bằng',buildings:.55,trees:.6,details:.6,fixtures:.5,lamps:.65,vehicles:.6,vessels:.7,bridgeRails:true,minorShadows:true,ambientOcclusion:true,bloom:true,mergedBuildings:false}),
-  Object.freeze({id:'light',label:'Nhẹ',buildings:.32,trees:.38,details:.3,fixtures:.25,lamps:.4,vehicles:.35,vessels:.45,bridgeRails:false,minorShadows:true,ambientOcclusion:true,bloom:true,mergedBuildings:false}),
-  Object.freeze({id:'minimal',label:'Tối thiểu',buildings:.16,trees:.2,details:0,fixtures:0,lamps:.15,vehicles:.15,vessels:.25,bridgeRails:false,minorShadows:false,ambientOcclusion:false,bloom:false,mergedBuildings:true})
+  Object.freeze({id:'full',label:'Đầy đủ',buildings:1,trees:1,details:1,fixtures:1,lamps:1,vehicles:1,vessels:1,bridgeRails:true,minorShadows:true,structureShadows:true,ambientOcclusion:true,bloom:true,mergedBuildings:false,simpleVessels:false,lodScale:1,aoScale:1}),
+  Object.freeze({id:'balanced',label:'Cân bằng',buildings:.55,trees:.6,details:.6,fixtures:.5,lamps:.65,vehicles:.6,vessels:.7,bridgeRails:true,minorShadows:false,structureShadows:true,ambientOcclusion:true,bloom:true,mergedBuildings:false,simpleVessels:false,lodScale:.8,aoScale:.6}),
+  Object.freeze({id:'light',label:'Nhẹ',buildings:.32,trees:.38,details:.3,fixtures:.25,lamps:.4,vehicles:.35,vessels:.45,bridgeRails:false,minorShadows:false,structureShadows:true,ambientOcclusion:true,bloom:true,mergedBuildings:false,simpleVessels:false,lodScale:.6,aoScale:.5}),
+  Object.freeze({id:'minimal',label:'Tối thiểu',buildings:.16,trees:.2,details:0,fixtures:0,lamps:.15,vehicles:.15,vessels:.25,bridgeRails:false,minorShadows:false,structureShadows:false,ambientOcclusion:false,bloom:false,mergedBuildings:true,simpleVessels:true,lodScale:0,aoScale:.2})
 ]);
 // Bước G: minorShadows = nhóm phụ (cây, chi tiết 28, thiết bị mái, đèn, xe, tàu) có đổ bóng; ambientOcclusion = GTAO
-// (pass pháp tuyến + quad AO); bloom = bloom emissive; mergedBuildings = công trình vẽ bằng một mesh gộp thay các chunk.
+// (pass pháp tuyến + quad AO); bloom = bloom emissive; mergedBuildings = công trình vẽ bằng một mesh gộp thay các chunk
+// (cùng cờ này bật các bản gộp tĩnh của kết cấu hero/signature và cây xa gộp); simpleVessels = tàu chỉ vẽ thân + một vệt nước;
+// lodScale = hệ số nhân bán kính LOD cây/chi tiết (0 = chỉ bản xa + mục bảo vệ); aoScale = hệ số nhân độ phân giải GTAO.
+// structureShadows = cầu (Ba Son, Bạch Đằng, cầu thủ tục) và Marina đổ bóng; chỉ mức Tối thiểu tắt (hình học vẫn vẽ đủ 100 %).
+// Bước G3: Cân bằng và Nhẹ cũng tắt bóng nhóm phụ (cây, chi tiết 28, đèn, xe, tàu) — pass bóng ×3 tầng CSM là phần
+// draw call lớn nhất của Đầy đủ; bóng công trình, cầu, hero và địa hình giữ nguyên.
 // Tất cả chỉ đổi cờ/camera/visible/updateBefore nên không biên dịch lại pipeline; công trình signature vẫn giữ đủ.
 const MERGED_BUILDING_FRACTION=DENSITY_LEVELS_31.find(level=>level.mergedBuildings)?.buildings??null;
 const levelById=new Map(DENSITY_LEVELS_31.map((level,index)=>[level.id,{...level,index}]));
 
+// Mức tắt GTAO vẫn chạy quad (giữ pass pháp tuyến kích hoạt bóng CSM) nhưng ở độ phân giải thấp nhất.
+const AO_OFF_SCALE=.1;
 const clamp01=v=>Math.max(0,Math.min(1,v));
 const fract=v=>v-Math.floor(v);
 function hash01(a,b=0){let h=Math.imul(a^0x9e3779b9,0x85ebca6b)^Math.imul(b+SEED,0xc2b2ae35);h^=h>>>15;h=Math.imul(h,0x2c1b3c6d);h^=h>>>12;return(h>>>0)/4294967296;}
@@ -170,14 +177,22 @@ export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,mate
   return {group,meshes,merged,setFraction,pick,shownIds,stats,total:drawable.length,shown:()=>shown};
 }
 
-// Thưa đều instance (cây, chi tiết runtime 28, thiết bị mái). Hạng phân tầng theo ô 300 m: trong ô có m mục (thứ tự
+/// Thưa đều instance (cây, chi tiết runtime 28, thiết bị mái). Hạng phân tầng theo ô 300 m: trong ô có m mục (thứ tự
 // Morton), hạng = (π + φ)/m với π là thứ bậc van der Corput của vị trí Morton và φ là pha băm của ô ⇒ ở tỉ lệ f mỗi ô
 // giữ đúng ⌈f·m − φ⌉ mục, trải đều trong ô. Mục được bảo vệ (registry) luôn đứng đầu. Mỗi mức chỉ đổi .count.
 // - nguồn inPlace (hoặc cellSize null): sắp lại ngay trong mesh nguồn theo thứ tự toàn cục (không thêm draw call) —
-//   cho nhóm nhẹ (tán cây xa, thiết bị mái). Tiền tố toàn cục độ dài `shown` trùng đúng tập các tiền tố theo ô.
+//   cho nhóm nhẹ (thiết bị mái). Tiền tố toàn cục độ dài `shown` trùng đúng tập các tiền tố theo ô.
 // - còn lại: chia InstancedMesh con theo lưới cellSize (frustum/bóng cull theo ô) — cho nhóm nặng ở tầm gần (cây, chi
-//   tiết 28). Mesh nguồn giữ nguyên trong scene (runtime cũ vẫn bật/tắt .visible theo LOD) nhưng tắt layer để không vẽ.
-export function createInstanceDensity31({sources,items,isProtected=()=>false,stratumM=300,cellSize=null,label='Instance 31E'}){
+//   tiết 28). Mesh nguồn giữ nguyên trong scene (runtime cũ vẫn bật/tắt .visible) nhưng tắt layer để không vẽ.
+// Bước G3 — LOD theo khoảng cách tới camera, tính theo ô (không đổi số mục hiển thị, chỉ đổi cách vẽ):
+// - lod.nearM + nguồn `far:true` (tán cây xa): ô gần hơn nearM vẽ bản đầy đủ (thân + 3 tán), ô xa vẽ bản xa (1 khối).
+//   Bản xa là MỘT InstancedMesh toàn thành phố (1 draw call, như 30B); mục thuộc ô gần được thu về một điểm (ma trận suy
+//   biến, không tạo tam giác) nên không vẽ trùng. Mục bảo vệ (hero corridor, Nguyễn Huệ) giữ bản đầy đủ tới protectM;
+//   xa hơn dùng bản xa như 30B (cameraDistance > 2500).
+// - lod.nearM không có nguồn `far`: phần không bảo vệ của ô xa hơn nearM không được vẽ (chi tiết nhỏ hơn ~1 px); mục
+//   bảo vệ luôn vẽ.
+// - setNearScale(s): nhân bán kính nearM (mức Tối thiểu dùng 0 ⇒ chỉ còn bản xa + mục bảo vệ).
+export function createInstanceDensity31({sources,items,isProtected=()=>false,stratumM=300,cellSize=null,label='Instance 31E',lod=null}){
   const n=items.length,prot=new Uint8Array(n),rank=new Float64Array(n),strata=new Map();
   for(let k=0;k<n;k++){
     prot[k]=isProtected(items[k].x,items[k].z)?1:0;
@@ -191,50 +206,115 @@ export function createInstanceDensity31({sources,items,isProtected=()=>false,str
   }
   const order=[...Array(n).keys()].sort((a,b)=>prot[b]-prot[a]||rank[a]-rank[b]||a-b);
   // Nhóm (một nhóm nếu không chia ô); trong nhóm giữ thứ tự order ⇒ mục bảo vệ trước, rồi hạng tăng dần.
+  // Mục bảo vệ gom vào MỘT nhóm cố định riêng (luôn đủ 100 %, không theo ô ⇒ mức Tối thiểu chỉ tốn 1 draw call/nhóm thay
+  // vì mỗi ô có mục bảo vệ một draw call); phần còn lại chia ô theo lưới.
   const groups=new Map();
-  for(const k of order){const key=cellSize?cellKey(items[k].x,items[k].z,cellSize):'all';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(k);}
+  for(const k of order){const key=prot[k]?'@protected':cellSize?cellKey(items[k].x,items[k].z,cellSize):'all';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(k);}
   const cells=[...groups].sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0).map(([key,list])=>{
-    const protectedCount=list.filter(k=>prot[k]).length;
-    return {key,list,protectedCount,ranks:Float64Array.from(list.slice(protectedCount),k=>rank[k]),meshes:[]};
+    const fixed=key==='@protected',protectedCount=fixed?list.length:0;
+    return {key,list,fixed,protectedCount,ranks:fixed?new Float64Array(0):Float64Array.from(list,k=>rank[k]),meshes:[],farSlots:null,farHidden:null,k:list.length,near:undefined,box:null};
   });
-  const inPlace=[];
-  for(const {mesh,stride=1,key:sourceKey,inPlace:own=!cellSize} of sources){
+  const padM=lod?.padM??40,protectM=lod?.protectM??2500,nearM=lod?.nearM??Infinity;
+  // Hộp bao 3D của ô (từ ma trận instance của nguồn đầu tiên) để đo khoảng cách camera → ô.
+  if(lod&&cellSize){
+    const first=sources.find(source=>!source.far&&source.mesh.isInstancedMesh)||sources[0],stride0=first.stride||1,matrix=first.mesh.instanceMatrix.array;
+    for(const cell of cells){
+      const box=[Infinity,Infinity,Infinity,-Infinity,-Infinity,-Infinity];
+      for(const k of cell.list){const o=k*stride0*16;box[0]=Math.min(box[0],matrix[o+12]);box[1]=Math.min(box[1],matrix[o+13]);box[2]=Math.min(box[2],matrix[o+14]);box[3]=Math.max(box[3],matrix[o+12]);box[4]=Math.max(box[4],matrix[o+13]);box[5]=Math.max(box[5],matrix[o+14]);}
+      cell.box=[box[0]-padM,box[1]-padM,box[2]-padM,box[3]+padM,box[4]+padM,box[5]+padM];
+    }
+  }
+  const inPlace=[],slotOf=new Int32Array(n);
+  order.forEach((k,slot)=>{slotOf[k]=slot;});
+  let farSource=null;
+  for(const {mesh,stride=1,key:sourceKey,inPlace:own=!cellSize,far=false} of sources){
     const source=sourceKey||mesh.name;
     const copy=(attribute,size,target,list)=>{const from=attribute.array;list.forEach((k,slot)=>target.set(from.subarray(k*stride*size,(k+1)*stride*size),slot*stride*size));};
-    if(own){
+    if(own||far){
       for(const [attribute,size] of [[mesh.instanceMatrix,16],[mesh.instanceColor,3]]){if(!attribute)continue;const target=attribute.array.slice();copy(attribute,size,target,order);attribute.array.set(target);attribute.needsUpdate=true;}
-      mesh.userData.densityInstances={source,stride,protected:order.filter(k=>prot[k]).length};
+      mesh.userData.densityInstances={source,stride,protected:order.filter(k=>prot[k]).length,far};
       inPlace.push({mesh,stride});
+      if(far){farSource={mesh,original:mesh.instanceMatrix.array.slice()};for(const cell of cells){cell.farSlots=Int32Array.from(cell.list,k=>slotOf[k]);cell.farHidden=false;}}
       continue;
     }
-    for(const cell of cells){
-      const count=cell.list.length*stride,chunk=new THREE.InstancedMesh(mesh.geometry,mesh.material,count);
-      copy(mesh.instanceMatrix,16,chunk.instanceMatrix.array,cell.list);
-      if(mesh.instanceColor){chunk.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(count*3),3);copy(mesh.instanceColor,3,chunk.instanceColor.array,cell.list);}
+    const build=(list,name)=>{
+      const count=list.length*stride,chunk=new THREE.InstancedMesh(mesh.geometry,mesh.material,count);
+      copy(mesh.instanceMatrix,16,chunk.instanceMatrix.array,list);
+      if(mesh.instanceColor){chunk.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(count*3),3);copy(mesh.instanceColor,3,chunk.instanceColor.array,list);}
       chunk.instanceMatrix.setUsage(THREE.StaticDrawUsage);chunk.instanceMatrix.needsUpdate=true;
       chunk.castShadow=mesh.castShadow;chunk.receiveShadow=mesh.receiveShadow;chunk.renderOrder=mesh.renderOrder;
-      chunk.name=`${mesh.name||label} · ô ${cell.key}`;
-      chunk.userData.densityInstances={source,stride,protected:cell.protectedCount};
-      chunk.computeBoundingSphere();
+      chunk.name=name;chunk.computeBoundingSphere();
+      return chunk;
+    };
+    for(const cell of cells){
+      const chunk=build(cell.list,`${mesh.name||label} · ô ${cell.key}`);chunk.userData.densityInstances={source,stride,protected:cell.protectedCount};
       mesh.add(chunk);cell.meshes.push({chunk,stride});
     }
     mesh.layers.disableAll();
   }
   const protectedTotal=cells.reduce((s,c)=>s+c.protectedCount,0);
-  let shown=n;
+  let shown=n,nearScale=1,farDirty=false;
+  const hasFar=!!farSource;
+  // Ma trận suy biến của mục bản xa: giữ vị trí (hệ số tịnh tiến) nhưng thu phần xoay/tỉ lệ về 0.
+  function setFarHidden(cell,slotFrom,slotTo,hidden){
+    const array=farSource.mesh.instanceMatrix.array,original=farSource.original;
+    for(let i=slotFrom;i<slotTo;i++){
+      const o=cell.farSlots[i]*16;
+      if(hidden){for(let j=0;j<16;j++)array[o+j]=(j>=12)?original[o+j]:0;}
+      else for(let j=0;j<16;j++)array[o+j]=original[o+j];
+    }
+    farDirty=true;
+  }
+  // Đặt count của ô theo (k = số mục mức mật độ cho phép) và trạng thái LOD hiện tại.
+  function applyCell(cell){
+    const k=cell.k,near=!lod||cell.near!==false;
+    // Nhóm bảo vệ của nguồn không có bản xa luôn vẽ đủ; ô thường xa thì không vẽ bản đầy đủ.
+    const drawNear=cell.fixed&&!hasFar?true:near;
+    // Bản xa: mục của ô gần (hoặc nhóm bảo vệ còn gần) ẩn vì đã vẽ bằng bản đầy đủ.
+    if(hasFar&&cell.farHidden!==(!lod||near)){cell.farHidden=!lod||near;setFarHidden(cell,0,cell.list.length,cell.farHidden);}
+    const nearK=drawNear?k:0;
+    // count 0 ⇒ three r186 bỏ qua draw (không tính draw call) nhưng vẫn duyệt render object của chunk mỗi pass (cập nhật
+    // uniform/binding, writeBuffer): 300+ chunk count 0 ở góc overview tốn ~9 ms CPU mỗi khung (đo bằng ablation). Vì vậy
+    // chunk không có gì để vẽ thì ẩn hẳn (visible = false). Hiện lại không biên dịch gì: render object và pipeline của
+    // chunk cùng vật liệu/hình đã có sẵn, và đã được dựng trong lần vẽ đầu tiên.
+    // Chunk trong bán kính Đầy đủ của camera giữ visible dù count 0 (đã có render object/pipeline/bóng sẵn, về Đầy đủ không
+    // biên dịch lúc đó); chỉ chunk ngoài bán kính ấy mới ẩn hẳn — chúng chỉ hiện dần khi camera đi tới.
+    const keep=cell.fixed||cell.inFull!==false;
+    for(const {chunk,stride} of cell.meshes){const count=nearK*stride;chunk.count=count;chunk.visible=count>0||keep;chunk.userData.densityCount=k*stride;}
+  }
   const setFraction=f=>{
     shown=0;
     for(const cell of cells){
-      const k=f>=1?cell.list.length:cell.protectedCount+countBelow(cell.ranks,f);shown+=k;
-      // Chỉ đổi count, KHÔNG ẩn chunk: count 0 ⇒ three r186 bỏ qua draw (không tính draw call) nhưng pipeline vẫn được
-      // dựng khi chunk vào khung nhìn ⇒ đổi mức sau đó không phải biên dịch (tránh khung đứng hình ~0,5 s).
-      for(const {chunk,stride} of cell.meshes)chunk.count=k*stride;
+      cell.k=cell.fixed||f>=1?cell.list.length:countBelow(cell.ranks,f);shown+=cell.k;
+      applyCell(cell);
     }
-    for(const {mesh,stride} of inPlace)mesh.count=shown*stride;
+    for(const {mesh,stride} of inPlace){mesh.count=shown*stride;mesh.userData.densityCount=shown*stride;}
+    flushFar();
     return shown;
   };
+  function flushFar(){if(farDirty){farSource.mesh.instanceMatrix.needsUpdate=true;farDirty=false;}}
+  const boxDistance=(box,x,y,z)=>Math.hypot(Math.max(box[0]-x,0,x-box[3]),Math.max(box[1]-y,0,y-box[4]),Math.max(box[2]-z,0,z-box[5]));
+  // Cập nhật LOD theo vị trí camera (mỗi khung; chỉ đụng ô đổi trạng thái). Trễ ±6 % tránh nhấp nháy ở biên.
+  let lodChanges=0;
+  const setLodCamera=position=>{
+    if(!lod||!cells[0]?.box)return 0;
+    let changed=0;
+    for(const cell of cells){
+      if(cell.fixed&&!hasFar)continue;
+      const d=boxDistance(cell.box,position.x,position.y,position.z);
+      const radius=cell.fixed?protectM:nearM*nearScale,near=cell.near===undefined?d<radius:cell.near?d<radius*1.06:d<radius*.94;
+      const full=cell.inFull===undefined?d<nearM:cell.inFull?d<nearM*1.06:d<nearM*.94;
+      if(near!==cell.near||full!==cell.inFull){cell.near=near;cell.inFull=full;applyCell(cell);changed++;}
+    }
+    flushFar();lodChanges+=changed;return changed;
+  };
+  const setNearScale=scale=>{
+    nearScale=scale;
+    for(const cell of cells)cell.near=undefined;   // đánh giá lại từ đầu ở lần setLodCamera kế tiếp (không trễ)
+  };
   const meshes=[...cells.flatMap(cell=>cell.meshes.map(entry=>entry.chunk)),...inPlace.map(entry=>entry.mesh)];
-  return {setFraction,meshes,total:n,protected:protectedTotal,chunks:cells.reduce((s,c)=>s+c.meshes.length,0),shown:()=>shown};
+  const lodState=()=>({nearCells:cells.filter(cell=>cell.near!==false&&cell.meshes.length).length,farCells:cells.filter(cell=>cell.near===false).length,cells:cells.length,changes:lodChanges});
+  return {setFraction,setLodCamera,setNearScale,lodState,meshes,total:n,protected:protectedTotal,chunks:cells.reduce((s,c)=>s+c.meshes.length,0),shown:()=>shown};
 }
 
 // Vị trí instance đọc từ ma trận (cho mesh không lộ danh sách mục: chi tiết runtime 28, thiết bị mái).
@@ -273,11 +353,93 @@ export function mergeStaticMeshes31(group){
   return {before,after};
 }
 
+// Bản gộp tĩnh bật/tắt cho mức Tối thiểu (bước G3): mọi Mesh/InstancedMesh con của `root` được nướng ma trận (cả từng
+// instance) vào geometry gộp theo (vật liệu, bóng, renderOrder). Mesh gốc giữ nguyên trong scene (tên, userData, QA cũ
+// vẫn tìm thấy) và chỉ bị ẩn khi bản gộp bật — hình, vật liệu và bóng giống hệt, chỉ bớt draw call. Không ẩn gì của
+// signature: toàn bộ hình học vẫn được vẽ. Bản gộp là con của `root` nên thừa hưởng .visible của module (ví dụ hero
+// corridor chỉ hiện ở góc corridor). Dựng lười ở lần bật đầu tiên.
+// Khóa vật liệu để gộp: hai vật liệu NodeMaterial cùng loại, cùng tham số số học/màu/texture và không có node tùy biến
+// (colorNode, roughnessNode…) cho ra điểm ảnh y hệt nhau ⇒ gộp được dù là hai đối tượng. Có node tùy biến thì khóa theo uuid.
+const CUSTOM_NODES=['colorNode','roughnessNode','metalnessNode','emissiveNode','normalNode','opacityNode','positionNode','alphaTestNode','aoNode','envNode','lightsNode','fragmentNode','vertexNode','maskNode','castShadowNode','receivedShadowNode','outputNode','backdropNode','backdropAlphaNode','transmissionNode','thicknessNode','clearcoatNode','clearcoatRoughnessNode','sheenNode'];
+function materialMergeKey(material){
+  if(CUSTOM_NODES.some(key=>material[key]))return material.uuid;
+  const textures=['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap','alphaMap','envMap','lightMap','bumpMap','displacementMap'].map(key=>material[key]?.uuid||'').join(',');
+  const number=value=>typeof value==='number'?+value.toFixed(5):value;
+  return [material.type,material.color?.getHex(),number(material.roughness),number(material.metalness),material.emissive?.getHex(),number(material.emissiveIntensity),number(material.opacity),material.transparent,material.side,material.depthWrite,material.depthTest,material.blending,material.polygonOffset,material.polygonOffsetFactor,material.polygonOffsetUnits,material.alphaTest,material.flatShading,material.vertexColors,material.fog,number(material.envMapIntensity),number(material.clearcoat),number(material.transmission),textures].join('|');
+}
+export function createMinimalMerge31(rootsInput,{name='Gộp Tối thiểu',frame=null}={}){
+  const roots=[].concat(rootsInput).filter(Boolean),root=frame||roots[0];
+  let group=null,sources=[],active=false;
+  function build(){
+    root.updateMatrixWorld(true);
+    const inverse=root.matrixWorld.clone().invert(),buckets=new Map(),local=new THREE.Matrix4(),full=new THREE.Matrix4(),normalMatrix=new THREE.Matrix3(),v=new THREE.Vector3();
+    for(const base of roots)base.traverse(object=>{
+      if(!object.isMesh||!object.visible||object.userData.minimalMerged||object.userData.noMinimalMerge||Array.isArray(object.material)||object.isSkinnedMesh||object.isInstancedMesh&&object.instanceColor)return;
+      if(object.isInstancedMesh&&!object.count)return;
+      // InstancedMesh bị tắt bóng bằng onBeforeShadow (count = 0) vẫn có castShadow=true ⇒ tính theo bóng thực sự đang vẽ.
+      const suppressed=object.isInstancedMesh&&object.userData.densityCastShadow!==undefined&&object.onBeforeShadow!==object.userData.densityOnBeforeShadow,cast=object.castShadow&&!suppressed;
+      const key=`${materialMergeKey(object.material)}|${cast}|${object.receiveShadow}|${object.renderOrder}`;
+      if(!buckets.has(key))buckets.set(key,{material:object.material,cast,receive:object.receiveShadow,renderOrder:object.renderOrder,parts:[]});
+      buckets.get(key).parts.push(object);
+    });
+    group=new THREE.Group();group.name=`${root.name||'nhóm'} · ${name}`;group.userData.minimalMerged=true;group.visible=false;
+    for(const bucket of buckets.values()){
+      const arrays={position:[],normal:[],uv:[],uv1:[]};let hasUv=false,hasUv1=false,vertices=0;
+      for(const object of bucket.parts){
+        const geometry=object.geometry.index?object.geometry.toNonIndexed():object.geometry,attributes=geometry.attributes,count=attributes.position.count;
+        let normals=attributes.normal;if(!normals){const clone=geometry.clone();clone.computeVertexNormals();normals=clone.attributes.normal;}
+        const instances=object.isInstancedMesh?object.count:1;
+        for(let i=0;i<instances;i++){
+          if(object.isInstancedMesh)object.getMatrixAt(i,local);else local.identity();
+          full.multiplyMatrices(inverse,object.matrixWorld).multiply(local);normalMatrix.getNormalMatrix(full);
+          for(let j=0;j<count;j++){
+            v.fromBufferAttribute(attributes.position,j).applyMatrix4(full);arrays.position.push(v.x,v.y,v.z);
+            v.fromBufferAttribute(normals,j).applyMatrix3(normalMatrix).normalize();arrays.normal.push(v.x,v.y,v.z);
+            if(attributes.uv){arrays.uv.push(attributes.uv.getX(j),attributes.uv.getY(j));hasUv=true;}else arrays.uv.push(0,0);
+            if(attributes.uv1){arrays.uv1.push(attributes.uv1.getX(j),attributes.uv1.getY(j));hasUv1=true;}else if(attributes.uv)arrays.uv1.push(attributes.uv.getX(j),attributes.uv.getY(j));else arrays.uv1.push(0,0);
+          }
+          vertices+=count;
+        }
+        if(geometry!==object.geometry)geometry.dispose();
+      }
+      if(!vertices)continue;
+      const merged=new THREE.BufferGeometry();
+      merged.setAttribute('position',new THREE.Float32BufferAttribute(arrays.position,3));
+      merged.setAttribute('normal',new THREE.Float32BufferAttribute(arrays.normal,3));
+      if(hasUv)merged.setAttribute('uv',new THREE.Float32BufferAttribute(arrays.uv,2));
+      if(hasUv1)merged.setAttribute('uv1',new THREE.Float32BufferAttribute(arrays.uv1,2));
+      merged.computeBoundingSphere();merged.computeBoundingBox();
+      const mesh=new THREE.Mesh(merged,bucket.material);
+      mesh.name=`${group.name} · ${bucket.material.name||bucket.material.color?.getHexString?.()||group.children.length}`;
+      mesh.castShadow=bucket.cast;mesh.receiveShadow=bucket.receive;mesh.renderOrder=bucket.renderOrder;mesh.userData.minimalMerged=true;
+      group.add(mesh);sources.push(...bucket.parts);
+    }
+    root.add(group);
+  }
+  return {
+    setActive(on){
+      on=!!on;
+      if(on&&!group)build();
+      if(!group)return {active:false,meshes:0,sources:0};
+      if(on!==active){
+        active=on;group.visible=on;
+        for(const object of sources){
+          if(on){object.userData.minimalHidden=object.visible?1:0;object.visible=false;}
+          else if(object.userData.minimalHidden!==undefined){object.visible=!!object.userData.minimalHidden;delete object.userData.minimalHidden;}
+        }
+      }
+      return {active,meshes:group.children.length,sources:sources.length};
+    },
+    stats:()=>({built:!!group,active,meshes:group?.children.length||0,sources:sources.length})
+  };
+}
+
 const attachedToScene=object=>{for(let o=object;o;o=o.parent)if(o.isScene)return true;return false;};
 
 // Bộ điều phối mật độ + UI. Mọi nhóm là tùy chọn; thiếu nhóm nào thì nhóm đó không giảm (ghi trong status).
 export function createDensityController31({
   gate,buildingChunks,treeDensity,detailDensity=[],fixtureDensity=null,streetFurniture=null,traffic=null,vesselGroup=null,bridgeRails=[],
+  minimalMerges=[],vesselDetail=[],structureRoots=[],
   audit:auditInputs,ui={},params=new URLSearchParams(location.search),status={},getFps=()=>60,lowFps=31,storage=globalThis.localStorage
 }){
   const registry=gate.registry;
@@ -320,9 +482,13 @@ export function createDensityController31({
   // r186 vẫn dựng pipeline nhưng bỏ qua draw (getDrawParameters → null). Mesh thường thì tắt castShadow.
   const hideInShadow=function(){this.userData.densityShadowCount=this.count;this.count=0;};
   const restoreAfterShadow=function(){if(this.userData.densityShadowCount!==undefined){this.count=this.userData.densityShadowCount;this.userData.densityShadowCount=undefined;}};
-  function setMinorShadows(on){
+  function minorShadowList(){
     const list=[...(treeDensity?.meshes||[]),...detailDensity.flatMap(set=>set.meshes||[]),...(fixtureDensity?.meshes||[]),streetFurniture?.lampMesh,streetFurniture?.headMesh];
     for(const root of [traffic?.group,vesselGroup])root?.traverse(o=>{if(o.isMesh)list.push(o);});
+    return list;
+  }
+  function structureShadowList(){const list=[];for(const root of structureRoots)root?.traverse(o=>{if(o.isMesh)list.push(o);});return list;}
+  function setCastShadows(list,on){
     let toggled=0;
     for(const mesh of new Set(list.filter(Boolean))){
       const data=mesh.userData;
@@ -343,15 +509,18 @@ export function createDensityController31({
   const applyPostEffects=()=>{
     const ambientOcclusion=current&&typeof pipeline?.setAmbientOcclusion==='function'?pipeline.setAmbientOcclusion(current.ambientOcclusion):false;
     const bloom=current&&typeof pipeline?.setBloom==='function'?pipeline.setBloom(current.bloom):false;
+    if(current&&typeof pipeline?.setAmbientOcclusionScale==='function')pipeline.setAmbientOcclusionScale(current.ambientOcclusion?current.aoScale:AO_OFF_SCALE);
     if(status.render)Object.assign(status.render,{ambientOcclusionActive:ambientOcclusion,bloomActive:bloom});
     return {ambientOcclusion,bloom};
   };
 
+  const lodSets=[treeDensity,...detailDensity,fixtureDensity].filter(Boolean);
   let current=null,source='default',suggestion=null,lowFor=0,snoozeUntil=0,simulatedFps=null,clock=0;
   function apply(id,from){
     const level=levelById.get(id);if(!level)return false;
     const started=performance.now();
     const built=buildingChunks.setFraction(level.buildings);
+    for(const set of lodSets)set.setNearScale?.(level.lodScale);
     const trees=treeDensity?treeDensity.setFraction(level.trees):0;
     const details=detailDensity.reduce((s,set)=>s+set.setFraction(level.details),0);
     const fixtures=fixtureDensity?fixtureDensity.setFraction(level.fixtures):0;
@@ -359,7 +528,10 @@ export function createDensityController31({
     const vehicles=setVehicles(level.vehicles);
     let vessels=0;for(const mesh of vesselMeshes){mesh.count=Math.max(1,Math.ceil(mesh.userData.densityCapacity*level.vessels));vessels=Math.max(vessels,mesh.count);}
     for(const rail of bridgeRails){rail.visible=level.bridgeRails;level.bridgeRails?disabled.delete(rail):disabled.add(rail);}
-    const minorShadowMeshes=setMinorShadows(level.minorShadows);
+    for(const mesh of vesselDetail)mesh.visible=!level.simpleVessels;
+    const minorShadowMeshes=setCastShadows(minorShadowList(),level.minorShadows)+setCastShadows(structureShadowList(),level.structureShadows);
+    // Bản gộp tĩnh dựng sau khi cờ bóng đã đặt (khóa gộp có castShadow) và sau khi các mesh phụ (lan can) đã ẩn.
+    const staticMerges=minimalMerges.map(merge=>merge.setActive(level.mergedBuildings));
     current=level;source=from;
     const audit=runAudit();
     const applyMs=+(performance.now()-started).toFixed(2);
@@ -369,7 +541,7 @@ export function createDensityController31({
       counts:{buildings:built.buildings,buildingTriangles:built.triangles,trees,details,fixtures,lamps,vehicles:vehicles.shown,vessels},
       totals:{buildings:buildingChunks.total,trees:treeDensity?.total||0,lamps:streetFurniture?.instances?.().length||0,vehicles:vehicleTotal(),vessels:vesselMeshes[0]?.userData.densityCapacity||0},
       vehiclesVia:vehicles.via,
-      render:{minorShadows:level.minorShadows,minorShadowMeshes,ambientOcclusion:level.ambientOcclusion,ambientOcclusionActive:false,bloom:level.bloom,bloomActive:false,mergedBuildings:!!built.merged},
+      render:{minorShadows:level.minorShadows,structureShadows:level.structureShadows,minorShadowMeshes,staticMerges:staticMerges.map(stat=>stat.active?stat.meshes:0),ambientOcclusion:level.ambientOcclusion,ambientOcclusionActive:false,bloom:level.bloom,bloomActive:false,mergedBuildings:!!built.merged},
       audit:{complete:audit.complete,total:audit.total,visible:audit.visible,missing:audit.missing}
     });
     applyPostEffects();
@@ -431,6 +603,9 @@ export function createDensityController31({
     // QA: giả lập FPS đọc được (null = dùng FPS thật của adaptive quality).
     simulateFps:value=>{simulatedFps=value===null?null:Number(value);lowFor=0;},
     audit:runAudit,
+    // GTAO đã chạy thật (QA đo draw call/tam giác chỉ sau khi sẵn sàng; mức không dùng AO luôn trả true).
+    aoReady:()=>!current?.ambientOcclusion||!pipeline||pipeline.ambientOcclusion!==true||pipeline.ambientOcclusionReady!==false,
+    lod:()=>({trees:treeDensity?.lodState?.(),details:detailDensity.map(set=>set.lodState?.())}),
     // Pipeline hậu kỳ dựng sau bộ điều phối: gắn vào thì áp ngay cờ GTAO/bloom của mức hiện tại.
     attachPipeline:value=>{pipeline=value||null;return applyPostEffects();}
   };
@@ -438,8 +613,10 @@ export function createDensityController31({
   return {
     ...api,
     get level(){return current.id;},
-    update(dt){
+    update(dt,cameraPosition=null){
       clock+=dt;
+      // LOD theo khoảng cách (cây gần/xa, chi tiết 28 ngoài tầm nhìn): chỉ đụng ô đổi trạng thái.
+      if(cameraPosition){for(const set of lodSets)set.setLodCamera?.(cameraPosition);}
       // API xe của bước D có thể khởi tạo sau bộ điều phối hoặc được thay: đối tượng API đổi thì đồng bộ ngay mức hiện tại.
       if(trafficApiChanged())syncVehicles();
       const fps=simulatedFps??getFps();

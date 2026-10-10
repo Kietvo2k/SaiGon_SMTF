@@ -69,7 +69,22 @@ function asphaltProbe(net,roadCount,[x0,z0,x1,z1]){
   return (x,z,r=.3)=>[[0,0],[r,0],[-r,0],[0,r],[0,-r]].some(([dx,dz])=>hit(x+dx,z+dz));
 }
 
-export function createHeroCorridor30({scene,roads,nightLevel,roadNetwork=null,status={}}){
+// Bước G3: phép thử "cột đèn nằm trong (hoặc sát mép) footprint công trình" trong một bbox. Cột bán kính r: thử tâm + 4 điểm
+// trên chu vi trong polygon, hoặc tâm cách cạnh polygon < r. Footprint ẩn ở bước C (hiddenByCorrection) do app lọc trước.
+function footprintProbe(buildings,[x0,z0,x1,z1]){
+  const rings=[];
+  for(const building of buildings){
+    const ring=building.r?.[0];if(!ring?.length)continue;
+    let bx0=Infinity,bz0=Infinity,bx1=-Infinity,bz1=-Infinity;
+    for(const [x,z] of ring){bx0=Math.min(bx0,x);bz0=Math.min(bz0,z);bx1=Math.max(bx1,x);bz1=Math.max(bz1,z);}
+    if(bx1>=x0&&bx0<=x1&&bz1>=z0&&bz0<=z1)rings.push({ring,box:[bx0,bz0,bx1,bz1]});
+  }
+  const inside=(ring,x,z)=>{let c=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],b=ring[j];if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+  const edgeDistance=(ring,x,z)=>{let best=Infinity;for(let i=0;i<ring.length;i++){const a=ring[i],b=ring[(i+1)%ring.length],sx=b[0]-a[0],sz=b[1]-a[1],l=sx*sx+sz*sz,t=l?Math.max(0,Math.min(1,((x-a[0])*sx+(z-a[1])*sz)/l)):0;best=Math.min(best,Math.hypot(a[0]+sx*t-x,a[1]+sz*t-z));}return best;};
+  return (x,z,r=.3)=>rings.some(({ring,box})=>x>=box[0]-r&&x<=box[2]+r&&z>=box[1]-r&&z<=box[3]+r&&([[0,0],[r,0],[-r,0],[0,r],[0,-r]].some(([dx,dz])=>inside(ring,x+dx,z+dz))||edgeDistance(ring,x,z)<r));
+}
+
+export function createHeroCorridor30({scene,roads,nightLevel,roadNetwork=null,buildings=[],status={}}){
   const root=new THREE.Group();root.name='Hero Corridor 30B · sourced identity geometry + CC0 PBR public realm';root.visible=false;scene.add(root);
   const architecture=new THREE.Group();architecture.name='Sourced landmark envelopes';root.add(architecture);
   const publicRealm=new THREE.Group();publicRealm.name='OSM-aligned public realm proxy';root.add(publicRealm);
@@ -172,9 +187,17 @@ export function createHeroCorridor30({scene,roads,nightLevel,roadNetwork=null,st
   // chạm asphalt được dời tới ô trống gần nhất (ra mép ngoài cùng phía ≤ +6 m, trượt dọc ≤ 8 m) — giữ số lượng và phía.
   const corridorPts=corridorRoads.flatMap(road=>road.c),pad=30,xs=corridorPts.map(p=>p[0]),zs=corridorPts.map(p=>p[1]);
   const onAsphalt=roadNetwork&&corridorPts.length?asphaltProbe(roadNetwork,roads.length,[Math.min(...xs)-pad,Math.min(...zs)-pad,Math.max(...xs)+pad,Math.max(...zs)+pad]):()=>false;
+  // Bước G3: thêm né footprint công trình (trước đây chỉ né asphalt/giao lộ nên có cột bị dời vào trong nhà). Cột đứng trong
+  // footprint hoặc cách mép < 0,6 m bị coi là bị chặn.
+  const inBuilding=buildings.length&&corridorPts.length?footprintProbe(buildings,[Math.min(...xs)-pad,Math.min(...zs)-pad,Math.max(...xs)+pad,Math.max(...zs)+pad]):()=>false;
   // Ô ứng viên theo độ dời tăng dần: ra mép ngoài 7…13 m, rồi trượt dọc tim ≤ 8 m (mép giao lộ) — nhịp ~28 m giữ nguyên.
-  const lampSlots=[];for(let out=7;out<=13;out+=.25)for(let along=0;along<=8;along+=.5)for(const sign of along?[1,-1]:[1])lampSlots.push([out,along*sign]);
-  lampSlots.sort((a,b)=>(a[0]-7)+Math.abs(a[1])-((b[0]-7)+Math.abs(b[1]))||Math.abs(a[1])-Math.abs(b[1])||a[1]-b[1]||a[0]-b[0]);
+  // Nếu cả vùng đó bị asphalt/footprint chặn thì mở rộng tìm ra mép ngoài ≤ 20 m, trượt dọc ≤ 16 m (ô mở rộng xếp sau).
+  const lampSlots=[],extendedSlots=[];
+  for(let out=7;out<=20;out+=.25)for(let along=0;along<=16;along+=.5)for(const sign of along?[1,-1]:[1])(out<=13&&along<=8?lampSlots:extendedSlots).push([out,along*sign]);
+  const byDisplacement=(a,b)=>(a[0]-7)+Math.abs(a[1])-((b[0]-7)+Math.abs(b[1]))||Math.abs(a[1])-Math.abs(b[1])||a[1]-b[1]||a[0]-b[0];
+  lampSlots.sort(byDisplacement);extendedSlots.sort(byDisplacement);
+  lampSlots.push(...extendedSlots);
+  const blocked=(x,z)=>onAsphalt(x,z)||inBuilding(x,z,.6);
   let movedLamps=0,blockedLamps=0;
   for(const road of corridorRoads){
     for(let i=0;i<road.c.length-1;i++){
@@ -182,13 +205,15 @@ export function createHeroCorridor30({scene,roads,nightLevel,roadNetwork=null,st
       const count=Math.max(1,Math.floor(length/28)),nx=-dz/length,nz=dx/length;
       for(let n=0;n<count;n++){
         const t=(n+.5)/count,x=a[0]+dx*t,z=a[1]+dz*t,side=n%2?1:-1;
-        const ux=dx/length,uz=dz/length,best=lampSlots.find(([out,along])=>!onAsphalt(x+nx*out*side+ux*along,z+nz*out*side+uz*along));
-        const [out,along]=best||[7,0];if(!best)blockedLamps++;else if(out!==7||along!==0)movedLamps++;
+        const ux=dx/length,uz=dz/length,best=lampSlots.find(([out,along])=>!blocked(x+nx*out*side+ux*along,z+nz*out*side+uz*along));
+        // Không tìm được ô trống: bỏ cột này (còn hơn cắm cột vào lòng đường hoặc trong nhà); ghi vào status.lamps.dropped.
+        if(!best){blockedLamps++;continue;}
+        const [out,along]=best;if(out!==7||along!==0)movedLamps++;
         furniture.push({x:x+nx*out*side+ux*along,y:3.5,z:z+nz*out*side+uz*along,sx:.11,sy:7,sz:.11});
       }
     }
   }
-  status.lamps={count:furniture.length,moved:movedLamps,blocked:blockedLamps,rule:'±7 m theo tim; chạm asphalt/giao lộ 31 thì dời ít nhất: ra mép ngoài ≤ +6 m, trượt dọc ≤ 8 m'};
+  status.lamps={count:furniture.length,moved:movedLamps,dropped:blockedLamps,rule:'±7 m theo tim; chạm asphalt/giao lộ 31 hoặc footprint công trình thì dời ít nhất (ra mép ngoài ≤ +13 m, trượt dọc ≤ 16 m); không còn ô trống thì bỏ cột đó'};
   instanced(publicRealm,'Lam Son street lamps',new THREE.CylinderGeometry(1,1,1,9),dark,furniture);
   instanced(publicRealm,'Lam Son lamp glow',new THREE.SphereGeometry(1,10,8),warm,furniture.map(item=>({...item,y:7.15,sx:.34,sy:.34,sz:.34})));
 
@@ -198,7 +223,7 @@ export function createHeroCorridor30({scene,roads,nightLevel,roadNetwork=null,st
 
   Object.assign(status,{version:'30b',classification:'site photos on approximate open-map envelopes',active:false,loadedPhotos:0,loadedPbrMaps:0,landmarks:Object.values(FRAMES).map(frame=>({name:frame.name,buildingId:frame.buildingId,source:frame.source,author:frame.author,license:frame.license,surveyed:false})),roadSourceIds:[...roadIds],publicRealm:'OSM centerlines with illustrative widths and furniture; CC0 PBR surface maps',pbrSources:['Poly Haven / aerial_asphalt_01 / CC0','Poly Haven / concrete_pavement_02 / CC0'],pbrReceipt:'assets/pbr30/SOURCES.json',caravelleHeight:'24 storeys × 3.2 m display rule; not surveyed'});
   return{
-    root,
+    root,architecture,publicRealm,
     update(cameraDistance,night,active){
       const visible=!!active&&cameraDistance<1800;root.visible=visible;publicRealm.visible=visible&&cameraDistance<1050;
       warm.emissiveIntensity=.08+Math.max(0,Math.min(1,night||0))*3.2;

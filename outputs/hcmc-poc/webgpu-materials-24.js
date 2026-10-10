@@ -8,15 +8,15 @@ import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import {
   createAdaptiveQuality, createCityRenderPipeline, createCityShadowSystem,
   resolveVisualQuality, smoothDampScalar, smoothDampVector
-} from './city-visual-runtime-30.js?v=30b-31g';
+} from './city-visual-runtime-30.js?v=30b-31g3';
 import { createCityDetailRuntime } from './city-detail-runtime-28.js?v=30b-31e2';
-import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b-31g';
+import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b-31g3';
 import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
-import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=30b-31g';
+import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=30b-31j';
 import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=30b-31e2';
-import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=30b-31g';
-import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31g';
-import { createTraffic31 } from './city-traffic-31.js?v=30b-31d';
+import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=30b-31j';
+import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31g3';
+import { createTraffic31 } from './city-traffic-31.js?v=30b-31j';
 
 const D=window.CITY_DATA;
 const SM=window.SEMANTIC_MATERIALS_08||{records:{},directTaggedBuildings:0,directCoveragePercent:0};
@@ -558,7 +558,7 @@ for(const side of [-1,1]){
 
 // Bước C 31A: kết cấu cầu thủ tục (bản mặt dày, trụ, lan can — minh họa) và Bạch Đằng dựng lại trong runtime WebGPU.
 materialStatus.bridges={};
-createBridges31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,water:D.water,bachDang:window.BACH_DANG_FOOTBRIDGE,footbridges:window.BRIDGE_CORRECTIONS_31,status:materialStatus.bridges});
+createBridges31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,water:D.water,bachDang:window.BACH_DANG_FOOTBRIDGE,footbridges:window.BRIDGE_CORRECTIONS_31,nightLevel,status:materialStatus.bridges});
 materialStatus.bridges.baSon=baSonJoin;
 
 // Marina Central Tower: official 240 m / 55 floors, anchored to three current OSM building parts.
@@ -719,7 +719,7 @@ fixtures.castShadow=true;scene.add(fixtures);
 materialStatus.heroDetail={};
 const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))&&!building.hiddenByCorrection),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
 materialStatus.heroCorridor={};
-const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetwork,status:materialStatus.heroCorridor});
+const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetwork,buildings:renderBuildings.filter(building=>!building.hiddenByCorrection),status:materialStatus.heroCorridor});
 // Bước E2: cột đèn theo mép đường hợp nhất + vạch zebra (thay đèn đặt theo tim từng way của runtime 28).
 materialStatus.streetFurniture={};
 const streetFurniture=createStreetFurniture31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,data:window.STREET_FURNITURE_31,widths,nightLevel,status:materialStatus.streetFurniture});
@@ -730,11 +730,19 @@ const identityFacades=createIdentityFacades30({scene,status:materialStatus.ident
 materialStatus.density={};
 for(const group of [bridgeDeckGroup,bridgeSupportGroup,bridgeCableGroup,marinaDetail,grandMarinaDetail])mergeStaticMeshes31(group);
 const bridgesApi=materialStatus.bridges.api;
+const TREE_NEAR_M=1100;   // cây trong bán kính này (tính tới ô 500 m gần nhất) vẽ đầy đủ; xa hơn vẽ khối tán xa
+// Bán kính còn nhìn thấy được của chi tiết 28 (1 px ≈ 1172/d m ở FOV 42° × 900 px): lan can mái 0,95 m ~ 1 px ở 1 km.
+const DETAIL_VISIBLE_M={'Hero roof parapets · inferred':1000,'Hero facade ledges · inferred':500,'Hero podium cornices · inferred':700,'Street awnings · inferred':550,'Ground-floor lightbox signs · inferred':400,'Rooftop water and plant tanks · inferred':1000};
 const cityDensity=createDensityController31({
   gate:signatureGate,buildingChunks:cityChunks,
-  treeDensity:createInstanceDensity31({sources:[{mesh:trunks,key:'trunks'},{mesh:canopies,stride:3,key:'canopies'},{mesh:farCanopies,key:'farCanopies',inPlace:true}],items:trees,isProtected:(x,z)=>signatureGate.protects(x,z,'tree'),cellSize:1000,label:'Cây 31E'}),
-  detailDensity:(()=>{const list=[];cityDetailRuntime.root.traverse(o=>{if(o.isInstancedMesh)list.push(o);});return list.map(mesh=>createInstanceDensity31({sources:[{mesh}],items:instanceItems31(mesh),isProtected:(x,z)=>signatureGate.protects(x,z,'detail'),cellSize:1500}));})(),
+  // Bước G3: LOD theo khoảng cách tới camera (tính theo ô 500 m): cây trong bán kính 1 100 m vẽ thân + 3 tán, xa hơn vẽ khối tán
+  // xa (như 30B ở cameraDistance > 2500 nhưng áp theo từng ô); chi tiết 28 chỉ vẽ trong bán kính còn nhìn thấy được.
+  treeDensity:createInstanceDensity31({sources:[{mesh:trunks,key:'trunks'},{mesh:canopies,stride:3,key:'canopies'},{mesh:farCanopies,key:'farCanopies',far:true}],items:trees,isProtected:(x,z)=>signatureGate.protects(x,z,'tree'),cellSize:500,lod:{nearM:TREE_NEAR_M,protectM:2500,padM:30},label:'Cây 31E'}),
+  detailDensity:(()=>{const list=[];cityDetailRuntime.root.traverse(o=>{if(o.isInstancedMesh)list.push(o);});return list.map(mesh=>createInstanceDensity31({sources:[{mesh}],items:instanceItems31(mesh),isProtected:(x,z)=>signatureGate.protects(x,z,'detail'),cellSize:1000,lod:{nearM:DETAIL_VISIBLE_M[mesh.name]??900,padM:60}}));})(),
   fixtureDensity:createInstanceDensity31({sources:[{mesh:fixtures,key:'roofFixtures'}],items:roofFixtures,isProtected:(x,z)=>signatureGate.protects(x,z,'detail')}),
+  minimalMerges:[createMinimalMerge31(heroCorridor.architecture,{name:'Gộp Tối thiểu · kiến trúc hero'}),createMinimalMerge31(heroCorridor.publicRealm,{name:'Gộp Tối thiểu · không gian công cộng hero'}),createMinimalMerge31([bridgeGroup,marinaDetail,grandMarinaDetail,bridgesApi?.root],{name:'Gộp Tối thiểu · cầu và Marina',frame:scene})],
+  structureRoots:[bridgeGroup,marinaDetail,grandMarinaDetail,...(bridgesApi?.meshes||[])],
+  vesselDetail:[vesselCabins,vesselWindows,...vesselWakes],
   streetFurniture,traffic:{api:()=>materialStatus.traffic?.api??materialStatus.motion?.api,group:trafficGroup},vesselGroup,   // xe: API city-traffic-31 (bước D) gắn ở status hoặc motionStatus
   bridgeRails:(bridgesApi?.procedural||[]).filter(mesh=>/lan can/.test(mesh.name)),
   audit:{
@@ -928,11 +936,10 @@ function render(now){
   streetFurniture.update(cameraDistance,nightLevel.value);
   heroCorridor.update(cameraDistance,nightLevel.value,activeView==='corridor');
   identityFacades.update(cameraDistance,activeView);
-  const closeVegetation=cameraDistance<3400;trunks.visible=closeVegetation;canopies.visible=closeVegetation;farCanopies.visible=cameraDistance>2500;
   advanceUrbanMotion(now);
   if(now-lastLabel>120){lastLabel=now;updateLabels();}
   adaptiveQuality.update(dt,cameraDistance,pointerDown||!!desired);
-  cityDensity.update(dt);
+  cityDensity.update(dt,camera.position);
   renderer.info?.reset?.();
   if(visualPipeline&&!pipelineFault){try{visualPipeline.render();}catch(error){pipelineFault=true;materialStatus.visualRuntime.pipeline='direct fallback after compile failure';materialStatus.visualRuntime.error=String(error?.message||error);console.warn('City Visual Runtime 30 pipeline failed; switching to direct rendering.',error);renderer.render(scene,camera);}}
   else renderer.render(scene,camera);

@@ -141,7 +141,11 @@ async function inspect(page, hidden) {
     // --- Bước G: mọi InstancedMesh đèn/cột khác (đèn hero corridor 30 "Lam Son street lamps", …): 0 cột trong mặt
     //     asphalt hoặc polygon giao lộ. Cột hình trụ đơn vị tâm ở giữa: chân = y − sy/2 (không thấp hơn groundY).
     const otherPoles = meshesNamed(/street lamps|lamp poles|lamp posts|bollards/i).filter(m => m.isInstancedMesh && !poleMeshes.includes(m));
-    const otherBad = { onAsphalt: [], inJunction: [] };
+    const otherBad = { onAsphalt: [], inJunction: [], inBuilding: [] };
+    // Bước G3: footprint công trình đang được vẽ (trừ footprint ẩn ở bước C). Cột hero nằm trong footprint hoặc cách mép < 0,3 m là lỗi.
+    const hiddenIds = new Set((window.BRIDGE_CORRECTIONS_31?.buildings || []).filter(e => e.action === 'hide').map(e => Number(e.id)));
+    const footprints = D.buildings.filter(b => !hiddenIds.has(Number(b.id)) && b.r?.[0]?.length).map(b => { const ring = b.r[0]; let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity; for (const [x, z] of ring) { x0 = Math.min(x0, x); z0 = Math.min(z0, z); x1 = Math.max(x1, x); z1 = Math.max(z1, z); } return { id: b.id, ring, box: [x0, z0, x1, z1] }; });
+    const inFootprint = (x, z, r) => { for (const f of footprints) { if (x < f.box[0] - r || x > f.box[2] + r || z < f.box[1] - r || z > f.box[3] + r) continue; if (inPoly(f.ring, x, z)) return f.id; for (let i = 0; i < f.ring.length; i++) { const a = f.ring[i], b = f.ring[(i + 1) % f.ring.length]; if (segDist(x, z, a[0], a[1], b[0], b[1]) < r) return f.id; } } return null; };
     out.otherLampMeshes = otherPoles.map(m => ({ name: m.name, count: m.count }));
     for (const mesh of otherPoles) {
       const m = mesh.instanceMatrix.array, e = mesh.matrixWorld.elements;
@@ -152,6 +156,7 @@ async function inspect(page, hidden) {
           if (asphaltYs(lamp.x + dx, lamp.z + dz).some(y => Math.abs(y - lamp.y) < 1)) hit = true;
         if (hit) push(otherBad.onAsphalt, lamp, { mesh: mesh.name, i });
         if (nearestJunction(lamp.x, lamp.z) < limits.POLE_RADIUS_M) push(otherBad.inJunction, lamp, { mesh: mesh.name, i });
+        const fp = inFootprint(lamp.x, lamp.z, limits.POLE_RADIUS_M); if (fp !== null) push(otherBad.inBuilding, lamp, { mesh: mesh.name, i, building: fp });
       }
     }
     out.otherLampBad = Object.fromEntries(Object.entries(otherBad).map(([k, v]) => [k, { count: v.count || 0, samples: v.slice() }]));
@@ -305,6 +310,10 @@ async function runBackend(browser, backend, hidden) {
         assert(r.otherLampMeshes.some(m => m.name === 'Lam Son street lamps' && m.count > 0), JSON.stringify(r.otherLampMeshes));
         assert.equal(r.otherLampBad.onAsphalt.count, 0, JSON.stringify(r.otherLampBad.onAsphalt));
         assert.equal(r.otherLampBad.inJunction.count, 0, JSON.stringify(r.otherLampBad.inJunction));
+      });
+      check(tag + 'đèn hero corridor (Lam Son street lamps): 0 cột trong footprint công trình (hoặc cách mép < bán kính cột)', () => {
+        const lamp = r.otherLampMeshes.find(m => m.name === 'Lam Son street lamps'); assert(lamp && lamp.count >= 30, JSON.stringify(r.otherLampMeshes));
+        assert.equal(r.otherLampBad.inBuilding.count, 0, JSON.stringify(r.otherLampBad.inBuilding));
       });
       check(tag + '0 cột đèn trong vòng xoay', () => { assert(r.roundabouts >= 5, `chỉ ${r.roundabouts} vòng xoay`); assert.equal(r.bad.inRoundabout.count, 0, JSON.stringify(r.bad.inRoundabout)); });
       check(tag + '0 cột đèn trên cầu hoặc xuyên mặt cầu', () => assert.equal(r.bad.onBridge.count, 0, JSON.stringify(r.bad.onBridge)));

@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import {
   abs, bool, builtinAOContext, clamp, dot, emissive, float, fract, length, max, mix,
-  mrt, normalView, output, pass, screenSize, screenUV, sin, smoothstep, time,
+  mrt, normalView, output, pass, screenSize, screenUV, sin, smoothstep, time, uniform,
   vec2, vec3, vec4, velocity
 } from 'three/tsl';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
@@ -100,6 +100,8 @@ function createFallbackDepthPipeline(renderer, scene, camera, quality) {
   };
 }
 
+const WARM_FRAMES = 4;   // số khung đầu luôn chạy đủ mọi pass (pipeline dựng sẵn) kể cả khi vào thẳng Tối thiểu
+
 export function createCityRenderPipeline(renderer, scene, camera, quality = PROFILES.presentation) {
   if (!quality.gtao && !quality.temporalAA) {
     const fallback = createFallbackDepthPipeline(renderer, scene, camera, quality);
@@ -108,6 +110,8 @@ export function createCityRenderPipeline(renderer, scene, camera, quality = PROF
       profile: quality,
       effects: fallback.effects,
       ambientOcclusion: false,
+      ambientOcclusionReady: false,
+      setAmbientOcclusionScale: () => false,
       setAmbientOcclusion: () => false,
       bloom: false,
       setBloom: () => false,
@@ -135,7 +139,9 @@ export function createCityRenderPipeline(renderer, scene, camera, quality = PROF
 
   const scenePass = pass(scene, camera);
   scenePass.setMRT(mrt({ output, velocity, emissive }));
-  if (aoPass) scenePass.contextNode = builtinAOContext(aoPass.getTextureNode().sample(screenUV).r);
+  // aoStrength = 0 ⇒ mức AO luôn là 1 (không che): tắt GTAO chỉ là đổi giá trị uniform + bỏ qua hai pass, KHÔNG đổi graph.
+  const aoStrength = uniform(1);
+  if (aoPass) scenePass.contextNode = builtinAOContext(mix(float(1), aoPass.getTextureNode().sample(screenUV).r, aoStrength));
 
   const sceneColor = scenePass.getTextureNode('output');
   const sceneDepth = scenePass.getTextureNode('depth');
@@ -164,42 +170,66 @@ export function createCityRenderPipeline(renderer, scene, camera, quality = PROF
   const pipeline = new THREE.RenderPipeline(renderer);
   pipeline.outputNode = composed;
 
-  // Mật độ "Tối thiểu" (bước G 31A) tắt GTAO mà không dựng lại graph: pass pháp tuyến chuyển sang camera bản sao
-  // không bật layer nào → không vẽ vật thể (bớt một lượt draw call cho mọi mesh), độ sâu trống nên AO = 1. Camera
-  // bản sao có danh sách render riêng (dùng chung camera chính với layers khác làm hỏng render list của three r186).
-  // Không biên dịch lại: graph, vật liệu và render target giữ nguyên.
-  // Bật lại: mesh vào khung nhìn lúc AO tắt chưa có pipeline pass pháp tuyến → biên dịch bất đồng bộ trước
-  // (Renderer.compileAsync, phần đồng bộ chỉ chụp render context của pass) rồi mới chuyển camera, tránh khung đứng hình.
-  // Tạm dừng hiệu ứng hậu kỳ (GTAO, bloom) không đổi graph: chạy thêm PAUSE_FRAMES khung để texture ra giá trị trung
-  // tính (AO = 1 vì độ sâu trống; bloom = 0 vì strength 0) rồi thay updateBefore bằng hàm rỗng ⇒ không vẽ quad nào.
+  // Mật độ "Tối thiểu" (bước G 31A) tắt GTAO và bloom mà KHÔNG dựng lại graph hay pipeline:
+  // - GTAO: aoStrength = 0 làm mức AO trong pass cảnh luôn bằng 1; pass GTAO vẫn chạy ở độ phân giải rất thấp (xem bên dưới); pass pháp
+  //   tuyến chỉ vẽ một tam giác "mồi" (renderObject tạm thời bỏ qua mọi vật thể khác) ⇒ không còn draw call pháp tuyến cho
+  //   cảnh. Phải giữ pass GTAO chạy: pass pháp tuyến được kích hoạt từ lúc quad GTAO dựng render object (đã đo bằng log
+  //   renderer.render) và bóng CSM được vẽ lồng bên trong pass pháp tuyến (MRT không velocity). Bỏ pass GTAO/pháp tuyến thì bóng
+  //   chuyển sang pass cảnh (MRT có velocity ⇒ vật liệu bóng khác) và three dựng lại ~130 pipeline bóng mỗi lần đổi chế độ ở
+  //   một góc nhìn chưa ghé (khung đứng hình 0,3–1,2 s; bản 30B+G: ~1,2 s). Camera, layer, graph, render target giữ nguyên nên
+  //   vào/ra Tối thiểu không dựng lại pipeline nào. Bật lại: biên dịch bất đồng bộ pass pháp tuyến cho khung nhìn hiện tại
+  //   (compileAsync) rồi mới vẽ lại toàn cảnh, chạy 2 khung cho texture AO mới và đặt aoStrength = 1 (không hiện AO cũ).
+  // - Bloom: strength = 0, chạy thêm PAUSE_FRAMES khung để texture về 0 rồi bỏ qua pass.
+  // - WARM_FRAMES khung đầu luôn chạy đủ mọi pass (kể cả khi vào thẳng Tối thiểu) để pipeline được dựng sẵn.
   const PAUSE_FRAMES = 2, skipUpdate = () => {};
-  const pausable = node => node && { node, pending: 0 };
-  const pauseEffect = (effect, paused) => {
-    if (!effect) return;
-    if (paused) effect.pending = PAUSE_FRAMES;
-    else { effect.pending = 0; delete effect.node.updateBefore; }
-  };
-  const aoEffect = pausable(aoPass), bloomEffect = pausable(bloomPass);
   const bloomStrength = bloomPass ? bloomPass.strength.value : 0;
-  let bloomEnabled = !!bloomPass;
+  let bloomEnabled = !!bloomPass, bloomPending = 0;
   const setBloom = enabled => {
     if (!bloomPass) return false;
     bloomEnabled = !!enabled;
     bloomPass.strength.value = bloomEnabled ? bloomStrength : 0;
-    pauseEffect(bloomEffect, !bloomEnabled);
+    if (bloomEnabled) { bloomPending = 0; delete bloomPass.updateBefore; } else bloomPending = PAUSE_FRAMES;
     return bloomEnabled;
   };
-  const aoCamera = camera.clone();
-  let aoEnabled = !!aoPass, aoToken = 0;
-  const useMainCamera = token => { if (token === aoToken && aoEnabled) normalPass.camera = camera; };
+  const sentinelGeometry = new THREE.BufferGeometry();
+  sentinelGeometry.setAttribute('position', new THREE.Float32BufferAttribute([0, -50, 0, 0.001, -50, 0, 0, -50, 0.001], 3));
+  sentinelGeometry.setAttribute('normal', new THREE.Float32BufferAttribute([0, 1, 0, 0, 1, 0, 0, 1, 0], 3));
+  const sentinel = new THREE.Mesh(sentinelGeometry, new THREE.MeshStandardNodeMaterial({ color: '#000000' }));
+  sentinel.name = 'GTAO · tam giác mồi (giữ bóng CSM ở pass pháp tuyến khi AO tắt)';
+  sentinel.frustumCulled = false; sentinel.castShadow = false; sentinel.receiveShadow = true; sentinel.visible = false;
+  scene.add(sentinel);
+  let normalHostOnly = false;
+  let warm = WARM_FRAMES;
+  if (aoPass) {
+    const hostOnly = (object, ...args) => { if (object === sentinel) renderer.renderObject(object, ...args); };
+    const proto = Object.getPrototypeOf(normalPass).updateBefore;
+    normalPass.updateBefore = function (frame) {
+      if (!normalHostOnly || warm > 0) return proto.call(this, frame);
+      const previous = renderer.getRenderObjectFunction();
+      renderer.setRenderObjectFunction(hostOnly);
+      try { return proto.call(this, frame); } finally { renderer.setRenderObjectFunction(previous); }
+    };
+  }
+  // Độ phân giải GTAO theo mức (hệ số nhân gtaoScale): resolutionScale đổi không dựng lại shader (khác `samples` được nướng
+  // vào shader nên đổi sẽ biên dịch lại), chỉ cấp lại render target AO một lần mỗi lần đổi.
+  let aoScaleFactor = 1;
+  const setAmbientOcclusionScale = factor => {
+    if (!aoPass) return false;
+    const next = Math.max(.08, Math.min(1, +factor || 1));
+    if (Math.abs(next - aoScaleFactor) < 1e-6) return true;
+    aoScaleFactor = next; aoPass.resolutionScale = quality.gtaoScale * next;
+    return true;
+  };
+  let aoEnabled = !!aoPass, aoRestore = 0, aoResuming = false, aoToken = 0;
   const setAmbientOcclusion = enabled => {
     if (!aoPass) return false;
     const next = !!enabled;
     if (next === aoEnabled) return aoEnabled;
     aoEnabled = next;
     const token = ++aoToken;
-    if (!aoEnabled) { normalPass.camera = aoCamera; pauseEffect(aoEffect, true); return false; }
-    pauseEffect(aoEffect, false);
+    if (!aoEnabled) { aoStrength.value = 0; aoRestore = 0; aoResuming = false; normalHostOnly = true; sentinel.visible = true; return false; }
+    aoResuming = true;
+    const resume = () => { if (token !== aoToken || !aoEnabled) return; aoResuming = false; normalHostOnly = false; sentinel.visible = false; aoRestore = 2; };
     let compiling = null;
     const target = renderer.getRenderTarget(), activeMrt = renderer.getMRT();
     try {
@@ -207,8 +237,7 @@ export function createCityRenderPipeline(renderer, scene, camera, quality = PROF
       compiling = renderer.compileAsync(scene, camera);
     } catch (error) { console.warn('GTAO: biên dịch trước pass pháp tuyến lỗi, bật trực tiếp.', error); }
     finally { renderer.setRenderTarget(target); renderer.setMRT(activeMrt); }
-    if (compiling) compiling.then(() => useMainCamera(token), () => useMainCamera(token));
-    else useMainCamera(token);
+    if (compiling) compiling.then(resume, resume); else resume();
     return true;
   };
   const effects = [
@@ -224,14 +253,19 @@ export function createCityRenderPipeline(renderer, scene, camera, quality = PROF
     effects,
     get ambientOcclusion() { return aoEnabled; },
     setAmbientOcclusion,
+    // true khi GTAO đã chạy thật (không đang biên dịch bất đồng bộ để bật lại, không còn đếm khung chờ)
+    setAmbientOcclusionScale,
+    get ambientOcclusionScale() { return aoScaleFactor; },
+    get ambientOcclusionReady() { return aoEnabled && !aoResuming && aoRestore === 0; },
     get bloom() { return bloomEnabled; },
     setBloom,
     render: () => {
-      if (aoPass && normalPass.camera === aoCamera) { aoCamera.copy(camera); aoCamera.layers.disableAll(); }
+      if (warm > 0) warm--;
       pipeline.render();
-      for (const effect of [aoEffect, bloomEffect]) if (effect?.pending && --effect.pending === 0) effect.node.updateBefore = skipUpdate;
+      if (aoPass && aoEnabled && aoRestore > 0 && --aoRestore === 0) aoStrength.value = 1;
+      if (bloomPass && bloomPending > 0 && warm === 0 && --bloomPending === 0) bloomPass.updateBefore = skipUpdate;
     },
-    dispose: () => pipeline.dispose()
+    dispose: () => { sentinel.removeFromParent(); sentinelGeometry.dispose(); sentinel.material.dispose(); pipeline.dispose(); }
   };
 }
 

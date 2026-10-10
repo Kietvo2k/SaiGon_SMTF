@@ -24,10 +24,13 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const LEVELS = ['full', 'balanced', 'light', 'minimal'];
 const LABELS = ['Đầy đủ', 'Cân bằng', 'Nhẹ', 'Tối thiểu'];
 const MIN_REDUCTION = .6;                 // Tối thiểu giảm ≥ 60 % cả tam giác lẫn draw call so với Đầy đủ (bước G)
-// WebGL 2 fallback: không có GTAO/TRAA/bloom, bóng một tầng, Đầy đủ chỉ ~95–136 draw call; sàn ~51 draw call cảnh là
-// mặt đường (9 vật liệu), nền, cầu/Marina signature và xe/tàu ⇒ 60 % không đạt được nếu không ẩn signature. QA giữ
-// mức giảm đo được tối thiểu 35 % (đo bước G: overview 39 %, ảnh 02 57 %).
-const MIN_DRAW_REDUCTION = { webgpu: MIN_REDUCTION, webgl: .35 };
+// Bước G3: cả hai backend phải đạt đúng đặc tả (≥ 60 % ở MỌI góc chuẩn). Không còn ngưỡng nới cho WebGL: Tối thiểu gộp
+// kết cấu hero/signature tĩnh theo vật liệu, gộp cây xa thành một draw call, tắt bóng nhóm phụ và bóng cầu/Marina.
+const MIN_DRAW_REDUCTION = { webgpu: MIN_REDUCTION, webgl: MIN_REDUCTION };
+const VIEWS = ['overview', 'bason', 'boulevard', 'corridor', 'river', 'materials'];
+// Cân bằng phải giảm thật draw call (tỉ lệ tối đa so với Đầy đủ): overview ít bóng phụ nên nới hơn các góc cận cảnh.
+const BALANCED_DC_MAX = { overview: .95, default: .8 };
+const BUDGET_VIEW = { full: 9.1e6, balanced: 5e6, light: 5e6, minimal: 3e6 };  // đặc tả mục 5.10, kiểm ở cả 6 góc, cả 2 backend
 // Draw call median 30B (research/baseline-30b/baseline-30b-metrics.json): overview 289; cận cảnh 30B 431–455 (pose02 lấy 431).
 const DRAW_CALLS_30B = { overview: 289, pose02: 431 };
 const BUDGET_02 = { full: 9.1e6, balanced: 5e6, minimal: 3e6 };  // tổng renderer.info ở camera ảnh 02 (WebGPU presentation)
@@ -107,6 +110,23 @@ async function openControls(page) {
   await sleep(350);
 }
 
+// Chờ cảnh yên (không khung nào > 80 ms trong quietMs): chuyển góc nhìn/pose làm three dựng pipeline cho vật thể mới vào
+// khung, việc đó không thuộc phép đo đổi mức mật độ.
+async function waitSmooth(page, quietMs = 1500, limitMs = 25000) {
+  return page.evaluate(async ([quiet, limit]) => new Promise(resolve => {
+    const t0 = performance.now(); let last = t0, calm = t0;
+    const tick = now => { const dt = now - last; last = now; if (dt > 80) calm = now; if (now - calm > quiet || now - t0 > limit) resolve(Math.round(now - t0)); else requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }), [quietMs, limitMs]);
+}
+
+// Đổi góc nhìn: dock #cityNav có 4 góc; river/materials chỉ có trong bảng điều khiển.
+async function gotoView(page, view) {
+  const dock = page.locator(`#cityNav [data-view="${view}"]`);
+  if (await dock.count()) { await dock.click(); return; }
+  await openControls(page); await page.click(`#controlBody [data-view="${view}"]`); await page.click('#collapse');
+}
+
 // Trạng thái đọc độc lập từ mesh đã dựng.
 async function sceneState(page) {
   return page.evaluate(async () => {
@@ -138,9 +158,9 @@ async function sceneState(page) {
     // Cây: vị trí từ instanceMatrix chunk thân cây.
     const cells = new Map(); let treesAll = 0, treesShown = 0, protAll = 0, protShown = 0;
     for (const mesh of treeChunks) {
-      const m = mesh.instanceMatrix.array, total = mesh.instanceMatrix.count;
+      const m = mesh.instanceMatrix.array, total = mesh.instanceMatrix.count, drawn = mesh.userData.densityCount ?? mesh.count;   // densityCount = số mục mức mật độ cho phép (count thật còn phụ thuộc LOD khoảng cách)
       for (let i = 0; i < total; i++) {
-        const x = m[i * 16 + 12], z = m[i * 16 + 14], shown = i < mesh.count, key = Math.floor(x / 300) + ',' + Math.floor(z / 300);
+        const x = m[i * 16 + 12], z = m[i * 16 + 14], shown = i < drawn, key = Math.floor(x / 300) + ',' + Math.floor(z / 300);
         const c = cells.get(key) || { all: 0, shown: 0 }; c.all++; if (shown) c.shown++; cells.set(key, c);
         treesAll++; if (shown) treesShown++;
         if (registry.inProtectedZone(x, z, 'tree')) { protAll++; if (shown) protShown++; }
@@ -160,6 +180,8 @@ async function sceneState(page) {
 // Median renderer.info trên ~40 khung sau khi cảnh ổn định.
 async function measureInfo(page, settleMs = 1600) {
   await sleep(settleMs);
+  // GTAO bật lại bằng biên dịch bất đồng bộ (vài giây trên máy chậm): đợi sẵn sàng rồi mới đo.
+  await page.waitForFunction(() => window.webgpuMaterials24.density.api.aoReady?.() !== false, null, { timeout: 60000, polling: 200 });
   return page.evaluate(async () => {
     window.__probe.frames.length = 0;
     await new Promise(resolve => { const tick = () => window.__probe.frames.length >= 40 ? resolve() : requestAnimationFrame(tick); requestAnimationFrame(tick); });
@@ -175,7 +197,7 @@ async function clickLevel(page, level) {
   return page.evaluate(async level => {
     const button = document.querySelector(`#controlBody [data-density="${level}"]`);
     const times = []; let firstApplied = null, stop = false;
-    const t0 = performance.now();
+    const t0 = performance.now(), p0 = window.__probe.pipelineLabels.length;
     // Mốc rAF (timestamp) là đầu khung, có thể sớm hơn t0 → dùng performance.now() trong callback.
     const tick = () => { const now = performance.now(); times.push(now); if (firstApplied === null && window.webgpuMaterials24.density.level === level) firstApplied = now; if (!stop) requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
@@ -183,7 +205,8 @@ async function clickLevel(page, level) {
     await new Promise(resolve => setTimeout(resolve, 1200)); stop = true;
     // Gồm cả khoảng click → khung đầu tiên (khung đứng hình ngay sau click là điều người dùng thấy).
     const deltas = [t0, ...times].slice(1).map((t, i) => t - [t0, ...times][i]);
-    return { switchMs: firstApplied === null ? null : firstApplied - t0, maxFrameMs: Math.max(...deltas, 0), applyMs: window.webgpuMaterials24.density.applyMs };
+    const created = {}; for (const label of window.__probe.pipelineLabels.slice(p0)) { const key = label.replace(/_\d+$/, ''); created[key] = (created[key] || 0) + 1; }
+    return { switchMs: firstApplied === null ? null : firstApplied - t0, maxFrameMs: Math.max(...deltas, 0), applyMs: window.webgpuMaterials24.density.applyMs, pipelines: created };
   }, level);
 }
 
@@ -218,7 +241,7 @@ async function runBackend(browser, backend) {
         await page.click(`#cityNav [data-view="${POSE_02.base}"]`); await sleep(2600);
         await page.evaluate(pose => { window.__probe.pose = pose; }, POSE_02);
         // Khung đầu ở pose mới biên dịch pipeline (không do mật độ) → chờ ổn định trước khi đo đổi mức.
-        await sleep(3000); await measureInfo(page, 0);
+        await sleep(3000); await measureInfo(page, 0); await waitSmooth(page);
       }
       for (const level of LEVELS) {
         const timing = await clickLevel(page, level);
@@ -245,6 +268,23 @@ async function runBackend(browser, backend) {
       }
     }
     await page.evaluate(() => { window.__probe.pose = null; });
+    // Bước G3: tam giác/draw call của 4 mức ở cả 6 góc chuẩn (renderer.info, quality=presentation, median 40 khung) +
+    // trạng thái LOD cây ở góc corridor (cây trong vùng bảo vệ phải luôn vẽ bản đầy đủ khi camera còn trong protectM).
+    out.views = {}; out.lodProbe = {};
+    for (const view of VIEWS) {
+      await gotoView(page, view); await sleep(2000); await waitSmooth(page);
+      for (const level of LEVELS) {
+        await page.evaluate(l => window.webgpuMaterials24.density.api.setLevel(l), level);
+        out.views[`${view}:${level}`] = await measureInfo(page, 1500);
+      }
+      await page.evaluate(() => window.webgpuMaterials24.density.api.setLevel('full')); await sleep(900);
+      out.lodProbe[view] = await page.evaluate(() => {
+        const trunks = []; for (const s of window.__probe.scenes) s.traverse(o => { if (o.isInstancedMesh && o.userData?.densityInstances?.source === 'trunks') trunks.push(o); });
+        const prot = trunks.filter(m => /@protected/.test(m.name)), regular = trunks.filter(m => !/@protected/.test(m.name));
+        return { protectedChunks: prot.length, protectedTotal: prot.reduce((n, m) => n + m.instanceMatrix.count, 0), protectedDrawn: prot.reduce((n, m) => n + m.count, 0),
+          regularTotal: regular.reduce((n, m) => n + m.instanceMatrix.count, 0), regularDrawn: regular.reduce((n, m) => n + m.count, 0), lod: window.webgpuMaterials24.density.api.lod?.().trees ?? { nearCells: 0, farCells: 0, cells: 0 } };
+      });
+    }
     // Chọn bằng chuột vẫn chạy: click tâm màn hình ở Nguyễn Huệ (mức Đầy đủ) mở bảng công trình.
     await clickLevel(page, 'full');
     await page.click('#cityNav [data-view="boulevard"]'); await sleep(2600);
@@ -449,8 +489,40 @@ async function runBackend(browser, backend) {
           assert(calls[0] <= DRAW_CALLS_30B[camera], `Đầy đủ ${calls[0]} > 30B ${DRAW_CALLS_30B[camera]}`);
         });
       }
-      if (backend === 'webgpu') check(tag + 'ngân sách tam giác ở camera ảnh 02 (gồm pass bóng): Đầy đủ ≤ 9,1M, Cân bằng ≤ 5M, Tối thiểu ≤ 3M', () => {
+      check(tag + 'ngân sách tam giác ở camera ảnh 02 (gồm pass bóng): Đầy đủ ≤ 9,1M, Cân bằng ≤ 5M, Tối thiểu ≤ 3M', () => {
         for (const [level, budget] of Object.entries(BUDGET_02)) assert(L[`pose02:${level}`].info.triangles <= budget, `${level}: ${L[`pose02:${level}`].info.triangles} > ${budget}`);
+      });
+      const V = r.views;
+      check(tag + 'TC10: ngân sách tam giác ở CẢ 6 góc chuẩn × 4 mức (Đầy đủ ≤ 9,1M, Cân bằng ≤ 5M, Nhẹ ≤ 5M, Tối thiểu ≤ 3M)', () => {
+        const bad = []; for (const view of VIEWS) for (const level of LEVELS) { const t = V[`${view}:${level}`].triangles; if (t > BUDGET_VIEW[level]) bad.push(`${view}/${level}: ${(t / 1e6).toFixed(2)}M > ${BUDGET_VIEW[level] / 1e6}M`); }
+        assert.deepEqual(bad, []);
+      });
+      check(tag + `TC4: Tối thiểu giảm ≥ ${MIN_REDUCTION * 100}% tam giác VÀ draw call so với Đầy đủ ở CẢ 6 góc chuẩn`, () => {
+        const bad = [], dr = MIN_DRAW_REDUCTION[backend] ?? MIN_REDUCTION;
+        for (const view of VIEWS) {
+          const f = V[`${view}:full`], m = V[`${view}:minimal`];
+          if (m.triangles > f.triangles * (1 - MIN_REDUCTION)) bad.push(`${view} tam giác ${m.triangles}/${f.triangles}`);
+          if (m.drawCalls > f.drawCalls * (1 - dr)) bad.push(`${view} draw call ${m.drawCalls}/${f.drawCalls} = ${(m.drawCalls / f.drawCalls).toFixed(3)}`);
+        }
+        assert.deepEqual(bad, []);
+      });
+      check(tag + 'TC5: Cân bằng giảm draw call thật (overview ≤ 0,95 và các góc cận cảnh ≤ 0,8 so với Đầy đủ); draw call không tăng khi hạ mức ở 6 góc', () => {
+        const bad = [];
+        for (const view of VIEWS) {
+          const calls = LEVELS.map(level => V[`${view}:${level}`].drawCalls), max = BALANCED_DC_MAX[view] ?? BALANCED_DC_MAX.default;
+          if (calls[1] > calls[0] * max) bad.push(`${view}: Cân bằng ${calls[1]}/${calls[0]} = ${(calls[1] / calls[0]).toFixed(3)} > ${max}`);
+          for (let i = 1; i < calls.length; i++) if (calls[i] > calls[i - 1]) bad.push(`${view}: ${LEVELS[i]} ${calls[i]} > ${LEVELS[i - 1]} ${calls[i - 1]}`);
+        }
+        assert.deepEqual(bad, []);
+      });
+      check(tag + 'LOD cây theo khoảng cách: cây trong vùng bảo vệ luôn đủ 100 % ở mức Đầy đủ; có cả ô gần lẫn ô xa ở góc cận cảnh', () => {
+        for (const view of VIEWS) {
+          const p = r.lodProbe[view]; assert(p.protectedChunks >= 1 && p.protectedTotal > 0, `${view}: ${JSON.stringify(p)}`);
+          assert(p.protectedDrawn === p.protectedTotal || p.lod.farCells > 0, `${view}: ${JSON.stringify(p)}`);
+        }
+        const c = r.lodProbe.corridor; assert.equal(c.protectedDrawn, c.protectedTotal, `corridor: ${JSON.stringify(c)}`);
+        const b = r.lodProbe.bason; assert(b.lod.nearCells > 0 && b.lod.farCells > 0, `bason: ${JSON.stringify(b)}`);
+        assert(b.regularDrawn < b.regularTotal, `bason: LOD chưa giảm cây xa ${JSON.stringify(b)}`);
       });
       check(tag + `đổi mức ≤ ${SWITCH_MS} ms (click → khung đã áp dụng), khung dài nhất ≤ ${MAX_FRAME_MS} ms`, () => {
         for (const [key, v] of Object.entries(L)) {
@@ -508,7 +580,7 @@ async function runBackend(browser, backend) {
     await browser.close();
     const summary = Object.fromEntries(Object.entries(report).map(([k, r]) => [k, {
       levels: Object.fromEntries(Object.entries(r.levels || {}).map(([key, v]) => [key, { info: v.info, timing: v.timing, counts: v.state?.counts, audit: v.state?.audit && { complete: v.state.audit.complete, total: v.state.audit.total, visible: v.state.audit.visible }, shown: v.state?.shown, expected: v.state?.expected, cityTriangles: v.state?.triangles, cityMeshes: v.state?.cityMeshes, trees: v.state && { all: v.state.trees.all, shown: v.state.trees.shown, protAll: v.state.trees.protAll, protShown: v.state.trees.protShown, chunks: v.state.trees.chunks } }])),
-      keyboard: r.keyboard, pick: r.pick, minimalPick: r.minimalPick, cycle: r.cycle, suggest: r.suggest, reload: r.reload, urlWins: r.urlWins, urlAfterView: r.urlAfterView, countsText: r.countsText, traffic: r.traffic, errors: r.errors
+      views: r.views, lodProbe: r.lodProbe, keyboard: r.keyboard, pick: r.pick, minimalPick: r.minimalPick, cycle: r.cycle, suggest: r.suggest, reload: r.reload, urlWins: r.urlWins, urlAfterView: r.urlAfterView, countsText: r.countsText, traffic: r.traffic, errors: r.errors
     }]));
     console.log(JSON.stringify({ suite: 'density-31 · E/F', passed: checks.length, failed: failures.length, checks, failures, summary }, null, 1));
     if (failures.length) process.exitCode = 1;
