@@ -175,15 +175,31 @@ export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,mate
     mesh.userData.densityChunk={cell,region:null,buildings:Int32Array.from(ids),vertexEnds:Int32Array.from(ends),ranks:new Float32Array(ids.length),signatureCount:ids.length};
     group.add(mesh);return mesh;
   };
+  // Bước H · T3: bản gộp theo khu (mergedByRegion) và bản gộp signature ngoài khu (sigOutside) là geometry riêng
+  // (~12 float/đỉnh, mỗi khu một bản) — giữ tối đa 2 bản (khu hiện tại + khu trước, LRU) để đi qua cả 4 khu ở mức Tối
+  // thiểu không tăng bộ nhớ theo số khu. Bản bị loại thì gỡ khỏi group + geometry.dispose(); quay lại khu thì dựng lại
+  // (cùng vật liệu/tố chất thuộc tính nên pipeline đã có sẵn, không biên dịch lại — QA region đo maxFrameMs ≤ 300 ms).
+  const REGION_MERGE_CACHE=2;
+  const regionCachePut=(map,key,build)=>{
+    if(map.has(key)){const mesh=map.get(key);map.delete(key);map.set(key,mesh);return mesh;}
+    const mesh=build();
+    map.set(key,mesh);
+    while(map.size>REGION_MERGE_CACHE){
+      const oldest=map.keys().next().value,old=map.get(oldest);
+      map.delete(oldest);
+      if(old){old.removeFromParent();old.geometry.dispose();}
+    }
+    return mesh;
+  };
   let merged=null;const mergedByRegion=new Map(),sigOutside=new Map();
   if(mergeFraction!==null&&mergeFraction<1&&meshes.length>1)merged=buildMerged(()=>true,`mức ${mergeFraction}`,undefined,'merged');
   let shown=drawable.length,fraction=1,regionId=null,merging=false;
   const refresh=()=>{
     shown=0;let triangles=0;const byRegion={};
     merging=!!merged&&Math.abs(fraction-mergeFraction)<1e-9;
-    if(merging&&regionId&&!mergedByRegion.has(regionId))mergedByRegion.set(regionId,buildMerged(()=>true,`mức ${mergeFraction} · ${regionId}`,chunk=>chunk.region===regionId?prefixOf(chunk,mergeFraction):chunk.signatureCount));
+    if(merging&&regionId)regionCachePut(mergedByRegion,regionId,()=>buildMerged(()=>true,`mức ${mergeFraction} · ${regionId}`,chunk=>chunk.region===regionId?prefixOf(chunk,mergeFraction):chunk.signatureCount));
     // Signature ngoài khu (luôn hiện, bất biến F): một mesh gộp duy nhất cho mọi chunk ngoài khu thay vì mỗi chunk một draw call.
-    if(regionId&&!sigOutside.has(regionId))sigOutside.set(regionId,buildMerged(chunk=>chunk.region!==regionId,`signature ngoài khu ${regionId}`,chunk=>chunk.signatureCount));
+    if(regionId)regionCachePut(sigOutside,regionId,()=>buildMerged(chunk=>chunk.region!==regionId,`signature ngoài khu ${regionId}`,chunk=>chunk.signatureCount));
     for(const mesh of meshes){
       const chunk=mesh.userData.densityChunk,inRegion=!regionId||chunk.region===regionId;
       // Ngoài khu chỉ giữ tiền tố signature (f = -1 < mọi hạng thường); trong khu theo mức mật độ (hoặc bản gộp khi Tối thiểu).

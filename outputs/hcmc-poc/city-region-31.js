@@ -2,8 +2,9 @@
  * City Region 31 · bước H kế hoạch 31A — "Khu mô phỏng": xem 1 trong 4 khu của thành phố (hoặc toàn bộ) để giảm tải GPU.
  *
  * Hệ tọa độ: cảnh (x = đông, z = nam; gốc ở tâm CITY_DATA.meta.center), cùng hệ với CITY_DATA và ROAD_GRAPH_31.
- * Bốn khu là đa giác KHÔNG chồng, KHÔNG hở: các đa giác dùng chung đỉnh, tạo phép chia (partition) của mặt phẳng nên
- * mọi điểm (tâm footprint công trình, cây, đèn, tàu…) thuộc đúng một khu (regionOf là hàm xác định, không ngẫu nhiên).
+ * Bốn khu là đa giác KHÔNG chồng, KHÔNG hở: các đa giác dùng chung đỉnh, phủ toàn phạm vi cảnh nên mọi điểm trong cảnh
+ * (tâm footprint công trình, cây, đèn, tàu…) thuộc đúng một khu (regionOf là hàm xác định, không ngẫu nhiên); điểm
+ * ngoài vành lấy khu có cạnh gần nhất.
  * Ranh bám địa vật thật thấy trong CITY_DATA (đo từ polygon nước, không phải ranh hành chính):
  *   - rạch Nhiêu Lộc – Thị Nghè (ranh phía bắc của lõi),
  *   - trục sông Sài Gòn (ranh bờ tây | bờ đông ở phía bắc; đoạn cong Ba Son lấy dải bờ tây gồm Ba Son · Marina Central ·
@@ -94,12 +95,25 @@ export const isRegionId=id=>byId.has(id);
 export const normalizeRegionId=value=>value===REGION_ALL_ID||byId.has(value)?value:null;
 export const regionById=id=>byId.get(id)||null;
 export const regionLabel=id=>id===REGION_ALL_ID||!id?'Toàn bộ':byId.get(id)?.label||'Toàn bộ';
-// Đa giác [[x,z],…] theo hợp đồng traffic.api.setRegion({id,polygon}).
+// Đa giác [[x,z],…] theo hợp đồng traffic.api.setRegion({id, polygon, margin?}).
 export const regionPolygon=id=>byId.get(id)?.polygon.map(point=>[...point])||null;
-export const regionTrafficPayload=id=>byId.has(id)?{id,polygon:regionPolygon(id)}:null;
+// Biên nới cho giao thông (bước H · T1): cạnh/nút giao thông chỉ thuộc khu khi MỌI điểm của nó nằm trong đa giác khu
+// NỚI thêm biên này (đa giác ⊕ đĩa REGION_TRAFFIC_MARGIN_M). Đo thực các cầu vắt ranh của sự cố (reach = quãng xa nhất
+// của điểm cạnh tới đa giác khu kề): cầu Thị Nghè 160 m, cầu Thủ Thiêm 156 m, cầu Khánh Hội 225 m ⇒ 250 m là giá trị
+// tròn nhỏ nhất để các cầu đó thuộc khu ở hai bờ; cầu Sài Gòn (~1 km, reach 500–600 m) vẫn chỉ thuộc trọn một bên.
+export const REGION_TRAFFIC_MARGIN_M=250;
+// Điểm thuộc khu theo phép thử giao thông: trong đa giác hoặc cách đa giác ≤ REGION_TRAFFIC_MARGIN_M (cùng phép thử
+// mà city-traffic-sim-31.js dùng khi setRegion ⇒ QA "xe ngoài khu = 0" và sim nhất quán). slackM: dung sai hình học cho
+// tâm xe (lệch ngang làn ±1,5 m + jitter) so với tim làn mà sim dùng khi chọn cạnh — không nới biên chọn cạnh.
+export const regionTrafficContains=(id,x,z,slackM=0)=>{
+  const region=byId.get(id);
+  if(!region)return false;
+  return inPolygon(x,z,region.polygon)||edgeDistance(x,z,region.polygon)<=REGION_TRAFFIC_MARGIN_M+slackM;
+};
+export const regionTrafficPayload=id=>byId.has(id)?{id,polygon:regionPolygon(id),margin:REGION_TRAFFIC_MARGIN_M}:null;
 
 // Tra khu chính xác (không dùng lưới): thứ tự khai báo quyết định khi hai đa giác cùng nhận một điểm (chỉ do sai số số học);
-// điểm không đa giác nào nhận (chỉ do sai số) thuộc khu có cạnh gần nhất ⇒ luôn trả về đúng một id.
+// điểm không đa giác nào nhận (ngoài vành phủ của bốn khu) lấy khu có cạnh gần nhất ⇒ luôn trả về đúng một id.
 function exactRegionOf(x,z){
   for(const region of REGIONS_31){
     const box=region.bbox;

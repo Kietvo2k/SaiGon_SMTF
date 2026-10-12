@@ -42,7 +42,12 @@ check('mã nguồn: city-region-31.js xuất hằng và regionOf; HTML có radio
 });
 
 function initProbe() {
-  const probe = window.__probe = { scenes: [], renderers: [], camera: null, pose: null, frames: [], pipelines: 0 };
+  const probe = window.__probe = { scenes: [], renderers: [], camera: null, pose: null, frames: [], pipelines: 0, pipelineLabels: [] };
+  // T4: đếm lần dựng pipeline/chương trình GPU (WebGPU: createRenderPipeline[Async]/createComputePipeline[Async]; WebGL: linkProgram)
+  // — đổi khu không được biên dịch lại gì sau lần dựng đầu của bản gộp khu.
+  const countCalls = (proto, names) => { for (const name of names) { const original = proto?.[name]; if (typeof original !== 'function') continue; proto[name] = function (...args) { probe.pipelines++; probe.pipelineLabels.push(String(args[0]?.label || name)); return original.apply(this, args); }; } };
+  if (typeof GPUDevice !== 'undefined') countCalls(GPUDevice.prototype, ['createRenderPipeline', 'createRenderPipelineAsync', 'createComputePipeline', 'createComputePipelineAsync']);
+  if (typeof WebGL2RenderingContext !== 'undefined') countCalls(WebGL2RenderingContext.prototype, ['linkProgram']);
   const hook = new EventTarget();
   hook.addEventListener('observe', event => {
     const object = event.detail;
@@ -130,11 +135,17 @@ async function sceneState(page) {
     const status = window.webgpuMaterials24, D = window.CITY_DATA, scenes = window.__probe.scenes;
     const registry = (await import('./signature-registry-31.js?v=30b-31e2')).loadSignatureRegistry(window.SIGNATURE_REGISTRY_31);
     const R = await import('./city-region-31.js?v=30b-31h');
-    const regionId = status.density.api.regionState().id, inside = (x, z) => regionId === 'all' || R.regionOf(x, z) === regionId;
-    const chunks = [], treeChunks = [], farGroups = [];
+    const regionId = status.density.api.regionState().id;
+    // Công trình/cây: lọc theo khu chính xác (chunk theo regionOf). Xe: theo đa giác ĐÃ NỚI (T1) — cùng phép thử với
+    // city-traffic-sim-31.js setRegion nên "xe ngoài khu = 0" nhất quán với cách sim chọn cạnh; slack 3 m cho tâm xe
+    // (lệch ngang làn ±1,5 m + jitter) so với tim làn mà sim xét khi chọn cạnh.
+    const inside = (x, z) => regionId === 'all' || R.regionOf(x, z) === regionId;
+    const insideTraffic = (x, z) => regionId === 'all' || R.regionTrafficContains(regionId, x, z, 3);
+    const chunks = [], treeChunks = [], farGroups = [], lampChunks = [];
     for (const s of scenes) s.traverse(o => {
       if (o.userData?.densityChunk) chunks.push(o);
       if (o.isInstancedMesh && o.userData?.densityInstances?.source === 'trunks') treeChunks.push(o);
+      if (o.isInstancedMesh && (o.userData?.densityInstances?.source === 'lampPoles' || o.userData?.densityInstances?.source === 'lampHeads')) lampChunks.push(o);
       if (o.isInstancedMesh && o.userData?.densityInstances?.far && o.userData.densityInstances.split) farGroups.push(o);
     });
     const hero = new Set([801710792, 2000032897, 39598465]);
@@ -163,11 +174,23 @@ async function sceneState(page) {
       }
     }
     const farVisible = farGroups.filter(m => m.visible).map(m => m.userData.densityInstances.region);
+    // Đèn (T2): instance đèn đang vẽ (densityCount của chunk đèn khu — nguồn lampPoles/lampHeads). Ngoài khu chỉ được là
+    // đèn vùng bảo vệ (registry.inProtectedZone(x,z,'lamp') = đèn signature); đèn thường ngoài khu phải = 0.
+    let lampsShown = 0, lampsInside = 0, lampsOutsideUnprotected = 0, lampChunksVisible = 0;
+    for (const mesh of lampChunks) {
+      if (!mesh.visible) continue;
+      lampChunksVisible++;
+      const m = mesh.instanceMatrix.array, drawn = mesh.userData.densityCount ?? mesh.count;
+      for (let i = 0; i < drawn; i++) {
+        const x = m[i * 16 + 12], z = m[i * 16 + 14]; lampsShown++;
+        if (inside(x, z)) lampsInside++; else if (!registry.inProtectedZone(x, z, 'lamp')) lampsOutsideUnprotected++;
+      }
+    }
     const api = status.traffic?.api ?? status.motion?.api;
     let vehicles = null;
     if (typeof api?.poses === 'function') {
       const poses = api.poses(); let active = 0, outsideVehicles = 0;
-      for (let i = 0; i + 4 < poses.length; i += 5) { if (!poses[i] && !poses[i + 2]) continue; active++; if (!inside(poses[i], poses[i + 2])) outsideVehicles++; }
+      for (let i = 0; i + 4 < poses.length; i += 5) { if (!poses[i] && !poses[i + 2]) continue; active++; if (!insideTraffic(poses[i], poses[i + 2])) outsideVehicles++; }
       vehicles = { active, outside: outsideVehicles, region: api.getRegion?.() ?? null };
     }
     const r = status.region;
@@ -175,6 +198,7 @@ async function sceneState(page) {
       region: regionId, label: r.label, audit: status.density.audit, dataset: { region: document.body.dataset.region, audit: document.body.dataset.densityAudit },
       shown: shownIdx.size, outside, notShownSignature, cityTriangles, visibleChunks: chunks.filter(m => m.visible).length,
       trees: { shown: treesShown, inside: treesInside, outsideUnprotected: treesOutsideUnprotected, farVisible },
+      lamps: { shown: lampsShown, inside: lampsInside, outsideUnprotected: lampsOutsideUnprotected, visibleChunks: lampChunksVisible, margin: R.REGION_TRAFFIC_MARGIN_M },
       vehicles, vessels: { inRegion: status.motion?.vesselsInRegion, total: status.motion?.vessels },
       state: { buildings: r.buildings, buildingsInRegion: r.buildingsInRegion, buildingsRegionTotal: r.buildingsRegionTotal, trees: r.trees, lamps: r.lamps, vehicles: r.vehicles, vehiclesRegionVia: r.vehiclesRegionVia, source: r.source, label: r.label }
     };
@@ -222,6 +246,51 @@ async function runBackend(browser, backend) {
       return { total: D.buildings.length, counts, bad: bad.slice(0, 5), badCount: bad.length, sweepN, sweepBad, chunkMismatch: chunkMismatch.slice(0, 5), chunkMismatchCount: chunkMismatch.length, chunkCounts, dupes, drawable: seen.size,
         polygons: R.REGIONS_31.map(r => ({ id: r.id, n: r.polygon.length })), ids: R.REGIONS_31.map(r => r.id) };
     });
+    // T1: cầu nối ranh của từng khu — cạnh bridge (elevationClass ≠ ground/skip) có điểm trong đa giác khu VÀ điểm ngoài.
+    // Xe trên các cầu này phải hiện ở cả hai khu kề (đa giác đã nới) nên mỗi khu phải có ≥ 1 cầu nối ranh có xe.
+    out.bridges = await page.evaluate(async () => {
+      const R = await import('./city-region-31.js?v=30b-31h'), G = window.ROAD_GRAPH_31, out = {};
+      for (const r of R.REGIONS_31) {
+        const list = [];
+        for (let e = 0; e < G.edges.length; e++) {
+          const E = G.edges[e];
+          if (!E.elevationClass || E.elevationClass === 'ground' || E.elevationClass === 'skip') continue;
+          const c = E.c; let inside = false, outside = false;
+          for (let k = 0; k < c.length; k += 2) { if (R.regionHits(c[k], c[k + 1]).includes(r.id)) inside = true; else outside = true; }
+          if (inside && outside) list.push(e);
+        }
+        out[r.id] = list;
+      }
+      out.margin = R.REGION_TRAFFIC_MARGIN_M;
+      return out;
+    });
+    // T4: đếm pipeline/program trước/sau khi đi hết 4 khu và về Toàn bộ, ở mức Đầy đủ rồi Tối thiểu. Trước mức Đầy đủ
+    // làm ấm một vòng không đo (dựng sẵn bản gộp signature ngoài khu của 4 khu) ⇒ Đầy đủ không được pipeline nào mới ở
+    // cả hai vòng; Tối thiểu vòng 1 chỉ được là pipeline LẦN ĐẦU DỰNG BẢN GỘP KHU (mergedByRegion, dựng lười lần chọn
+    // khu đầu ở mức Tối thiểu), vòng 2 = 0.
+    out.pipeline = {};
+    const pipelineRound = async () => {
+      const before = await page.evaluate(() => window.__probe.pipelines);
+      let maxFrameMs = 0;
+      for (const region of [...REGIONS, 'all']) {
+        const timing = await click(page, `#controlBody [data-region="${region}"]`, 'region', region);
+        maxFrameMs = Math.max(maxFrameMs, timing.maxFrameMs ?? 0);
+        await waitSmooth(page, 900);
+      }
+      const after = await page.evaluate(() => window.__probe.pipelines);
+      const labels = await page.evaluate(n => window.__probe.pipelineLabels.slice(n ? -n : Infinity).map(l => l.replace(/_\d+$/, '')), after - before);
+      const histogram = {}; for (const label of labels) histogram[label] = (histogram[label] || 0) + 1;
+      return { newPipelines: after - before, histogram, maxFrameMs };
+    };
+    const pipelineCycle = async (level, warm) => {
+      await click(page, `#controlBody [data-density="${level}"]`, 'level', level, 900);
+      await sleep(2500);
+      await waitSmooth(page);
+      if (warm) await pipelineRound();
+      return { first: await pipelineRound(), second: await pipelineRound() };
+    };
+    out.pipeline.full = await pipelineCycle('full', true);
+    out.pipeline.minimal = await pipelineCycle('minimal', false);
     // Ma trận: mật độ (Đầy đủ, Tối thiểu) × khu (Toàn bộ + 4), cùng camera Toàn vùng của khu.
     for (const level of ['full', 'minimal']) {
       await click(page, `#controlBody [data-density="${level}"]`, 'level', level, 900);
@@ -309,10 +378,29 @@ async function runBackend(browser, backend) {
     out.motion = {};
     for (const region of ['all', ...REGIONS]) {
       await page.evaluate(r => window.webgpuMaterials24.density.api.setRegion(r, 'qa'), region); await sleep(1800);
-      out.motion[region] = await page.evaluate(async () => {
+      out.motion[region] = await page.evaluate(async ({ region, bridgeEdges }) => {
         const s = window.webgpuMaterials24, api = s.traffic?.api ?? s.motion?.api, r = s.region;
-        return { vehicles: r.vehicles, via: r.vehiclesRegionVia, vessels: s.motion.vesselsInRegion, apiRegion: api?.getRegion?.() ?? null, total: api?.total ?? null };
-      });
+        // T1: eligible trước/sau khi nới biên — trước = đa giác thuần (margin 0, hành vi cũ), sau = đa giác đã nới.
+        let eligibleBefore = null, eligibleAfter = null;
+        if (region !== 'all' && typeof api?.setRegion === 'function') {
+          const R = await import('./city-region-31.js?v=30b-31h'), payload = R.regionTrafficPayload(region);
+          api.setRegion({ id: region, polygon: payload.polygon }); eligibleBefore = api.getRegion().eligible;
+          api.setRegion(payload); eligibleAfter = api.getRegion().eligible;
+        }
+        // T1: xe trên cầu nối ranh của khu (y > 3 m hoặc cạnh bridge) — mỗi khu phải có ≥ 1 cầu nối ranh có xe.
+        let bridgeVehicles = 0; const bridgesWithVehicles = new Set();
+        if (region !== 'all' && typeof api?.poses === 'function') {
+          const set = new Set(bridgeEdges), poses = api.poses(), snap = api.snapshot(), lanes = api.lanes();
+          for (let i = 0; i < snap.active.length; i++) {
+            if (!snap.active[i]) continue;
+            const e = lanes.edge[snap.lane[i]];
+            if (!set.has(e) && poses[i * 5 + 1] <= 3) continue;
+            if (set.has(e)) { bridgeVehicles++; bridgesWithVehicles.add(e); }
+          }
+        }
+        return { vehicles: r.vehicles, via: r.vehiclesRegionVia, vessels: s.motion.vesselsInRegion, apiRegion: api?.getRegion?.() ?? null, total: api?.total ?? null,
+          eligibleBefore, eligibleAfter, bridgeVehicles, bridgesWithVehicles: bridgesWithVehicles.size, boundaryBridges: bridgeEdges.length };
+      }, { region, bridgeEdges: out.bridges?.[region] ?? [] });
     }
     // Bàn phím trên radiogroup khu.
     await openControls(page);
@@ -412,6 +500,12 @@ async function runBackend(browser, backend) {
           if (region !== 'all') for (const g of s.trees.farVisible) assert(g === region || g === '@protected', `bản xa lạ: ${g}`);
           assert(s.trees.shown > 0, 'không có cây nào');
         });
+        // T2: đèn theo khu kiểm độc lập ở mức instance (không tin status tự báo).
+        if (region !== 'all') check(tag + `${level}/${region}: đèn ngoài khu chỉ là đèn vùng bảo vệ (lampsOutsideUnprotected = 0)`, () => {
+          assert(s.lamps.shown > 0, `không đọc được instance đèn nào: ${JSON.stringify(s.lamps)}`);
+          assert.equal(s.lamps.outsideUnprotected, 0, `đèn thường ngoài khu vẫn vẽ: ${JSON.stringify(s.lamps)}`);
+          assert(s.lamps.inside > 0, JSON.stringify(s.lamps));
+        });
         if (region !== 'all') check(tag + `${level}/${region}: số công trình trong khu + tổng tự báo khớp mesh`, () => {
           assert.equal(s.state.buildings, s.shown, JSON.stringify(s.state));
           assert(s.state.buildingsInRegion <= s.state.buildingsRegionTotal && s.state.buildingsInRegion > 0, JSON.stringify(s.state));
@@ -428,6 +522,23 @@ async function runBackend(browser, backend) {
       });
       check(tag + `đổi khu: khung dài nhất (gồm camera bay) ≤ ${SWITCH_MS} ms, áp dụng ngay (switchMs nhỏ)`, () => {
         for (const [key, m] of Object.entries(M)) { assert(m.timing.maxFrameMs <= SWITCH_MS, `${key}: ${JSON.stringify(m.timing)}`); assert(m.timing.switchMs !== null && m.timing.switchMs <= SWITCH_MS, `${key}: ${JSON.stringify(m.timing)}`); }
+      });
+      // T4: đổi khu không dựng pipeline mới. Đầy đủ: đã làm ấm một vòng (bản gộp signature ngoài khu của 4 khu) nên cả
+      // hai vòng = 0. Tối thiểu: vòng 1 được phép là pipeline LẦN ĐẦU DỰNG BẢN GỘP KHU (mergedByRegion — dựng lười ở lần
+      // chọn khu đầu của mức Tối thiểu; histogram ghi rõ), vòng 2 (đi lại 4 khu, có dựng lại bản gộp do LRU 2 bản) phải
+      // = 0 pipeline mới ở cả hai mức. Khung quay lại khu ≤ SWITCH_MS (dựng lại bản gộp không khựng).
+      check(tag + 'đổi khu không dựng pipeline mới: Đầy đủ cả hai vòng = 0; Tối thiểu vòng 1 chỉ là pipeline lần đầu dựng bản gộp khu, vòng 2 = 0', () => {
+        const ALLOWED_FIRST = /^renderPipeline_(Background\.material|GTAO|Mesh\w*NodeMaterial)$/;
+        for (const level of ['full', 'minimal']) {
+          const p = r.pipeline?.[level]; assert(p, `thiếu số liệu pipeline ${level}`);
+          assert(p.first.maxFrameMs <= SWITCH_MS && p.second.maxFrameMs <= SWITCH_MS, `${level}: khựng khi đổi khu ${JSON.stringify(p)}`);
+          assert.equal(p.second.newPipelines, 0, `${level}: vòng 2 dựng ${p.second.newPipelines} pipeline mới ${JSON.stringify(p.second)}`);
+          if (level === 'full') assert.equal(p.first.newPipelines, 0, `full: vòng 1 dựng ${p.first.newPipelines} pipeline mới ${JSON.stringify(p.first)}`);
+          else {
+            for (const label of Object.keys(p.first.histogram)) assert(ALLOWED_FIRST.test(label), `${level}: pipeline lạ ở vòng 1: ${label} ${JSON.stringify(p.first)}`);
+            assert(p.first.newPipelines <= 60, `minimal: vòng 1 dựng quá nhiều pipeline cho lần đầu bản gộp khu ${JSON.stringify(p.first)}`);
+          }
+        }
       });
       check(tag + 'sau khi đi qua mọi khu rồi về "Toàn bộ": số liệu quay về như ban đầu', () => {
         const base = M['full:all'];
@@ -463,11 +574,24 @@ async function runBackend(browser, backend) {
       check(tag + 'Flood Lab trong khu: mở sang khu chứa Thảo Điền (ven sông) không lỗi; kịch bản mưa vẫn chạy', () => {
         assert.equal(r.flood.open.region, r.expectedViewRegion.flood25, JSON.stringify(r.flood)); assert(r.flood.rain.ok); assert.equal(r.flood.closed.open, false);
       });
-      check(tag + 'xe theo khu: dùng traffic.api.setRegion thật; tổng xe giảm theo khu; mọi xe đang chạy nằm trong khu', () => {
+      check(tag + 'xe theo khu: dùng traffic.api.setRegion thật; tổng xe giảm theo khu; mọi xe đang chạy nằm trong đa giác khu ĐÃ NỚI (biên REGION_TRAFFIC_MARGIN_M)', () => {
         const all = r.motion.all; assert.equal(all.via, 'traffic.api.setRegion', JSON.stringify(all));
         for (const region of REGIONS) { const m = r.motion[region]; assert.equal(m.via, 'traffic.api.setRegion'); assert(m.vehicles > 0 && m.vehicles < all.vehicles, `${region}: ${JSON.stringify(m)}`); assert.equal(m.apiRegion?.id, region, JSON.stringify(m)); }
         for (const key of ['full:' + REGIONS[0], 'full:' + REGIONS[1], 'full:' + REGIONS[2], 'full:' + REGIONS[3]]) { const v = M[key].state.vehicles; if (v) { assert.equal(v.outside, 0, `${key}: ${JSON.stringify(v)}`); assert(v.active > 0, JSON.stringify(v)); } }
-        const sum = REGIONS.reduce((s, id) => s + r.motion[id].vehicles, 0); assert(sum <= all.vehicles * 1.05 && sum >= all.vehicles * .6, `tổng xe 4 khu ${sum} / toàn bộ ${all.vehicles}`);
+        // Xe trên cạnh/cầu vắt ranh thuộc CẢ hai khu kề (đa giác đã nới) ⇒ tổng 4 khu vượt Toàn bộ một phần (đo ≈ 25 %).
+        const sum = REGIONS.reduce((s, id) => s + r.motion[id].vehicles, 0); assert(sum <= all.vehicles * 1.35 && sum >= all.vehicles * .6, `tổng xe 4 khu ${sum} / toàn bộ ${all.vehicles}`);
+      });
+      check(tag + 'T1 · xe trên cầu nối ranh: mỗi khu có ≥ 1 cầu nối ranh có xe; eligible sau khi nới biên ≥ trước, không mất xe', () => {
+        for (const region of REGIONS) {
+          const m = r.motion[region];
+          assert(m.boundaryBridges > 0, `${region}: không có cầu nối ranh nào ${JSON.stringify(m)}`);
+          assert(m.bridgesWithVehicles >= 1, `${region}: không có xe trên cầu nối ranh nào ${JSON.stringify(m)}`);
+          assert(m.eligibleAfter >= m.eligibleBefore, `${region}: eligible giảm sau khi nới ${JSON.stringify(m)}`);
+          assert(m.eligibleBefore < m.total, `${region}: eligible trước phải < tổng pool ${JSON.stringify(m)}`);
+        }
+        const before = REGIONS.reduce((s, id) => s + (r.motion[id].eligibleBefore || 0), 0);
+        const after = REGIONS.reduce((s, id) => s + (r.motion[id].eligibleAfter || 0), 0);
+        assert(after > before, `eligible 4 khu không tăng sau khi nới biên: trước ${before} → sau ${after}`);
       });
       check(tag + 'tàu theo khu: tổng 4 khu ≈ 22 tàu, mỗi khu chỉ vẽ tàu trong khu', () => {
         assert.equal(r.motion.all.vessels, 22); const sum = REGIONS.reduce((s, id) => s + r.motion[id].vessels, 0); assert(Math.abs(sum - 22) <= 3, `${sum} tàu / 22 (đo lần lượt, tàu đang chạy nên cho lệch ≤ 3): ${JSON.stringify(r.motion)}`); assert(REGIONS.every(id => r.motion[id].vessels < 22));
@@ -501,7 +625,7 @@ async function runBackend(browser, backend) {
     }
   } finally {
     await browser.close();
-    console.log(JSON.stringify({ suite: 'region-31 · H', passed: checks.length, failed: failures.length, failures, table, summary: Object.fromEntries(Object.entries(report).map(([k, r]) => [k, { coverage: r.coverage, camera: r.camera, views: r.views, flood: r.flood, motion: r.motion, pick: r.pick, withDensity: r.withDensity, persist: r.persist, errors: r.errors }])) }, null, 1));
+    console.log(JSON.stringify({ suite: 'region-31 · H', passed: checks.length, failed: failures.length, failures, table, summary: Object.fromEntries(Object.entries(report).map(([k, r]) => [k, { coverage: r.coverage, camera: r.camera, views: r.views, flood: r.flood, motion: r.motion, bridges: r.bridges, pipeline: r.pipeline, pick: r.pick, withDensity: r.withDensity, persist: r.persist, errors: r.errors }])) }, null, 1));
     console.log('\nCHECKS PASS:\n' + checks.map(c => ' ✓ ' + c).join('\n'));
     if (failures.length) process.exitCode = 1;
   }

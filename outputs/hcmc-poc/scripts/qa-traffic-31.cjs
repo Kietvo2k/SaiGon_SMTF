@@ -156,7 +156,7 @@ async function sample(page, seconds, limits) {
       }
       return boxes;
     };
-    let prevDrawn = null, prevSnap = null, prevT = null;
+    let prevDrawn = null, prevSnap = null, prevT = null, skipGenUntil = null;
     const lanes = api ? api.lanes() : null;
     const snapCopy = s => ({ t: s.t, lane: s.lane.slice(), next: s.next.slice(), s: s.s.slice(), v: s.v.slice(), lat: s.lat.slice(), gen: s.gen.slice(), active: s.active.slice(), kind: s.kind.slice(), len: s.len.slice(), wid: s.wid.slice() });
     const successors = new Map();   // lane → Set(lane) quan sát từ bảng làn (cùng nút)
@@ -170,13 +170,28 @@ async function sample(page, seconds, limits) {
         const boxes = drawnBoxes(), map = new Map(boxes.map(b => [b.id, b]));
         out.drawnMax = Math.max(out.drawnMax, boxes.length);
         const snap = api ? snapCopy(api.snapshot()) : null;
-        const dtSim = snap && prevSnap ? snap.t - prevSnap.t : (prevT === null ? 0 : (now - prevT) / 1000);
-        if (prevDrawn && dtSim > 0) for (const b of boxes) {
+        // Δt của cặp mẫu (mục 7 · ổn định check): ma trận hiển thị được nội suy theo thời gian TƯỜNG (city-traffic-31.js
+        // draw(acc/STEP), D0/D1 trễ một bước so với snapshot đã bị ép finishStep) ⇒ quãng hiển thị giữa hai mẫu có thể
+        // tương ứng gần thời gian tường của cặp khung dù đồng hồ sim (snap.t) chỉ tăng 0–1 bước. Lấy
+        // Δt = max(thời gian sim, thời gian tường) — đúng khoảng thời gian giữa 2 mẫu ở mọi pha; công thức ngưỡng giữ
+        // nguyên vmax·Δt·1,6 + 0,3 m. Trước đây Δt chỉ lấy snap.t nên cặp khung chậm (chụp GC/compile) bị coi là teleport.
+        const dtWall = prevT === null ? 0 : (now - prevT) / 1000;
+        const dtSnap = snap && prevSnap ? snap.t - prevSnap.t : 0;
+        // Tái sinh (gen đổi) nhưng ma trận hiển thị chỉ nhảy ở khung CHỐT BƯỚC sau đó (commit trễ so với gen trong
+        // snapshot do snapshot ép finishStep) ⇒ cặp khung chứa bước nhảy vẫn có gen như cũ. Bỏ qua xe đó trong 1,5 s
+        // quanh lần gen đổi (đủ cho commit + nội suy) — cùng tinh thần "trừ tái sinh có cờ" của check này.
+        if (snap) {
+          if (!skipGenUntil || skipGenUntil.length < snap.gen.length) { const next = new Float64Array(snap.gen.length); if (skipGenUntil) next.set(skipGenUntil); skipGenUntil = next; }
+          if (prevSnap) for (let i = 0; i < snap.gen.length; i++) if (snap.gen[i] !== prevSnap.gen[i]) skipGenUntil[i] = now + 1500;
+        }
+        const dtSim = Math.max(dtSnap, dtWall);
+        if (prevDrawn && dtSnap > 0) for (const b of boxes) {
           const p = prevDrawn.get(b.id); if (!p) continue;
           if (snap && prevSnap && snap.gen[b.id] !== prevSnap.gen[b.id]) continue;   // tái sinh có đánh dấu
+          if (skipGenUntil && skipGenUntil[b.id] > now) continue;                    // hiển thị trễ commit sau tái sinh
           out.matrixPairs++;
           const d = Math.hypot(b.x - p.x, b.y - p.y, b.z - p.z), allow = limits.VMAX * dtSim * limits.PATH_FACTOR + limits.JUMP_EPS;
-          if (d > allow) { out.matrixJumps++; pushS(out.jumpSamples, { id: b.id, d: +d.toFixed(2), allow: +allow.toFixed(2), x: +b.x.toFixed(1), z: +b.z.toFixed(1) }); }
+          if (d > allow) { out.matrixJumps++; pushS(out.jumpSamples, { id: b.id, d: +d.toFixed(2), allow: +allow.toFixed(2), x: +b.x.toFixed(1), z: +b.z.toFixed(1), dtSim: +dtSim.toFixed(3), dtWall: +dtWall.toFixed(3) }); }
         }
         const r = overlapPairs(boxes, 8, out.obbSamples); out.obbChecks += r.pairs; out.obbOverlaps += r.bad;
         if (api && snap) {
@@ -293,6 +308,19 @@ function regionProbe() {
     items.fraction = { eligible, half, full: activeCount() };
     out.items.push(items);
   }
+  // Bước H · T1: hợp đồng setRegion({id, polygon, margin}) — biên nới chọn thêm cạnh/nút ngoài polygon nhưng trong
+  // margin (đa giác ⊕ đĩa margin). Chạy thật dùng REGION_TRAFFIC_MARGIN_M của city-region-31.js; ở đây đo hợp đồng
+  // bằng margin 120 m trên cùng khu thử: eligible phải tăng so với đa giác thuần, xe không được vượt polygon + margin.
+  {
+    const r0 = rects.tay, poly = polyOf(r0), M = 120;
+    api.setRegion({ id: 'tay', polygon: poly }); const strictEligible = api.getRegion().eligible;
+    api.setRegion({ id: 'tay', polygon: poly, margin: M }); const wide = api.getRegion();
+    let worst = -1e9, teleports0 = api.stats().teleports, gap0 = api.stats().gapViolations;
+    for (let k = 0; k < 20; k++) { api.advance(1); const o = outsideStats(r0); worst = Math.max(worst, o.worst); }
+    const st = api.stats();
+    out.margin = { strictEligible, eligible: wide.eligible, margin: wide.margin, worst: +worst.toFixed(2), teleports: st.teleports - teleports0, gap: st.gapViolations - gap0, active: activeCount() };
+    api.setRegion(null);
+  }
   // Khôi phục toàn thành phố: đúng tổng round(F·N) (hạng nhớ theo bước), hết xe chờ chỗ ≤ 2 s.
   const target = Math.round(Math.min(1, lf) * api.total), back = api.setRegion(null), wantedBack = api.sim.wantedCount();
   let settleS = 0; while (api.sim.pendingCount() > 0 && settleS < 4) { api.advance(.1); settleS += .1; }
@@ -300,8 +328,8 @@ function regionProbe() {
   // Tất định: reset + khu + 20 s hai lần.
   const run = () => { api.setRegion(null); api.reset(); api.setRegion({ id: 'tay', polygon: polyOf(rects.tay) }); api.advance(20); return api.stateHash(); };
   out.determinism = { h1: run(), h2: run() };
-  // Đa giác sai phải ném lỗi, không làm hỏng trạng thái.
-  out.invalid = ['x', { id: 'a', polygon: [[0, 0]] }, { polygon: polyOf(rects.tay) }].map(v => { try { api.setRegion(v); return false; } catch (e) { return e instanceof TypeError; } });
+  // Đa giác sai phải ném lỗi, không làm hỏng trạng thái (gồm margin âm).
+  out.invalid = ['x', { id: 'a', polygon: [[0, 0]] }, { polygon: polyOf(rects.tay) }, { id: 'a', polygon: polyOf(rects.tay), margin: -1 }].map(v => { try { api.setRegion(v); return false; } catch (e) { return e instanceof TypeError; } });
   api.setRegion(null); api.reset();
   return out;
 }
@@ -355,22 +383,29 @@ async function inspect(page) {
     // API mật độ bước E.
     const activeCount = () => { const s = api.snapshot(); let n = 0; for (let i = 0; i < s.active.length; i++) n += s.active[i]; return n; };
     const activeSet = () => { const s = api.snapshot(), ids = []; for (let i = 0; i < s.active.length; i++) if (s.active[i]) ids.push(i); return ids; };
+    // Mật độ/tỉ lệ đo trên trạng thái TẤT ĐỊNH (reset + 20 s cố định, seed cố định) — không phụ thuộc sim đã chạy bao lâu.
+    api.reset(); api.advance(20);
     const full = activeCount(), inst = api.instances();
     api.setVisibleFraction(.5); const halfIds = activeSet();
     api.setVisibleFraction(1); api.setVisibleFraction(.5); const halfIds2 = activeSet();
     const sigTotal = inst.filter(i => i.signature).length, sigHalf = halfIds.filter(i => inst[i].signature).length;
-    // Thưa đều: không ô 400 m nào (≥ 8 xe) còn < 25 % khi f = 0,5.
+    // Thưa đều: chụp hai tập trên CÙNG một bộ vị trí — full trước, f=0,5 sau (setFraction chỉ TẮT xe, xe giữ lại không
+    // đổi vị trí). Trước đây chụp halfIds trước rồi kích hoạt lại toàn bộ gây relocate/respawn làm đổi ô của xe mới bật
+    // nên một ô đầy bất thường bị coi là "trống" — nguồn chập chờn của check này. Ngưỡng giữ nguyên (ô 400 m có ≥ 8 xe
+    // phải còn ≥ 25 % khi f = 0,5); đo trên trạng thái tất định (reset + 20 s cố định ở trên) nên kết quả lặp lại được.
+    api.setVisibleFraction(1); const cellFull = activeSet(), Pf = api.poses();
+    api.setVisibleFraction(.5); const cellHalf = new Set(activeSet());
+    api.setVisibleFraction(1);
     const cells = new Map();
-    api.setVisibleFraction(1); const fullIds = activeSet(), Pf = api.poses();
-    for (const i of fullIds) { const k = Math.floor(Pf[i * 5] / 400) + ',' + Math.floor(Pf[i * 5 + 2] / 400); const c = cells.get(k) || { all: 0, half: 0 }; c.all++; cells.set(k, c); }
-    const halfSet = new Set(halfIds);
-    for (const i of fullIds) if (halfSet.has(i)) cells.get(Math.floor(Pf[i * 5] / 400) + ',' + Math.floor(Pf[i * 5 + 2] / 400)).half++;
+    for (const i of cellFull) { const k = Math.floor(Pf[i * 5] / 400) + ',' + Math.floor(Pf[i * 5 + 2] / 400); const c = cells.get(k) || { all: 0, half: 0 }; c.all++; cells.set(k, c); }
+    for (const i of cellFull) if (cellHalf.has(i)) cells.get(Math.floor(Pf[i * 5] / 400) + ',' + Math.floor(Pf[i * 5 + 2] / 400)).half++;
     api.setVisibleFraction(0); const zero = activeCount();
     const returned = api.setDensity('full'); const restored = activeCount();
     // Xe có chỗ cũ đã bị chiếm chờ tái sinh ở nút biên các bước kế: sau 2 s phải về lại ≥ 99 % (số xe hoạt động tự dao động ±0,5 % do tái sinh).
     api.advance(2); const settled = activeCount();
     const viaTraffic = window.webgpuMaterials24.traffic?.api === api, retHalf = api.setVisibleFraction(.5), countHalf = activeCount(); api.setDensity('full');
-    out.densityApi = { viaTraffic, returned, retHalf, countHalf, total: api.total, full, half: halfIds.length, halfSame: JSON.stringify(halfIds) === JSON.stringify(halfIds2), sigTotal, sigHalf, zero, restored, settled, emptied: [...cells.values()].filter(c => c.all >= 8 && c.half / c.all < .25).length, hasSetDensity: typeof api.setDensity === 'function', instances: inst.length, instanceKeys: Object.keys(inst[0] || {}) };
+    const big = [...cells.values()].filter(c => c.all >= 8);
+    out.densityApi = { viaTraffic, returned, retHalf, countHalf, total: api.total, full, half: halfIds.length, halfSame: JSON.stringify(halfIds) === JSON.stringify(halfIds2), sigTotal, sigHalf, zero, restored, settled, emptied: big.filter(c => c.half / c.all < .25).length, emptiedFull: big.filter(c => c.half === 0).length, thinWorst: big.length ? +Math.min(...big.map(c => c.half / c.all)).toFixed(2) : null, hasSetDensity: typeof api.setDensity === 'function', instances: inst.length, instanceKeys: Object.keys(inst[0] || {}) };
     // Khôi phục đúng tổng bất kể sim chạy/tái sinh bao lâu: F → thấp → chạy → F cũ phải cho đúng số xe đích (wanted) và số xe hoạt động cũ.
     const lf = api.sim.lightFactor, targetOf = f => Math.round(Math.min(1, f * lf) * api.total);
     out.restore = [];
@@ -484,7 +519,12 @@ const pct = (list, p) => { const s = list.slice().sort((a, b) => a - b); return 
         const t = g.restore; assert.equal(t.wantedBack, t.target, 'setRegion(null) không khôi phục đúng tổng round(F·N): ' + JSON.stringify(t));
         assert(t.back >= t.target * .98 && t.pendingAfter === 0 && t.settleS <= 2 && t.active >= t.target * .995 && !t.region.active && t.dataset === '/0', JSON.stringify(t));
         assert(g.determinism.h1 && g.determinism.h1 === g.determinism.h2, 'setRegion không tất định: ' + JSON.stringify(g.determinism));
-        assert.deepEqual(g.invalid, [true, true, true], 'đầu vào sai phải ném TypeError');
+        assert.deepEqual(g.invalid, [true, true, true, true], 'đầu vào sai phải ném TypeError');
+        // Bước H · T1: margin (biên nới) trong hợp đồng setRegion.
+        const m = g.margin; assert(m, 'thiếu số liệu margin');
+        assert(m.margin === 120 && m.eligible > m.strictEligible, 'margin không nới thêm cạnh/nút: ' + JSON.stringify(m));
+        assert(m.worst <= 126, 'xe vượt polygon + margin: ' + JSON.stringify(m));
+        assert.equal(m.teleports, 0, JSON.stringify(m)); assert.equal(m.gap, 0, JSON.stringify(m));
       });
             check(tag + 'sim dài 600 s: phá kẹt thưa, ít xe chờ, hồi đủ xe ngay khi về Đầy đủ, 0 vi phạm gap/oneway/teleport', () => {
         const g = r.longProbe; assert(g, 'thiếu longProbe');
@@ -503,6 +543,7 @@ const pct = (list, p) => { const s = list.slice().sort((a, b) => a - b); return 
         assert.equal(d.sigHalf, d.sigTotal, 'f=0,5 làm mất xe signature');
         assert.equal(d.zero, d.sigTotal, 'f=0 phải còn đúng xe signature');
         assert.equal(d.emptied, 0, 'f=0,5 làm trống cả một ô 400 m');
+        assert.equal(d.emptiedFull, 0, 'f=0,5 làm trống hoàn toàn một ô 400 m');
         assert(d.restored >= d.full * .99 && d.restored <= d.full * 1.01, 'setDensity(full) lệch > 1 %: ' + JSON.stringify(d));
         assert(d.settled >= d.full * .99, 'sau 2 s chưa hồi đủ xe: ' + JSON.stringify(d));
         assert(d.viaTraffic, 'webgpuMaterials24.traffic.api phải là cùng API (bộ điều phối mật độ E/F gọi đường này)');
@@ -560,7 +601,8 @@ const pct = (list, p) => { const s = list.slice().sort((a, b) => a - b); return 
     await browser.close();
     const summary = Object.fromEntries(Object.entries(report).map(([k, r]) => [k, {
       windows: Object.fromEntries(Object.entries(r.windows || {}).map(([id, w]) => [id, { frames: w.frames, drawnMax: w.drawnMax, active: [w.activeMin, w.activeMax], matrixPairs: w.matrixPairs, matrixJumps: w.matrixJumps, obbChecks: w.obbChecks, obbOverlaps: w.obbOverlaps, allObbOverlaps: w.allObbOverlaps, graph: { ...w.graph, samples: undefined }, oneway: w.oneway.bad, heading: [w.heading.checked, w.heading.bad], right: [w.right.checked, w.right.bad], gap: { pairs: w.gap.pairs, cross: w.gap.crossEdge, bad: w.gap.bad }, bridge: { ...w.bridge, yBad: undefined } }])),
-      determinism: r.determinism, longRun: r.longRun, densityPerLaneKm: r.densityPerLaneKm, kindShares: r.kindShares, light: r.light, densityApi: r.densityApi, kinds: r.kinds, geo: r.geo, kindPool: r.kindPool, meshes: r.meshes, cpu: r.cpuSummary, motion: r.motion, errors: r.errors
+      determinism: r.determinism, longRun: r.longRun, densityPerLaneKm: r.densityPerLaneKm, kindShares: r.kindShares, light: r.light, densityApi: r.densityApi, kinds: r.kinds, geo: r.geo, kindPool: r.kindPool, meshes: r.meshes, cpu: r.cpuSummary, motion: r.motion, errors: r.errors,
+      region: r.region ? { lf: r.region.lf, items: r.region.items.map(i => ({ id: i.id, eligible: i.eligible, n0: i.n0 })), margin: r.region.margin, restore: r.region.restore } : null
     }]));
     console.log(JSON.stringify({ suite: 'traffic-31 · D', passed: checks.length, failed: failures.length, checks, failures, summary }, null, 1));
     if (failures.length) process.exitCode = 1;

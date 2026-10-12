@@ -680,21 +680,29 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   function activeCount() { let n = 0; for (let i = 0; i < N; i++) n += active[i]; return n; }
 
-  // ---- Khu mô phỏng (bước H). Hợp đồng: setRegion(null) = toàn thành phố; setRegion({id, polygon:[[x,z],…]}) tọa độ cảnh.
+  // ---- Khu mô phỏng (bước H). Hợp đồng: setRegion(null) = toàn thành phố; setRegion({id, polygon:[[x,z],…], margin?}) tọa độ cảnh.
   // Xe ngoài khu bị tắt; xe chỉ sinh/tái sinh ở nút trong khu kề nút ngoài khu (hoặc nút biên thật trong khu); đi tới cạnh không nằm hẳn trong khu
   // thì coi như tới nút biên (tái sinh trong khu). F áp lên tập xe thuộc khu: Q = round(F·n_khu), cùng tính chất khôi phục của setFraction.
+  // Bước H · T1: chọn cạnh/nút bằng đa giác NỚI một biên margin (mặc định 0 = hợp đồng cũ, đa giác thuần): điểm được coi
+  // là "trong khu" khi nằm trong đa giác hoặc cách đa giác ≤ margin. Nhờ vậy cạnh vắt ranh (cầu nối hai khu) thuộc khu ở
+  // CẢ hai bờ ⇒ xe trên cầu hiện ở cả hai khu kề thay vì biến mất ở mọi khu (trước đây chỉ dùng cạnh có mọi đỉnh trong
+  // đa giác ⇒ ~4 % xe trên cạnh vắt ranh không thuộc khu nào). Cùng phép thử với city-region-31.js regionTrafficContains.
   const nodeIdx = new Map(); G.nodes.forEach((n, k) => nodeIdx.set(n.id, k));
   const inPoly = (poly, x, z) => { let c = false; for (let a = 0, b = poly.length - 2; a < poly.length; b = a, a += 2) { const xa = poly[a], za = poly[a + 1], xb = poly[b], zb = poly[b + 1]; if ((za > z) !== (zb > z) && x < (xb - xa) * (z - za) / (zb - za) + xa) c = !c; } return c; };
+  // Khoảng cách từ điểm tới đa giác phẳng (tới đoạn gần nhất): dùng cho biên nới.
+  const distPoly = (poly, x, z) => { let best = Infinity; for (let a = 0, b = poly.length - 2; a < poly.length; b = a, a += 2) { const xa = poly[a], za = poly[a + 1], sx = poly[b] - xa, sz = poly[b + 1] - za, l = sx * sx + sz * sz, t = l ? Math.max(0, Math.min(1, ((x - xa) * sx + (z - za) * sz) / l)) : 0; best = Math.min(best, Math.hypot(xa + sx * t - x, za + sz * t - z)); } return best; };
   function setRegion(reg) {
     finishStep();
     if (!reg) { region = null; insideLane.fill(1); spawnList = spawnLanes; }
     else {
-      const pts = reg.polygon;
-      if (typeof reg.id !== 'string' || !Array.isArray(pts) || pts.length < 3 || !pts.every(p => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]))) throw new TypeError('setRegion: cần {id: string, polygon: [[x, z], …≥ 3 điểm]} hoặc null');
+      const pts = reg.polygon, margin = reg.margin ?? 0;
+      if (typeof reg.id !== 'string' || !Array.isArray(pts) || pts.length < 3 || !pts.every(p => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]))) throw new TypeError('setRegion: cần {id: string, polygon: [[x, z], …≥ 3 điểm], margin?: số ≥ 0} hoặc null');
+      if (!Number.isFinite(margin) || margin < 0) throw new TypeError('setRegion: margin phải là số hữu hạn ≥ 0');
       const poly = new Float64Array(pts.length * 2); pts.forEach((p, k) => { poly[k * 2] = p[0]; poly[k * 2 + 1] = p[1]; });
-      const inNode = new Uint8Array(G.nodes.length); for (let n = 0; n < inNode.length; n++) inNode[n] = inPoly(poly, G.nodes[n].x, G.nodes[n].z) ? 1 : 0;
+      const inRegion = margin > 0 ? (x, z) => inPoly(poly, x, z) || distPoly(poly, x, z) <= margin : (x, z) => inPoly(poly, x, z);
+      const inNode = new Uint8Array(G.nodes.length); for (let n = 0; n < inNode.length; n++) inNode[n] = inRegion(G.nodes[n].x, G.nodes[n].z) ? 1 : 0;
       const inEdge = new Uint8Array(net.NE);
-      for (let e = 0; e < net.NE; e++) { const c = E[e].c; let ok = inNode[nodeIdx.get(E[e].from)] && inNode[nodeIdx.get(E[e].to)]; for (let k = 0; ok && k < c.length; k += 2) ok = inPoly(poly, c[k], c[k + 1]); inEdge[e] = ok ? 1 : 0; }
+      for (let e = 0; e < net.NE; e++) { const c = E[e].c; let ok = inNode[nodeIdx.get(E[e].from)] && inNode[nodeIdx.get(E[e].to)]; for (let k = 0; ok && k < c.length; k += 2) ok = inRegion(c[k], c[k + 1]); inEdge[e] = ok ? 1 : 0; }
       for (let l = 0; l < NL; l++) insideLane[l] = inEdge[lanes.edge[l]];
       const edgeNode = (e2, end) => nodeIdx.get(end === 0 ? E[e2].to : E[e2].from);
       spawnList = [];
@@ -703,7 +711,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
         const n = lanes.from[l], nd = G.nodes[n];
         if (nd.kind === 'boundary' || nd.adj.some(([e2, end]) => !inNode[edgeNode(e2, end)])) spawnList.push(l);
       }
-      region = { id: reg.id, poly };
+      region = { id: reg.id, poly, margin };
     }
     for (let i = 0; i < N; i++) elig[i] = !region || pending[i] ? 1 : insideLane[lane[i]];
     // Lộ trình: giữ đoạn còn hợp lệ, lập lại đoạn trỏ ra ngoài khu (hoặc đoạn -2 nay đi tiếp được); xe đã giữ khóa nút không đổi làn kế.
@@ -886,7 +894,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   return {
     N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters,
     step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, wantedCount: () => { let n = 0; for (let i = 0; i < N; i++) n += wanted[i]; return n; }, pendingCount: () => { let n = 0; for (let i = 0; i < N; i++) n += pending[i]; return n; }, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,
-    setRegion, get region() { return region ? { id: region.id, active: true, lanes: insideLane.reduce((a, b) => a + b, 0), spawnLanes: spawnList.length } : { id: null, active: false, lanes: NL, spawnLanes: spawnLanes.length }; },
+    setRegion, get region() { return region ? { id: region.id, active: true, margin: region.margin, lanes: insideLane.reduce((a, b) => a + b, 0), spawnLanes: spawnList.length } : { id: null, active: false, margin: 0, lanes: NL, spawnLanes: spawnLanes.length }; },
     eligibleCount: () => { let n = 0; for (let i = 0; i < N; i++) n += elig[i]; return n; }, isEligible: i => !!elig[i], insideLaneOf: l => !!insideLane[l],
     setFraction(f) { finishStep(); fraction = Math.max(0, Math.min(1, f)); return select(); },
     setLightFactor(f) { if (Math.abs(f - lightFactor) < 1e-9) return activeCount(); finishStep(); lightFactor = f; return select(); },
