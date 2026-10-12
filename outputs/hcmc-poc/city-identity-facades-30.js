@@ -13,10 +13,10 @@ import * as THREE from 'three/webgpu';
 const HERO_IDS=new Set([801710792,2000032897,39598465]);
 const ACTIVE_VIEWS=new Set(['materials','boulevard','corridor']);
 
-function loadTexture(loader,url,color=false){
+function loadTexture(loader,url,color=false,anisotropy=8){
   return new Promise((resolve,reject)=>loader.load(url,texture=>{
     texture.colorSpace=color?THREE.SRGBColorSpace:THREE.NoColorSpace;
-    texture.anisotropy=8;
+    texture.anisotropy=anisotropy;
     resolve(texture);
   },undefined,()=>reject(new Error(`Texture decode failed: ${url}`))));
 }
@@ -53,12 +53,12 @@ function facadeGeometry(entry){
   return geometry;
 }
 
-export function createIdentityFacades30({scene,status={}}){
+export function createIdentityFacades30({scene,status={},atlasUrl='assets/facades15/facade-atlas.jpg',maskUrl='assets/facades15/facade-mask.png',anisotropy=8}={}){
   const root=new THREE.Group();root.name='Identity Facades 30B · accepted photo registrations';root.visible=false;scene.add(root);
   const resources={textures:[],geometries:[]};
   const material=new THREE.MeshStandardNodeMaterial({color:'#ffffff',roughness:.76,metalness:.025,alphaTest:.44,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2});
   let ready=false;
-  Object.assign(status,{version:'30b',state:'loading',accepted:0,rendered:0,held:0,classification:'site photo patches on approximate open-map geometry'});
+  Object.assign(status,{version:'30b',state:'loading',accepted:0,rendered:0,held:0,atlasUrl,maskUrl,anisotropy,classification:'site photo patches on approximate open-map geometry'});
 
   fetch('./data/facades-30.json?v=30b').then(response=>{
     if(!response.ok)throw new Error(`facades-30.json HTTP ${response.status}`);
@@ -73,11 +73,13 @@ export function createIdentityFacades30({scene,status={}}){
     }
     const loader=new THREE.TextureLoader();
     const [map,alphaMap]=await Promise.all([
-      loadTexture(loader,'assets/facades15/facade-atlas.jpg',true),
-      loadTexture(loader,'assets/facades15/facade-mask.png',false)
+      loadTexture(loader,atlasUrl,true,anisotropy),
+      loadTexture(loader,maskUrl,false,anisotropy)
     ]);
+    // Lite: texture thu nhỏ đã đủ nhẹ nên tắt mipmap để giảm thêm bộ nhớ GPU (facade signature chỉ giảm độ phân giải, không mất).
+    if(anisotropy<=2){for(const texture of [map,alphaMap]){texture.generateMipmaps=false;texture.minFilter=THREE.LinearFilter;texture.needsUpdate=true;}}
     resources.textures.push(map,alphaMap);material.map=map;material.alphaMap=alphaMap;material.needsUpdate=true;ready=true;
-    Object.assign(status,{state:'ready',accepted:eligible.length,rendered:rendered.length,heroReplacements:eligible.length-rendered.length,held:manifest.entries.length-eligible.length,atlas:manifest.atlas,alphaMask:manifest.alpha_mask,sources:rendered.map(entry=>({name:entry.name,buildingId:entry.building_id,url:entry.source_url,author:entry.author,license:entry.license}))});
+    Object.assign(status,{state:'ready',accepted:eligible.length,rendered:rendered.length,heroReplacements:eligible.length-rendered.length,held:manifest.entries.length-eligible.length,atlas:manifest.atlas,alphaMask:manifest.alpha_mask,atlasSize:map.image?[map.image.width,map.image.height]:null,maskSize:alphaMap.image?[alphaMap.image.width,alphaMap.image.height]:null,sources:rendered.map(entry=>({name:entry.name,buildingId:entry.building_id,url:entry.source_url,author:entry.author,license:entry.license}))});
   }).catch(error=>{status.state='error';status.error=String(error?.message||error);root.visible=false;});
 
   return{

@@ -78,6 +78,14 @@
         <button id="collapse" class="panel-toggle" type="button" aria-expanded="false" aria-controls="controlBody" aria-label="Mở rộng điều khiển cảnh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
       </div>
       <div class="control-body panel-body" id="controlBody">
+        <div class="density-control mode-control">
+          <div class="density-head"><span id="modeTitle">Chế độ</span><small>Preview giữ nguyên · Lite cho máy yếu</small></div>
+          <div id="modeControl" class="segmented mode-options" role="radiogroup" aria-labelledby="modeTitle" aria-describedby="modeCounts">
+            <button type="button" role="radio" data-mode="preview" aria-checked="true" tabindex="0" class="active" title="Trải nghiệm hiện tại y nguyên">Preview · chất lượng đầy đủ</button>
+            <button type="button" role="radio" data-mode="lite" aria-checked="false" tabindex="-1" title="Máy yếu: bớt nhà không cần, texture nhỏ, UI gọn">Lite · máy yếu</button>
+          </div>
+          <p id="modeCounts" class="density-counts" aria-live="polite">—</p>
+        </div>
         <label class="range-row" for="realism">
           <span><b>Độ thực hóa</b><output id="realismValue">100%</output></span>
           <input id="realism" type="range" min="0" max="100" value="100" step="1">

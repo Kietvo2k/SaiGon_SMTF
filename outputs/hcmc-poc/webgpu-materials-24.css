@@ -403,3 +403,13 @@ body.ui-hidden .region-notice{opacity:0;pointer-events:none}
 .density-suggest [data-density-apply]{background:rgba(234,214,182,.92);border-color:transparent;color:#173138}
 body.ui-hidden .density-suggest{opacity:0;pointer-events:none}
 @media(max-width:540px){.density-suggest{left:var(--edge);right:var(--edge);transform:none;bottom:calc(var(--edge) + 40px);flex-wrap:wrap}}
+
+/* Chế độ Preview/Lite · 31I */
+.mode-control{margin-top:0;padding-top:0;border-top:0}
+.segmented.mode-options{grid-template-columns:1fr 1fr;margin:8px 0 6px}
+.mode-options button{padding:10px 4px;white-space:normal;line-height:1.3}
+/* Lite gọn UI: ẩn bảng phụ nặng (chú giải họ vật liệu, nút xem khối nền, kiểm định Flood Lab);
+   giữ điều hướng data-view, ánh sáng, mật độ, khu mô phỏng, chế độ, chọn công trình, Flood Lab mở được. */
+body[data-mode="lite"] .controls .legend,
+body[data-mode="lite"] #compare,
+body[data-mode="lite"] .flood-audit{display:none!important}

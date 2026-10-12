@@ -575,7 +575,7 @@ const attachedToScene=object=>{for(let o=object;o;o=o.parent)if(o.isScene)return
 // Bộ điều phối mật độ + UI. Mọi nhóm là tùy chọn; thiếu nhóm nào thì nhóm đó không giảm (ghi trong status).
 export function createDensityController31({
   gate,buildingChunks,treeDensity,detailDensity=[],fixtureDensity=null,streetFurniture=null,traffic=null,vesselGroup=null,bridgeRails=[],
-  minimalMerges=[],vesselDetail=[],structureRoots=[],regionOf=null,regionStatus={},onRegionChange=null,
+  minimalMerges=[],vesselDetail=[],structureRoots=[],regionOf=null,regionStatus={},onRegionChange=null,defaultLevel='full',
   audit:auditInputs,ui={},params=new URLSearchParams(location.search),status={},getFps=()=>60,lowFps=31,storage=globalThis.localStorage
 }){
   const registry=gate.registry;
@@ -821,7 +821,7 @@ export function createDensityController31({
   let stored=null;try{stored=storage?.getItem(STORAGE_KEY);}catch{}
   if(levelById.has(requested))apply(requested,'url');
   else if(levelById.has(stored))apply(stored,'storage');
-  else apply('full','default');
+  else apply(levelById.has(defaultLevel)?defaultLevel:'full','default');
 
   const api={
     levels:DENSITY_LEVELS_31,

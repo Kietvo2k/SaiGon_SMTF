@@ -17,6 +17,7 @@ import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furni
 import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=30b-31j';
 import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31h';
 import { REGION_ALL_ID, REGION_URL_PARAM, REGIONS_31, regionById, regionOf, regionContains } from './city-region-31.js?v=30b-31h';
+import { MODE_STORAGE_KEY, MODE_URL_PARAM, anisotropyForMode, createModeController, modeById, resolveMode, textureUrlsForMode } from './city-mode-31.js?v=30b-31i';
 import { createTraffic31 } from './city-traffic-31.js?v=30b-31j';
 
 const D=window.CITY_DATA;
@@ -28,11 +29,22 @@ const $=selector=>document.querySelector(selector);
 const params=new URLSearchParams(location.search);
 const forceWebGL=params.get('backend')==='webgl';
 const requestedQuality=params.get('quality')||'presentation';
+// Bước I 31A — Chế độ Preview/Lite: mode gói sẵn density/quality/texture/UI. `&quality=` do người dùng
+// chỉ định vẫn ưu tiên hơn preset của mode. Dòng requestedQuality gốc được giữ nguyên cho QA 30B.
+const modeResolved=resolveMode(params);
+const modePreset=modeById(modeResolved.id)||modeById('preview');
+const effectiveQuality=params.get('quality')||modePreset.quality||requestedQuality;
+const modeTextures=textureUrlsForMode(modePreset.id);
 let activeLight='day';
+const requestedLight=params.get('light');
+if(requestedLight==='day'||requestedLight==='golden'||requestedLight==='night')activeLight=requestedLight;
 const loading=$('#loading'),loaderText=$('#loaderText'),loaderProgress=$('#loaderProgress');
 const setProgress=(value,text)=>{loaderProgress.style.width=`${Math.max(3,Math.min(100,value))}%`;if(text)loaderText.textContent=text;};
 const yieldMain=()=>new Promise(resolve=>setTimeout(resolve,0));
 const materialStatus=window.webgpuMaterials24={version:APP_VERSION,state:'initializing'};
+// Bước I 31A — trạng thái chế độ (gán sau khi materialStatus khởi tạo để tránh lỗi TDZ).
+materialStatus.mode={version:'mode-31i',id:modePreset.id,label:modePreset.label,source:modeResolved.source,density:modePreset.density,quality:effectiveQuality,textureScale:modePreset.textureScale,uiCompact:modePreset.uiCompact,textures:{sentinel:null,atlas:null,mask:null}};
+document.body.dataset.mode=modePreset.id;
 
 if(!D?.buildings?.length)throw new Error('CITY_DATA không khả dụng');
 
@@ -61,7 +73,7 @@ try{
 
 $('#scene').append(renderer.domElement);
 const actualWebGPU=!!renderer.backend?.isWebGPUBackend;
-const visualQuality=resolveVisualQuality(requestedQuality,actualWebGPU);
+const visualQuality=resolveVisualQuality(effectiveQuality,actualWebGPU);
 renderer.setPixelRatio(Math.min(devicePixelRatio,visualQuality.maxPixelRatio));
 renderer.setSize(innerWidth,innerHeight);
 const backendElement=$('#backend');
@@ -379,7 +391,14 @@ const groundMaterial=new THREE.MeshStandardNodeMaterial({color:groundTint,roughn
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(D.meta.width,D.meta.depth),groundMaterial);
 ground.name='Nền đất · Sentinel-2 2016';
 ground.geometry.rotateX(-Math.PI/2);ground.position.y=-1;ground.receiveShadow=true;scene.add(ground);
-new THREE.TextureLoader().load('data/sentinel-2016.jpg',texture=>{texture.colorSpace=THREE.SRGBColorSpace;ground.material.map=texture;ground.material.color.set(groundTint);ground.material.needsUpdate=true;});
+new THREE.TextureLoader().load(modeTextures.sentinel,texture=>{
+  texture.colorSpace=THREE.SRGBColorSpace;
+  try{texture.anisotropy=anisotropyForMode(modePreset.id,renderer.capabilities.getMaxAnisotropy());}catch{texture.anisotropy=modePreset.id==='lite'?2:8;}
+  // Lite: ảnh nền đã thu nhỏ một nửa mỗi cạnh nên tắt mipmap để giảm thêm bộ nhớ GPU.
+  if(modePreset.id==='lite'){texture.generateMipmaps=false;texture.minFilter=THREE.LinearFilter;}
+  ground.material.map=texture;ground.material.color.set(groundTint);ground.material.needsUpdate=true;
+  if(materialStatus.mode&&texture.image)materialStatus.mode.textures.sentinel=[texture.image.width,texture.image.height];
+});
 const outsideMaterial=new THREE.MeshStandardNodeMaterial({color:'#536b58',roughness:1});
 const outside=new THREE.Mesh(new THREE.PlaneGeometry(60000,60000),outsideMaterial);outside.rotation.x=-Math.PI/2;outside.position.y=-3;scene.add(outside);
 const parksMaterial=new THREE.MeshStandardNodeMaterial({color:'#315b38',roughness:.96,side:THREE.DoubleSide});
@@ -731,7 +750,7 @@ const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetw
 materialStatus.streetFurniture={};
 const streetFurniture=createStreetFurniture31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,data:window.STREET_FURNITURE_31,widths,nightLevel,status:materialStatus.streetFurniture});
 materialStatus.identityFacades={};
-const identityFacades=createIdentityFacades30({scene,status:materialStatus.identityFacades});
+const identityFacades=createIdentityFacades30({scene,status:materialStatus.identityFacades,atlasUrl:modeTextures.atlas,maskUrl:modeTextures.mask,anisotropy:modePreset.id==='lite'?2:8});
 // Bước E/F 31A: "Mật độ chi tiết". Kết cấu signature được gộp (không ẩn) để bớt draw call cố định; cây, chi tiết
 // runtime 28 chia chunk lưới (cull theo ô), tán cây xa và thiết bị mái sắp lại tại chỗ; mọi bộ lọc đi qua signature registry.
 materialStatus.density={};
@@ -759,6 +778,7 @@ const cityDensity=createDensityController31({
     modules:{'ba-son-bridge-structure':bridgeGroup,'bach-dang-footbridge-structure':bridgesApi?.signature||[],'marina-central-detail':marinaDetail,'grand-marina-detail':grandMarinaDetail,'hero-corridor-module':heroCorridor.root,'extra-identity-facades-module':identityFacades.root}
   },
   regionOf,regionStatus:materialStatus.region,onRegionChange:event=>onRegionChosen(event),
+  defaultLevel:modePreset.density,
   ui:{root:$('#densityControl'),counts:$('#densityCounts'),regionRoot:$('#regionControl'),regionCounts:$('#regionCounts'),suggest:$('#densitySuggest'),suggestText:$('#densitySuggestText'),suggestApply:$('[data-density-apply]'),suggestDismiss:$('[data-density-dismiss]')},
   params,status:materialStatus.density,getFps:()=>adaptiveQuality.fps,lowFps:visualQuality.targetLowFps
 });
@@ -821,12 +841,34 @@ function selectView(key){
   transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
   transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
   document.querySelectorAll('[data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view===key));
-  $('#viewLabel').textContent=p.label;const density=new URLSearchParams(location.search).get('density');history.replaceState(null,'',`?v=${APP_VERSION}&view=${key}${forceWebGL?'&backend=webgl':''}${requestedQuality!=='presentation'?`&quality=${requestedQuality}`:''}${density?`&density=${encodeURIComponent(density)}`:''}${regionParam()?`&${REGION_URL_PARAM}=${encodeURIComponent(regionParam())}`:''}`);
+  $('#viewLabel').textContent=p.label;const density=new URLSearchParams(location.search).get('density');const keepMode=new URLSearchParams(location.search).get(MODE_URL_PARAM);const keepLight=new URLSearchParams(location.search).get('light');history.replaceState(null,'',`?v=${APP_VERSION}&view=${key}${forceWebGL?'&backend=webgl':''}${effectiveQuality!=='presentation'?`&quality=${effectiveQuality}`:''}${density?`&density=${encodeURIComponent(density)}`:''}${regionParam()?`&${REGION_URL_PARAM}=${encodeURIComponent(regionParam())}`:''}${keepMode?`&${MODE_URL_PARAM}=${encodeURIComponent(keepMode)}`:''}${keepLight?`&light=${encodeURIComponent(keepLight)}`:''}`);
 }
 const regionParam=()=>new URLSearchParams(location.search).get(REGION_URL_PARAM);
 document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>selectView(button.dataset.view));
 selectView(startKey);
 materialStatus.selectView=selectView;
+// Bước I 31A — Chế độ Preview/Lite. Đổi mode cần dựng lại pipeline chất lượng (presentation ↔ performance)
+// nên tải lại trang có giữ trạng thái (view, light, region) và có thông báo rõ; density tay đã lưu trước đó
+// bị preset của mode mới ghi đè (đúng "chỉnh tay được giữ cho tới khi đổi mode"), quality/density trên URL
+// do người dùng chỉ định được bỏ để preset của mode có hiệu lực.
+const modeController=createModeController({root:$('#modeControl'),params,initial:modeResolved,onChoose:({id})=>{
+  const preset=modeById(id);
+  try{localStorage.setItem(MODE_STORAGE_KEY,id);localStorage.setItem('citylab.31e.density',preset.density);}catch{}
+  const query=new URLSearchParams();
+  query.set('v',APP_VERSION);query.set('view',activeView);
+  if(forceWebGL)query.set('backend','webgl');
+  query.set(MODE_URL_PARAM,id);query.set('light',activeLight);
+  if(activeRegion!==REGION_ALL_ID)query.set(REGION_URL_PARAM,activeRegion);
+  showRegionNotice(`Đang chuyển sang chế độ ${preset.label} — giữ góc nhìn, trang sẽ tải lại…`);
+  setTimeout(()=>{location.search=`?${query}`;},650);
+}});
+materialStatus.mode.controller=true;
+{
+  const counts=$('#modeCounts');
+  if(counts)counts.textContent=modePreset.id==='lite'
+    ?`Lite · mật độ Nhẹ · hiệu năng · texture ½ cạnh · UI gọn · signature vẫn đủ`
+    :`Preview · mật độ Đầy đủ · trình diễn · texture đầy đủ · UI đầy đủ`;
+}
 materialStatus.regions=REGIONS_31.map(region=>({id:region.id,label:region.label,short:region.short,bbox:region.bbox}));
 materialStatus.setFloodRain=setFloodRain;
 materialStatus.setFloodScenario=setFloodScenario;
@@ -844,6 +886,8 @@ function setLight(key){
   activeFogDensity=state.fogDensity;scene.background=skyTextures[key];scene.fog.color.set(state.fog);scene.fog.density=state.fogDensity;sun.color.set(state.sun);sun.intensity=state.sunIntensity;hemi.color.set(state.hemiSky);hemi.groundColor.set(state.hemiGround);hemi.intensity=state.hemi;renderer.toneMappingExposure=state.exposure;nightLevel.value=state.night;sun.position.set(...state.pos);
   document.querySelectorAll('[data-light]').forEach(button=>button.classList.toggle('active',button.dataset.light===key));
   materialStatus.light=key;
+  // URL đang mang light (do đổi mode giữ lại) thì cập nhật để reload không quay về giá trị cũ.
+  try{const query=new URLSearchParams(location.search);if(query.has('light')){query.set('light',key);history.replaceState(null,'',`?${query}`);}}catch{}
 }
 document.querySelectorAll('[data-light]').forEach(button=>button.onclick=()=>setLight(button.dataset.light));
 materialStatus.visualCalibration={profile:'hcmc-aerial-default-30',saturation:'1.015–1.085 by distance',contrast:'1.06–1.13 by distance',atmosphere:'distance-bounded neutral haze',materials:'class-separated physical PBR + camera-scaled inferred relief',renderScale:Math.min(devicePixelRatio,visualQuality.maxPixelRatio)};
@@ -919,7 +963,7 @@ Object.assign(materialStatus,{
   version:APP_VERSION,threeRevision:THREE.REVISION,backend:actualWebGPU?'webgpu':'webgl2-fallback',
   buildings:D.meta.renderedBuildings,areaKm2:D.meta.areaKm2,materialFamilies:8,
   directlyTaggedBuildings:SM.directTaggedBuildings,directCoveragePercent:SM.directCoveragePercent,
-  inferredBuildings:D.meta.renderedBuildings-SM.directTaggedBuildings,realism:100,light:'day',
+  inferredBuildings:D.meta.renderedBuildings-SM.directTaggedBuildings,realism:100,light:activeLight,
   bridge:{name:'Cầu Ba Son',pylonHeightM:113,cablePlanes:2,cables:28,surveyedGeometry:false},
   marinaCentral:{heightM:240,floors:55,osmParts:[1432358258,1432358259,1432358260],classification:'official_attributes_anchored_to_open_footprint'},
   grandMarinaResidences:{correctedTowers:4,osmParts:[1151026864,1151026865,1151026866,1151026867],heightsM:[170,170,170,162],heightClass:'official_floor_count_proxy',towerNameMapping:'withheld_pending_official_geospatial_plan'},
@@ -989,6 +1033,11 @@ function render(now){
   if(now-lastLabel>120){lastLabel=now;updateLabels();}
   adaptiveQuality.update(dt,cameraDistance,pointerDown||!!desired);
   cityDensity.update(dt,camera.position);
+  // Bước I: kích thước texture facade chỉ biết sau khi atlas nạp xong (async) — chép vào mode.status một lần.
+  if(materialStatus.mode&&!materialStatus.mode.textures.atlas&&materialStatus.identityFacades.atlasSize){
+    materialStatus.mode.textures.atlas=materialStatus.identityFacades.atlasSize;
+    materialStatus.mode.textures.mask=materialStatus.identityFacades.maskSize||null;
+  }
   renderer.info?.reset?.();
   if(visualPipeline&&!pipelineFault){try{visualPipeline.render();}catch(error){pipelineFault=true;materialStatus.visualRuntime.pipeline='direct fallback after compile failure';materialStatus.visualRuntime.error=String(error?.message||error);console.warn('City Visual Runtime 30 pipeline failed; switching to direct rendering.',error);renderer.render(scene,camera);}}
   else renderer.render(scene,camera);

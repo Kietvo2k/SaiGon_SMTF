@@ -220,7 +220,7 @@ async function runBackend(browser, backend) {
     out.initial = await page.evaluate(() => ({ level: window.webgpuMaterials24.density.level, source: window.webgpuMaterials24.density.source }));
     await openControls(page);
     out.control = await page.evaluate(() => {
-      const group = document.querySelector('#controlBody [role="radiogroup"]');
+      const group = document.querySelector('#densityControl[role="radiogroup"]');
       const buttons = group ? [...group.querySelectorAll('[data-density]')] : [];
       return {
         exists: !!group, label: group?.getAttribute('aria-label') || document.getElementById(group?.getAttribute('aria-labelledby') || '')?.textContent || '',
