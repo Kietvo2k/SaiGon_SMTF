@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { loadSignatureRegistry } from './signature-registry-31.js?v=30b-31e2';
+import { REGION_ALL_ID, REGION_STORAGE_KEY, REGION_URL_PARAM, REGIONS_31, normalizeRegionId, regionById, regionTrafficPayload } from './city-region-31.js?v=30b-31h';
 
 /*
  * City Density 31 · bước E/F kế hoạch 31A — "Mật độ chi tiết" (Đầy đủ / Cân bằng / Nhẹ / Tối thiểu).
@@ -13,11 +14,14 @@ import { loadSignatureRegistry } from './signature-registry-31.js?v=30b-31e2';
  *   (cull theo ô); nhóm nhẹ sắp lại ngay trong mesh nguồn (không thêm draw call).
  * - Đèn (E2), xe (bước D), tàu, lan can cầu thủ tục: qua API của từng module.
  * Bất biến F: mọi bộ lọc đi qua signature-registry-31.js; công trình/cây/đèn/module signature không bao giờ giảm.
+ * Bước H — "Khu mô phỏng" (city-region-31.js): chọn 1 trong 4 khu (hoặc Toàn bộ). Ngoài khu chỉ còn signature: chunk công trình
+ *   chia sẵn theo khu (drawRange = tiền tố signature), chunk cây/chi tiết/đèn theo (khu, ô) chỉ ẩn/hiện, bản xa và thiết bị mái dựng bản sao
+ *   theo khu ở lần chọn đầu, xe qua traffic.api.setRegion, tàu/nhãn do app lọc. Kết hợp được với mọi mức mật độ.
  * Hiệu ứng hậu kỳ/bóng vẫn do hồ sơ quality (city-visual-runtime-30.js) quản lý.
  * Không có ngẫu nhiên: mọi thứ hạng là hàm xác định của dữ liệu (băm theo SEED).
  */
 
-export const CITY_DENSITY_31_VERSION='density-31e';
+export const CITY_DENSITY_31_VERSION='density-31h';
 const SEED=31;
 const STORAGE_KEY='citylab.31e.density';
 const SUGGEST_AFTER_S=8;       // FPS dưới ngưỡng liên tục bấy lâu thì đề xuất hạ mức
@@ -100,8 +104,12 @@ export function scoreBuildings31({buildings,roads,isSignature=()=>false}){
   return scores;
 }
 
-// Chia công trình thành chunk lưới; arrays là mảng đỉnh theo thứ tự công trình, faceEnds[i] = tam giác cuối (lũy kế).
-export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,material,roads,gate,cellSize=2500,name='Công trình 31E',mergeFraction=MERGED_BUILDING_FRACTION}){
+// Chia công trình thành chunk; arrays là mảng đỉnh theo thứ tự công trình, faceEnds[i] = tam giác cuối (lũy kế).
+// - không có regionOf: chunk lưới cellSize (như 31E).
+// - có regionOf (bước H, "Khu mô phỏng"): mỗi khu chia k-d thành tối đa 2^kdLevels chunk cân số công trình (tổng số chunk gần bằng
+//   lưới cũ ⇒ không thêm draw call), mỗi chunk thuộc đúng một khu ⇒ ẩn/hiện cả khu chỉ là visible/drawRange.
+//   setRegion(id): chunk ngoài khu chỉ giữ tiền tố signature (hạng -1) — bất biến F; chunk trong khu theo mức mật độ.
+export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,material,roads,gate,cellSize=2500,name='Công trình 31E',mergeFraction=MERGED_BUILDING_FRACTION,regionOf=null,kdLevels=2}){
   const started=performance.now(),n=buildings.length,faceStart=i=>i?faceEnds[i-1]:0;
   const scores=scoreBuildings31({buildings,roads,isSignature:id=>gate.isSignatureBuilding(id)});
   const drawable=[];for(let i=0;i<n;i++)if(faceEnds[i]>faceStart(i))drawable.push(i);
@@ -110,9 +118,23 @@ export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,mate
   const ordinary=drawable.filter(i=>!gate.isSignatureBuilding(buildings[i].id)).sort((a,b)=>scores[b]-scores[a]||a-b);
   ordinary.forEach((i,k)=>{rank[i]=k/ordinary.length;});
   for(const i of drawable)if(gate.isSignatureBuilding(buildings[i].id))rank[i]=-1;
-  const cells=new Map();
-  for(const i of drawable){const key=cellKey(buildings[i].center[0],buildings[i].center[1],cellSize);if(!cells.has(key))cells.set(key,[]);cells.get(key).push(i);}
-  const group=new THREE.Group();group.name=`${name} · chunk lưới ${cellSize} m`;
+  const cells=new Map(),cellRegion=new Map();
+  if(regionOf){
+    const byRegion=new Map();
+    for(const i of drawable){const r=regionOf(buildings[i].center[0],buildings[i].center[1]);if(!byRegion.has(r))byRegion.set(r,[]);byRegion.get(r).push(i);}
+    // k-d: cắt đôi theo trục dài hơn tại trung vị (hòa → chỉ số công trình) ⇒ xác định, chunk cân số công trình.
+    const kd=(list,level,path)=>{
+      if(level===0||list.length<2)return [[path,list]];
+      let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
+      for(const i of list){const [x,z]=buildings[i].center;if(x<minX)minX=x;if(x>maxX)maxX=x;if(z<minZ)minZ=z;if(z>maxZ)maxZ=z;}
+      const axis=(maxX-minX)>=(maxZ-minZ)?0:1,sorted=list.slice().sort((a,b)=>buildings[a].center[axis]-buildings[b].center[axis]||a-b),mid=sorted.length>>1;
+      return [...kd(sorted.slice(0,mid),level-1,path+'a'),...kd(sorted.slice(mid),level-1,path+'b')];
+    };
+    for(const [r,list] of byRegion)for(const [path,part] of kd(list,kdLevels,'')){const key=`${r}:${path}`;cells.set(key,part);cellRegion.set(key,r);}
+  }else{
+    for(const i of drawable){const key=cellKey(buildings[i].center[0],buildings[i].center[1],cellSize);if(!cells.has(key))cells.set(key,[]);cells.get(key).push(i);}
+  }
+  const group=new THREE.Group();group.name=regionOf?`${name} · chunk khu (k-d ${kdLevels} mức)`:`${name} · chunk lưới ${cellSize} m`;
   const meshes=[];
   for(const [key,list] of [...cells].sort((a,b)=>a[0]<b[0]?-1:1)){
     list.sort((a,b)=>rank[a]-rank[b]||a-b);
@@ -128,16 +150,18 @@ export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,mate
     const mesh=new THREE.Mesh(geometry,material);
     mesh.name=`${name} · ô ${key}`;mesh.castShadow=true;mesh.receiveShadow=true;
     const signatureCount=ranks.findIndex(r=>r>=0);
-    mesh.userData.densityChunk={cell:key,buildings:Int32Array.from(list),vertexEnds,ranks,signatureCount:signatureCount<0?list.length:signatureCount};
+    mesh.userData.densityChunk={cell:key,region:cellRegion.get(key)??null,buildings:Int32Array.from(list),vertexEnds,ranks,signatureCount:signatureCount<0?list.length:signatureCount};
     group.add(mesh);meshes.push(mesh);
   }
   const prefixOf=(chunk,f)=>f>=1?chunk.buildings.length:chunk.signatureCount+countBelow(chunk.ranks,f,chunk.signatureCount);
   // Mesh gộp (bước G): đúng tập công trình của từng chunk ở tỉ lệ mergeFraction, nối thành một mesh cùng vật liệu →
   // cùng pipeline, đổi qua lại chỉ là visible. Chỉ dùng khi tỉ lệ yêu cầu đúng bằng mergeFraction (mức Tối thiểu).
-  let merged=null;
-  if(mergeFraction!==null&&mergeFraction<1&&meshes.length>1){
-    const parts=meshes.map(mesh=>{const chunk=mesh.userData.densityChunk,k=prefixOf(chunk,mergeFraction);return {mesh,chunk,k,count:k?chunk.vertexEnds[k-1]:0};});
-    const vertices=parts.reduce((sum,part)=>sum+part.count,0),geometry=new THREE.BufferGeometry();
+  // Bước H: bản gộp toàn thành phố dựng sẵn như trước; bản gộp riêng từng khu (gồm cả signature ngoài khu, vẫn 1 mesh) dựng lười ở lần
+  // chọn khu đầu tiên ở mức Tối thiểu.
+  const mergeParts=(filter,kOf)=>meshes.filter(mesh=>filter(mesh.userData.densityChunk)).map(mesh=>{const chunk=mesh.userData.densityChunk,k=kOf(chunk);return {mesh,chunk,k,count:k?chunk.vertexEnds[k-1]:0};});
+  const buildMerged=(filter,label,kOf=chunk=>prefixOf(chunk,mergeFraction),cell=`merged ${label}`)=>{
+    const parts=mergeParts(filter,kOf),vertices=parts.reduce((sum,part)=>sum+part.count,0),geometry=new THREE.BufferGeometry();
+    if(!vertices)return null;
     for(const [attribute,source] of Object.entries(meshes[0].geometry.attributes)){
       const size=source.itemSize,target=new Float32Array(vertices*size);let offset=0;
       for(const part of parts){if(!part.count)continue;target.set(part.mesh.geometry.attributes[attribute].array.subarray(0,part.count*size),offset);offset+=part.count*size;}
@@ -147,23 +171,41 @@ export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,mate
     const ids=[],ends=[];let base=0;
     for(const part of parts){for(let k=0;k<part.k;k++){ids.push(part.chunk.buildings[k]);ends.push(base+part.chunk.vertexEnds[k]);}base+=part.count;}
     const mesh=new THREE.Mesh(geometry,material);
-    mesh.name=`${name} · gộp mức ${mergeFraction}`;mesh.castShadow=meshes[0].castShadow;mesh.receiveShadow=meshes[0].receiveShadow;mesh.visible=false;
-    mesh.userData.densityChunk={cell:'merged',buildings:Int32Array.from(ids),vertexEnds:Int32Array.from(ends),ranks:new Float32Array(ids.length),signatureCount:ids.length};
-    group.add(mesh);merged=mesh;
-  }
-  let shown=drawable.length,useMerged=false;
-  const setFraction=f=>{
-    shown=0;let triangles=0;
-    useMerged=!!merged&&Math.abs(f-mergeFraction)<1e-9;
-    for(const mesh of meshes){
-      const chunk=mesh.userData.densityChunk,k=prefixOf(chunk,f);
-      const count=k?chunk.vertexEnds[k-1]:0;
-      mesh.geometry.setDrawRange(0,count);mesh.visible=count>0&&!useMerged;shown+=k;triangles+=count/3;
-    }
-    if(merged)merged.visible=useMerged;
-    return {buildings:shown,triangles,merged:useMerged};
+    mesh.name=`${name} · gộp ${label}`;mesh.castShadow=meshes[0].castShadow;mesh.receiveShadow=meshes[0].receiveShadow;mesh.visible=false;
+    mesh.userData.densityChunk={cell,region:null,buildings:Int32Array.from(ids),vertexEnds:Int32Array.from(ends),ranks:new Float32Array(ids.length),signatureCount:ids.length};
+    group.add(mesh);return mesh;
   };
-  const pickable=()=>useMerged?[merged]:meshes;
+  let merged=null;const mergedByRegion=new Map(),sigOutside=new Map();
+  if(mergeFraction!==null&&mergeFraction<1&&meshes.length>1)merged=buildMerged(()=>true,`mức ${mergeFraction}`,undefined,'merged');
+  let shown=drawable.length,fraction=1,regionId=null,merging=false;
+  const refresh=()=>{
+    shown=0;let triangles=0;const byRegion={};
+    merging=!!merged&&Math.abs(fraction-mergeFraction)<1e-9;
+    if(merging&&regionId&&!mergedByRegion.has(regionId))mergedByRegion.set(regionId,buildMerged(()=>true,`mức ${mergeFraction} · ${regionId}`,chunk=>chunk.region===regionId?prefixOf(chunk,mergeFraction):chunk.signatureCount));
+    // Signature ngoài khu (luôn hiện, bất biến F): một mesh gộp duy nhất cho mọi chunk ngoài khu thay vì mỗi chunk một draw call.
+    if(regionId&&!sigOutside.has(regionId))sigOutside.set(regionId,buildMerged(chunk=>chunk.region!==regionId,`signature ngoài khu ${regionId}`,chunk=>chunk.signatureCount));
+    for(const mesh of meshes){
+      const chunk=mesh.userData.densityChunk,inRegion=!regionId||chunk.region===regionId;
+      // Ngoài khu chỉ giữ tiền tố signature (f = -1 < mọi hạng thường); trong khu theo mức mật độ (hoặc bản gộp khi Tối thiểu).
+      const k=prefixOf(chunk,inRegion?fraction:-1),count=k?chunk.vertexEnds[k-1]:0,covered=merging&&inRegion;
+      // Chunk ngoài khu không tự vẽ: phần signature của chúng nằm trong mesh gộp sigOutside (vẽ 1 draw call).
+      mesh.geometry.setDrawRange(0,inRegion?count:0);mesh.visible=inRegion&&count>0&&!covered;shown+=k;triangles+=count/3;
+      if(chunk.region)byRegion[chunk.region]=(byRegion[chunk.region]||0)+k;
+    }
+    if(merged)merged.visible=merging&&!regionId;
+    for(const [id,mesh] of mergedByRegion)if(mesh)mesh.visible=merging&&id===regionId;
+    for(const [id,mesh] of sigOutside)if(mesh)mesh.visible=id===regionId&&!merging;   // khi gộp, bản gộp của khu đã gồm signature ngoài khu
+    return {buildings:shown,triangles,merged:merging,byRegion};
+  };
+  const setFraction=f=>{fraction=f;return refresh();};
+  const setRegion=id=>{regionId=id||null;return refresh();};
+  const pickable=()=>{
+    const list=[];
+    if(merging){if(merged?.visible)list.push(merged);for(const mesh of mergedByRegion.values())if(mesh?.visible)list.push(mesh);}
+    for(const mesh of sigOutside.values())if(mesh?.visible)list.push(mesh);
+    for(const mesh of meshes)if(mesh.visible)list.push(mesh);
+    return list;
+  };
   // Chọn công trình: raycast tôn trọng drawRange; tam giác → công trình bằng tìm nhị phân trên vertexEnds.
   const pick=raycaster=>{
     const hit=raycaster.intersectObjects(pickable(),false)[0];if(!hit)return null;
@@ -172,9 +214,11 @@ export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,mate
     return chunk.buildings[lo];
   };
   const shownIds=()=>{const ids=[];for(const mesh of pickable()){const chunk=mesh.userData.densityChunk,count=mesh.visible?mesh.geometry.drawRange.count:0;for(let k=0;k<chunk.buildings.length&&chunk.vertexEnds[k]<=count;k++)ids.push(Number(buildings[chunk.buildings[k]].id));}return ids;};
-  const stats={chunks:meshes.length,cellSizeM:cellSize,drawable:drawable.length,signature:drawable.length-ordinary.length,triangles:faceEnds[n-1]||0,
+  // Số công trình của từng khu (theo tâm footprint): QA đối chiếu "bốn khu phủ đúng một lần".
+  const regionTotals=()=>{const totals={};for(const mesh of meshes){const chunk=mesh.userData.densityChunk;if(chunk.region)totals[chunk.region]=(totals[chunk.region]||0)+chunk.buildings.length;}return totals;};
+  const stats={chunks:meshes.length,cellSizeM:regionOf?null:cellSize,regionChunks:!!regionOf,drawable:drawable.length,signature:drawable.length-ordinary.length,triangles:faceEnds[n-1]||0,
     merged:merged?{fraction:mergeFraction,buildings:merged.userData.densityChunk.buildings.length,triangles:merged.geometry.attributes.position.count/3}:null,buildMs:Math.round(performance.now()-started)};
-  return {group,meshes,merged,setFraction,pick,shownIds,stats,total:drawable.length,shown:()=>shown};
+  return {group,meshes,get merged(){return merged;},mergedByRegion,setFraction,setRegion,pick,shownIds,regionTotals,stats,total:drawable.length,shown:()=>shown};
 }
 
 /// Thưa đều instance (cây, chi tiết runtime 28, thiết bị mái). Hạng phân tầng theo ô 300 m: trong ô có m mục (thứ tự
@@ -192,10 +236,11 @@ export function createBuildingChunks31({arrays,itemSizes,faceEnds,buildings,mate
 // - lod.nearM không có nguồn `far`: phần không bảo vệ của ô xa hơn nearM không được vẽ (chi tiết nhỏ hơn ~1 px); mục
 //   bảo vệ luôn vẽ.
 // - setNearScale(s): nhân bán kính nearM (mức Tối thiểu dùng 0 ⇒ chỉ còn bản xa + mục bảo vệ).
-export function createInstanceDensity31({sources,items,isProtected=()=>false,stratumM=300,cellSize=null,label='Instance 31E',lod=null}){
-  const n=items.length,prot=new Uint8Array(n),rank=new Float64Array(n),strata=new Map();
+export function createInstanceDensity31({sources,items,isProtected=()=>false,stratumM=300,cellSize=null,label='Instance 31E',lod=null,regionOf=null,enabled=true}){
+  const n=items.length,prot=new Uint8Array(n),rank=new Float64Array(n),strata=new Map(),reg=new Array(n).fill('');
   for(let k=0;k<n;k++){
-    prot[k]=isProtected(items[k].x,items[k].z)?1:0;
+    prot[k]=isProtected(items[k].x,items[k].z,k)?1:0;
+    if(regionOf)reg[k]=regionOf(items[k].x,items[k].z);
     if(prot[k])continue;
     const key=cellKey(items[k].x,items[k].z,stratumM);if(!strata.has(key))strata.set(key,[]);strata.get(key).push(k);
   }
@@ -209,10 +254,12 @@ export function createInstanceDensity31({sources,items,isProtected=()=>false,str
   // Mục bảo vệ gom vào MỘT nhóm cố định riêng (luôn đủ 100 %, không theo ô ⇒ mức Tối thiểu chỉ tốn 1 draw call/nhóm thay
   // vì mỗi ô có mục bảo vệ một draw call); phần còn lại chia ô theo lưới.
   const groups=new Map();
-  for(const k of order){const key=prot[k]?'@protected':cellSize?cellKey(items[k].x,items[k].z,cellSize):'all';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(k);}
+  // Bước H: có regionOf thì nhóm (ô) không bao giờ vắt ngang hai khu; mục bảo vệ vẫn một nhóm cố định chung mọi khu.
+  const groupKey=k=>prot[k]?'@protected':(regionOf?`${reg[k]}|`:'')+(cellSize?cellKey(items[k].x,items[k].z,cellSize):'all');
+  for(const k of order){const key=groupKey(k);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(k);}
   const cells=[...groups].sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0).map(([key,list])=>{
     const fixed=key==='@protected',protectedCount=fixed?list.length:0;
-    return {key,list,fixed,protectedCount,ranks:fixed?new Float64Array(0):Float64Array.from(list,k=>rank[k]),meshes:[],farSlots:null,farHidden:null,k:list.length,near:undefined,box:null};
+    return {key,list,fixed,protectedCount,region:fixed||!regionOf?null:reg[list[0]],off:false,ranks:fixed?new Float64Array(0):Float64Array.from(list,k=>rank[k]),meshes:[],farSlots:null,farHidden:null,gFar:null,gFarHidden:undefined,k:list.length,near:undefined,box:null};
   });
   const padM=lod?.padM??40,protectM=lod?.protectM??2500,nearM=lod?.nearM??Infinity;
   // Hộp bao 3D của ô (từ ma trận instance của nguồn đầu tiên) để đo khoảng cách camera → ô.
@@ -224,16 +271,16 @@ export function createInstanceDensity31({sources,items,isProtected=()=>false,str
       cell.box=[box[0]-padM,box[1]-padM,box[2]-padM,box[3]+padM,box[4]+padM,box[5]+padM];
     }
   }
-  const inPlace=[],slotOf=new Int32Array(n);
+  const inPlace=[],inPlaceInfo=[],chunkSources=[],slotOf=new Int32Array(n);
   order.forEach((k,slot)=>{slotOf[k]=slot;});
   let farSource=null;
-  for(const {mesh,stride=1,key:sourceKey,inPlace:own=!cellSize,far=false} of sources){
+  for(const {mesh,stride=1,key:sourceKey,inPlace:own=!cellSize,far=false,chunkName=null} of sources){
     const source=sourceKey||mesh.name;
     const copy=(attribute,size,target,list)=>{const from=attribute.array;list.forEach((k,slot)=>target.set(from.subarray(k*stride*size,(k+1)*stride*size),slot*stride*size));};
     if(own||far){
       for(const [attribute,size] of [[mesh.instanceMatrix,16],[mesh.instanceColor,3]]){if(!attribute)continue;const target=attribute.array.slice();copy(attribute,size,target,order);attribute.array.set(target);attribute.needsUpdate=true;}
       mesh.userData.densityInstances={source,stride,protected:order.filter(k=>prot[k]).length,far};
-      inPlace.push({mesh,stride});
+      inPlace.push({mesh,stride});inPlaceInfo.push({mesh,stride,far,source});
       if(far){farSource={mesh,original:mesh.instanceMatrix.array.slice()};for(const cell of cells){cell.farSlots=Int32Array.from(cell.list,k=>slotOf[k]);cell.farHidden=false;}}
       continue;
     }
@@ -243,17 +290,18 @@ export function createInstanceDensity31({sources,items,isProtected=()=>false,str
       if(mesh.instanceColor){chunk.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(count*3),3);copy(mesh.instanceColor,3,chunk.instanceColor.array,list);}
       chunk.instanceMatrix.setUsage(THREE.StaticDrawUsage);chunk.instanceMatrix.needsUpdate=true;
       chunk.castShadow=mesh.castShadow;chunk.receiveShadow=mesh.receiveShadow;chunk.renderOrder=mesh.renderOrder;
-      chunk.name=name;chunk.computeBoundingSphere();
+      chunk.name=name;chunk.computeBoundingSphere();chunk.visible=enabled;
       return chunk;
     };
     for(const cell of cells){
-      const chunk=build(cell.list,`${mesh.name||label} · ô ${cell.key}`);chunk.userData.densityInstances={source,stride,protected:cell.protectedCount};
+      const chunk=build(cell.list,`${chunkName||mesh.name||label} · ô ${cell.key}`);chunk.userData.densityInstances={source,stride,protected:cell.protectedCount};
       mesh.add(chunk);cell.meshes.push({chunk,stride});
     }
-    mesh.layers.disableAll();
+    mesh.userData.densityLayerMask=mesh.layers.mask;chunkSources.push(mesh);
+    if(enabled)mesh.layers.disableAll();
   }
   const protectedTotal=cells.reduce((s,c)=>s+c.protectedCount,0);
-  let shown=n,nearScale=1,farDirty=false;
+  let nearScale=1,farDirty=false;
   const hasFar=!!farSource;
   // Ma trận suy biến của mục bản xa: giữ vị trí (hệ số tịnh tiến) nhưng thu phần xoay/tỉ lệ về 0.
   function setFarHidden(cell,slotFrom,slotTo,hidden){
@@ -267,32 +315,44 @@ export function createInstanceDensity31({sources,items,isProtected=()=>false,str
   }
   // Đặt count của ô theo (k = số mục mức mật độ cho phép) và trạng thái LOD hiện tại.
   function applyCell(cell){
+    const off=regionId!==null&&!cell.fixed&&cell.region!==regionId;cell.off=off;
     const k=cell.k,near=!lod||cell.near!==false;
     // Nhóm bảo vệ của nguồn không có bản xa luôn vẽ đủ; ô thường xa thì không vẽ bản đầy đủ.
     const drawNear=cell.fixed&&!hasFar?true:near;
-    // Bản xa: mục của ô gần (hoặc nhóm bảo vệ còn gần) ẩn vì đã vẽ bằng bản đầy đủ.
-    if(hasFar&&cell.farHidden!==(!lod||near)){cell.farHidden=!lod||near;setFarHidden(cell,0,cell.list.length,cell.farHidden);}
-    const nearK=drawNear?k:0;
+    // Bản xa: mục của ô gần (hoặc nhóm bảo vệ còn gần) ẩn vì đã vẽ bằng bản đầy đủ. Ô ngoài khu không đụng tới (mesh bản xa của khu ẩn cả khối).
+    if(hasFar&&!off){
+      const hidden=!lod||near;
+      if(splitActive()){if(cell.gFarHidden!==hidden){cell.gFarHidden=hidden;setGroupFarHidden(cell,hidden);}}
+      else if(cell.farHidden!==hidden){cell.farHidden=hidden;setFarHidden(cell,0,cell.list.length,hidden);}
+    }
+    const nearK=drawNear&&!off?k:0;
     // count 0 ⇒ three r186 bỏ qua draw (không tính draw call) nhưng vẫn duyệt render object của chunk mỗi pass (cập nhật
     // uniform/binding, writeBuffer): 300+ chunk count 0 ở góc overview tốn ~9 ms CPU mỗi khung (đo bằng ablation). Vì vậy
     // chunk không có gì để vẽ thì ẩn hẳn (visible = false). Hiện lại không biên dịch gì: render object và pipeline của
     // chunk cùng vật liệu/hình đã có sẵn, và đã được dựng trong lần vẽ đầu tiên.
     // Chunk trong bán kính Đầy đủ của camera giữ visible dù count 0 (đã có render object/pipeline/bóng sẵn, về Đầy đủ không
     // biên dịch lúc đó); chỉ chunk ngoài bán kính ấy mới ẩn hẳn — chúng chỉ hiện dần khi camera đi tới.
-    const keep=cell.fixed||cell.inFull!==false;
-    for(const {chunk,stride} of cell.meshes){const count=nearK*stride;chunk.count=count;chunk.visible=count>0||keep;chunk.userData.densityCount=k*stride;}
+    // Bước H: chunk ngoài khu ẩn hẳn (trừ nhóm bảo vệ); chunk không thuộc nguồn đang bật (enabled=false) cũng ẩn.
+    const keep=!off&&(cell.fixed||cell.inFull!==false);
+    for(const {chunk,stride} of cell.meshes){const count=nearK*stride;chunk.count=count;chunk.visible=enabled&&!off&&(count>0||keep);chunk.userData.densityCount=(off?0:k)*stride;}
   }
+  // Tổng mục cho phép: theo khu đang chọn (mục bảo vệ luôn tính) và tổng toàn bộ (nguồn in-place chỉ dùng khi không chọn khu).
+  const recount=()=>{shown=0;plainShown=0;for(const cell of cells){plainShown+=cell.k;if(!cell.off)shown+=cell.k;}};
   const setFraction=f=>{
-    shown=0;
     for(const cell of cells){
-      cell.k=cell.fixed||f>=1?cell.list.length:countBelow(cell.ranks,f);shown+=cell.k;
+      cell.k=cell.fixed||f>=1?cell.list.length:countBelow(cell.ranks,f);
       applyCell(cell);
     }
-    for(const {mesh,stride} of inPlace){mesh.count=shown*stride;mesh.userData.densityCount=shown*stride;}
-    flushFar();
+    recount();
+    for(const {mesh,stride} of inPlace){mesh.count=plainShown*stride;mesh.userData.densityCount=plainShown*stride;}
+    applySplit();flushFar();
     return shown;
   };
-  function flushFar(){if(farDirty){farSource.mesh.instanceMatrix.needsUpdate=true;farDirty=false;}}
+  function flushFar(){
+    if(farDirty){farSource.mesh.instanceMatrix.needsUpdate=true;farDirty=false;}
+    for(const group of dirtyGroups)group.mesh.instanceMatrix.needsUpdate=true;
+    dirtyGroups.clear();
+  }
   const boxDistance=(box,x,y,z)=>Math.hypot(Math.max(box[0]-x,0,x-box[3]),Math.max(box[1]-y,0,y-box[4]),Math.max(box[2]-z,0,z-box[5]));
   // Cập nhật LOD theo vị trí camera (mỗi khung; chỉ đụng ô đổi trạng thái). Trễ ±6 % tránh nhấp nháy ở biên.
   let lodChanges=0;
@@ -301,6 +361,7 @@ export function createInstanceDensity31({sources,items,isProtected=()=>false,str
     let changed=0;
     for(const cell of cells){
       if(cell.fixed&&!hasFar)continue;
+      if(cell.off)continue;   // ô ngoài khu không vẽ gì: bỏ qua, tính lại khi khu được chọn
       const d=boxDistance(cell.box,position.x,position.y,position.z);
       const radius=cell.fixed?protectM:nearM*nearScale,near=cell.near===undefined?d<radius:cell.near?d<radius*1.06:d<radius*.94;
       const full=cell.inFull===undefined?d<nearM:cell.inFull?d<nearM*1.06:d<nearM*.94;
@@ -312,9 +373,84 @@ export function createInstanceDensity31({sources,items,isProtected=()=>false,str
     nearScale=scale;
     for(const cell of cells)cell.near=undefined;   // đánh giá lại từ đầu ở lần setLodCamera kế tiếp (không trễ)
   };
-  const meshes=[...cells.flatMap(cell=>cell.meshes.map(entry=>entry.chunk)),...inPlace.map(entry=>entry.mesh)];
-  const lodState=()=>({nearCells:cells.filter(cell=>cell.near!==false&&cell.meshes.length).length,farCells:cells.filter(cell=>cell.near===false).length,cells:cells.length,changes:lodChanges});
-  return {setFraction,setLodCamera,setNearScale,lodState,meshes,total:n,protected:protectedTotal,chunks:cells.reduce((s,c)=>s+c.meshes.length,0),shown:()=>shown};
+
+  // --- Bước H: khu mô phỏng. Nguồn in-place (bản xa, thiết bị mái) chỉ sắp theo hạng toàn cục nên không thể tách theo khu bằng
+  // một tiền tố; ở lần chọn khu đầu tiên dựng bản sao theo khu (một InstancedMesh mỗi khu + một nhóm bảo vệ), chỉ dùng khi
+  // đang chọn khu — khi "Toàn bộ" vẫn vẽ mesh nguồn như cũ (không thêm draw call). Nguồn chia ô đã tách khu sẵn từ lúc dựng.
+  let regionId=null,split=null,plainShown=n,shown=n;
+  const dirtyGroups=new Set(),extraMeshes=[];
+  const splitActive=()=>regionId!==null&&!!split;
+  function ensureSplit(){
+    if(split||!regionOf||!inPlaceInfo.length)return;
+    split={groups:new Map()};
+    const lists=new Map();
+    for(const k of order){const key=prot[k]?'@protected':reg[k];if(!lists.has(key))lists.set(key,[]);lists.get(key).push(k);}
+    const posOf=new Int32Array(n);
+    for(const [key,list] of lists){list.forEach((k,i)=>{posOf[k]=i;});split.groups.set(key,{key,list,entries:[]});}
+    for(const {mesh,stride,far,source} of inPlaceInfo){
+      const fromMatrix=far?farSource.original:mesh.instanceMatrix.array,fromColor=mesh.instanceColor?.array;
+      for(const group of split.groups.values()){
+        const gm=new THREE.InstancedMesh(mesh.geometry,mesh.material,Math.max(1,group.list.length*stride));
+        group.list.forEach((k,i)=>{
+          gm.instanceMatrix.array.set(fromMatrix.subarray(slotOf[k]*stride*16,(slotOf[k]+1)*stride*16),i*stride*16);
+          if(fromColor){if(!gm.instanceColor)gm.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(gm.count*3),3);gm.instanceColor.array.set(fromColor.subarray(slotOf[k]*stride*3,(slotOf[k]+1)*stride*3),i*stride*3);}
+        });
+        gm.instanceMatrix.needsUpdate=true;if(gm.instanceColor)gm.instanceColor.needsUpdate=true;
+        gm.castShadow=mesh.castShadow;gm.receiveShadow=mesh.receiveShadow;gm.renderOrder=mesh.renderOrder;gm.frustumCulled=mesh.frustumCulled;
+        gm.name=`${mesh.name||label} · khu ${group.key}`;gm.computeBoundingSphere();gm.visible=false;
+        gm.userData.densityInstances={source,stride,protected:group.key==='@protected'?group.list.length:0,far,region:group.key,split:true};
+        mesh.add(gm);extraMeshes.push(gm);
+        group.entries.push({mesh:gm,stride,far,original:far?gm.instanceMatrix.array.slice():null});
+      }
+    }
+    for(const cell of cells){const group=split.groups.get(cell.fixed?'@protected':cell.region);if(group&&hasFar)cell.gFar={group,slots:Int32Array.from(cell.list,k=>posOf[k])};}
+  }
+  function setGroupFarHidden(cell,hidden){
+    if(!cell.gFar)return;
+    for(const entry of cell.gFar.group.entries){
+      if(!entry.far)continue;
+      const array=entry.mesh.instanceMatrix.array,original=entry.original;
+      for(const slot of cell.gFar.slots){const o=slot*16;if(hidden){for(let j=0;j<16;j++)array[o+j]=(j>=12)?original[o+j]:0;}else for(let j=0;j<16;j++)array[o+j]=original[o+j];}
+      dirtyGroups.add(entry);
+    }
+  }
+  // Đặt count/visible mesh theo khu cho các bản sao (nguồn in-place); khi không chọn khu thì ẩn bản sao, mesh nguồn hiện lại.
+  function applySplit(){
+    for(const {mesh} of inPlace){if(mesh.userData.densityLayerMask===undefined)mesh.userData.densityLayerMask=mesh.layers.mask;mesh.layers.mask=enabled&&regionId!==null&&split?0:mesh.userData.densityLayerMask;}
+    if(!split)return;
+    for(const group of split.groups.values()){
+      let count=group.list.length;
+      if(group.key!=='@protected'){count=0;for(const cell of cells)if(!cell.fixed&&cell.region===group.key)count+=cell.k;}
+      const on=enabled&&regionId!==null&&(group.key==='@protected'||group.key===regionId);
+      for(const entry of group.entries){entry.mesh.count=count*entry.stride;entry.mesh.visible=on&&count>0;entry.mesh.userData.densityCount=count*entry.stride;}
+    }
+  }
+  const setRegion=id=>{
+    regionId=regionOf&&id?id:null;
+    if(regionId!==null)ensureSplit();
+    for(const cell of cells){cell.farHidden=undefined;cell.gFarHidden=undefined;applyCell(cell);}
+    recount();
+    for(const {mesh,stride} of inPlace){mesh.count=plainShown*stride;mesh.userData.densityCount=plainShown*stride;}
+    applySplit();flushFar();
+    return shown;
+  };
+  // Nguồn tạo lười (đèn đường): chỉ bật khi đang chọn khu; tắt thì trả layer cho mesh nguồn.
+  const setEnabled=on=>{
+    enabled=!!on;
+    for(const mesh of chunkSources)mesh.layers.mask=enabled?0:mesh.userData.densityLayerMask;
+    for(const cell of cells)applyCell(cell);
+    applySplit();
+  };
+  const regionCounts=()=>{
+    const out={};
+    for(const cell of cells){const key=cell.fixed?'@protected':cell.region??'all';const e=out[key]||(out[key]={total:0,shown:0});e.total+=cell.list.length;e.shown+=cell.k;}
+    return out;
+  };
+  const lodState=()=>({nearCells:cells.filter(cell=>cell.near!==false&&cell.meshes.length&&!cell.off).length,farCells:cells.filter(cell=>cell.near===false&&!cell.off).length,cells:cells.length,changes:lodChanges});
+  const liveMeshes=[];
+  const refreshMeshes=()=>{liveMeshes.length=0;liveMeshes.push(...cells.flatMap(cell=>cell.meshes.map(entry=>entry.chunk)),...inPlace.map(entry=>entry.mesh),...extraMeshes);return liveMeshes;};
+  refreshMeshes();
+  return {setFraction,setLodCamera,setNearScale,setRegion,setEnabled,prepareRegions:ensureSplit,lodState,regionCounts,get meshes(){return refreshMeshes();},total:n,protected:protectedTotal,chunks:cells.reduce((s,c)=>s+c.meshes.length,0),shown:()=>shown,isEnabled:()=>enabled};
 }
 
 // Vị trí instance đọc từ ma trận (cho mesh không lộ danh sách mục: chi tiết runtime 28, thiết bị mái).
@@ -439,7 +575,7 @@ const attachedToScene=object=>{for(let o=object;o;o=o.parent)if(o.isScene)return
 // Bộ điều phối mật độ + UI. Mọi nhóm là tùy chọn; thiếu nhóm nào thì nhóm đó không giảm (ghi trong status).
 export function createDensityController31({
   gate,buildingChunks,treeDensity,detailDensity=[],fixtureDensity=null,streetFurniture=null,traffic=null,vesselGroup=null,bridgeRails=[],
-  minimalMerges=[],vesselDetail=[],structureRoots=[],
+  minimalMerges=[],vesselDetail=[],structureRoots=[],regionOf=null,regionStatus={},onRegionChange=null,
   audit:auditInputs,ui={},params=new URLSearchParams(location.search),status={},getFps=()=>60,lowFps=31,storage=globalThis.localStorage
 }){
   const registry=gate.registry;
@@ -451,9 +587,19 @@ export function createDensityController31({
 
   // API xe đang dùng: luôn gọi qua api.setVisibleFraction (không giữ tham chiếu hàm); update() so sánh đối tượng API
   // mỗi khung — API xuất hiện sau, được thay hay bị gỡ thì đồng bộ lại mức hiện tại.
-  let vehicleApi=null;
+  let vehicleApi=null,regionId=null;   // regionId: null = Toàn bộ
+  // Khu cho xe (hợp đồng city-traffic-31: api.setRegion(null | {id, polygon:[[x,z],…]})). Gọi lại khi khu hoặc đối tượng API đổi;
+  // API chưa có setRegion thì xe không bị lọc theo khu (ghi trong regionStatus.vehiclesVia).
+  const trafficRegion={api:null,id:undefined,via:'chưa có API xe'};
+  function syncTrafficRegion(api){
+    if(typeof api?.setRegion!=='function'){Object.assign(trafficRegion,{api:api??null,id:undefined,via:api?'API xe chưa có setRegion (xe không lọc theo khu)':'chưa có API xe'});return false;}
+    if(trafficRegion.api===api&&trafficRegion.id===regionId)return true;
+    try{api.setRegion(regionId?regionTrafficPayload(regionId):null);Object.assign(trafficRegion,{api,id:regionId,via:'traffic.api.setRegion'});return true;}
+    catch(error){console.warn('Khu mô phỏng: traffic.api.setRegion lỗi',error);Object.assign(trafficRegion,{api,id:undefined,via:'lỗi setRegion'});return false;}
+  }
   function setVehicles(f){
     const api=traffic?.api?.();vehicleApi=api??null;
+    syncTrafficRegion(api);
     if(typeof api?.setVisibleFraction==='function'){const shown=api.setVisibleFraction(f);return {shown:typeof shown==='number'?shown:Math.round(vehicleTotal()*f),via:'traffic.api.setVisibleFraction'};}
     if(typeof api?.setDensity==='function'){const shown=api.setDensity(f);return {shown:typeof shown==='number'?shown:Math.round(vehicleTotal()*f),via:'traffic.api.setDensity'};}
     // Dự phòng (chưa có API bước D): xe đã xếp theo điểm đoạn đường giảm dần → cắt đuôi giữ trục chính/trung tâm.
@@ -483,7 +629,7 @@ export function createDensityController31({
   const hideInShadow=function(){this.userData.densityShadowCount=this.count;this.count=0;};
   const restoreAfterShadow=function(){if(this.userData.densityShadowCount!==undefined){this.count=this.userData.densityShadowCount;this.userData.densityShadowCount=undefined;}};
   function minorShadowList(){
-    const list=[...(treeDensity?.meshes||[]),...detailDensity.flatMap(set=>set.meshes||[]),...(fixtureDensity?.meshes||[]),streetFurniture?.lampMesh,streetFurniture?.headMesh];
+    const list=[...(treeDensity?.meshes||[]),...detailDensity.flatMap(set=>set.meshes||[]),...(fixtureDensity?.meshes||[]),...(lampSet?.meshes||[]),streetFurniture?.lampMesh,streetFurniture?.headMesh];
     for(const root of [traffic?.group,vesselGroup])root?.traverse(o=>{if(o.isMesh)list.push(o);});
     return list;
   }
@@ -515,6 +661,7 @@ export function createDensityController31({
   };
 
   const lodSets=[treeDensity,...detailDensity,fixtureDensity].filter(Boolean);
+  let lampSet=null,regionSource='default';
   let current=null,source='default',suggestion=null,lowFor=0,snoozeUntil=0,simulatedFps=null,clock=0;
   function apply(id,from){
     const level=levelById.get(id);if(!level)return false;
@@ -524,7 +671,8 @@ export function createDensityController31({
     const trees=treeDensity?treeDensity.setFraction(level.trees):0;
     const details=detailDensity.reduce((s,set)=>s+set.setFraction(level.details),0);
     const fixtures=fixtureDensity?fixtureDensity.setFraction(level.fixtures):0;
-    const lamps=streetFurniture?streetFurniture.setVisibleFraction(level.lamps):0;
+    const lampsAll=streetFurniture?streetFurniture.setVisibleFraction(level.lamps):0;
+    const lamps=lampSet?.isEnabled()?lampSet.setFraction(level.lamps):lampsAll;
     const vehicles=setVehicles(level.vehicles);
     let vessels=0;for(const mesh of vesselMeshes){mesh.count=Math.max(1,Math.ceil(mesh.userData.densityCapacity*level.vessels));vessels=Math.max(vessels,mesh.count);}
     for(const rail of bridgeRails){rail.visible=level.bridgeRails;level.bridgeRails?disabled.delete(rail):disabled.add(rail);}
@@ -538,7 +686,7 @@ export function createDensityController31({
     Object.assign(status,{
       version:CITY_DENSITY_31_VERSION,level:level.id,label:level.label,source,applyMs,
       fractions:{buildings:level.buildings,trees:level.trees,details:level.details,fixtures:level.fixtures,lamps:level.lamps,vehicles:level.vehicles,vessels:level.vessels,bridgeRails:level.bridgeRails},
-      counts:{buildings:built.buildings,buildingTriangles:built.triangles,trees,details,fixtures,lamps,vehicles:vehicles.shown,vessels},
+      counts:{buildings:built.buildings,buildingTriangles:built.triangles,trees,details,fixtures,lamps,vehicles:vehicles.shown,vessels,buildingsByRegion:built.byRegion},
       totals:{buildings:buildingChunks.total,trees:treeDensity?.total||0,lamps:streetFurniture?.instances?.().length||0,vehicles:vehicleTotal(),vessels:vesselMeshes[0]?.userData.densityCapacity||0},
       vehiclesVia:vehicles.via,
       render:{minorShadows:level.minorShadows,structureShadows:level.structureShadows,minorShadowMeshes,staticMerges:staticMerges.map(stat=>stat.active?stat.meshes:0),ambientOcclusion:level.ambientOcclusion,ambientOcclusionActive:false,bloom:level.bloom,bloomActive:false,mergedBuildings:!!built.merged},
@@ -549,9 +697,79 @@ export function createDensityController31({
     body.densityLevel=level.id;body.densityAudit=audit.complete?'complete':'incomplete';
     body.densityBuildings=String(built.buildings);body.densityTrees=String(trees);body.densityLamps=String(lamps);body.densityVehicles=String(vehicles.shown);
     if(!audit.complete)console.warn('Mật độ 31E: registry signature chưa hiển thị đủ',audit.missing);
-    renderUi();
+    renderUi();updateRegionStatus();
     return true;
   }
+
+  // --- Bước H: "Khu mô phỏng". Mỗi tập tự lọc theo khu (chunk/drawRange/visible); đây chỉ điều phối + trạng thái + UI.
+  // Đèn đường: mesh của city-street-furniture-31 là một cặp InstancedMesh toàn thành phố nên tạo lười ở lần chọn khu đầu tiên một
+  // tập chunk (khu, ô 500 m) từ chính ma trận của nó; khi Toàn bộ thì dùng lại mesh gốc + setVisibleFraction như 31E.
+  function ensureLampSet(){
+    if(lampSet||!regionOf||!streetFurniture?.instances||!streetFurniture.lampMesh||!streetFurniture.headMesh)return lampSet;
+    const lamps=streetFurniture.instances();
+    lampSet=createInstanceDensity31({sources:[{mesh:streetFurniture.lampMesh,key:'lampPoles',chunkName:'Đèn khu 31H · cột'},{mesh:streetFurniture.headMesh,key:'lampHeads',chunkName:'Đèn khu 31H · đầu đèn'}],items:lamps,isProtected:(x,z,k)=>!!lamps[k].signature,cellSize:500,regionOf,enabled:false,label:'Đèn 31H'});
+    return lampSet;
+  }
+  function setRegionMasks(rid){
+    buildingChunks.setRegion?.(rid);
+    if(rid){const set=ensureLampSet();if(set){set.setRegion(rid);set.setEnabled(true);}}
+    else if(lampSet){lampSet.setRegion(null);lampSet.setEnabled(false);}
+    for(const set of lodSets)set.setRegion?.(rid);
+  }
+  const regionButtons=ui.regionRoot?[...ui.regionRoot.querySelectorAll('[data-region]')]:[];
+  function renderRegionUi(){
+    const id=regionId??REGION_ALL_ID;
+    for(const button of regionButtons){
+      const on=button.dataset.region===id;
+      button.classList.toggle('active',on);button.setAttribute('aria-checked',String(on));button.tabIndex=on?0:-1;
+    }
+    if(ui.regionCounts&&regionStatus.label){
+      ui.regionCounts.textContent=regionId
+        ?`${regionStatus.label} · ${fmt(regionStatus.buildingsInRegion)} nhà trong khu · ${fmt(regionStatus.trees)} cây · ${fmt(regionStatus.vehicles)} xe · signature ngoài khu vẫn hiện`
+        :`Toàn bộ thành phố · ${fmt(regionStatus.buildings)} nhà · ${fmt(regionStatus.trees)} cây · ${fmt(regionStatus.vehicles)} xe`;
+    }
+  }
+  function updateRegionStatus(){
+    const def=regionId?regionById(regionId):null,counts=status.counts||{},byRegion=counts.buildingsByRegion||{},totals=buildingChunks.regionTotals?.()||{};
+    Object.assign(regionStatus,{
+      version:CITY_DENSITY_31_VERSION,id:regionId??REGION_ALL_ID,label:def?.label??'Toàn bộ',short:def?.short??'Toàn bộ',source:regionSource,
+      buildings:counts.buildings??0,buildingsInRegion:regionId?(byRegion[regionId]??0):(counts.buildings??0),
+      buildingsRegionTotal:regionId?(totals[regionId]??0):buildingChunks.total,buildingsByRegionTotal:totals,
+      trees:counts.trees??0,details:counts.details??0,lamps:counts.lamps??0,vehicles:counts.vehicles??0,
+      vehiclesVia:status.vehiclesVia,vehiclesRegionVia:trafficRegion.via,signatureAudit:status.audit?{complete:status.audit.complete,total:status.audit.total,visible:status.audit.visible}:null
+    });
+    document.body.dataset.region=regionStatus.id;
+    renderRegionUi();
+  }
+  // Áp khu: đặt mặt nạ cho mọi tập rồi áp lại mức mật độ hiện tại (đếm lại, bóng nhóm phụ, xe qua api.setRegion, kiểm registry).
+  function applyRegion(id,from){
+    const next=id===REGION_ALL_ID||id===null?null:(regionById(id)?id:undefined);
+    if(next===undefined)return false;
+    const started=performance.now();
+    regionId=next;regionSource=from;
+    setRegionMasks(regionId);
+    if(current)apply(current.id,source);
+    regionStatus.applyMs=+(performance.now()-started).toFixed(2);
+    return true;
+  }
+  function chooseRegion(id,from){
+    if(!applyRegion(id,from))return false;
+    try{storage?.setItem(REGION_STORAGE_KEY,regionId??REGION_ALL_ID);}catch{}
+    // URL đang mang region thì cập nhật để reload không quay về giá trị cũ (URL ưu tiên hơn localStorage).
+    const query=new URLSearchParams(location.search);
+    if(query.has(REGION_URL_PARAM)){query.set(REGION_URL_PARAM,regionId??REGION_ALL_ID);history.replaceState(null,'',`?${query}`);}
+    onRegionChange?.({id:regionId??REGION_ALL_ID,region:regionId?regionById(regionId):null,from});
+    return true;
+  }
+  for(const button of regionButtons)button.addEventListener('click',()=>chooseRegion(button.dataset.region,'user'));
+  ui.regionRoot?.addEventListener('keydown',event=>{
+    const index=regionButtons.findIndex(b=>b.dataset.region===(regionId??REGION_ALL_ID));if(index<0)return;
+    const next={ArrowRight:index+1,ArrowDown:index+1,ArrowLeft:index-1,ArrowUp:index-1,Home:0,End:regionButtons.length-1}[event.key];
+    if(next===undefined)return;
+    event.preventDefault();
+    const target=regionButtons[(next+regionButtons.length)%regionButtons.length];
+    chooseRegion(target.dataset.region,'user');target.focus();
+  });
 
   // --- UI: radiogroup roving tabindex như WAI-ARIA APG; nút đang chọn có class active như data-light/data-view.
   const buttons=ui.root?[...ui.root.querySelectorAll('[data-density]')]:[];
@@ -591,6 +809,14 @@ export function createDensityController31({
   ui.suggestApply?.addEventListener('click',()=>{if(suggestion)choose(suggestion.id,'suggestion');});
   ui.suggestDismiss?.addEventListener('click',()=>{snoozeUntil=clock+SUGGEST_SNOOZE_S;hideSuggestion();});
 
+  // Khu ban đầu: URL (&region=) > localStorage > Toàn bộ. Không gọi onRegionChange (app tự đặt camera sau khi dựng xong).
+  {
+    const fromUrl=normalizeRegionId(params.get(REGION_URL_PARAM));
+    let fromStorage=null;try{fromStorage=normalizeRegionId(storage?.getItem(REGION_STORAGE_KEY));}catch{}
+    const initial=fromUrl??fromStorage??REGION_ALL_ID;
+    regionId=initial===REGION_ALL_ID?null:initial;regionSource=fromUrl?'url':fromStorage?'storage':'default';
+    if(regionId)setRegionMasks(regionId);
+  }
   const requested=params.get('density');
   let stored=null;try{stored=storage?.getItem(STORAGE_KEY);}catch{}
   if(levelById.has(requested))apply(requested,'url');
@@ -607,12 +833,22 @@ export function createDensityController31({
     aoReady:()=>!current?.ambientOcclusion||!pipeline||pipeline.ambientOcclusion!==true||pipeline.ambientOcclusionReady!==false,
     lod:()=>({trees:treeDensity?.lodState?.(),details:detailDensity.map(set=>set.lodState?.())}),
     // Pipeline hậu kỳ dựng sau bộ điều phối: gắn vào thì áp ngay cờ GTAO/bloom của mức hiện tại.
-    attachPipeline:value=>{pipeline=value||null;return applyPostEffects();}
+    attachPipeline:value=>{pipeline=value||null;return applyPostEffects();},
+    // Bước H: khu mô phỏng ('all' hoặc id trong REGIONS_31). Trả true khi khu hiện tại đúng bằng giá trị yêu cầu.
+    regions:REGIONS_31,
+    setRegion:(id,from='api')=>{chooseRegion(id,from);return (regionId??REGION_ALL_ID)===id;},
+    // Dựng sẵn (không bật) bản sao theo khu và tập đèn: lần chọn khu đầu tiên khỏi tốn thời gian dựng.
+    prewarmRegions:()=>{if(!regionOf)return false;ensureLampSet();for(const set of lodSets)set.prepareRegions?.();return true;},
+    // Đặt khu tạm (không lưu storage/URL, không đổi camera): dùng để biên dịch sẵn pipeline của từng khu lúc nạp trang.
+    previewRegion:(id,from='warm')=>applyRegion(id,from),
+    regionState:()=>({...regionStatus}),
+    trafficRegion:()=>({...trafficRegion})
   };
   Object.defineProperty(status,'api',{value:api,enumerable:false,configurable:true});
   return {
     ...api,
     get level(){return current.id;},
+    get region(){return regionId??REGION_ALL_ID;},
     update(dt,cameraPosition=null){
       clock+=dt;
       // LOD theo khoảng cách (cây gần/xa, chi tiết 28 ngoài tầm nhìn): chỉ đụng ô đổi trạng thái.

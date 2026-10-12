@@ -15,7 +15,8 @@ import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
 import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=30b-31j';
 import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=30b-31e2';
 import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=30b-31j';
-import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31g3';
+import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31h';
+import { REGION_ALL_ID, REGION_URL_PARAM, REGIONS_31, regionById, regionOf, regionContains } from './city-region-31.js?v=30b-31h';
 import { createTraffic31 } from './city-traffic-31.js?v=30b-31j';
 
 const D=window.CITY_DATA;
@@ -354,7 +355,7 @@ const signatureGate=createSignatureGate31({buildings:renderBuildings});
 const cityChunks=createBuildingChunks31({
   arrays:{position:positions,uv:uvs,baseColor24:baseRgb,surface24:surfaces,class24:classes,seed24:seeds,direct24:directs},
   itemSizes:{position:3,uv:2,baseColor24:3,surface24:1,class24:1,seed24:1,direct24:1},
-  faceEnds,buildings:renderBuildings,material:cityMaterial,roads:D.roads,gate:signatureGate
+  faceEnds,buildings:renderBuildings,material:cityMaterial,roads:D.roads,gate:signatureGate,regionOf   // bước H: chunk chia sẵn theo khu (k-d), mỗi chunk đúng một khu
 });
 for(const list of [positions,uvs,baseRgb,surfaces,classes,seeds,directs])list.length=0;  // dữ liệu đã chép vào chunk
 const city=cityChunks.group;
@@ -689,21 +690,27 @@ vesselHulls.instanceColor.needsUpdate=true;
 for(const mesh of [vesselHulls,vesselCabins,vesselWindows,...vesselWakes]){mesh.frustumCulled=false;mesh.castShadow=!vesselWakes.includes(mesh);vesselGroup.add(mesh);}
 
 const motionDummy=new THREE.Object3D();let motionFrame=0;
+let activeRegion=REGION_ALL_ID,regionMotionDirty=false;   // khu đang chọn (bước H) — tàu và nhãn ngoài khu không vẽ
 function advanceUrbanMotion(now){
-  motionFrame++;const timeSeconds=now*.001,updateStride=cameraDistance>4800?3:cameraDistance>900?2:1,updateFrame=motionFrame%updateStride===0;
+  motionFrame++;const timeSeconds=now*.001,updateStride=cameraDistance>4800?3:cameraDistance>900?2:1,updateFrame=motionFrame%updateStride===0||regionMotionDirty;
   // Xe: bước cố định 10 Hz tính dần theo lát + nội suy (tự cull theo cạnh), ma trận ghi theo nhịp updateFrame; đo CPU vòng cập nhật xe cho QA/HUD.
   const trafficStart=performance.now();traffic.update(now,cameraDistance,updateFrame);traffic.recordCpu(performance.now()-trafficStart);
   vesselGroup.visible=cameraDistance<10500;if(!updateFrame)return;
+  regionMotionDirty=false;let vesselsInRegion=0;
   for(let i=0;i<vesselItems.length;i++){
     const item=vesselItems[i],progress=vesselProgress(item,timeSeconds),state=vesselAt(progress.u),direction=progress.backward?state.direction.clone().multiplyScalar(-1):state.direction,nx=-direction.z,nz=direction.x;
     const x=state.point.x+nx*item.lane,z=state.point.z+nz*item.lane,rotation=-Math.atan2(direction.z,direction.x),scale=item.type==='barge'?1.55:item.type==='ferry'?1.2:.78;
+    // Bước H: tàu ngoài khu thu về 0 (không vẽ); signature không có tàu nên không cần ngoại lệ.
+    const inRegion=activeRegion===REGION_ALL_ID||regionContains(activeRegion,x,z),k=inRegion?1:0;if(inRegion)vesselsInRegion++;
     const specs=[[vesselHulls,0,3.05,scale,1,1],[vesselCabins,-1.2,5.0,6.4*scale,2.25,3.0],[vesselWindows,-.6,5.25,6.55*scale,1.1,3.08]];
-    for(const [mesh,offset,y,sx,sy,sz] of specs){motionDummy.position.set(x+direction.x*offset,y,z+direction.z*offset);motionDummy.rotation.set(0,rotation,0);motionDummy.scale.set(sx,sy,sz);motionDummy.updateMatrix();mesh.setMatrixAt(i,motionDummy.matrix);}
+    for(const [mesh,offset,y,sx,sy,sz] of specs){motionDummy.position.set(x+direction.x*offset,y,z+direction.z*offset);motionDummy.rotation.set(0,rotation,0);motionDummy.scale.set(sx*k,sy*k,sz*k);motionDummy.updateMatrix();mesh.setMatrixAt(i,motionDummy.matrix);}
     const wakeBreath=1+Math.sin(timeSeconds*2.2+i*.83)*.035;
-    for(const wake of vesselWakes){motionDummy.position.set(x,.72,z);motionDummy.rotation.set(0,rotation,0);motionDummy.scale.set(scale,1,scale*wakeBreath);motionDummy.updateMatrix();wake.setMatrixAt(i,motionDummy.matrix);}
+    for(const wake of vesselWakes){motionDummy.position.set(x,.72,z);motionDummy.rotation.set(0,rotation,0);motionDummy.scale.set(scale*k,k,scale*wakeBreath*k);motionDummy.updateMatrix();wake.setMatrixAt(i,motionDummy.matrix);}
   }
   for(const mesh of [vesselHulls,vesselCabins,vesselWindows,...vesselWakes])mesh.instanceMatrix.needsUpdate=true;
   materialStatus.motion.lastFrame=motionFrame;
+  materialStatus.motion.vesselsInRegion=vesselsInRegion;
+  if(materialStatus.region)materialStatus.region.vessels=vesselsInRegion;
 }
 // Trạng thái chuyển động: tàu (26B) + giao thông 31D. createTraffic31 ghi thêm số xe, chuyển cạnh, vi phạm, CPU, kiểm xe không chìm
 // (surfaceChecked/belowRoad) vào materialStatus.motion và API ở materialStatus.traffic.api (bộ điều phối mật độ E/F dùng).
@@ -728,6 +735,7 @@ const identityFacades=createIdentityFacades30({scene,status:materialStatus.ident
 // Bước E/F 31A: "Mật độ chi tiết". Kết cấu signature được gộp (không ẩn) để bớt draw call cố định; cây, chi tiết
 // runtime 28 chia chunk lưới (cull theo ô), tán cây xa và thiết bị mái sắp lại tại chỗ; mọi bộ lọc đi qua signature registry.
 materialStatus.density={};
+materialStatus.region={};
 for(const group of [bridgeDeckGroup,bridgeSupportGroup,bridgeCableGroup,marinaDetail,grandMarinaDetail])mergeStaticMeshes31(group);
 const bridgesApi=materialStatus.bridges.api;
 const TREE_NEAR_M=1100;   // cây trong bán kính này (tính tới ô 500 m gần nhất) vẽ đầy đủ; xa hơn vẽ khối tán xa
@@ -737,9 +745,9 @@ const cityDensity=createDensityController31({
   gate:signatureGate,buildingChunks:cityChunks,
   // Bước G3: LOD theo khoảng cách tới camera (tính theo ô 500 m): cây trong bán kính 1 100 m vẽ thân + 3 tán, xa hơn vẽ khối tán
   // xa (như 30B ở cameraDistance > 2500 nhưng áp theo từng ô); chi tiết 28 chỉ vẽ trong bán kính còn nhìn thấy được.
-  treeDensity:createInstanceDensity31({sources:[{mesh:trunks,key:'trunks'},{mesh:canopies,stride:3,key:'canopies'},{mesh:farCanopies,key:'farCanopies',far:true}],items:trees,isProtected:(x,z)=>signatureGate.protects(x,z,'tree'),cellSize:500,lod:{nearM:TREE_NEAR_M,protectM:2500,padM:30},label:'Cây 31E'}),
-  detailDensity:(()=>{const list=[];cityDetailRuntime.root.traverse(o=>{if(o.isInstancedMesh)list.push(o);});return list.map(mesh=>createInstanceDensity31({sources:[{mesh}],items:instanceItems31(mesh),isProtected:(x,z)=>signatureGate.protects(x,z,'detail'),cellSize:1000,lod:{nearM:DETAIL_VISIBLE_M[mesh.name]??900,padM:60}}));})(),
-  fixtureDensity:createInstanceDensity31({sources:[{mesh:fixtures,key:'roofFixtures'}],items:roofFixtures,isProtected:(x,z)=>signatureGate.protects(x,z,'detail')}),
+  treeDensity:createInstanceDensity31({sources:[{mesh:trunks,key:'trunks'},{mesh:canopies,stride:3,key:'canopies'},{mesh:farCanopies,key:'farCanopies',far:true}],items:trees,isProtected:(x,z)=>signatureGate.protects(x,z,'tree'),cellSize:500,lod:{nearM:TREE_NEAR_M,protectM:2500,padM:30},label:'Cây 31E',regionOf}),
+  detailDensity:(()=>{const list=[];cityDetailRuntime.root.traverse(o=>{if(o.isInstancedMesh)list.push(o);});return list.map(mesh=>createInstanceDensity31({sources:[{mesh}],items:instanceItems31(mesh),isProtected:(x,z)=>signatureGate.protects(x,z,'detail'),cellSize:1000,lod:{nearM:DETAIL_VISIBLE_M[mesh.name]??900,padM:60},regionOf}));})(),
+  fixtureDensity:createInstanceDensity31({sources:[{mesh:fixtures,key:'roofFixtures'}],items:roofFixtures,isProtected:(x,z)=>signatureGate.protects(x,z,'detail'),regionOf}),
   minimalMerges:[createMinimalMerge31(heroCorridor.architecture,{name:'Gộp Tối thiểu · kiến trúc hero'}),createMinimalMerge31(heroCorridor.publicRealm,{name:'Gộp Tối thiểu · không gian công cộng hero'}),createMinimalMerge31([bridgeGroup,marinaDetail,grandMarinaDetail,bridgesApi?.root],{name:'Gộp Tối thiểu · cầu và Marina',frame:scene})],
   structureRoots:[bridgeGroup,marinaDetail,grandMarinaDetail,...(bridgesApi?.meshes||[])],
   vesselDetail:[vesselCabins,vesselWindows,...vesselWakes],
@@ -750,7 +758,8 @@ const cityDensity=createDensityController31({
     ways:()=>D.roads.filter((road,index)=>roadNetwork.pieces(index).length).map(road=>road.id),
     modules:{'ba-son-bridge-structure':bridgeGroup,'bach-dang-footbridge-structure':bridgesApi?.signature||[],'marina-central-detail':marinaDetail,'grand-marina-detail':grandMarinaDetail,'hero-corridor-module':heroCorridor.root,'extra-identity-facades-module':identityFacades.root}
   },
-  ui:{root:$('#densityControl'),counts:$('#densityCounts'),suggest:$('#densitySuggest'),suggestText:$('#densitySuggestText'),suggestApply:$('[data-density-apply]'),suggestDismiss:$('[data-density-dismiss]')},
+  regionOf,regionStatus:materialStatus.region,onRegionChange:event=>onRegionChosen(event),
+  ui:{root:$('#densityControl'),counts:$('#densityCounts'),regionRoot:$('#regionControl'),regionCounts:$('#regionCounts'),suggest:$('#densitySuggest'),suggestText:$('#densitySuggestText'),suggestApply:$('[data-density-apply]'),suggestDismiss:$('[data-density-dismiss]')},
   params,status:materialStatus.density,getFps:()=>adaptiveQuality.fps,lowFps:visualQuality.targetLowFps
 });
 let sceneMeshCount=0;scene.traverse(object=>{if(object.isMesh)sceneMeshCount++;});$('#draws').textContent=sceneMeshCount;
@@ -770,23 +779,55 @@ const presets={
   bason:{target:new THREE.Vector3(-300,76,-360),distance:930,az:2.43,polar:1.03,label:'BA SON · MARINA CENTRAL + GRAND MARINA'},
   flood25:{target:xyz(106.7305,10.8030,24),distance:1280,az:-.92,polar:1.01,label:'THẢO ĐIỀN · MÔ PHỎNG NGẬP 25A'}
 };
-const initial=presets[params.get('view')]||presets.materials;
-let activeView=params.get('view') in presets?params.get('view'):'materials';
+// Bước H: góc nhìn theo khu. Trong khu, "Toàn vùng" (overview) = khung đúng khu đó; góc có tâm nằm ở khu khác thì tự chuyển sang
+// khu chứa tâm góc ấy (không tự về Toàn bộ: giữ tải GPU thấp) và báo ngắn gọn. Khu từ URL/localStorage quyết định khi trùng.
+const regionPreset=id=>{const region=regionById(id),view=region.view;return {target:new THREE.Vector3(...view.target),distance:view.distance,az:view.az,polar:view.polar,label:`KHU · ${region.label.toUpperCase()}`};};
+function resolveView(key,region){
+  const base=presets[key];if(!base)return null;
+  if(region===REGION_ALL_ID)return {key,preset:base,switchTo:null};
+  if(key==='overview')return {key,preset:regionPreset(region),switchTo:null};
+  const owner=regionOf(base.target.x,base.target.z);
+  return {key,preset:base,switchTo:owner===region?null:owner};
+}
+let regionCameraLock=false,regionNoticeTimer=0;
+activeRegion=cityDensity.region;regionMotionDirty=true;
+function showRegionNotice(text){
+  const el=$('#regionNotice');materialStatus.regionNotice=text;if(!el)return;
+  el.textContent=text;el.hidden=false;clearTimeout(regionNoticeTimer);regionNoticeTimer=setTimeout(()=>{el.hidden=true;},5200);
+}
+// Đổi khu từ UI/API: bay camera tới khung của khu (hoặc về Toàn vùng khi chọn Toàn bộ); selectView tự chuyển khu thì tự đặt camera.
+function onRegionChosen(event){
+  activeRegion=event.id;regionMotionDirty=true;
+  materialStatus.region.camera={region:event.id,from:event.from};
+  if(!regionCameraLock)selectView('overview');
+}
+let startKey=params.get('view') in presets?params.get('view'):(activeRegion===REGION_ALL_ID?'materials':'overview');
+if(activeRegion!==REGION_ALL_ID&&resolveView(startKey,activeRegion).switchTo)startKey='overview';
+const initial=resolveView(startKey,activeRegion).preset;
+let activeView=startKey;
 let target=initial.target.clone(),cameraDistance=initial.distance,azimuth=initial.az,polar=initial.polar,desired=null;
 const transitionVelocity=new THREE.Vector3();
 const transitionState={distance:cameraDistance,azimuth,polar};
 function selectView(key){
-  const p=presets[key];if(!p)return;desired={...p,target:p.target.clone()};
+  const resolved=resolveView(key,cityDensity.region);if(!resolved)return;
+  if(resolved.switchTo){
+    const owner=regionById(resolved.switchTo);
+    regionCameraLock=true;try{cityDensity.setRegion(resolved.switchTo,'view');}finally{regionCameraLock=false;}
+    showRegionNotice(`Góc nhìn “${presets[key].label}” nằm ở khu “${owner.label}” — đã chuyển khu để giữ tải GPU thấp.`);
+  }
+  const p=resolved.preset;desired={...p,target:p.target.clone()};
   activeView=key;
   camera.fov=p.fov||42;camera.updateProjectionMatrix();
   transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
   transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
   document.querySelectorAll('[data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view===key));
-  $('#viewLabel').textContent=p.label;const density=new URLSearchParams(location.search).get('density');history.replaceState(null,'',`?v=${APP_VERSION}&view=${key}${forceWebGL?'&backend=webgl':''}${requestedQuality!=='presentation'?`&quality=${requestedQuality}`:''}${density?`&density=${encodeURIComponent(density)}`:''}`);
+  $('#viewLabel').textContent=p.label;const density=new URLSearchParams(location.search).get('density');history.replaceState(null,'',`?v=${APP_VERSION}&view=${key}${forceWebGL?'&backend=webgl':''}${requestedQuality!=='presentation'?`&quality=${requestedQuality}`:''}${density?`&density=${encodeURIComponent(density)}`:''}${regionParam()?`&${REGION_URL_PARAM}=${encodeURIComponent(regionParam())}`:''}`);
 }
+const regionParam=()=>new URLSearchParams(location.search).get(REGION_URL_PARAM);
 document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>selectView(button.dataset.view));
-selectView(params.get('view') in presets?params.get('view'):'materials');
+selectView(startKey);
 materialStatus.selectView=selectView;
+materialStatus.regions=REGIONS_31.map(region=>({id:region.id,label:region.label,short:region.short,bbox:region.bbox}));
 materialStatus.setFloodRain=setFloodRain;
 materialStatus.setFloodScenario=setFloodScenario;
 materialStatus.floodPresets={pilot:'flood25',referenceRainMm:200};
@@ -861,8 +902,11 @@ window.addEventListener('keydown',event=>{
 });
 
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
+// Chỉ số công trình (trong renderBuildings) tại điểm màn hình; null nếu không trúng công trình đang vẽ (QA dùng trực tiếp).
+function pickBuildingIndex(x,y){pointer.set(x/innerWidth*2-1,-y/innerHeight*2+1);raycaster.setFromCamera(pointer,camera);return cityChunks.pick(raycaster);}
+materialStatus.pickBuilding=(x,y)=>{const index=pickBuildingIndex(x,y);return index===null?null:{index,id:renderBuildings[index].id};};
 function pick(x,y){
-  pointer.set(x/innerWidth*2-1,-y/innerHeight*2+1);raycaster.setFromCamera(pointer,camera);const low=cityChunks.pick(raycaster);if(low===null){$('#selection').hidden=true;return;}
+  const low=pickBuildingIndex(x,y);if(low===null){$('#selection').hidden=true;return;}
   const building=renderBuildings[low],kind=classify(building),direct=SM.records[String(building.id)]||{};
   $('#selectedName').textContent=building.name||`Công trình ${building.id}`;
   $('#selectedBody').innerHTML=`<p>Chiều cao dựng: <b>${building.h.toLocaleString('vi-VN')} m</b> · ${building.q==='estimated'?'ước lượng':'có đối chiếu nguồn'}</p><p>Họ vật liệu: <b>${['Phổ thông','Nhà ở','Kính thương mại','Công cộng','Công nghiệp','Trung tâm','Tôn giáo','Hỗn hợp'][kind]}</b></p><p>${Object.keys(direct).length?'Có thẻ vật liệu/màu từ dữ liệu mở; shader thêm độ nhám, ô cửa và phong hóa.':'Màu và nhịp mặt đứng được suy luận ổn định từ loại công trình, chiều cao, khu vực và ID.'}</p>`;
@@ -897,6 +941,11 @@ materialStatus.visualRuntime={
 
 let lastTime=performance.now(),frameCount=0,fpsTime=lastTime,lastLabel=0;
 const overlaps=(a,b,padding=6)=>a.left-padding<b.right&&a.right+padding>b.left&&a.top-padding<b.bottom&&a.bottom+padding>b.top;
+// Nhãn địa danh ngoài khu ẩn (trừ nhãn gắn với vùng signature và nhãn cảnh báo ngập có cờ active).
+function labelInRegion(label){
+  if(activeRegion===REGION_ALL_ID||label.active!==undefined)return true;
+  const {x,z}=label.pos;return regionContains(activeRegion,x,z)||signatureGate.protects(x,z,'detail');
+}
 function updateLabels(){
   const occupied=[...document.querySelectorAll('.topbar,.nav-dock,.controls,.flood-lab,.selection,.hud,.ioc-alert-bar,.density-suggest')]
     .filter(element=>{const style=getComputedStyle(element),rect=element.getBoundingClientRect();return !element.hidden&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)>0.05&&rect.width>0&&rect.height>0;})
@@ -904,7 +953,7 @@ function updateLabels(){
   const candidates=[];
   for(const label of labels){
     const projected=label.pos.clone().project(camera),x=(projected.x*.5+.5)*innerWidth,y=(-projected.y*.5+.5)*innerHeight;
-    const visible=(label.active!==false)&&projected.z<1&&x>30&&x<innerWidth-30&&y>60&&y<innerHeight-48;
+    const visible=(label.active!==false)&&projected.z<1&&x>30&&x<innerWidth-30&&y>60&&y<innerHeight-48&&labelInRegion(label);
     label.el.style.display='none';
     if(visible)candidates.push({label,x,y,priority:label.active===true?0:1});
   }
@@ -944,13 +993,24 @@ function render(now){
   if(visualPipeline&&!pipelineFault){try{visualPipeline.render();}catch(error){pipelineFault=true;materialStatus.visualRuntime.pipeline='direct fallback after compile failure';materialStatus.visualRuntime.error=String(error?.message||error);console.warn('City Visual Runtime 30 pipeline failed; switching to direct rendering.',error);renderer.render(scene,camera);}}
   else renderer.render(scene,camera);
   frameCount++;
-  if(now-fpsTime>1000){const fps=Math.round(frameCount*1000/(now-fpsTime));frameCount=0;fpsTime=now;$('#fps').textContent=fps;const triangles=renderer.info?.render?.triangles??0;$('#triangles').textContent=triangles>1e6?`${(triangles/1e6).toFixed(1)}M`:Math.round(triangles/1000)+'K';materialStatus.fps=fps;materialStatus.meshes=sceneMeshCount;materialStatus.triangles=triangles||null;}
+  if(now-fpsTime>1000){const fps=Math.round(frameCount*1000/(now-fpsTime));frameCount=0;fpsTime=now;$('#fps').textContent=fps;const triangles=renderer.info?.render?.triangles??0;$('#triangles').textContent=triangles>1e6?`${(triangles/1e6).toFixed(1)}M`:Math.round(triangles/1000)+'K';materialStatus.fps=fps;materialStatus.meshes=sceneMeshCount;materialStatus.triangles=triangles||null;Object.assign(materialStatus.region,{triangles:triangles||null,drawCalls:renderer.info?.render?.drawCalls??null,fps});}
 }
 
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();adaptiveQuality.resize();});
 setProgress(94,'Đang nạp pipeline GPU lần đầu…');
 renderer.setAnimationLoop(render);
 await renderer.compileAsync(scene,camera);
+// Bước H: biên dịch sẵn pipeline cho từng khu (camera Toàn vùng, che sau màn nạp) — đổi khu lần đầu không bị khựng do dựng pipeline.
+{
+  const started=performance.now(),original=cityDensity.region,originalSource=materialStatus.region.source,preset=presets.overview;
+  try{
+    cityDensity.prewarmRegions();
+    const warm=camera.clone();warm.position.set(preset.target.x+preset.distance*Math.sin(preset.polar)*Math.sin(preset.az),preset.target.y+preset.distance*Math.cos(preset.polar),preset.target.z+preset.distance*Math.sin(preset.polar)*Math.cos(preset.az));warm.lookAt(preset.target);warm.updateMatrixWorld(true);
+    for(const region of REGIONS_31){setProgress(97,`Đang nạp pipeline khu · ${region.short}…`);cityDensity.previewRegion(region.id);await renderer.compileAsync(scene,warm);}
+  }catch(error){console.warn('Khu mô phỏng: biên dịch sẵn thất bại',error);}
+  cityDensity.previewRegion(original,originalSource);
+  materialStatus.region.warmMs=Math.round(performance.now()-started);
+}
 setProgress(100,'Sẵn sàng');
 window.dispatchEvent(new CustomEvent('citylab:renderer-ready',{detail:materialStatus}));
 setTimeout(()=>loading.classList.add('done'),220);

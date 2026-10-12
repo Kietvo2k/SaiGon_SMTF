@@ -389,6 +389,12 @@ button:focus-visible,select:focus-visible,a:focus-visible{
 .density-counts{margin:0;color:var(--muted);font-size:10px;line-height:1.4;font-variant-numeric:tabular-nums}
 .density-suggest{position:fixed;z-index:14;left:50%;bottom:calc(var(--edge) + 44px);transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:calc(100% - 2 * var(--edge));padding:9px 10px 9px 14px;border:1px solid rgba(233,187,131,.38);border-radius:12px}
 .density-suggest[hidden]{display:none}
+.region-control{margin-top:10px}
+.segmented.region-options{grid-template-columns:repeat(2,1fr);margin:8px 0 6px}
+.region-options button{padding:10px 4px;white-space:nowrap}
+.region-options button:first-child{grid-column:1/-1}
+.region-notice{top:calc(var(--edge) + 56px);bottom:auto;max-width:min(520px,calc(100% - 2 * var(--edge)))}
+body.ui-hidden .region-notice{opacity:0;pointer-events:none}
 .density-suggest p{margin:0;font-size:11px;line-height:1.4}
 .density-suggest div{display:flex;gap:6px;flex:none}
 .density-suggest button{min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:rgba(202,222,216,.06);color:var(--ink);font-size:11px;font-weight:700;cursor:pointer}

@@ -43,10 +43,10 @@ const POSE_02 = { base: 'bason', position: [625, 300, -1204.8], target: [605.8, 
 const checks = [], failures = [];
 const check = (name, fn) => { try { fn(); checks.push(name); } catch (error) { failures.push({ name, error: String(error?.message || error).slice(0, 700) }); } };
 
-check('mã nguồn: module city-density-31.js được nạp với khóa cache 30b-31g, HTML có điều khiển mật độ', () => {
+check('mã nguồn: module city-density-31.js được nạp với khóa cache 30b-31g/h, HTML có điều khiển mật độ', () => {
   assert(fs.existsSync(path.join(root, 'city-density-31.js')), 'thiếu city-density-31.js');
   const app = read('webgpu-materials-24.js'), html = read('webgpu-materials-24.html'), mod = read('city-density-31.js');
-  assert(/from '\.\/city-density-31\.js\?v=30b-31g[^']*'/.test(app), 'webgpu-materials-24.js chưa import city-density-31.js?v=30b-31g…');
+  assert(/from '\.\/city-density-31\.js\?v=30b-31[gh][^']*'/.test(app), 'webgpu-materials-24.js chưa import city-density-31.js?v=30b-31g/h…');
   assert(app.includes('cityDensity.attachPipeline(visualPipeline)'), 'pipeline hậu kỳ chưa gắn vào bộ điều phối mật độ (AO theo mức)');
   assert(/signature-registry-31\.js/.test(mod), 'bộ lọc mật độ phải đi qua signature-registry-31.js');
   assert(/role="radiogroup"/.test(html) && LEVELS.every(level => html.includes(`data-density="${level}"`)), 'HTML thiếu radiogroup data-density');

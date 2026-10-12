@@ -8,6 +8,19 @@ Ba proxy thô của Nhà hát Thành phố, Continental và Caravelle được l
 
 Xem [kiến trúc và nghiệm thu Runtime 30B](VISUAL-RUNTIME-30B.md). Khởi động lạnh cấu hình trình diễn phải biên dịch nhiều graph GPU và cascade; cấu hình hiệu năng là đường lui tức thời cho máy demo yếu.
 
+## Bước H 31A — Khu mô phỏng (`&region=`) để giảm tải GPU
+
+Trong `Điều khiển cảnh` có nhóm nút **Khu mô phỏng** (radiogroup, mũi tên/Home/End đổi khu): Toàn bộ hoặc một trong bốn khu. Tham số URL `&region=all|trung-tam|ven-song|bac|nam` (ưu tiên hơn `localStorage` khoá `citylab.31h.region`; giá trị lạ về Toàn bộ). Kết hợp được với mọi mức `&density=`, `&quality=`, `&backend=webgl`, ví dụ `webgpu-materials-24.html?v=30b&view=overview&region=trung-tam&density=balanced`.
+
+| id | Khu | Ranh (đo từ polygon nước của `CITY_DATA`, không phải ranh hành chính) | Công trình |
+|---|---|---|---|
+| `trung-tam` | Lõi Quận 1 · Bến Nghé | bờ tây sông, nam rạch Thị Nghè, bắc rạch Bến Nghé | 23 366 |
+| `ven-song` | Ven sông · Ba Son · Thủ Thiêm | toàn bộ bờ đông (Thủ Thiêm, Thảo Điền) + dải bờ tây Ba Son · Marina · Grand Marina | 8 393 |
+| `bac` | Phía bắc · Thị Nghè · Bình Thạnh | bờ tây, bắc rạch Thị Nghè (Landmark 81, Thanh Đa) | 23 115 |
+| `nam` | Phía nam · Quận 4 · Khánh Hội | nam rạch Bến Nghé và nam sông quanh Thủ Thiêm | 15 852 |
+
+Bốn đa giác dùng chung đỉnh (`city-region-31.js`, `regionOf(x,z)`), phủ toàn cảnh không hở không chồng; mỗi công trình, cây, đèn, chi tiết, tàu thuộc đúng một khu theo tâm/vị trí. Chọn khu: công trình, cây, chi tiết 28, thiết bị mái, đèn, tàu và xe ngoài khu không vẽ; **signature registry luôn hiển thị 100 %** (công trình/cây/đèn/module signature ngoài khu vẫn có mặt). Mặt đất, nước, đường và cầu vẫn vẽ (mặt đường là mesh gộp theo loại lớp nên không tách được theo khu); nhãn ngoài khu ẩn trừ nhãn gắn signature. Camera bay tới khung của khu; `Toàn vùng` trong một khu = khung khu đó; góc nhìn có tâm ở khu khác tự chuyển sang khu chứa tâm và báo ngắn gọn. Xe: `materialStatus.motion.api.setRegion({id, polygon})` (hoặc `null`). Trạng thái: `window.webgpuMaterials24.region` (`id, label, buildings, trees, vehicles, vessels, triangles, drawCalls…`), `document.body.dataset.region`. QA: `node outputs/hcmc-poc/scripts/qa-region-31.cjs [webgpu|webgl]`.
+
 ## Bản hiện hành 28B — hình học đô thị phân cấp theo camera
 
 Mở [WebGPU Material Engine](http://127.0.0.1:8768/hcmc-poc/webgpu-materials-24.html?v=28b&view=materials). Bản này dùng Three.js r186, `WebGPURenderer`, TSL/NodeMaterial và WebGL 2 fallback để phủ 8 họ vật liệu lên toàn bộ 70.726 công trình trong vùng 38,57 km². Bản 24E khôi phục kết cấu dây văng cầu Ba Son, Marina Central Tower 55 tầng / 240 m, sửa bốn footprint Grand Marina thành cụm tháp 45–47 tầng, hạ tương phản ô kính ban ngày và tách hiệu chỉnh khỏi dữ liệu cảnh gốc.

@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <title>City Lab · WebGPU Material Engine</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="webgpu-materials-24.css?v=30b">
+  <link rel="stylesheet" href="webgpu-materials-24.css?v=30b-31h">
   <script type="importmap">
     {
       "imports": {
@@ -105,6 +105,17 @@
           </div>
           <p id="densityCounts" class="density-counts" aria-live="polite">—</p>
         </div>
+        <div class="density-control region-control">
+          <div class="density-head"><span id="regionTitle">Khu mô phỏng</span><small>Giảm tải GPU</small></div>
+          <div id="regionControl" class="segmented region-options" role="radiogroup" aria-labelledby="regionTitle" aria-describedby="regionCounts">
+            <button type="button" role="radio" data-region="all" aria-checked="true" tabindex="0" class="active">Toàn bộ</button>
+            <button type="button" role="radio" data-region="trung-tam" aria-checked="false" tabindex="-1" title="Lõi Quận 1 · Bến Nghé">Lõi Quận 1</button>
+            <button type="button" role="radio" data-region="ven-song" aria-checked="false" tabindex="-1" title="Ven sông · Ba Son · Thủ Thiêm">Ven sông · Thủ Thiêm</button>
+            <button type="button" role="radio" data-region="bac" aria-checked="false" tabindex="-1" title="Phía bắc · Thị Nghè · Bình Thạnh">Phía bắc</button>
+            <button type="button" role="radio" data-region="nam" aria-checked="false" tabindex="-1" title="Phía nam · Quận 4 · Khánh Hội">Phía nam</button>
+          </div>
+          <p id="regionCounts" class="density-counts" aria-live="polite">—</p>
+        </div>
         <button type="button" id="compare" class="compare"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 010 16z"/></svg><b>Giữ để xem khối nền</b></button>
         <button type="button" id="openFloodLab" class="flood-launch" data-open-flood><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8c2.4 0 2.4-2 4.8-2s2.4 2 4.8 2S15 6 17.4 6 19.8 8 22 8M3 13c2.4 0 2.4-2 4.8-2s2.4 2 4.8 2 2.4-2 4.8-2 2.4 2 4.6 2M3 18c2.4 0 2.4-2 4.8-2s2.4 2 4.8 2 2.4-2 4.8-2 2.4 2 4.6 2"/></svg><b>Ngập đô thị</b><small>25A · DATA GATE</small></button>
         <div class="legend">
@@ -126,6 +137,8 @@
       <p id="densitySuggestText">Khung hình thấp. Hạ mật độ chi tiết?</p>
       <div><button type="button" data-density-apply>Áp dụng</button><button type="button" data-density-dismiss>Bỏ qua</button></div>
     </div>
+
+    <div id="regionNotice" class="density-suggest region-notice glass" role="status" aria-live="polite" hidden></div>
 
     <div id="selection" class="selection glass" hidden>
       <div class="selection-head">
@@ -205,7 +218,7 @@
   <script src="data/signature-registry-31.js?v=30b-31c"></script>
   <script src="data/street-furniture-31.js?v=30b-31e2"></script>
   <script>window.addEventListener('error',event=>{console.error('CITY24_ERROR',event.message,event.filename,event.lineno,event.colno);const text=document.getElementById('loaderText');if(text)text.textContent=`Lỗi dựng cảnh · ${event.message} · dòng ${event.lineno||'?'}`;});</script>
-  <script type="module" src="webgpu-materials-24.js?v=30b-31g3"></script>
+  <script type="module" src="webgpu-materials-24.js?v=30b-31h"></script>
   <script type="module" src="flood-ui-25.js?v=30b"></script>
 </body>
 </html>
