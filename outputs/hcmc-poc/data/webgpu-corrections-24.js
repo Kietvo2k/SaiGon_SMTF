@@ -1,7 +1,7 @@
 // Curated corrections are kept outside the renderer so the source city dataset
 // remains immutable. Every entry must also have provenance in ba-son-marina-24.json.
 window.WEBGPU_CORRECTIONS_24=Object.freeze({
-  version:'30b',
+  version:'31a',
   marinaCentral:Object.freeze({
     parts:Object.freeze({
       1432358258:Object.freeze({name:'Marina Central Tower'}),

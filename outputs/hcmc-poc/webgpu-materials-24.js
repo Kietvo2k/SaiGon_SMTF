@@ -8,17 +8,17 @@ import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import {
   createAdaptiveQuality, createCityRenderPipeline, createCityShadowSystem,
   resolveVisualQuality, smoothDampScalar, smoothDampVector
-} from './city-visual-runtime-30.js?v=30b-31g3';
-import { createCityDetailRuntime } from './city-detail-runtime-28.js?v=30b-31e2';
-import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=30b-31g3';
-import { createIdentityFacades30 } from './city-identity-facades-30.js?v=30b';
-import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=30b-31j';
-import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=30b-31e2';
-import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=30b-31j';
-import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=30b-31h';
-import { REGION_ALL_ID, REGION_URL_PARAM, REGIONS_31, regionById, regionOf, regionContains } from './city-region-31.js?v=30b-31h';
-import { MODE_STORAGE_KEY, MODE_URL_PARAM, anisotropyForMode, createModeController, modeById, resolveMode, textureUrlsForMode } from './city-mode-31.js?v=30b-31i';
-import { createTraffic31 } from './city-traffic-31.js?v=30b-31j';
+} from './city-visual-runtime-30.js?v=31a';
+import { createCityDetailRuntime } from './city-detail-runtime-28.js?v=31a';
+import { createHeroCorridor30 } from './city-hero-corridor-30.js?v=31a';
+import { createIdentityFacades30 } from './city-identity-facades-30.js?v=31a';
+import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=31a';
+import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=31a';
+import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=31a';
+import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=31a';
+import { REGION_ALL_ID, REGION_URL_PARAM, REGIONS_31, regionById, regionOf, regionContains } from './city-region-31.js?v=31a';
+import { MODE_STORAGE_KEY, MODE_URL_PARAM, anisotropyForMode, createModeController, modeById, resolveMode, textureUrlsForMode } from './city-mode-31.js?v=31a';
+import { createTraffic31 } from './city-traffic-31.js?v=31a';
 
 const D=window.CITY_DATA;
 const SM=window.SEMANTIC_MATERIALS_08||{records:{},directTaggedBuildings:0,directCoveragePercent:0};

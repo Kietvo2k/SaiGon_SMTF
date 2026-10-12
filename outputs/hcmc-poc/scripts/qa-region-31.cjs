@@ -35,7 +35,7 @@ check('mã nguồn: city-region-31.js xuất hằng và regionOf; HTML có radio
   assert(fs.existsSync(path.join(root, 'city-region-31.js')), 'thiếu city-region-31.js');
   const region = read('city-region-31.js'), app = read('webgpu-materials-24.js'), html = read('webgpu-materials-24.html'), density = read('city-density-31.js');
   for (const name of ['REGIONS_31', 'regionOf', 'regionContains', 'regionPolygon', 'REGION_ALL_ID', 'REGION_URL_PARAM']) assert(new RegExp(`export (const|function) ${name}\\b`).test(region), `thiếu export ${name}`);
-  assert(/from '\.\/city-region-31\.js\?v=30b-31h'/.test(app) && /from '\.\/city-region-31\.js\?v=30b-31h'/.test(density), 'import city-region-31.js?v=30b-31h');
+  assert(/from '\.\/city-region-31\.js\?v=31a'/.test(app) && /from '\.\/city-region-31\.js\?v=31a'/.test(density), 'import city-region-31.js?v=31a');
   assert(/id="regionControl"[^>]*role="radiogroup"/.test(html) || /role="radiogroup"[^>]*id="regionControl"/.test(html), 'thiếu radiogroup #regionControl');
   for (const id of ['all', ...REGIONS]) assert(html.includes(`data-region="${id}"`), `HTML thiếu data-region="${id}"`);
   assert(/api\.setRegion|setRegion\(/.test(density) && /regionTrafficPayload/.test(density), 'bộ điều phối phải gọi traffic.api.setRegion theo hợp đồng');
@@ -83,7 +83,7 @@ async function open(browser, query, { storage = null, clear = true } = {}) {
   page.on('pageerror', e => errors.push(String(e).slice(0, 300)));
   await page.addInitScript(initProbe);
   if (clear) await page.addInitScript(values => { try { if (!sessionStorage.getItem('qa31h')) { localStorage.clear(); for (const [k, v] of Object.entries(values || {})) localStorage.setItem(k, v); sessionStorage.setItem('qa31h', '1'); } } catch {} }, storage);
-  await page.goto(`${BASE}?v=30b${query}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}?v=31a${query}`, { waitUntil: 'load' });
   await waitReady(page);
   return { context, page, errors };
 }
@@ -133,8 +133,8 @@ async function click(page, selector, expectKey, expectValue, windowMs = 3200) {
 async function sceneState(page) {
   return page.evaluate(async () => {
     const status = window.webgpuMaterials24, D = window.CITY_DATA, scenes = window.__probe.scenes;
-    const registry = (await import('./signature-registry-31.js?v=30b-31e2')).loadSignatureRegistry(window.SIGNATURE_REGISTRY_31);
-    const R = await import('./city-region-31.js?v=30b-31h');
+    const registry = (await import('./signature-registry-31.js?v=31a')).loadSignatureRegistry(window.SIGNATURE_REGISTRY_31);
+    const R = await import('./city-region-31.js?v=31a');
     const regionId = status.density.api.regionState().id;
     // Công trình/cây: lọc theo khu chính xác (chunk theo regionOf). Xe: theo đa giác ĐÃ NỚI (T1) — cùng phép thử với
     // city-traffic-sim-31.js setRegion nên "xe ngoài khu = 0" nhất quán với cách sim chọn cạnh; slack 3 m cho tâm xe
@@ -230,7 +230,7 @@ async function runBackend(browser, backend) {
     });
     // Bao phủ: bốn khu phủ toàn bộ công trình đúng một lần (đa giác thuần túy + chunk).
     out.coverage = await page.evaluate(async () => {
-      const R = await import('./city-region-31.js?v=30b-31h'), D = window.CITY_DATA, counts = {}, bad = [];
+      const R = await import('./city-region-31.js?v=31a'), D = window.CITY_DATA, counts = {}, bad = [];
       for (const b of D.buildings) {
         const hits = R.regionHits(b.center[0], b.center[1]);
         if (hits.length !== 1 || R.regionOf(b.center[0], b.center[1]) !== hits[0]) bad.push([b.id, hits.join('+')]);
@@ -249,7 +249,7 @@ async function runBackend(browser, backend) {
     // T1: cầu nối ranh của từng khu — cạnh bridge (elevationClass ≠ ground/skip) có điểm trong đa giác khu VÀ điểm ngoài.
     // Xe trên các cầu này phải hiện ở cả hai khu kề (đa giác đã nới) nên mỗi khu phải có ≥ 1 cầu nối ranh có xe.
     out.bridges = await page.evaluate(async () => {
-      const R = await import('./city-region-31.js?v=30b-31h'), G = window.ROAD_GRAPH_31, out = {};
+      const R = await import('./city-region-31.js?v=31a'), G = window.ROAD_GRAPH_31, out = {};
       for (const r of R.REGIONS_31) {
         const list = [];
         for (let e = 0; e < G.edges.length; e++) {
@@ -315,12 +315,12 @@ async function runBackend(browser, backend) {
     const { context, page, errors } = await open(browser, `&view=overview&density=full${q}`);
     const D = await page.evaluate(() => window.CITY_DATA.buildings.map(b => ({ id: b.id, x: b.center[0], z: b.center[1], h: b.h, name: b.name || '' })));
     const info = await page.evaluate(async () => {
-      const R = await import('./city-region-31.js?v=30b-31h'), registry = (await import('./signature-registry-31.js?v=30b-31e2')).loadSignatureRegistry(window.SIGNATURE_REGISTRY_31);
+      const R = await import('./city-region-31.js?v=31a'), registry = (await import('./signature-registry-31.js?v=31a')).loadSignatureRegistry(window.SIGNATURE_REGISTRY_31);
       return { sig: registry.signatureBuildingIds(), hidden: (window.BRIDGE_CORRECTIONS_31?.buildings || []).filter(e => e.action === 'hide').map(e => Number(e.id)) };
     });
     const sig = new Set(info.sig), hidden = new Set(info.hidden);
     const pickReport = {};
-    const regionOfNode = async list => page.evaluate(async list => { const R = await import('./city-region-31.js?v=30b-31h'); return list.map(b => R.regionOf(b.x, b.z)); }, list);
+    const regionOfNode = async list => page.evaluate(async list => { const R = await import('./city-region-31.js?v=31a'); return list.map(b => R.regionOf(b.x, b.z)); }, list);
     // Mẫu: công trình cao 40–120 m không signature, mỗi khu 6 mẫu trong khu + 3 mẫu ngoài khu. Camera nhìn xuống đỉnh mái; công
     // trình cao hơn ngay bên cạnh có thể che tia nên chỉ yêu cầu đa số trúng; mọi lần trúng phải là công trình trong khu hoặc signature.
     const candidates = D.filter(b => !sig.has(Number(b.id)) && !hidden.has(Number(b.id)) && b.h >= 40 && b.h <= 120).sort((a, b) => b.h - a.h).slice(0, 900);
@@ -346,7 +346,7 @@ async function runBackend(browser, backend) {
       await click(page, `#controlBody [data-region="${region}"]`, 'region', region, 3600);
       await waitSmooth(page, 900);
       out.camera[region] = await page.evaluate(async region => {
-        const R = await import('./city-region-31.js?v=30b-31h'), cam = window.__probe.camera, view = region === 'all' ? { target: [0, 0, 0], distance: 7600 } : R.regionById(region).view;
+        const R = await import('./city-region-31.js?v=31a'), cam = window.__probe.camera, view = region === 'all' ? { target: [0, 0, 0], distance: 7600 } : R.regionById(region).view;
         const dx = cam.position.x - view.target[0], dy = cam.position.y - view.target[1], dz = cam.position.z - view.target[2];
         return { label: document.querySelector('#viewLabel').textContent, distance: Math.round(Math.hypot(dx, dy, dz)), expected: view.distance, url: location.search };
       }, region);
@@ -362,7 +362,7 @@ async function runBackend(browser, backend) {
       await page.evaluate(() => window.webgpuMaterials24.density.api.setRegion('nam', 'qa'));
       await sleep(300);
     }
-    out.expectedViewRegion = await page.evaluate(async targets => { const R = await import('./city-region-31.js?v=30b-31h'); return Object.fromEntries(Object.entries(targets).map(([k, t]) => [k, R.regionOf(t[0], t[1])])); }, VIEW_TARGETS);
+    out.expectedViewRegion = await page.evaluate(async targets => { const R = await import('./city-region-31.js?v=31a'); return Object.fromEntries(Object.entries(targets).map(([k, t]) => [k, R.regionOf(t[0], t[1])])); }, VIEW_TARGETS);
     // Flood Lab: mở khi đang ở khu khác → chuyển sang khu chứa Thảo Điền; đóng không lỗi.
     out.flood = {};
     await page.evaluate(() => window.webgpuMaterials24.density.api.setRegion('nam', 'qa')); await sleep(500);
@@ -383,7 +383,7 @@ async function runBackend(browser, backend) {
         // T1: eligible trước/sau khi nới biên — trước = đa giác thuần (margin 0, hành vi cũ), sau = đa giác đã nới.
         let eligibleBefore = null, eligibleAfter = null;
         if (region !== 'all' && typeof api?.setRegion === 'function') {
-          const R = await import('./city-region-31.js?v=30b-31h'), payload = R.regionTrafficPayload(region);
+          const R = await import('./city-region-31.js?v=31a'), payload = R.regionTrafficPayload(region);
           api.setRegion({ id: region, polygon: payload.polygon }); eligibleBefore = api.getRegion().eligible;
           api.setRegion(payload); eligibleAfter = api.getRegion().eligible;
         }

@@ -89,7 +89,7 @@ function updateIOC(){
   document.body.dataset.iocLevel=level;
   alertBar.hidden=level!=='red';
   $('#alertRain').textContent=`${Math.round(rainMm)} mm`;$('#alertTide').textContent=`${tideM.toFixed(2).replace('.',',')} m`;$('#alertDepth').textContent=`${Math.round(proxyDepthM*100)} cm proxy`;
-  if(level==='red'&&!redOverviewTriggered){redOverviewTriggered=true;focusOverview();history.replaceState(null,'','?v=30b&view=overview&scenario=stress-test');}
+  if(level==='red'&&!redOverviewTriggered){redOverviewTriggered=true;focusOverview();history.replaceState(null,'','?v=31a&view=overview&scenario=stress-test');}
   if(level!=='red')redOverviewTriggered=false;
   window.floodIOC25={version:'30b',rainMm,tideM,severity,level,proxyDepthM,windKmh,mode:'bounded_visual_stress_test',forecast:false};
   return{rainRatio,tideRatio,severity,level,proxyDepthM,windKmh};
@@ -180,7 +180,7 @@ function openPanel({focus=true}={}){
   panel.hidden=false;
   launches.forEach(button=>button.classList.add('active'));
   document.body.classList.add('flood-open');
-  if(focus){focusPilot();history.replaceState(null,'','?v=30b&view=flood25');}
+  if(focus){focusPilot();history.replaceState(null,'','?v=31a&view=flood25');}
 }
 function closePanel(){panel.hidden=true;launches.forEach(button=>button.classList.remove('active'));document.body.classList.remove('flood-open');}
 
@@ -208,7 +208,7 @@ rainToggle.addEventListener('click',()=>{
 $('#focusFloodRoads').addEventListener('click',focusPilot);
 function activateWorstCase(){
   rainPlaying=true;updateRain(200);updateTide(1.8);updateRainButton();focusOverview();redOverviewTriggered=true;
-  history.replaceState(null,'','?v=30b&view=overview&scenario=stress-test');
+  history.replaceState(null,'','?v=31a&view=overview&scenario=stress-test');
 }
 $('#worstCase').addEventListener('click',activateWorstCase);
 window.addEventListener('citylab:renderer-ready',()=>{updateRain(rainMm);updateTide(tideM);});

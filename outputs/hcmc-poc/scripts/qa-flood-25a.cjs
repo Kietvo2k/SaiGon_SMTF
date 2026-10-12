@@ -71,7 +71,7 @@ check('Citywide contract and scenario catalogue agree',()=>{
 
 check('Demo keeps hydraulic solver fail-closed and labels visual depth as proxy',()=>{
   assert(floodHtml.includes('id="floodLab"'));
-  assert(floodHtml.includes('flood-ui-25.js?v=30b'));
+  assert(floodHtml.includes('flood-ui-25.js?v=31a'));
   assert(floodUi.includes("mode:'fail-closed'"));
   assert(floodUi.includes("$('#runFloodScenario').disabled=blocked"));
   assert(floodUi.includes("view=flood25"));

@@ -13,7 +13,7 @@ const check=(name,fn)=>{fn();checks.push(name);};
 
 check('Canonical entry targets the 30B shell and preserves the legacy escape hatch',()=>{
   const index=read('index.html');
-  assert(index.includes('webgpu-materials-24.html?v=30b'));
+  assert(index.includes('webgpu-materials-24.html?v=31a'));
   assert(index.includes("q.get('legacy')==='1'"));
 });
 
@@ -30,7 +30,7 @@ check('Every local asset referenced by the canonical HTML exists',()=>{
 check('Canonical cache keys and runtime data remain aligned to 30B',()=>{
   const refs=[...html.matchAll(/(?:src|href)="([^"]+\?v=([^"]+))"/g)];
   assert(refs.length>=7);
-  for(const [,asset,version] of refs)assert(version.startsWith('30b'),`Stale cache key ${version}: ${asset}`);
+  for(const [,asset,version] of refs)assert(version.startsWith('31a'),`Stale cache key ${version}: ${asset}`);
   assert(renderer.includes("const APP_VERSION=CORRECTIONS.version"));
   assert.equal(require(path.join(demo,'data/webgpu-materials-24.json')).version,'30b');
 });

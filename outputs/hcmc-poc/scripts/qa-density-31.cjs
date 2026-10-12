@@ -46,7 +46,7 @@ const check = (name, fn) => { try { fn(); checks.push(name); } catch (error) { f
 check('mã nguồn: module city-density-31.js được nạp với khóa cache 30b-31g/h, HTML có điều khiển mật độ', () => {
   assert(fs.existsSync(path.join(root, 'city-density-31.js')), 'thiếu city-density-31.js');
   const app = read('webgpu-materials-24.js'), html = read('webgpu-materials-24.html'), mod = read('city-density-31.js');
-  assert(/from '\.\/city-density-31\.js\?v=30b-31[gh][^']*'/.test(app), 'webgpu-materials-24.js chưa import city-density-31.js?v=30b-31g/h…');
+  assert(/from '\.\/city-density-31\.js\?v=31a'/.test(app), 'webgpu-materials-24.js chưa import city-density-31.js?v=31a');
   assert(app.includes('cityDensity.attachPipeline(visualPipeline)'), 'pipeline hậu kỳ chưa gắn vào bộ điều phối mật độ (AO theo mức)');
   assert(/signature-registry-31\.js/.test(mod), 'bộ lọc mật độ phải đi qua signature-registry-31.js');
   assert(/role="radiogroup"/.test(html) && LEVELS.every(level => html.includes(`data-density="${level}"`)), 'HTML thiếu radiogroup data-density');
@@ -98,7 +98,7 @@ async function open(browser, query, { clearStorage = true, storage = null } = {}
   page.on('pageerror', e => errors.push(String(e).slice(0, 300)));
   await page.addInitScript(initProbe);
   if (clearStorage) await page.addInitScript(value => { try { if (!sessionStorage.getItem('qa31e')) { localStorage.clear(); if (value) localStorage.setItem('citylab.31e.density', value); sessionStorage.setItem('qa31e', '1'); } } catch {} }, storage);
-  await page.goto(`${BASE}?v=30b${query}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}?v=31a${query}`, { waitUntil: 'load' });
   await waitReady(page);
   return { context, page, errors };
 }
@@ -131,7 +131,7 @@ async function gotoView(page, view) {
 async function sceneState(page) {
   return page.evaluate(async () => {
     const status = window.webgpuMaterials24, D = window.CITY_DATA, scenes = window.__probe.scenes;
-    const registryModule = await import('./signature-registry-31.js?v=30b-31e2');
+    const registryModule = await import('./signature-registry-31.js?v=31a');
     const registry = registryModule.loadSignatureRegistry(window.SIGNATURE_REGISTRY_31);
     const chunks = [], treeChunks = [];
     for (const s of scenes) s.traverse(o => {

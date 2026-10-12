@@ -25,7 +25,7 @@ check('mã nguồn: city-mode-31.js có preset preview/lite; HTML có radiogroup
   assert(fs.existsSync(path.join(root, 'assets/facades15/facade-atlas-lite.jpg')), 'thiếu facade-atlas-lite.jpg');
   assert(fs.existsSync(path.join(root, 'assets/facades15/facade-mask-lite.png')), 'thiếu facade-mask-lite.png');
   const mode = read('city-mode-31.js'), app = read('webgpu-materials-24.js'), html = read('webgpu-materials-24.html'), css = read('webgpu-materials-24.css');
-  assert(/from '\.\/city-mode-31\.js\?v=30b-31i'/.test(app), 'app chưa import city-mode-31.js?v=30b-31i');
+  assert(/from '\.\/city-mode-31\.js\?v=31a'/.test(app), 'app chưa import city-mode-31.js?v=31a');
   assert(mode.includes("id: 'preview'") && mode.includes("id: 'lite'"), 'thiếu preset preview/lite');
   assert(mode.includes("density: 'light'") && mode.includes("quality: 'performance'"), 'lite phải gói density light + quality performance');
   assert(/role="radiogroup"/.test(html) && html.includes('data-mode="preview"') && html.includes('data-mode="lite"'), 'HTML thiếu radiogroup data-mode');
@@ -64,7 +64,7 @@ async function open(browser, query, { storage = null } = {}) {
   page.on('pageerror', e => errors.push(String(e).slice(0, 300)));
   await page.addInitScript(initProbe);
   await page.addInitScript(values => { try { if (!sessionStorage.getItem('qa31i')) { localStorage.clear(); for (const [k, v] of Object.entries(values || {})) localStorage.setItem(k, v); sessionStorage.setItem('qa31i', '1'); } } catch {} }, storage);
-  await page.goto(`${BASE}?v=30b${query}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}?v=31a${query}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.webgpuMaterials24?.state === 'ready' && document.querySelector('#loading')?.classList.contains('done') && window.webgpuMaterials24?.density?.level, null, { timeout: 240000 });
   return { context, page, errors };
 }

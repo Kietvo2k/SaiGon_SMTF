@@ -60,7 +60,7 @@ export function createIdentityFacades30({scene,status={},atlasUrl='assets/facade
   let ready=false;
   Object.assign(status,{version:'30b',state:'loading',accepted:0,rendered:0,held:0,atlasUrl,maskUrl,anisotropy,classification:'site photo patches on approximate open-map geometry'});
 
-  fetch('./data/facades-30.json?v=30b').then(response=>{
+  fetch('./data/facades-30.json?v=31a').then(response=>{
     if(!response.ok)throw new Error(`facades-30.json HTTP ${response.status}`);
     return response.json();
   }).then(async manifest=>{

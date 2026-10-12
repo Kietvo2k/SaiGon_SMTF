@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
-import { loadSignatureRegistry } from './signature-registry-31.js?v=30b-31e2';
-import { REGION_ALL_ID, REGION_STORAGE_KEY, REGION_URL_PARAM, REGIONS_31, normalizeRegionId, regionById, regionTrafficPayload } from './city-region-31.js?v=30b-31h';
+import { loadSignatureRegistry } from './signature-registry-31.js?v=31a';
+import { REGION_ALL_ID, REGION_STORAGE_KEY, REGION_URL_PARAM, REGIONS_31, normalizeRegionId, regionById, regionTrafficPayload } from './city-region-31.js?v=31a';
 
 /*
  * City Density 31 · bước E/F kế hoạch 31A — "Mật độ chi tiết" (Đầy đủ / Cân bằng / Nhẹ / Tối thiểu).

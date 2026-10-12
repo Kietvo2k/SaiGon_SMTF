@@ -37,7 +37,7 @@ check('Renderer assets are version-aligned at 30b',()=>{
   const manifest=JSON.parse(fs.readFileSync(path.join(demo,'data/webgpu-materials-24.json'),'utf8'));
   const evidence=JSON.parse(fs.readFileSync(path.join(demo,'data/ba-son-marina-24.json'),'utf8'));
   assert(!html.includes('?v=24d'));
-  assert(html.includes('webgpu-materials-24.js?v=30b'));
+  assert(html.includes('webgpu-materials-24.js?v=31a'));
   assert(entry.includes("version:'30b'"));
   assert.equal(manifest.version,'30b');
   assert.equal(evidence.version,'24e');
@@ -51,7 +51,7 @@ check('Unified map-first shell keeps one canonical UI and aligned collapsible pa
   const flood=fs.readFileSync(path.join(demo,'flood-ui-25.js'),'utf8');
   for(const id of ['cityNav','collapseNav','collapseStory','collapse','collapseSelection','collapseFloodLab'])assert(html.includes(`id="${id}"`));
   assert(html.includes('aria-controls="floodContent"'));
-  assert(index.includes("location.replace(`webgpu-materials-24.html?v=30b"));
+  assert(index.includes("location.replace(`webgpu-materials-24.html?v=31a"));
   assert(index.includes("q.get('legacy')==='1'"));
   assert(css.includes('Unified map shell · 30B'));
   assert(css.includes('--rail:44px'));

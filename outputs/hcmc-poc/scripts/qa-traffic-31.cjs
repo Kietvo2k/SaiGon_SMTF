@@ -54,7 +54,7 @@ let baselineCpu = null;
 check('mã nguồn: module city-traffic-31.js được nạp, vòng xe theo đoạn thẳng 26B đã bỏ', () => {
   const app = read('webgpu-materials-24.js');
   assert(fs.existsSync(path.join(root, 'city-traffic-31.js')), 'thiếu city-traffic-31.js');
-  assert(/from '\.\/city-traffic-31\.js\?v=30b[^']*'/.test(app), 'webgpu-materials-24.js chưa import city-traffic-31.js?v=30b…');
+  assert(/from '\.\/city-traffic-31\.js\?v=31a'/.test(app), 'webgpu-materials-24.js chưa import city-traffic-31.js?v=31a');
   assert(!app.includes('(item.phase+timeSeconds*item.speed)%1'), 'còn vòng xe u=(phase+t·speed)%1 (teleport về đầu đoạn)');
   assert(!/side=motionRandom\(\)>\.5\?1:-1/.test(app), 'còn chọn chiều ngẫu nhiên bỏ qua oneway');
 });
@@ -447,7 +447,7 @@ async function runBackend(browser, backend) {
   page.on('pageerror', e => errors.push(String(e).slice(0, 300)));
   await page.addInitScript(initProbe);
   await page.addInitScript(() => { try { localStorage.clear(); } catch {} });
-  await page.goto(`${BASE}?v=30b&view=materials${backend === 'webgl' ? '&backend=webgl' : ''}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}?v=31a&view=materials${backend === 'webgl' ? '&backend=webgl' : ''}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.webgpuMaterials24?.state === 'ready' && document.querySelector('#loading')?.classList.contains('done'), null, { timeout: 240000 });
   const result = { windows: {} };
   for (const w of VIEWS) {

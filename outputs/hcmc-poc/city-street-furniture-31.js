@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { loadSignatureRegistry } from './signature-registry-31.js?v=30b-31e2';
+import { loadSignatureRegistry } from './signature-registry-31.js?v=31a';
 
 /*
  * Street Furniture 31 · bước E2 kế hoạch 31A

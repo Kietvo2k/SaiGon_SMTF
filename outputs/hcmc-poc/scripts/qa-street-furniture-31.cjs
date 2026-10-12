@@ -267,7 +267,7 @@ async function runBackend(browser, backend, hidden) {
     hook.addEventListener('observe', event => { const o = event.detail; if (o?.isScene) (window.__probeScenes = window.__probeScenes || []).push(o); });
     window.__THREE_DEVTOOLS__ = hook;
   });
-  await page.goto(`${BASE}?v=30b&view=overview${backend === 'webgl' ? '&backend=webgl' : ''}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}?v=31a&view=overview${backend === 'webgl' ? '&backend=webgl' : ''}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.webgpuMaterials24?.state === 'ready' && document.querySelector('#loading')?.classList.contains('done'), null, { timeout: 240000 });
   const result = await inspect(page, hidden);
   // Đèn đêm và giờ vàng: bấm nút ánh sáng như người dùng.
