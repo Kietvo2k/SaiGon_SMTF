@@ -1,0 +1,8 @@
+[
+  {"node_id": "HX-01", "osm_id": 366390689, "label": "Cầu vượt Hàng Xanh ∩ Điện Biên Phủ", "prefix": "HX", "x": -251, "z": -2440, "cluster_id": "HX-C1", "camera_id": "CAM-HX-001", "has_vms": false},
+  {"node_id": "HX-02", "osm_id": 366440827, "label": "Nguyễn Gia Trí ∩ Điện Biên Phủ", "prefix": "HX", "x": 395, "z": -2427, "cluster_id": "HX-C2", "camera_id": null, "has_vms": false},
+  {"node_id": "HX-03", "osm_id": 10118771782, "label": "Bạch Đằng ∩ Đinh Bộ Lĩnh", "prefix": "HX", "x": -232, "z": -2657, "cluster_id": "HX-C3", "camera_id": null, "has_vms": false},
+  {"node_id": "HX-04", "osm_id": 12437015526, "label": "Bạch Đằng ∩ Xô Viết Nghệ Tĩnh", "prefix": "HX", "x": -11, "z": -2634, "cluster_id": "HX-C4", "camera_id": null, "has_vms": false},
+  {"node_id": "HX-05", "osm_id": 701671562, "label": "Đinh Bộ Lĩnh ∩ Điện Biên Phủ", "prefix": "HX", "x": -242, "z": -2465, "cluster_id": "HX-C1", "camera_id": null, "has_vms": false},
+  {"node_id": "HX-06", "osm_id": 1497276515, "label": "Ngã tư Hàng Xanh ∩ Xô Viết Nghệ Tĩnh", "prefix": "HX", "x": -14, "z": -2453, "cluster_id": "HX-C5", "camera_id": "CAM-HX-002", "has_vms": false}
+]

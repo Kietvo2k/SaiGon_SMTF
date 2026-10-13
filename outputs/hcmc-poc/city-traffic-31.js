@@ -2,7 +2,7 @@
 // nội suy giữa hai bước mô phỏng. Lõi mô phỏng tất định ở city-traffic-sim-31.js.
 import * as THREE from 'three/webgpu';
 import { attribute, mix, vec3 } from 'three/tsl';
-import { TRAFFIC_31_VERSION, TRAFFIC_KINDS, LIGHT_FACTOR, STEP, MAX_STEPS_PER_FRAME, SEED, hashU32, buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=31a';
+import { TRAFFIC_31_VERSION, TRAFFIC_KINDS, LIGHT_FACTOR, STEP, MAX_STEPS_PER_FRAME, SEED, hashU32, buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
 
 // ---------------------------------------------------------------- hình xe: khối đa diện có vát + bánh lăng trụ, màu đỉnh + mặt nạ sơn + phát sáng
 // Mỗi khối là tập mặt lồi; pháp tuyến hướng ra ngoài theo tâm khối nên không phụ thuộc thứ tự đỉnh. Bỏ mặt đáy và mặt khuất.
@@ -144,10 +144,10 @@ const PALETTES = [
 const paintOf = (kind, i) => { const p = PALETTES[kind]; return p[hashU32((i * 31 + 7) ^ SEED) % p.length]; };
 
 // ---------------------------------------------------------------- pose (hình học) + vẽ
-export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null }) {
+export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null, signalPlan = null, controller = null, breakerS = undefined, seed = undefined }) {
   const t0 = performance.now();
-  const net = buildTrafficNetwork31({ graph, roads, widthOf, drawn });
-  const sim = createTrafficSim31(net);
+  const net = buildTrafficNetwork31({ graph, roads, widthOf, drawn, signalPlan });
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: breakerS === undefined ? undefined : breakerS, seed });
   const { lanes } = net;
   // ---- Nâng y theo mặt đường vẽ: mặt cao nhất trong 0,5 m trên profile làn (dốc/mảnh đoạn chồng nhau, như baseline 30B).
   // Tính tại đúng vị trí xe (không bảng nội suy) nên không tụt dưới đỉnh giữa hai mẫu.
@@ -335,6 +335,15 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
       const f = typeof level === 'number' ? level : named[level] ?? 1;
       return api.setVisibleFraction(f);
     },
+    get controller() { return sim.controller; },
+    signalState: nodeId => {
+      const c = sim.controller;
+      if (!c) return null;
+      const idx = typeof nodeId === 'string' ? net.G.nodes.findIndex(n => String(n.id) === nodeId) : nodeId;
+      return idx >= 0 ? c.stateOf(idx, sim.counters.t) : null;
+    },
+    setSignalMode: mode => (sim.controller ? sim.controller.setMode(mode) : { ok: false, mode: null }),
+    overridePhase: (node, group, duration_s, by, reason) => (sim.controller ? sim.controller.overridePhase(node, group, duration_s, by, reason) : { ok: false, until_t_sim: 0, until_at: '' }),
     counts
   };
   const c0 = counts();

@@ -1,37 +1,37 @@
-// Batch 31A · bước D — lõi mô phỏng giao thông minh họa (illustrative) trên ROAD_GRAPH_31: thuần JS, không THREE,
-// chạy được trong Node để kiểm thử tất định. Phần vẽ ở city-traffic-31.js.
+// Batch 31A Â· bÆ°á»›c D â€” lÃµi mÃ´ phá»ng giao thÃ´ng minh há»a (illustrative) trÃªn ROAD_GRAPH_31: thuáº§n JS, khÃ´ng THREE,
+// cháº¡y Ä‘Æ°á»£c trong Node Ä‘á»ƒ kiá»ƒm thá»­ táº¥t Ä‘á»‹nh. Pháº§n váº½ á»Ÿ city-traffic-31.js.
 //
-// Mô hình (tất định, seed cố định, bước cố định 1/20 s, vẽ nội suy giữa hai bước):
-//  - Trạng thái = cạnh có hướng (edge, dir) trong thành phần liên thông mạnh lái được (xét oneway, không quay đầu;
-//    nút biên nối vòng qua "siêu nút" tái sinh). Mỗi trạng thái có 1–4 làn; làn 0 sát lề phải, hai chiều đi bên phải.
-//  - Mỗi xe: (làn, s dọc làn theo chiều đi, v). Bám xe IDM rút gọn + kẹp cứng khoảng cách (không xuyên nhau), nhìn qua
-//    ranh giới cạnh theo lộ trình đã lập 3 làn tới. Xe máy lệch ngang cố định nhỏ trong làn (chen làn có giới hạn).
-//  - Nút có ≥ 2 làn đổ vào: vạch dừng cách nút Rz; vào vùng nút phải giữ "khóa chuyển động" tương thích với xe đang
-//    trong nút (cùng làn vào; hoặc cùng đi thẳng song song/đối diện, khác làn ra). Nút trục chính có chu kỳ đèn giả lập;
-//    nút còn lại nhường theo cấp đường + thời gian chờ (chờ lâu thì được ưu tiên). Bộ phá kẹt: dừng > 75 s → tái sinh.
-//  - Ra nút biên → tái sinh ở làn xuất phát từ nút biên khác (chọn theo rng của xe), có cờ gen.
-// Hiệu năng: mô phỏng 1D rẻ cho mọi xe (giữ tất định, không phụ thuộc camera); chỉ xe trên cạnh nằm trong frustum
-// và bán kính quanh camera mới tính pose + ghi ma trận (tự cull, 3 InstancedMesh theo loại xe).
+// MÃ´ hÃ¬nh (táº¥t Ä‘á»‹nh, seed cá»‘ Ä‘á»‹nh, bÆ°á»›c cá»‘ Ä‘á»‹nh 1/20 s, váº½ ná»™i suy giá»¯a hai bÆ°á»›c):
+//  - Tráº¡ng thÃ¡i = cáº¡nh cÃ³ hÆ°á»›ng (edge, dir) trong thÃ nh pháº§n liÃªn thÃ´ng máº¡nh lÃ¡i Ä‘Æ°á»£c (xÃ©t oneway, khÃ´ng quay Ä‘áº§u;
+//    nÃºt biÃªn ná»‘i vÃ²ng qua "siÃªu nÃºt" tÃ¡i sinh). Má»—i tráº¡ng thÃ¡i cÃ³ 1â€“4 lÃ n; lÃ n 0 sÃ¡t lá» pháº£i, hai chiá»u Ä‘i bÃªn pháº£i.
+//  - Má»—i xe: (lÃ n, s dá»c lÃ n theo chiá»u Ä‘i, v). BÃ¡m xe IDM rÃºt gá»n + káº¹p cá»©ng khoáº£ng cÃ¡ch (khÃ´ng xuyÃªn nhau), nhÃ¬n qua
+//    ranh giá»›i cáº¡nh theo lá»™ trÃ¬nh Ä‘Ã£ láº­p 3 lÃ n tá»›i. Xe mÃ¡y lá»‡ch ngang cá»‘ Ä‘á»‹nh nhá» trong lÃ n (chen lÃ n cÃ³ giá»›i háº¡n).
+//  - NÃºt cÃ³ â‰¥ 2 lÃ n Ä‘á»• vÃ o: váº¡ch dá»«ng cÃ¡ch nÃºt Rz; vÃ o vÃ¹ng nÃºt pháº£i giá»¯ "khÃ³a chuyá»ƒn Ä‘á»™ng" tÆ°Æ¡ng thÃ­ch vá»›i xe Ä‘ang
+//    trong nÃºt (cÃ¹ng lÃ n vÃ o; hoáº·c cÃ¹ng Ä‘i tháº³ng song song/Ä‘á»‘i diá»‡n, khÃ¡c lÃ n ra). NÃºt trá»¥c chÃ­nh cÃ³ chu ká»³ Ä‘Ã¨n giáº£ láº­p;
+//    nÃºt cÃ²n láº¡i nhÆ°á»ng theo cáº¥p Ä‘Æ°á»ng + thá»i gian chá» (chá» lÃ¢u thÃ¬ Ä‘Æ°á»£c Æ°u tiÃªn). Bá»™ phÃ¡ káº¹t: dá»«ng > 75 s â†’ tÃ¡i sinh.
+//  - Ra nÃºt biÃªn â†’ tÃ¡i sinh á»Ÿ lÃ n xuáº¥t phÃ¡t tá»« nÃºt biÃªn khÃ¡c (chá»n theo rng cá»§a xe), cÃ³ cá» gen.
+// Hiá»‡u nÄƒng: mÃ´ phá»ng 1D ráº» cho má»i xe (giá»¯ táº¥t Ä‘á»‹nh, khÃ´ng phá»¥ thuá»™c camera); chá»‰ xe trÃªn cáº¡nh náº±m trong frustum
+// vÃ  bÃ¡n kÃ­nh quanh camera má»›i tÃ­nh pose + ghi ma tráº­n (tá»± cull, 3 InstancedMesh theo loáº¡i xe).
 export const TRAFFIC_31_VERSION = 'traffic-31D';
 export const SEED = 31031;
-export const STEP = 1 / 10;   // s, bước cố định 10 Hz (vẽ nội suy giữa hai bước)
+export const STEP = 1 / 10;   // s, bÆ°á»›c cá»‘ Ä‘á»‹nh 10 Hz (váº½ ná»™i suy giá»¯a hai bÆ°á»›c)
 export const MAX_STEPS_PER_FRAME = 5;
 const POOL_TARGET = 3600;
-const PN = 4, LK = 5;   // PN: số làn lập sẵn lộ trình = số nút tối đa xin khóa một lượt (cụm nút kề nhau); LK: chỗ giữ khóa (thêm 1 cho nút vừa qua chưa nhả)
+const PN = 4, LK = 5;   // PN: sá»‘ lÃ n láº­p sáºµn lá»™ trÃ¬nh = sá»‘ nÃºt tá»‘i Ä‘a xin khÃ³a má»™t lÆ°á»£t (cá»¥m nÃºt ká» nhau); LK: chá»— giá»¯ khÃ³a (thÃªm 1 cho nÃºt vá»«a qua chÆ°a nháº£)
 
-const HARD_GAP = .55;          // m, khe hở cứng tối thiểu đầu xe sau – đuôi xe trước (QA đòi ≥ 0,3)
-const PATIENCE_S = 12;         // s dừng liên tục trước khi xe bỏ quy tắc chừa đủ chỗ thoát hộp nút
-const REL_F = .6;              // đuôi xe qua REL_F·Rz sau nút thì nhả khóa (trước đây cả Rz: giữ khóa ~5,3 s/xe, giao lộ bão hòa dù mật độ thấp)
-const PRED_S = 1;              // s: đầu làn ra tính theo vị trí dự báo (xe đang chạy sẽ rời trước khi xe chờ vào tới nơi)
-const RELOCATE_M = 60, RELOCATE_STEP = 2;   // m: tầm tìm chỗ trống quanh vị trí cũ khi kích hoạt lại
-const BREAKER_S = 50;          // s, dừng liên tục quá ngưỡng → tái sinh (bộ phá kẹt)
+const HARD_GAP = .55;          // m, khe há»Ÿ cá»©ng tá»‘i thiá»ƒu Ä‘áº§u xe sau â€“ Ä‘uÃ´i xe trÆ°á»›c (QA Ä‘Ã²i â‰¥ 0,3)
+const PATIENCE_S = 12;         // s dá»«ng liÃªn tá»¥c trÆ°á»›c khi xe bá» quy táº¯c chá»«a Ä‘á»§ chá»— thoÃ¡t há»™p nÃºt
+const REL_F = .6;              // Ä‘uÃ´i xe qua REL_FÂ·Rz sau nÃºt thÃ¬ nháº£ khÃ³a (trÆ°á»›c Ä‘Ã¢y cáº£ Rz: giá»¯ khÃ³a ~5,3 s/xe, giao lá»™ bÃ£o hÃ²a dÃ¹ máº­t Ä‘á»™ tháº¥p)
+const PRED_S = 1;              // s: Ä‘áº§u lÃ n ra tÃ­nh theo vá»‹ trÃ­ dá»± bÃ¡o (xe Ä‘ang cháº¡y sáº½ rá»i trÆ°á»›c khi xe chá» vÃ o tá»›i nÆ¡i)
+const RELOCATE_M = 60, RELOCATE_STEP = 2;   // m: táº§m tÃ¬m chá»— trá»‘ng quanh vá»‹ trÃ­ cÅ© khi kÃ­ch hoáº¡t láº¡i
+const BREAKER_S = 50;          // s, dá»«ng liÃªn tá»¥c quÃ¡ ngÆ°á»¡ng â†’ tÃ¡i sinh (bá»™ phÃ¡ káº¹t)
 const LANE_W_MIN = 2.7, LANE_W_MAX = 3.6, LANE_W_SQUEEZE = 2.6;
 const DRIVE_RANK = { trunk: 5, primary: 4, secondary: 3, tertiary: 2, residential: 1, unclassified: 1, living_street: 1, road: 1 };
 const SPEED_BY_RANK = [0, 5.5, 8, 9.5, 11, 13.5];             // m/s
-const DENSITY_BY_RANK = [0, 2.5, 9, 16, 24, 26];              // xe / km làn (trước hệ số trung tâm và chuẩn hóa pool)
-export const LIGHT_FACTOR = { day: .85, golden: 1, night: .5 };       // giờ vàng = cao điểm chiều; đêm thưa
-const SIGNAL_CLUSTER_M = 80;                                   // m: đèn gần hơn ngưỡng này chung pha
-const SIGNAL_CYCLE = 44;                                       // s: xanh nhóm 0 22 s, đỏ chung 3 s, xanh nhóm 1 16 s, đỏ chung 3 s
+const DENSITY_BY_RANK = [0, 2.5, 9, 16, 24, 26];              // xe / km lÃ n (trÆ°á»›c há»‡ sá»‘ trung tÃ¢m vÃ  chuáº©n hÃ³a pool)
+export const LIGHT_FACTOR = { day: .85, golden: 1, night: .5 };       // giá» vÃ ng = cao Ä‘iá»ƒm chiá»u; Ä‘Ãªm thÆ°a
+const SIGNAL_CLUSTER_M = 80;                                   // m: Ä‘Ã¨n gáº§n hÆ¡n ngÆ°á»¡ng nÃ y chung pha
+const SIGNAL_CYCLE = 44;                                       // s: xanh nhÃ³m 0 22 s, Ä‘á» chung 3 s, xanh nhÃ³m 1 16 s, Ä‘á» chung 3 s
 
 export const TRAFFIC_KINDS = [
   { name: 'motorbike', length: 1.9, width: .7, height: 1.62, s0: 1.0, T: .8, a: 2.6, b: 3.2 },
@@ -39,10 +39,10 @@ export const TRAFFIC_KINDS = [
   { name: 'bus', length: 12, width: 2.5, height: 3.2, s0: 2.2, T: 1.4, a: 1.2, b: 2.6 },
   { name: 'truck', length: 7.4, width: 2.3, height: 3.05, s0: 2.0, T: 1.3, a: 1.3, b: 2.7 }
 ];
-const HEAVY = 2;                                               // kind ≥ HEAVY (buýt, tải): chỉ chạy đường cấp ≥ 2, tránh rẽ vào hẻm
+const HEAVY = 2;                                               // kind â‰¥ HEAVY (buÃ½t, táº£i): chá»‰ cháº¡y Ä‘Æ°á»ng cáº¥p â‰¥ 2, trÃ¡nh ráº½ vÃ o háº»m
 const MAX_LEN = Math.max(...TRAFFIC_KINDS.map(k => k.length));
 
-// ---------------------------------------------------------------- tiện ích số
+// ---------------------------------------------------------------- tiá»‡n Ã­ch sá»‘
 const profileAt = (p, s) => {
   if (s <= p[0]) return p[1];
   const n = p.length / 2; if (s >= p[(n - 1) * 2]) return p[(n - 1) * 2 + 1];
@@ -52,8 +52,8 @@ const profileAt = (p, s) => {
 export const hashU32 = n => { let x = (n ^ 0x9e3779b9) >>> 0; x = Math.imul(x ^ (x >>> 16), 0x85ebca6b) >>> 0; x = Math.imul(x ^ (x >>> 13), 0xc2b2ae35) >>> 0; return (x ^ (x >>> 16)) >>> 0; };
 const angleDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
 
-// ---------------------------------------------------------------- dựng mạng làn (thuần dữ liệu, không THREE)
-export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
+// ---------------------------------------------------------------- dá»±ng máº¡ng lÃ n (thuáº§n dá»¯ liá»‡u, khÃ´ng THREE)
+export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn, signalPlan = null }) {
   const nodeIndex = new Map(); G.nodes.forEach((n, i) => nodeIndex.set(n.id, i));
   const E = G.edges, NE = E.length, NN = G.nodes.length;
   const rankOf = e => { const t = String(G.roads[E[e].road].type || '').replace(/_link$/, ''); return DRIVE_RANK[t] || 0; };
@@ -64,9 +64,9 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     if (!rankOf(e) || !drawn(ed.road) || roads[ed.road]?.tunnel) continue;
     drivable[e] = 1;
   }
-  // Hướng đi (rad, atan2(dz, dx)) ở đầu/cuối cạnh theo chiều vẽ.
+  // HÆ°á»›ng Ä‘i (rad, atan2(dz, dx)) á»Ÿ Ä‘áº§u/cuá»‘i cáº¡nh theo chiá»u váº½.
   const headAt = (e, atEnd) => { const c = E[e].c, n = c.length / 2; return atEnd ? Math.atan2(c[n * 2 - 1] - c[n * 2 - 3], c[n * 2 - 2] - c[n * 2 - 4]) : Math.atan2(c[3] - c[1], c[2] - c[0]); };
-  // Trạng thái st = e*2 + (dir>0 ? 0 : 1).
+  // Tráº¡ng thÃ¡i st = e*2 + (dir>0 ? 0 : 1).
   const allowed = (e, d) => drivable[e] && (E[e].oneway === 'yes' ? d > 0 : E[e].oneway === '-1' ? d < 0 : true);
   const stFrom = st => { const e = st >> 1; return nodeIndex.get(st & 1 ? E[e].to : E[e].from); };
   const stTo = st => { const e = st >> 1; return nodeIndex.get(st & 1 ? E[e].from : E[e].to); };
@@ -79,7 +79,7 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     for (const [e2, end] of G.nodes[n].adj) { if (e2 === e) continue; const d2 = end === 0 ? 1 : -1; if (allowed(e2, d2)) out.push(e2 * 2 + (d2 > 0 ? 0 : 1)); }
     return out;
   };
-  // SCC (Tarjan lặp) trên trạng thái + siêu nút SUPER: trạng thái tới nút biên → SUPER → trạng thái rời nút biên.
+  // SCC (Tarjan láº·p) trÃªn tráº¡ng thÃ¡i + siÃªu nÃºt SUPER: tráº¡ng thÃ¡i tá»›i nÃºt biÃªn â†’ SUPER â†’ tráº¡ng thÃ¡i rá»i nÃºt biÃªn.
   const NS = NE * 2, SUPER = NS, valid = new Uint8Array(NS);
   for (let st = 0; st < NS; st++) valid[st] = allowed(st >> 1, st & 1 ? -1 : 1) && stFrom(st) !== undefined && stTo(st) !== undefined ? 1 : 0;
   const succ = new Array(NS + 1);
@@ -104,9 +104,9 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     }
   }
   const keepComp = comp[SUPER], inScc = st => valid[st] && comp[st] === keepComp;
-  // Khoảng trống hai bên mỗi cạnh giữ lại (khung chiều vẽ): tới tim cạnh lái được gần nhất song song (|cos| > 0,8),
-  // cùng cao độ (±2 m) — đường đôi tách làn (Điện Biên Phủ, Cầu Kiệu, Ba Son) có tim cách nhau ~7,5 m nên mỗi chiều chỉ
-  // được dùng nửa khoảng trống; bỏ 1 đoạn gần nút (vùng nút đã có khóa). Không có hàng xóm → Infinity.
+  // Khoáº£ng trá»‘ng hai bÃªn má»—i cáº¡nh giá»¯ láº¡i (khung chiá»u váº½): tá»›i tim cáº¡nh lÃ¡i Ä‘Æ°á»£c gáº§n nháº¥t song song (|cos| > 0,8),
+  // cÃ¹ng cao Ä‘á»™ (Â±2 m) â€” Ä‘Æ°á»ng Ä‘Ã´i tÃ¡ch lÃ n (Äiá»‡n BiÃªn Phá»§, Cáº§u Kiá»‡u, Ba Son) cÃ³ tim cÃ¡ch nhau ~7,5 m nÃªn má»—i chiá»u chá»‰
+  // Ä‘Æ°á»£c dÃ¹ng ná»­a khoáº£ng trá»‘ng; bá» 1 Ä‘oáº¡n gáº§n nÃºt (vÃ¹ng nÃºt Ä‘Ã£ cÃ³ khÃ³a). KhÃ´ng cÃ³ hÃ ng xÃ³m â†’ Infinity.
   const kept = new Uint8Array(NE); for (let st = 0; st < NS; st++) if (inScc(st)) kept[st >> 1] = 1;
   const yAt = (e, sd) => E[e].profile ? profileAt(E[e].profile, sd) : G.frame.groundY;
   const CELL = 24, segGrid = new Map();
@@ -143,7 +143,7 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
       acc += Ls;
     }
   }
-  // Làn theo trạng thái: làn 0 sát lề phải; offset dương = bên phải chiều đi.
+  // LÃ n theo tráº¡ng thÃ¡i: lÃ n 0 sÃ¡t lá» pháº£i; offset dÆ°Æ¡ng = bÃªn pháº£i chiá»u Ä‘i.
   const lanesOfSt = new Int32Array(NS).fill(-1), laneCountOfSt = new Uint8Array(NS);
   const L = { edge: [], dir: [], from: [], to: [], length: [], offset: [], k: [], n: [], width: [], rank: [], speed: [], st: [] };
   let statesKept = 0, squeezed = 0; const edgesKept = new Set();
@@ -152,7 +152,7 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     const e = st >> 1, ed = E[e], d = st & 1 ? -1 : 1, two = ed.oneway === 'no', W = widthOf(ed.road);
     const lanesTag = Math.max(1, Number(ed.lanes) || 1), n0 = Math.min(4, two ? Math.max(1, Math.floor(lanesTag / 2)) : lanesTag);
     const w0 = Math.min(LANE_W_MAX, Math.max(LANE_W_MIN, W / (two ? n0 * 2 : n0)));
-    const hr = (d > 0 ? clearR[e] : clearL[e]) / 2 - .1, hl = (d > 0 ? clearL[e] : clearR[e]) / 2 - .1;   // nửa khoảng trống phải/trái theo chiều đi
+    const hr = (d > 0 ? clearR[e] : clearL[e]) / 2 - .1, hl = (d > 0 ? clearL[e] : clearR[e]) / 2 - .1;   // ná»­a khoáº£ng trá»‘ng pháº£i/trÃ¡i theo chiá»u Ä‘i
     let lo, hi;
     if (two) { lo = 0; hi = Math.min(n0 * w0, hr); } else { lo = -Math.min(n0 * w0 / 2, hl); hi = Math.min(n0 * w0 / 2, hr); }
     const avail = hi - lo, n = Math.max(1, Math.min(n0, Math.floor(avail / LANE_W_SQUEEZE))), w = Math.max(LANE_W_SQUEEZE, Math.min(w0, avail / n));
@@ -171,8 +171,8 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     length: Float32Array.from(L.length), offset: Float32Array.from(L.offset), k: Uint8Array.from(L.k), n: Uint8Array.from(L.n),
     width: Float32Array.from(L.width), rank: Uint8Array.from(L.rank), speed: Float32Array.from(L.speed), st: Int32Array.from(L.st)
   };
-  // "Co ngắn" phía trong khúc cua giữa cạnh: lệch |lat| vào phía trong đỉnh gấp góc θ rút ngắn quãng thật ≈ 2·|lat|·tan(θ/2)
-  // → xe cùng làn phải giữ thêm chừng đó để thân xe không chồng nhau trên đường lệch (tối đa 6 m).
+  // "Co ngáº¯n" phÃ­a trong khÃºc cua giá»¯a cáº¡nh: lá»‡ch |lat| vÃ o phÃ­a trong Ä‘á»‰nh gáº¥p gÃ³c Î¸ rÃºt ngáº¯n quÃ£ng tháº­t â‰ˆ 2Â·|lat|Â·tan(Î¸/2)
+  // â†’ xe cÃ¹ng lÃ n pháº£i giá»¯ thÃªm chá»«ng Ä‘Ã³ Ä‘á»ƒ thÃ¢n xe khÃ´ng chá»“ng nhau trÃªn Ä‘Æ°á»ng lá»‡ch (tá»‘i Ä‘a 6 m).
   const pinch = new Float32Array(lanes.edge.length);
   for (let l = 0; l < lanes.edge.length; l++) {
     const c = E[lanes.edge[l]].c, n = c.length / 2, latDraw = lanes.offset[l] * lanes.dir[l]; let p = 0;
@@ -184,7 +184,7 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     pinch[l] = Math.min(6, p);
   }
   lanes.pinch = pinch;
-  // Kế tiếp theo trạng thái (đã lọc SCC) + góc rẽ (+ phải, − trái) + cùng tên đường.
+  // Káº¿ tiáº¿p theo tráº¡ng thÃ¡i (Ä‘Ã£ lá»c SCC) + gÃ³c ráº½ (+ pháº£i, âˆ’ trÃ¡i) + cÃ¹ng tÃªn Ä‘Æ°á»ng.
   const nextSt = new Array(NS);
   for (let st = 0; st < NS; st++) {
     if (lanesOfSt[st] < 0) continue;
@@ -192,7 +192,7 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     const ah = arriveHead(st), name = G.roads[E[st >> 1].road].name || '';
     nextSt[st] = succRaw(st).filter(x => lanesOfSt[x] >= 0).map(x => ({ st: x, turn: angleDiff(ah, departHead(x)), sameName: !!name && (G.roads[E[x >> 1].road].name || '') === name, rank: rankOf(x >> 1) }));
   }
-  // Nút: số làn đổ vào, bán kính vùng nút, đèn.
+  // NÃºt: sá»‘ lÃ n Ä‘á»• vÃ o, bÃ¡n kÃ­nh vÃ¹ng nÃºt, Ä‘Ã¨n.
   const inLanes = new Int32Array(NN), outLanes = new Int32Array(NN), maxHalf = new Float32Array(NN);
   for (let l = 0; l < NL; l++) {
     inLanes[lanes.to[l]]++; outLanes[lanes.from[l]]++; const hw = widthOf(E[lanes.edge[l]].road) / 2;
@@ -203,8 +203,8 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
   let controlledNodes = 0, signals = 0;
   const incomingByNode = new Map();
   for (let st = 0; st < NS; st++) if (lanesOfSt[st] >= 0) { const n = stTo(st); let l = incomingByNode.get(n); if (!l) incomingByNode.set(n, l = []); l.push(st); }
-  // Bề ngang chiếm dụng mỗi cạnh (|offset| + nửa làn lớn nhất, cả hai chiều): hai cạnh gặp nhau tại nút dưới góc φ nhỏ
-  // chỉ tách hẳn sau r ≥ (ext₁ + ext₂ + 0,4)/sin φ → vùng nút (vạch dừng) phải lùi tới đó, tối đa 32 m.
+  // Bá» ngang chiáº¿m dá»¥ng má»—i cáº¡nh (|offset| + ná»­a lÃ n lá»›n nháº¥t, cáº£ hai chiá»u): hai cáº¡nh gáº·p nhau táº¡i nÃºt dÆ°á»›i gÃ³c Ï† nhá»
+  // chá»‰ tÃ¡ch háº³n sau r â‰¥ (extâ‚ + extâ‚‚ + 0,4)/sin Ï† â†’ vÃ¹ng nÃºt (váº¡ch dá»«ng) pháº£i lÃ¹i tá»›i Ä‘Ã³, tá»‘i Ä‘a 32 m.
   const ext = new Float32Array(NE);
   for (let l = 0; l < NL; l++) { const e = lanes.edge[l]; ext[e] = Math.max(ext[e], Math.abs(lanes.offset[l]) + lanes.width[l] / 2); }
   const convergeR = new Float32Array(NN);
@@ -219,7 +219,7 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
   }
   for (let n = 0; n < NN; n++) {
     Rz[n] = Math.min(32, Math.max(6, maxHalf[n] + 1.5, convergeR[n]));
-    if ((inLanes[n] >= 2 || outLanes[n] >= 2) && !boundary(n)) { needsLock[n] = 1; controlledNodes++; }   // nhập hoặc tách: cần khóa
+    if ((inLanes[n] >= 2 || outLanes[n] >= 2) && !boundary(n)) { needsLock[n] = 1; controlledNodes++; }   // nháº­p hoáº·c tÃ¡ch: cáº§n khÃ³a
   }
   for (const [n, sts] of incomingByNode) {
     if (!needsLock[n] || sts.length < 3) continue;
@@ -230,15 +230,29 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     const axis = arriveHead(axisSt);
     for (const st of sts) arriveGroup[st] = Math.abs(Math.cos(arriveHead(st) - axis)) > .5 ? 0 : 1;
   }
-  // Đèn các nút gần nhau (< 80 m) cùng một pha: xe xin khóa chuỗi nút kề nhau (liên kết ngắn) cần xanh ở tất cả nút cùng lúc, nếu lệch pha ngẫu nhiên
-  // thì có xe chờ cả chục giây dù cả cụm đã xanh (một nguyên nhân bộ phá kẹt).
+  // ÄÃ¨n cÃ¡c nÃºt gáº§n nhau (< 80 m) cÃ¹ng má»™t pha: xe xin khÃ³a chuá»—i nÃºt ká» nhau (liÃªn káº¿t ngáº¯n) cáº§n xanh á»Ÿ táº¥t cáº£ nÃºt cÃ¹ng lÃºc, náº¿u lá»‡ch pha ngáº«u nhiÃªn
+  // thÃ¬ cÃ³ xe chá» cáº£ chá»¥c giÃ¢y dÃ¹ cáº£ cá»¥m Ä‘Ã£ xanh (má»™t nguyÃªn nhÃ¢n bá»™ phÃ¡ káº¹t).
   { const sg = []; for (let n = 0; n < NN; n++) if (signal[n]) sg.push(n);
     const root = new Map(sg.map(n => [n, n])), find = n => { while (root.get(n) !== n) n = root.get(n); return n; };
     for (let a = 0; a < sg.length; a++) for (let b = a + 1; b < sg.length; b++) if (Math.hypot(G.nodes[sg[a]].x - G.nodes[sg[b]].x, G.nodes[sg[a]].z - G.nodes[sg[b]].z) < SIGNAL_CLUSTER_M) { const ra = find(sg[a]), rb = find(sg[b]); if (ra !== rb) root.set(Math.max(ra, rb), Math.min(ra, rb)); }
     for (const n of sg) signalOffset[n] = signalOffset[find(n)]; }
-  // Làn xuất phát từ nút biên (điểm tái sinh), sắp theo chỉ số.
+  // Káº¿ hoáº¡ch Ä‘Ã¨n M1 (tÃ¹y chá»n): ghi Ä‘Ã¨ signal/signalOffset/arriveGroup cho nÃºt HÃ ng Xanh.
+  let net_out_signalPlan = null;
+  if (signalPlan) {
+    const stTo = st => { const e = st >> 1; return nodeIndex.get(st & 1 ? G.edges[e].from : G.edges[e].to); };
+    for (const n of signalPlan.signalNodes) {
+      signal[n] = 1;
+      signalOffset[n] = signalPlan.offset.get(n) ?? 0;
+    }
+    for (let st = 0; st < arriveGroup.length; st++) {
+      const n = stTo(st);
+      if (n !== undefined && signalPlan.signalNodes.includes(n)) arriveGroup[st] = signalPlan.arriveGroup[st];
+    }
+    net_out_signalPlan = signalPlan;
+  }
+  // LÃ n xuáº¥t phÃ¡t tá»« nÃºt biÃªn (Ä‘iá»ƒm tÃ¡i sinh), sáº¯p theo chá»‰ sá»‘.
   const spawnLanes = []; for (let l = 0; l < NL; l++) if (boundary(lanes.from[l])) spawnLanes.push(l);
-  // Hình học cạnh: polyline phẳng, độ dài cộng dồn, pháp tuyến đỉnh (trung bình hai đoạn kề, hướng phải của chiều vẽ).
+  // HÃ¬nh há»c cáº¡nh: polyline pháº³ng, Ä‘á»™ dÃ i cá»™ng dá»“n, phÃ¡p tuyáº¿n Ä‘á»‰nh (trung bÃ¬nh hai Ä‘oáº¡n ká», hÆ°á»›ng pháº£i cá»§a chiá»u váº½).
   const geoOff = new Int32Array(NE + 1); let total = 0;
   for (let e = 0; e < NE; e++) { geoOff[e] = total; if (edgesKept.has(e)) total += E[e].c.length / 2; }
   geoOff[NE] = total;
@@ -255,7 +269,7 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
   }
   const bridgeEdge = new Uint8Array(NE), signatureEdge = new Uint8Array(NE);
   for (const e of edgesKept) { bridgeEdge[e] = E[e].elevationClass && E[e].elevationClass !== 'ground' && E[e].elevationClass !== 'skip' ? 1 : 0; signatureEdge[e] = G.roads[E[e].road].signature ? 1 : 0; }
-  // Cầu bán kính bao quanh từng cạnh (cull).
+  // Cáº§u bÃ¡n kÃ­nh bao quanh tá»«ng cáº¡nh (cull).
   const sphere = new Float32Array(NE * 4);
   for (const e of edgesKept) {
     const o = geoOff[e], n = E[e].c.length / 2; let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, maxY = G.frame.groundY;
@@ -264,11 +278,11 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
     sphere[e * 4] = (minX + maxX) / 2; sphere[e * 4 + 1] = (G.frame.groundY + maxY) / 2 + 1.5; sphere[e * 4 + 2] = (minZ + maxZ) / 2;
     sphere[e * 4 + 3] = Math.hypot(maxX - minX, maxZ - minZ, maxY - G.frame.groundY) / 2 + 16;
   }
-  // Kiểm tĩnh: mọi làn khớp tag oneway.
+  // Kiá»ƒm tÄ©nh: má»i lÃ n khá»›p tag oneway.
   let onewayLaneViolations = 0;
   for (let l = 0; l < NL; l++) { const ow = E[lanes.edge[l]].oneway; if ((ow === 'yes' && lanes.dir[l] !== 1) || (ow === '-1' && lanes.dir[l] !== -1)) onewayLaneViolations++; }
   const net = {
-    G, E, NE, NN, NS, NL, lanes, lanesOfSt, laneCountOfSt, nextSt, needsLock, Rz, signal, signalOffset, arriveGroup, arriveHead, spawnLanes,
+    G, E, NE, NN, NS, NL, lanes, lanesOfSt, laneCountOfSt, nextSt, needsLock, Rz, signal, signalOffset, arriveGroup, arriveHead, spawnLanes, signalPlan: net_out_signalPlan,
     geo: { off: geoOff, x: gx, z: gz, s: gs, nx, nz, planar }, bridgeEdge, signatureEdge, sphere, rankOf,
     stats: { drivableEdges: edgesKept.size, states: statesKept, lanes: NL, components: compCount, controlledNodes, signals, spawnLanes: spawnLanes.length, onewayLaneViolations, squeezedStates: squeezed }
   };
@@ -277,9 +291,9 @@ export function buildTrafficNetwork31({ graph: G, roads, widthOf, drawn }) {
   return net;
 }
 
-// Vùng giao cắt không có nút chung: hai làn khác cạnh, không chung nút (hoặc chung nút nhưng xa ngoài vùng khóa) mà tim làn
-// đi gần nhau < CROSS_R ở cùng cao độ (nhánh nhập cầu vắt qua mép cạnh khác, đầu dải phân cách…). Khóa nút không thấy các cặp này,
-// nên mỗi vùng là một "token": xe chỉ vào đoạn [a, b] của làn mình khi không có xe ở làn xung đột đang giữ cùng vùng.
+// VÃ¹ng giao cáº¯t khÃ´ng cÃ³ nÃºt chung: hai lÃ n khÃ¡c cáº¡nh, khÃ´ng chung nÃºt (hoáº·c chung nÃºt nhÆ°ng xa ngoÃ i vÃ¹ng khÃ³a) mÃ  tim lÃ n
+// Ä‘i gáº§n nhau < CROSS_R á»Ÿ cÃ¹ng cao Ä‘á»™ (nhÃ¡nh nháº­p cáº§u váº¯t qua mÃ©p cáº¡nh khÃ¡c, Ä‘áº§u dáº£i phÃ¢n cÃ¡châ€¦). KhÃ³a nÃºt khÃ´ng tháº¥y cÃ¡c cáº·p nÃ y,
+// nÃªn má»—i vÃ¹ng lÃ  má»™t "token": xe chá»‰ vÃ o Ä‘oáº¡n [a, b] cá»§a lÃ n mÃ¬nh khi khÃ´ng cÃ³ xe á»Ÿ lÃ n xung Ä‘á»™t Ä‘ang giá»¯ cÃ¹ng vÃ¹ng.
 const CROSS_R = 3.4, CROSS_STEP = 1.5;
 function buildCrossZones31(net) {
   const { lanes, NL, Rz } = net, geo = createTrafficGeometry31(net, { jit: [0] }), p = {};
@@ -293,7 +307,7 @@ function buildCrossZones31(net) {
     }
   }
   const nearNode = (l, sl, node) => (lanes.to[l] === node ? lanes.length[l] - sl : sl) < Rz[node] + 6;
-  // Hai làn nối tiếp nhau (trực tiếp hoặc qua một làn ngắn < 25 m) do bám xe xử lý, không phải giao cắt.
+  // Hai lÃ n ná»‘i tiáº¿p nhau (trá»±c tiáº¿p hoáº·c qua má»™t lÃ n ngáº¯n < 25 m) do bÃ¡m xe xá»­ lÃ½, khÃ´ng pháº£i giao cáº¯t.
   const follows = (u, w) => {
     const su = lanes.st[u], sw = lanes.st[w], nu = net.nextSt[su] || [];
     for (const c of nu) { if (c.st === sw) return true; const lm = net.lanesOfSt[c.st]; if (lm >= 0 && lanes.length[lm] < 25 && (net.nextSt[c.st] || []).some(x => x.st === sw)) return true; }
@@ -317,7 +331,7 @@ function buildCrossZones31(net) {
       }
     }
   }
-  // Gom điểm xung đột thành vùng (union-find theo khoảng cách 10 m).
+  // Gom Ä‘iá»ƒm xung Ä‘á»™t thÃ nh vÃ¹ng (union-find theo khoáº£ng cÃ¡ch 10 m).
   const parent = new Int32Array(hits.length / 2).map((_, k) => k), find = k => { while (parent[k] !== k) k = parent[k] = parent[parent[k]]; return k; };
   const hg = new Map();
   for (let h = 0; h < hits.length / 2; h++) {
@@ -327,7 +341,7 @@ function buildCrossZones31(net) {
     }
     const g = gx * 1048576 + gz; let arr = hg.get(g); if (!arr) hg.set(g, arr = []); arr.push(h);
   }
-  const zoneOf = new Map(), spans = new Map(), pairs = new Set();   // spans: "zone:lane" → [a, b]
+  const zoneOf = new Map(), spans = new Map(), pairs = new Set();   // spans: "zone:lane" â†’ [a, b]
   for (let h = 0; h < hits.length / 2; h++) {
     const r = find(h); if (!zoneOf.has(r)) zoneOf.set(r, zoneOf.size); const z = zoneOf.get(r);
     for (const id of [hits[h * 2], hits[h * 2 + 1]]) {
@@ -343,17 +357,18 @@ function buildCrossZones31(net) {
   return { zones: zoneOf.size, off, zone, a, b, pairs, conflict: (l1, l2) => pairs.has(Math.min(l1, l2) * NL + Math.max(l1, l2)) };
 }
 
-// ---------------------------------------------------------------- mô phỏng (thuần JS, tất định)
-export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TARGET } = {}) {
+// ---------------------------------------------------------------- mÃ´ phá»ng (thuáº§n JS, táº¥t Ä‘á»‹nh)
+export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TARGET, signalPlan = null, controller: controller0 = null, breakerS = BREAKER_S, seed = SEED } = {}) {
+  let controller = controller0;
   const { lanes, NL, nextSt, lanesOfSt, laneCountOfSt, needsLock, Rz, signal, signalOffset, arriveGroup, arriveHead, spawnLanes, E, G } = net;
   const KL = TRAFFIC_KINDS.map(k => k.length), KW = TRAFFIC_KINDS.map(k => k.width);
-  // ---- Bố trí pool ban đầu (tất định): xe/km làn theo cấp × hệ số trung tâm, rải đều dọc làn ngoài vùng nút.
+  // ---- Bá»‘ trÃ­ pool ban Ä‘áº§u (táº¥t Ä‘á»‹nh): xe/km lÃ n theo cáº¥p Ã— há»‡ sá»‘ trung tÃ¢m, ráº£i Ä‘á»u dá»c lÃ n ngoÃ i vÃ¹ng nÃºt.
   const centrality = l => { const s = net.sphere, e = lanes.edge[l]; const d = Math.hypot(s[e * 4] - centre[0], s[e * 4 + 2] - centre[1]); return .35 + .65 * Math.max(0, 1 - d / 4200); };
   let raw = 0; const expect = new Float32Array(NL);
   for (let l = 0; l < NL; l++) { expect[l] = DENSITY_BY_RANK[lanes.rank[l]] * lanes.length[l] / 1000 * centrality(l); raw += expect[l]; }
   const scale = poolTarget / Math.max(1, raw);
   const spawnPlan = [];   // [lane, s, kind, rngSeed]
-  let carry = 0, rngSpawn = SEED >>> 0;
+  let carry = 0, rngSpawn = seed >>> 0;
   const nextRng = () => { rngSpawn ^= rngSpawn << 13; rngSpawn >>>= 0; rngSpawn ^= rngSpawn >>> 17; rngSpawn ^= rngSpawn << 5; rngSpawn >>>= 0; return rngSpawn / 4294967296; };
   const zoneStart = (l, len) => needsLock[lanes.from[l]] ? Rz[lanes.from[l]] + len / 2 + .6 : len / 2 + .6;
   const zoneEnd = (l, len) => lanes.length[l] - (needsLock[lanes.to[l]] ? Rz[lanes.to[l]] : 0) - len / 2 - .6;
@@ -365,25 +380,27 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const step = span / n; if (step < MAX_LEN + 1.5) { n = Math.max(0, Math.floor(span / (MAX_LEN + 1.5))); }
     if (!n) continue;
     carry -= n;
-    for (let k = 0; k < n; k++) spawnPlan.push([l, a + (k + .5) * span / n, kinds[k], hashU32(spawnPlan.length * 7919 + SEED)]);
+    for (let k = 0; k < n; k++) spawnPlan.push([l, a + (k + .5) * span / n, kinds[k], hashU32(spawnPlan.length * 7919 + seed)]);
   }
   const N = spawnPlan.length;
-  // ---- Trạng thái xe.
+  // ---- Tráº¡ng thÃ¡i xe.
   const lane = new Int32Array(N), s = new Float64Array(N), v = new Float32Array(N), lat = new Float32Array(N), jit = new Float32Array(N);
   const gen = new Uint32Array(N), active = new Uint8Array(N), wanted = new Uint8Array(N), selRank = new Float32Array(N), pending = new Uint8Array(N), kind = new Uint8Array(N), len = new Float32Array(N), wid = new Float32Array(N);
   const vf = new Float32Array(N), rng = new Uint32Array(N), path = new Int32Array(N * PN), next = new Int32Array(N), prevLane = new Int32Array(N);
   const pLane = new Int32Array(N), pS = new Float64Array(N), pGen = new Uint32Array(N), stopT = new Float32Array(N), lastStep = new Int32Array(N), waiting = new Uint8Array(N);
+  const lastStepCrossed = new Int32Array(N).fill(-1);
+  const lastS = new Float64Array(N).fill(-1);
   const lockNode = new Int32Array(N * LK), lockIn = new Int32Array(N * LK), lockOut = new Int32Array(N * LK), lockRemain = new Float32Array(N * LK);
   const rand = i => { let x = rng[i]; x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; rng[i] = x; return x / 4294967296; };
   const laneCars = new Array(NL); const laneActive = new Uint8Array(NL); let activeLanes = [];
-  // Khoảng cách thật (theo pose) khi xe dẫn đang cắt góc trong vùng nút: quãng s không phản ánh đúng hình học Bezier rẽ gắt.
+  // Khoáº£ng cÃ¡ch tháº­t (theo pose) khi xe dáº«n Ä‘ang cáº¯t gÃ³c trong vÃ¹ng nÃºt: quÃ£ng s khÃ´ng pháº£n Ã¡nh Ä‘Ãºng hÃ¬nh há»c Bezier ráº½ gáº¯t.
   const geoSim = createTrafficGeometry31(net, { jit, len }), PA = {}, PB = {};
   const geoGap = (i, o) => {
     geoSim.poseAt(i, lane[i], s[i], next[i], prevLane[i], PA); geoSim.poseAt(o, lane[o], s[o], next[o], prevLane[o], PB);
     const dx = PB.x - PA.x, dz = PB.z - PA.z; if (dx * PA.tx + dz * PA.tz <= 0) return Infinity;
     return Math.hypot(dx, dz) - (len[i] + len[o]) / 2 - .6;
   };
-  // node → [{car, inL, outL, straight}]: mảng theo chỉ số nút (nhanh hơn Map trong vòng xe), cùng API get/set/delete/clear/values.
+  // node â†’ [{car, inL, outL, straight}]: máº£ng theo chá»‰ sá»‘ nÃºt (nhanh hÆ¡n Map trong vÃ²ng xe), cÃ¹ng API get/set/delete/clear/values.
   const holders = (() => {
     const nn = G.nodes.length, a = new Array(nn).fill(undefined), seen = new Uint8Array(nn), used = [];
     return {
@@ -395,23 +412,23 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     };
   })();
   let reqPrev = new Map(), reqCur = new Map();
-  // Số khóa đang giữ theo làn vào (lọc nhanh trước khi quét holders của nút cuối làn).
+  // Sá»‘ khÃ³a Ä‘ang giá»¯ theo lÃ n vÃ o (lá»c nhanh trÆ°á»›c khi quÃ©t holders cá»§a nÃºt cuá»‘i lÃ n).
   const inHold = new Int32Array(NL);
-  // Token vùng giao cắt không nút (net.cross): zoneHold[z] = Map(làn → số xe giữ); mỗi xe giữ tối đa 2 token, nhả khi đuôi qua b.
+  // Token vÃ¹ng giao cáº¯t khÃ´ng nÃºt (net.cross): zoneHold[z] = Map(lÃ n â†’ sá»‘ xe giá»¯); má»—i xe giá»¯ tá»‘i Ä‘a 2 token, nháº£ khi Ä‘uÃ´i qua b.
   const CZ = net.cross, zoneHold = new Map(), zTok = new Int32Array(N * 2).fill(-1), zLane = new Int32Array(N * 2), zRem = new Float32Array(N * 2);
   const counters = { t: 0, step: 0, edgeTransitions: 0, teleports: 0, onewayViolations: 0, gapViolations: 0, respawns: 0, breakerRespawns: 0, waitsTotal: 0, maxStopS: 0, perSecond: new Int32Array(32), lastSecond: 0, pendingFails: 0 };
   let fraction = 1, lightFactor = 1;
-  // ---- Khu mô phỏng (bước H): region = null → toàn thành phố; {id, poly[x0,z0,x1,z1…]} → chỉ xe trên cạnh nằm hẳn trong đa giác.
-  // insideLane: làn thuộc cạnh mà mọi đỉnh nằm trong khu; spawnList: làn điểm tái sinh (nút biên thật hoặc nút trong khu kề nút ngoài khu);
-  // elig: xe được tính vào khu (đặt theo vị trí lúc setRegion; xe đang chờ chỗ giữ nguyên, xe đặt/tái sinh trong khu luôn hợp lệ).
+  // ---- Khu mÃ´ phá»ng (bÆ°á»›c H): region = null â†’ toÃ n thÃ nh phá»‘; {id, poly[x0,z0,x1,z1â€¦]} â†’ chá»‰ xe trÃªn cáº¡nh náº±m háº³n trong Ä‘a giÃ¡c.
+  // insideLane: lÃ n thuá»™c cáº¡nh mÃ  má»i Ä‘á»‰nh náº±m trong khu; spawnList: lÃ n Ä‘iá»ƒm tÃ¡i sinh (nÃºt biÃªn tháº­t hoáº·c nÃºt trong khu ká» nÃºt ngoÃ i khu);
+  // elig: xe Ä‘Æ°á»£c tÃ­nh vÃ o khu (Ä‘áº·t theo vá»‹ trÃ­ lÃºc setRegion; xe Ä‘ang chá» chá»— giá»¯ nguyÃªn, xe Ä‘áº·t/tÃ¡i sinh trong khu luÃ´n há»£p lá»‡).
   let region = null, spawnList = spawnLanes;
   const insideLane = new Uint8Array(NL).fill(1), elig = new Uint8Array(N).fill(1);
 
   const laneList = l => { let a = laneCars[l]; if (!a) { a = laneCars[l] = []; } if (!laneActive[l]) { laneActive[l] = 1; activeLanes.push(l); } return a; };
   const insertSorted = (l, i) => { const a = laneList(l); let k = 0; while (k < a.length && s[a[k]] < s[i]) k++; a.splice(k, 0, i); };
   const removeFrom = (l, i) => { const a = laneCars[l]; if (!a) return; const k = a.indexOf(i); if (k >= 0) a.splice(k, 1); };
-  // Đệm khi hai xe ở hai làn nối nhau qua góc nút (đường Bezier cắt góc ngắn hơn quãng s).
-  // Đệm qua góc nút: Bezier cắt góc ngắn hơn quãng s; phía trong góc rẽ θ ngắn thêm ≈ 2·(|lat|+0,75)·tan(θ/2).
+  // Äá»‡m khi hai xe á»Ÿ hai lÃ n ná»‘i nhau qua gÃ³c nÃºt (Ä‘Æ°á»ng Bezier cáº¯t gÃ³c ngáº¯n hÆ¡n quÃ£ng s).
+  // Äá»‡m qua gÃ³c nÃºt: Bezier cáº¯t gÃ³c ngáº¯n hÆ¡n quÃ£ng s; phÃ­a trong gÃ³c ráº½ Î¸ ngáº¯n thÃªm â‰ˆ 2Â·(|lat|+0,75)Â·tan(Î¸/2).
   const pinchMemo = new Map();
   const turnPinch = (a, b) => {
     if (a < 0 || b < 0) return 0;
@@ -427,22 +444,22 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   const cornerPad = (i, j, a = -1, b = -1) => .3 * (len[i] + len[j]) / 2 + .4 + Math.max(cornerOf(j), cornerOf(i), turnPinch(a, b));
   const inCorner = o => { const l = lane[o]; return s[o] > lanes.length[l] - Rz[lanes.to[l]] || (prevLane[o] >= 0 && s[o] < Rz[lanes.from[l]] + 4); };
   const overlapLat = (i, j) => Math.abs(jit[i] - jit[j]) < (wid[i] + wid[j]) / 2;
-  // Chặn nhau khi mô phỏng: chồng dải ngang + đệm 0,45 m (thân xe xoay khi vào cua); trong vùng nút không đi song song.
+  // Cháº·n nhau khi mÃ´ phá»ng: chá»“ng dáº£i ngang + Ä‘á»‡m 0,45 m (thÃ¢n xe xoay khi vÃ o cua); trong vÃ¹ng nÃºt khÃ´ng Ä‘i song song.
   const blocks = (i, j) => Math.abs(jit[i] - jit[j]) < (wid[i] + wid[j]) / 2 + .45 || inCorner(i) || inCorner(j);
 
-  // Lập lộ trình: chọn trạng thái kế + làn đích theo góc rẽ.
+  // Láº­p lá»™ trÃ¬nh: chá»n tráº¡ng thÃ¡i káº¿ + lÃ n Ä‘Ã­ch theo gÃ³c ráº½.
   function planNext(i, l) {
     const st = lanes.st[l]; let cands = nextSt[st];
-    if (region && cands) cands = cands.filter(c => insideLane[lanesOfSt[c.st]]);   // ra khỏi khu = nút biên
-    if (!cands || !cands.length) return -2;   // tới nút biên → tái sinh
+    if (region && cands) cands = cands.filter(c => insideLane[lanesOfSt[c.st]]);   // ra khá»i khu = nÃºt biÃªn
+    if (!cands || !cands.length) return -2;   // tá»›i nÃºt biÃªn â†’ tÃ¡i sinh
     let total = 0; const w = [];
-    // Xe buýt (2,5 m) không chui đường nội bộ làn 2,7 m: thân dài quét sang làn ngược chiều khi rẽ; chỉ đi khi không còn lối khác.
+    // Xe buÃ½t (2,5 m) khÃ´ng chui Ä‘Æ°á»ng ná»™i bá»™ lÃ n 2,7 m: thÃ¢n dÃ i quÃ©t sang lÃ n ngÆ°á»£c chiá»u khi ráº½; chá»‰ Ä‘i khi khÃ´ng cÃ²n lá»‘i khÃ¡c.
     const busAvoid = kind[i] >= HEAVY && cands.some(c => c.rank >= 2);
     for (const c of cands) {
       const a = Math.abs(c.turn); let x = a < .6 ? 5 : a < 2.4 ? 1.1 : .12;
       if (c.sameName) x *= 2.2; x *= .55 + .25 * c.rank;
       if (busAvoid && c.rank < 2) x = 0;
-      // Xe buýt không rẽ cắt ngang làn bên cạnh (rẽ phải từ làn trong / rẽ trái từ làn ngoài): thân 10,5 m quét qua xe chờ ở vạch.
+      // Xe buÃ½t khÃ´ng ráº½ cáº¯t ngang lÃ n bÃªn cáº¡nh (ráº½ pháº£i tá»« lÃ n trong / ráº½ trÃ¡i tá»« lÃ n ngoÃ i): thÃ¢n 10,5 m quÃ©t qua xe chá» á»Ÿ váº¡ch.
       if (kind[i] >= HEAVY && a >= .6 && (c.turn > 0 ? lanes.k[l] > 0 : lanes.k[l] < lanes.n[l] - 1)) x *= 1e-4;
       w.push(x); total += x;
     }
@@ -455,10 +472,10 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   function shiftPath(i) { for (let p = 0; p < PN - 1; p++) path[i * PN + p] = path[i * PN + p + 1]; const prev = path[i * PN + PN - 2]; path[i * PN + PN - 1] = prev >= 0 ? planNext(i, prev) : -2; next[i] = path[i * PN]; }
   const straightMove = (inL, outL) => { const c = nextSt[lanes.st[inL]]?.find(x => x.st === lanes.st[outL]); return !!c && Math.abs(c.turn) < .87; };
 
-  // ---- Khóa nút.
-  const relR = n => Rz[n] * REL_F;   // bán kính tính từ nút mà đuôi xe qua thì nhả khóa
+  // ---- KhÃ³a nÃºt.
+  const relR = n => Rz[n] * REL_F;   // bÃ¡n kÃ­nh tÃ­nh tá»« nÃºt mÃ  Ä‘uÃ´i xe qua thÃ¬ nháº£ khÃ³a
   const holdsFor = (i, node) => { for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] === node) return k; return -1; };
-  // Biên ngang của xe khi đổi làn qua nút: nửa rộng + lệch xe máy + đuôi xe xoay (≈ 10 % chiều dài, xe buýt ~1 m).
+  // BiÃªn ngang cá»§a xe khi Ä‘á»•i lÃ n qua nÃºt: ná»­a rá»™ng + lá»‡ch xe mÃ¡y + Ä‘uÃ´i xe xoay (â‰ˆ 10 % chiá»u dÃ i, xe buÃ½t ~1 m).
   const sideMargin = i => i < 0 ? 1 : wid[i] / 2 + Math.abs(jit[i]) + .1 * len[i];
   const sweepApart = (a1, b1, m1, a2, b2, m2) => {
     const lo1 = Math.min(lanes.offset[a1], lanes.offset[b1]) - m1, hi1 = Math.max(lanes.offset[a1], lanes.offset[b1]) + m1;
@@ -469,9 +486,9 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     if (h.inL === inL) return true;
     if (h.outL === outL) return false;
     if (straightMove(inL, outL) && h.straight) {
-      // Song song cùng cặp trạng thái: dải ngang quét (làn vào → làn ra, cộng biên thân xe) không được chồng nhau (nút có tim đường lệch).
+      // Song song cÃ¹ng cáº·p tráº¡ng thÃ¡i: dáº£i ngang quÃ©t (lÃ n vÃ o â†’ lÃ n ra, cá»™ng biÃªn thÃ¢n xe) khÃ´ng Ä‘Æ°á»£c chá»“ng nhau (nÃºt cÃ³ tim Ä‘Æ°á»ng lá»‡ch).
       if (lanes.st[inL] === lanes.st[h.inL]) return lanes.st[outL] === lanes.st[h.outL] && sweepApart(inL, outL, sideMargin(i), h.inL, h.outL, sideMargin(h.car ?? -1));
-      // Đối đầu đi thẳng: chỉ khi tránh nhau trên cùng cạnh hai chiều; hai cạnh khác nhau tỏa góc nhỏ (đầu dải phân cách) vẫn chồng thân xe gần nút.
+      // Äá»‘i Ä‘áº§u Ä‘i tháº³ng: chá»‰ khi trÃ¡nh nhau trÃªn cÃ¹ng cáº¡nh hai chiá»u; hai cáº¡nh khÃ¡c nhau tá»a gÃ³c nhá» (Ä‘áº§u dáº£i phÃ¢n cÃ¡ch) váº«n chá»“ng thÃ¢n xe gáº§n nÃºt.
       const d = Math.abs(angleDiff(arriveHead(lanes.st[inL]), arriveHead(lanes.st[h.inL])));
       if (d > 2.6 && lanes.edge[inL] === lanes.edge[h.outL] && lanes.edge[outL] === lanes.edge[h.inL]) return true;
     }
@@ -479,43 +496,48 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   function green(node, st) {
     if (!signal[node]) return true;
+    const managed = signalPlan && signalPlan.signalNodes.includes(node);
+    if (controller && managed) return controller.isGreen(node, st, counters.t);
+    // Nút có đèn 31A NGOÀI plan (signal=1, không do controller quản): giữ chu kỳ 44 s cũ
+    // (không để thành nút "không đèn, không nhường").
     const t = (counters.t + signalOffset[node]) % SIGNAL_CYCLE, g = arriveGroup[st];
     return g === 0 ? t < 22 : t >= 25 && t < 41;
   }
   const firstRear = (l, i, shiftJit, pred = 0) => { const a = laneCars[l]; if (!a) return Infinity; for (const j of a) { if (j === i) continue; if (!shiftJit || blocks(i, j)) return s[j] - len[j] / 2 + v[j] * pred; } return Infinity; };
   const sigHeld = (i, plan) => { for (const p of plan) if (signal[p.node]) return true; for (let k = 0; k < LK; k++) { const n = lockNode[i * LK + k]; if (n >= 0 && signal[n]) return true; } return false; };
-  // Thử lấy khóa cho chuyển động (inL → outL) tại nút cuối inL, kèm chuỗi nút kế nếu làn ra quá ngắn để dừng.
+  // Thá»­ láº¥y khÃ³a cho chuyá»ƒn Ä‘á»™ng (inL â†’ outL) táº¡i nÃºt cuá»‘i inL, kÃ¨m chuá»—i nÃºt káº¿ náº¿u lÃ n ra quÃ¡ ngáº¯n Ä‘á»ƒ dá»«ng.
   function tryAcquire(i, inL, depth, plan, ignorePriority) {
     const node = lanes.to[inL], outL = depth === 0 ? path[i * PN] : path[i * PN + depth];
     if (outL < 0) return true;
     if (!needsLock[node]) { return true; }
     if (holdsFor(i, node) >= 0) return true;
     const st = lanes.st[inL];
-    // Đèn chỉ chặn ở nút có đèn đầu tiên trên chuỗi khóa: chuỗi nút kề nhau (liên kết ngắn) có đèn lệch nhóm (xanh nhóm 0 / nhóm 1 không bao giờ trùng)
-    // sẽ không bao giờ có đủ xanh cùng lúc → xe đứng vĩnh viễn; xe đã giữ/đang xin một nút có đèn coi cả cụm là một giao lộ.
-    if (!ignorePriority && !green(node, st) && !sigHeld(i, plan)) return false;
+    // ÄÃ¨n chá»‰ cháº·n á»Ÿ nÃºt cÃ³ Ä‘Ã¨n Ä‘áº§u tiÃªn trÃªn chuá»—i khÃ³a: chuá»—i nÃºt ká» nhau (liÃªn káº¿t ngáº¯n) cÃ³ Ä‘Ã¨n lá»‡ch nhÃ³m (xanh nhÃ³m 0 / nhÃ³m 1 khÃ´ng bao giá» trÃ¹ng)
+    // sáº½ khÃ´ng bao giá» cÃ³ Ä‘á»§ xanh cÃ¹ng lÃºc â†’ xe Ä‘á»©ng vÄ©nh viá»…n; xe Ä‘Ã£ giá»¯/Ä‘ang xin má»™t nÃºt cÃ³ Ä‘Ã¨n coi cáº£ cá»¥m lÃ  má»™t giao lá»™.
+    if (!ignorePriority && !green(node, st) && !sigHeld(i, plan) && !(controller && controller.runsRed(i, node, st, counters.t))) return false;
     const hs = holders.get(node) || [];
     for (const h of hs) if (h.car !== i && !compatible(inL, outL, h, i)) return false;
     for (const p of plan) if (p.node === node && !(p.inL === inL) && !compatible(inL, outL, { car: i, inL: p.inL, outL: p.outL, straight: straightMove(p.inL, p.outL) }, i)) return false;
-    // Chỗ trống ở làn ra: đuôi xe đầu tiên (cùng dải ngang) phải đủ xa để xe lọt hẳn khỏi vạch nút.
-    // Chờ quá PATIENCE_S thì nhượng bộ quy tắc "không vào hộp nếu chưa thoát được" (vòng/cụm nút ngắn có hai xe là tự chặn nhau):
-    // chỉ cần chỗ cho thân xe nối đuôi xe đầu làn ra; va chạm vẫn do IDM + kẹp khe cứng bảo đảm.
+    // Chá»— trá»‘ng á»Ÿ lÃ n ra: Ä‘uÃ´i xe Ä‘áº§u tiÃªn (cÃ¹ng dáº£i ngang) pháº£i Ä‘á»§ xa Ä‘á»ƒ xe lá»t háº³n khá»i váº¡ch nÃºt.
+    // Chá» quÃ¡ PATIENCE_S thÃ¬ nhÆ°á»£ng bá»™ quy táº¯c "khÃ´ng vÃ o há»™p náº¿u chÆ°a thoÃ¡t Ä‘Æ°á»£c" (vÃ²ng/cá»¥m nÃºt ngáº¯n cÃ³ hai xe lÃ  tá»± cháº·n nhau):
+    // chá»‰ cáº§n chá»— cho thÃ¢n xe ná»‘i Ä‘uÃ´i xe Ä‘áº§u lÃ n ra; va cháº¡m váº«n do IDM + káº¹p khe cá»©ng báº£o Ä‘áº£m.
     const need = stopT[i] > PATIENCE_S ? len[i] + HARD_GAP + 1.5 : Math.min(lanes.length[outL] - .2, Rz[node] + len[i] + 1.5);
     if (firstRear(outL, i, true, PRED_S) < need) return false;
     plan.push({ node, inL, outL });
-    // Chỗ dừng trên làn ra (trước vạch nút kế) phải để đuôi xe ra khỏi vùng nút này, nếu không xe đứng chắn giữa nút: xin luôn khóa nút kế.
+    // Chá»— dá»«ng trÃªn lÃ n ra (trÆ°á»›c váº¡ch nÃºt káº¿) pháº£i Ä‘á»ƒ Ä‘uÃ´i xe ra khá»i vÃ¹ng nÃºt nÃ y, náº¿u khÃ´ng xe Ä‘á»©ng cháº¯n giá»¯a nÃºt: xin luÃ´n khÃ³a nÃºt káº¿.
     const node2 = lanes.to[outL], stop2 = lanes.length[outL] - Rz[node2] - len[i] / 2;
     if (needsLock[node2] && stop2 - len[i] / 2 < Rz[node] + .3 && depth < PN - 1) { if (!tryAcquire(i, outL, depth + 1, plan, ignorePriority)) return false; }
-    // Nhường ở nút không đèn: chỉ xe đã "sẵn sàng" (tương thích + có chỗ + chuỗi nút kế thông) mới tranh lượt, theo cấp đường + thời gian chờ;
-    // xe chưa đi được thì không giữ lượt (tránh chặn vô hạn).
-    if (!ignorePriority && !signal[node] && depth === 0) {
+    // NhÆ°á»ng á»Ÿ nÃºt khÃ´ng Ä‘Ã¨n: chá»‰ xe Ä‘Ã£ "sáºµn sÃ ng" (tÆ°Æ¡ng thÃ­ch + cÃ³ chá»— + chuá»—i nÃºt káº¿ thÃ´ng) má»›i tranh lÆ°á»£t, theo cáº¥p Ä‘Æ°á»ng + thá»i gian chá»;
+    // xe chÆ°a Ä‘i Ä‘Æ°á»£c thÃ¬ khÃ´ng giá»¯ lÆ°á»£t (trÃ¡nh cháº·n vÃ´ háº¡n).
+    const managed = signalPlan && signalPlan.signalNodes.includes(node);
+    if (!ignorePriority && !signal[node] && depth === 0 && !managed) {
       const prio = lanes.rank[inL] * 10 + stopT[i] * 1.5 + (i % 997) * 1e-6;
       const cur = reqCur.get(node); if (!cur || prio > cur.p) reqCur.set(node, { p: prio, car: i });
       const prev = reqPrev.get(node); if (prev && prev.car !== i && prev.p > prio && active[prev.car] && lanes.to[lane[prev.car]] === node && holdsFor(prev.car, node) < 0) return false;
     }
     return true;
   }
-  // inL/depth: khóa nút xa hơn trên lộ trình (làn kế quá ngắn, xe phải xin trước khi rời làn hiện tại).
+  // inL/depth: khÃ³a nÃºt xa hÆ¡n trÃªn lá»™ trÃ¬nh (lÃ n káº¿ quÃ¡ ngáº¯n, xe pháº£i xin trÆ°á»›c khi rá»i lÃ n hiá»‡n táº¡i).
   function acquire(i, ignorePriority = false, inL = lane[i], depth = 0) {
     const plan = [];
     if (!tryAcquire(i, inL, depth, plan, ignorePriority)) return false;
@@ -535,7 +557,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   const releaseAll = i => { for (let k = 0; k < LK; k++) releaseSlot(i, k); for (let k = 0; k < 2; k++) dropZone(i, k); };
 
-  // ---- Token vùng giao cắt không nút.
+  // ---- Token vÃ¹ng giao cáº¯t khÃ´ng nÃºt.
   const holdsZone = (i, z) => zTok[i * 2] === z || zTok[i * 2 + 1] === z;
   const zoneFree = (z, l) => { const h = zoneHold.get(z); if (!h) return true; for (const hl of h.keys()) if (hl !== l && CZ.conflict(hl, l)) return false; return true; };
   function takeZone(i, z, l, rem) {
@@ -549,7 +571,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const h = zoneHold.get(z), l = zLane[i * 2 + k]; if (h) { const c = (h.get(l) || 1) - 1; if (c > 0) h.set(l, c); else h.delete(l); if (!h.size) zoneHold.delete(z); }
     zTok[i * 2 + k] = -1;
   }
-  // Khoảng tới đầu vùng chưa xin được (Infinity nếu đường thông); xin token cho các vùng trong tầm phanh.
+  // Khoáº£ng tá»›i Ä‘áº§u vÃ¹ng chÆ°a xin Ä‘Æ°á»£c (Infinity náº¿u Ä‘Æ°á»ng thÃ´ng); xin token cho cÃ¡c vÃ¹ng trong táº§m phanh.
   function crossGate(i, l, si, Li, reach) {
     let base = 0, ln = l;
     for (let p = -1; p < PN; p++) {
@@ -565,7 +587,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     }
     return Infinity;
   }
-  // Xe đặt/kích hoạt giữa vùng: phải xin được mọi token vùng đang chạm thân xe.
+  // Xe Ä‘áº·t/kÃ­ch hoáº¡t giá»¯a vÃ¹ng: pháº£i xin Ä‘Æ°á»£c má»i token vÃ¹ng Ä‘ang cháº¡m thÃ¢n xe.
   function claimInside(i, l, si) {
     for (let q = CZ.off[l]; q < CZ.off[l + 1]; q++) {
       const z = CZ.zone[q]; if (CZ.a[q] > si + len[i] / 2 || CZ.b[q] < si - len[i] / 2 || holdsZone(i, z)) continue;
@@ -574,8 +596,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     return true;
   }
 
-  // ---- Đặt xe vào làn (kích hoạt / tái sinh) nếu đủ chỗ cả trước và sau.
-  // tight: kích hoạt lại tại chỗ cũ (trạng thái đóng băng vốn hợp lệ) chỉ cần khe vi phạm 0,3 m + đệm như khi bám xe; đặt mới thì rộng hơn.
+  // ---- Äáº·t xe vÃ o lÃ n (kÃ­ch hoáº¡t / tÃ¡i sinh) náº¿u Ä‘á»§ chá»— cáº£ trÆ°á»›c vÃ  sau.
+  // tight: kÃ­ch hoáº¡t láº¡i táº¡i chá»— cÅ© (tráº¡ng thÃ¡i Ä‘Ã³ng bÄƒng vá»‘n há»£p lá»‡) chá»‰ cáº§n khe vi pháº¡m 0,3 m + Ä‘á»‡m nhÆ° khi bÃ¡m xe; Ä‘áº·t má»›i thÃ¬ rá»™ng hÆ¡n.
   function spotFree(i, l, si, tight = false) {
     const a = laneCars[l] || [];
     for (const j of a) {
@@ -605,8 +627,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     }
     pending[i] = 1; return false;
   }
-  // Chỗ cũ đã bị xe khác chiếm: tìm chỗ trống gần nhất trong tầm RELOCATE_M cùng làn (rồi các làn cùng trạng thái), ngoài vùng nút,
-  // để xe hồi tức thì thay vì chờ tái sinh ở nút biên (sau sim dài ~2 % xe không còn chỗ cũ).
+  // Chá»— cÅ© Ä‘Ã£ bá»‹ xe khÃ¡c chiáº¿m: tÃ¬m chá»— trá»‘ng gáº§n nháº¥t trong táº§m RELOCATE_M cÃ¹ng lÃ n (rá»“i cÃ¡c lÃ n cÃ¹ng tráº¡ng thÃ¡i), ngoÃ i vÃ¹ng nÃºt,
+  // Ä‘á»ƒ xe há»“i tá»©c thÃ¬ thay vÃ¬ chá» tÃ¡i sinh á»Ÿ nÃºt biÃªn (sau sim dÃ i ~2 % xe khÃ´ng cÃ²n chá»— cÅ©).
   function relocate(i) {
     const l0 = lane[i], s0 = s[i], st = lanes.st[l0], base = lanesOfSt[st], n = laneCountOfSt[st], vel = Math.min(v[i], lanes.speed[l0] * .6);
     for (let q = 0; q < n; q++) {
@@ -621,14 +643,14 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     }
     return false;
   }
-  // Kích hoạt lại tại chỗ cũ (trạng thái đóng băng); trong vùng nút phải lấy lại khóa (bỏ qua ưu tiên/đèn).
+  // KÃ­ch hoáº¡t láº¡i táº¡i chá»— cÅ© (tráº¡ng thÃ¡i Ä‘Ã³ng bÄƒng); trong vÃ¹ng nÃºt pháº£i láº¥y láº¡i khÃ³a (bá» qua Æ°u tiÃªn/Ä‘Ã¨n).
   function reactivate(i) {
     const l = lane[i];
     if (!spotFree(i, l, s[i], true) || !claimInside(i, l, s[i])) return false;
     const node = lanes.to[l], stopPos = lanes.length[l] - Rz[node] - len[i] / 2;
     insertSorted(l, i); active[i] = 1; pending[i] = 0;
     if (needsLock[node] && s[i] > stopPos && path[i * PN] >= 0 && !acquire(i, true)) { removeFrom(l, i); releaseAll(i); active[i] = 0; return false; }
-    // Đang trong vùng sau nút (đuôi chưa qua): lấy lại khóa nút đầu làn.
+    // Äang trong vÃ¹ng sau nÃºt (Ä‘uÃ´i chÆ°a qua): láº¥y láº¡i khÃ³a nÃºt Ä‘áº§u lÃ n.
     const n0 = lanes.from[l];
     if (needsLock[n0] && prevLane[i] >= 0 && s[i] - len[i] / 2 < Rz[n0] && holdsFor(i, n0) < 0) {
       const hs = holders.get(n0) || [];
@@ -640,28 +662,28 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   function deactivate(i) { if (!active[i]) return; removeFrom(lane[i], i); releaseAll(i); active[i] = 0; waiting[i] = 0; }
 
-  // ---- Chọn tập xe hoạt động theo tỉ lệ F.
-  // Hạng không gian: trong mỗi ô 200 m (theo vị trí ở bước hiện tại) xe được xếp hạng (xe đang chạy trước, rồi theo hash(id)),
-  // selRank = (k + 1 − u_ô)/n_ô với u_ô = hash(ô) ∈ [0, 1) → ngưỡng F lấy ≈ F·n_ô xe mỗi ô, không ô nào bị làm trống, tập lồng nhau khi F đổi.
-  // Tổng số xe KHÔNG phụ thuộc vị trí: lấy đúng Q = round(F·N) xe có hạng thấp nhất toàn cục (xe signature đang trên cầu luôn được giữ
-  // và tính vào Q; chỉ khi số xe signature > Q mới vượt Q). Nhờ vậy setFraction(1) hoặc đưa F về giá trị cũ khôi phục đúng tổng cũ
-  // dù mô phỏng đã chạy bao lâu; trước đây tổng = Σ_ô floor(F·n_ô + u_ô) đổi theo cách xe phân bố vào ô nên trôi vài chục xe.
-  // Hạng nhớ theo bước nên gọi lại cùng F trong cùng bước → cùng tập.
+  // ---- Chá»n táº­p xe hoáº¡t Ä‘á»™ng theo tá»‰ lá»‡ F.
+  // Háº¡ng khÃ´ng gian: trong má»—i Ã´ 200 m (theo vá»‹ trÃ­ á»Ÿ bÆ°á»›c hiá»‡n táº¡i) xe Ä‘Æ°á»£c xáº¿p háº¡ng (xe Ä‘ang cháº¡y trÆ°á»›c, rá»“i theo hash(id)),
+  // selRank = (k + 1 âˆ’ u_Ã´)/n_Ã´ vá»›i u_Ã´ = hash(Ã´) âˆˆ [0, 1) â†’ ngÆ°á»¡ng F láº¥y â‰ˆ FÂ·n_Ã´ xe má»—i Ã´, khÃ´ng Ã´ nÃ o bá»‹ lÃ m trá»‘ng, táº­p lá»“ng nhau khi F Ä‘á»•i.
+  // Tá»•ng sá»‘ xe KHÃ”NG phá»¥ thuá»™c vá»‹ trÃ­: láº¥y Ä‘Ãºng Q = round(FÂ·N) xe cÃ³ háº¡ng tháº¥p nháº¥t toÃ n cá»¥c (xe signature Ä‘ang trÃªn cáº§u luÃ´n Ä‘Æ°á»£c giá»¯
+  // vÃ  tÃ­nh vÃ o Q; chá»‰ khi sá»‘ xe signature > Q má»›i vÆ°á»£t Q). Nhá» váº­y setFraction(1) hoáº·c Ä‘Æ°a F vá» giÃ¡ trá»‹ cÅ© khÃ´i phá»¥c Ä‘Ãºng tá»•ng cÅ©
+  // dÃ¹ mÃ´ phá»ng Ä‘Ã£ cháº¡y bao lÃ¢u; trÆ°á»›c Ä‘Ã¢y tá»•ng = Î£_Ã´ floor(FÂ·n_Ã´ + u_Ã´) Ä‘á»•i theo cÃ¡ch xe phÃ¢n bá»‘ vÃ o Ã´ nÃªn trÃ´i vÃ i chá»¥c xe.
+  // Háº¡ng nhá»› theo bÆ°á»›c nÃªn gá»i láº¡i cÃ¹ng F trong cÃ¹ng bÆ°á»›c â†’ cÃ¹ng táº­p.
   let rankStep = -1;
   const order = Array.from({ length: N }, (_, i) => i);
   function rankCells() {
     const cells = new Map();
     for (let i = 0; i < N; i++) { if (!elig[i]) { selRank[i] = Infinity; continue; } const c = cellOf(i); let a = cells.get(c); if (!a) cells.set(c, a = []); a.push(i); }
     for (const [c, a] of cells) {
-      a.sort((x, y) => (active[y] - active[x]) || (hashU32(x + SEED) - hashU32(y + SEED)));
-      const u = hashU32((c ^ SEED) >>> 0) / 4294967296, n = a.length;
+      a.sort((x, y) => (active[y] - active[x]) || (hashU32(x + seed) - hashU32(y + seed)));
+      const u = hashU32((c ^ seed) >>> 0) / 4294967296, n = a.length;
       a.forEach((i, k) => { selRank[i] = (k + 1 - u) / n; });
     }
     rankStep = counters.step;
   }
   function cellOf(i) { const e = lanes.edge[lane[i]], o = net.geo.off[e]; const c = E[e].c, n = c.length / 2; const t = Math.min(1, Math.max(0, s[i] / lanes.length[lane[i]])), k = Math.min(n - 1, Math.round(t * (n - 1))); return Math.floor(net.geo.x[o + k] / 200) * 100000 + Math.floor(net.geo.z[o + k] / 200); }
   function isSignature(i) { return !!(active[i] && net.signatureEdge[lanes.edge[lane[i]]]); }
-  // Đánh dấu wanted: xe signature đang hoạt động trước (hạng −1), rồi theo selRank, hoà theo id; lấy max(Q, số signature) xe đầu.
+  // ÄÃ¡nh dáº¥u wanted: xe signature Ä‘ang hoáº¡t Ä‘á»™ng trÆ°á»›c (háº¡ng âˆ’1), rá»“i theo selRank, hoÃ  theo id; láº¥y max(Q, sá»‘ signature) xe Ä‘áº§u.
   function chooseWanted(F, keepSignature) {
     let nElig = 0; for (let i = 0; i < N; i++) nElig += elig[i];
     const Q = Math.round(F * nElig), key = i => (!elig[i] ? Infinity : keepSignature && isSignature(i) ? -1 : selRank[i]);
@@ -674,30 +696,30 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     if (rankStep !== counters.step) rankCells();
     chooseWanted(F, true);
     for (let i = 0; i < N; i++) if (!wanted[i] && (active[i] || pending[i])) { deactivate(i); pending[i] = 0; }
-    // Không kích hoạt lại tại chỗ được (xe khác đã tới) → tái sinh ngay ở nút biên để số xe khớp tỉ lệ ngay lập tức.
+    // KhÃ´ng kÃ­ch hoáº¡t láº¡i táº¡i chá»— Ä‘Æ°á»£c (xe khÃ¡c Ä‘Ã£ tá»›i) â†’ tÃ¡i sinh ngay á»Ÿ nÃºt biÃªn Ä‘á»ƒ sá»‘ xe khá»›p tá»‰ lá»‡ ngay láº­p tá»©c.
     for (let i = 0; i < N; i++) if (wanted[i] && !active[i]) { if (reactivate(i)) { pLane[i] = lane[i]; pS[i] = s[i]; pGen[i] = gen[i]; } else if (!relocate(i) && !respawn(i, false, 48)) pending[i] = 1; }
     return activeCount();
   }
   function activeCount() { let n = 0; for (let i = 0; i < N; i++) n += active[i]; return n; }
 
-  // ---- Khu mô phỏng (bước H). Hợp đồng: setRegion(null) = toàn thành phố; setRegion({id, polygon:[[x,z],…], margin?}) tọa độ cảnh.
-  // Xe ngoài khu bị tắt; xe chỉ sinh/tái sinh ở nút trong khu kề nút ngoài khu (hoặc nút biên thật trong khu); đi tới cạnh không nằm hẳn trong khu
-  // thì coi như tới nút biên (tái sinh trong khu). F áp lên tập xe thuộc khu: Q = round(F·n_khu), cùng tính chất khôi phục của setFraction.
-  // Bước H · T1: chọn cạnh/nút bằng đa giác NỚI một biên margin (mặc định 0 = hợp đồng cũ, đa giác thuần): điểm được coi
-  // là "trong khu" khi nằm trong đa giác hoặc cách đa giác ≤ margin. Nhờ vậy cạnh vắt ranh (cầu nối hai khu) thuộc khu ở
-  // CẢ hai bờ ⇒ xe trên cầu hiện ở cả hai khu kề thay vì biến mất ở mọi khu (trước đây chỉ dùng cạnh có mọi đỉnh trong
-  // đa giác ⇒ ~4 % xe trên cạnh vắt ranh không thuộc khu nào). Cùng phép thử với city-region-31.js regionTrafficContains.
+  // ---- Khu mÃ´ phá»ng (bÆ°á»›c H). Há»£p Ä‘á»“ng: setRegion(null) = toÃ n thÃ nh phá»‘; setRegion({id, polygon:[[x,z],â€¦], margin?}) tá»a Ä‘á»™ cáº£nh.
+  // Xe ngoÃ i khu bá»‹ táº¯t; xe chá»‰ sinh/tÃ¡i sinh á»Ÿ nÃºt trong khu ká» nÃºt ngoÃ i khu (hoáº·c nÃºt biÃªn tháº­t trong khu); Ä‘i tá»›i cáº¡nh khÃ´ng náº±m háº³n trong khu
+  // thÃ¬ coi nhÆ° tá»›i nÃºt biÃªn (tÃ¡i sinh trong khu). F Ã¡p lÃªn táº­p xe thuá»™c khu: Q = round(FÂ·n_khu), cÃ¹ng tÃ­nh cháº¥t khÃ´i phá»¥c cá»§a setFraction.
+  // BÆ°á»›c H Â· T1: chá»n cáº¡nh/nÃºt báº±ng Ä‘a giÃ¡c Ná»šI má»™t biÃªn margin (máº·c Ä‘á»‹nh 0 = há»£p Ä‘á»“ng cÅ©, Ä‘a giÃ¡c thuáº§n): Ä‘iá»ƒm Ä‘Æ°á»£c coi
+  // lÃ  "trong khu" khi náº±m trong Ä‘a giÃ¡c hoáº·c cÃ¡ch Ä‘a giÃ¡c â‰¤ margin. Nhá» váº­y cáº¡nh váº¯t ranh (cáº§u ná»‘i hai khu) thuá»™c khu á»Ÿ
+  // Cáº¢ hai bá» â‡’ xe trÃªn cáº§u hiá»‡n á»Ÿ cáº£ hai khu ká» thay vÃ¬ biáº¿n máº¥t á»Ÿ má»i khu (trÆ°á»›c Ä‘Ã¢y chá»‰ dÃ¹ng cáº¡nh cÃ³ má»i Ä‘á»‰nh trong
+  // Ä‘a giÃ¡c â‡’ ~4 % xe trÃªn cáº¡nh váº¯t ranh khÃ´ng thuá»™c khu nÃ o). CÃ¹ng phÃ©p thá»­ vá»›i city-region-31.js regionTrafficContains.
   const nodeIdx = new Map(); G.nodes.forEach((n, k) => nodeIdx.set(n.id, k));
   const inPoly = (poly, x, z) => { let c = false; for (let a = 0, b = poly.length - 2; a < poly.length; b = a, a += 2) { const xa = poly[a], za = poly[a + 1], xb = poly[b], zb = poly[b + 1]; if ((za > z) !== (zb > z) && x < (xb - xa) * (z - za) / (zb - za) + xa) c = !c; } return c; };
-  // Khoảng cách từ điểm tới đa giác phẳng (tới đoạn gần nhất): dùng cho biên nới.
+  // Khoáº£ng cÃ¡ch tá»« Ä‘iá»ƒm tá»›i Ä‘a giÃ¡c pháº³ng (tá»›i Ä‘oáº¡n gáº§n nháº¥t): dÃ¹ng cho biÃªn ná»›i.
   const distPoly = (poly, x, z) => { let best = Infinity; for (let a = 0, b = poly.length - 2; a < poly.length; b = a, a += 2) { const xa = poly[a], za = poly[a + 1], sx = poly[b] - xa, sz = poly[b + 1] - za, l = sx * sx + sz * sz, t = l ? Math.max(0, Math.min(1, ((x - xa) * sx + (z - za) * sz) / l)) : 0; best = Math.min(best, Math.hypot(xa + sx * t - x, za + sz * t - z)); } return best; };
   function setRegion(reg) {
     finishStep();
     if (!reg) { region = null; insideLane.fill(1); spawnList = spawnLanes; }
     else {
       const pts = reg.polygon, margin = reg.margin ?? 0;
-      if (typeof reg.id !== 'string' || !Array.isArray(pts) || pts.length < 3 || !pts.every(p => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]))) throw new TypeError('setRegion: cần {id: string, polygon: [[x, z], …≥ 3 điểm], margin?: số ≥ 0} hoặc null');
-      if (!Number.isFinite(margin) || margin < 0) throw new TypeError('setRegion: margin phải là số hữu hạn ≥ 0');
+      if (typeof reg.id !== 'string' || !Array.isArray(pts) || pts.length < 3 || !pts.every(p => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]))) throw new TypeError('setRegion: cáº§n {id: string, polygon: [[x, z], â€¦â‰¥ 3 Ä‘iá»ƒm], margin?: sá»‘ â‰¥ 0} hoáº·c null');
+      if (!Number.isFinite(margin) || margin < 0) throw new TypeError('setRegion: margin pháº£i lÃ  sá»‘ há»¯u háº¡n â‰¥ 0');
       const poly = new Float64Array(pts.length * 2); pts.forEach((p, k) => { poly[k * 2] = p[0]; poly[k * 2 + 1] = p[1]; });
       const inRegion = margin > 0 ? (x, z) => inPoly(poly, x, z) || distPoly(poly, x, z) <= margin : (x, z) => inPoly(poly, x, z);
       const inNode = new Uint8Array(G.nodes.length); for (let n = 0; n < inNode.length; n++) inNode[n] = inRegion(G.nodes[n].x, G.nodes[n].z) ? 1 : 0;
@@ -714,7 +736,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       region = { id: reg.id, poly, margin };
     }
     for (let i = 0; i < N; i++) elig[i] = !region || pending[i] ? 1 : insideLane[lane[i]];
-    // Lộ trình: giữ đoạn còn hợp lệ, lập lại đoạn trỏ ra ngoài khu (hoặc đoạn -2 nay đi tiếp được); xe đã giữ khóa nút không đổi làn kế.
+    // Lá»™ trÃ¬nh: giá»¯ Ä‘oáº¡n cÃ²n há»£p lá»‡, láº­p láº¡i Ä‘oáº¡n trá» ra ngoÃ i khu (hoáº·c Ä‘oáº¡n -2 nay Ä‘i tiáº¿p Ä‘Æ°á»£c); xe Ä‘Ã£ giá»¯ khÃ³a nÃºt khÃ´ng Ä‘á»•i lÃ n káº¿.
     for (let i = 0; i < N; i++) {
       if (!active[i]) { fillPath(i); continue; }
       let holdsLock = false; for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] >= 0) holdsLock = true;
@@ -740,37 +762,37 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       const [l, si, k, seed] = spawnPlan[i];
       kind[i] = k; len[i] = KL[k]; wid[i] = KW[k]; rng[i] = seed || 1; gen[i] = 0; active[i] = 0; pending[i] = 0;
       jit[i] = k === 0 ? (rand(i) - .5) * 1.5 : 0;
-      vf[i] = k === 0 ? .85 + rand(i) * .35 : k === 1 ? .9 + rand(i) * .2 : .8 + rand(i) * .1;   // buýt và tải cùng dải
+      vf[i] = k === 0 ? .85 + rand(i) * .35 : k === 1 ? .9 + rand(i) * .2 : .8 + rand(i) * .1;   // buÃ½t vÃ  táº£i cÃ¹ng dáº£i
       lane[i] = l; s[i] = si; prevLane[i] = -1; v[i] = lanes.speed[l] * vf[i] * .7; lat[i] = lanes.offset[l] + jit[i]; stopT[i] = 0; waiting[i] = 0;
       fillPath(i);
     }
     for (let i = 0; i < N; i++) elig[i] = region ? insideLane[lane[i]] : 1;
-    // Chọn tập theo tỉ lệ hiện tại (ban đầu chưa xe nào hoạt động nên kích hoạt từ trạng thái gốc).
+    // Chá»n táº­p theo tá»‰ lá»‡ hiá»‡n táº¡i (ban Ä‘áº§u chÆ°a xe nÃ o hoáº¡t Ä‘á»™ng nÃªn kÃ­ch hoáº¡t tá»« tráº¡ng thÃ¡i gá»‘c).
     rankCells();
     chooseWanted(Math.max(0, Math.min(1, fraction * lightFactor)), false);
     for (let i = 0; i < N; i++) if (wanted[i]) { if (claimInside(i, lane[i], s[i])) { insertSorted(lane[i], i); active[i] = 1; } else pending[i] = 1; }
     for (let i = 0; i < N; i++) { pLane[i] = lane[i]; pS[i] = s[i]; pGen[i] = gen[i]; }
   }
 
-  // ---- Một bước mô phỏng.
+  // ---- Má»™t bÆ°á»›c mÃ´ phá»ng.
   function updateCar(i, l, idx) {
     const K = TRAFFIC_KINDS[kind[i]], Li = len[i], list = laneCars[l];
     let laneLen = lanes.length[l], si = s[i], vi = v[i];
-    // Đường tắt cho xe đang đứng sát sau xe cũng đang đứng (đuôi hàng chờ): IDM chắc chắn cho v = 0, chỉ cộng thời gian dừng.
+    // ÄÆ°á»ng táº¯t cho xe Ä‘ang Ä‘á»©ng sÃ¡t sau xe cÅ©ng Ä‘ang Ä‘á»©ng (Ä‘uÃ´i hÃ ng chá»): IDM cháº¯c cháº¯n cho v = 0, chá»‰ cá»™ng thá»i gian dá»«ng.
     if (vi === 0 && idx + 1 < list.length) {
       const o = list[idx + 1];
       if (v[o] === 0 && blocks(i, o) && s[o] - len[o] / 2 - (si + Li / 2) - lanes.pinch[l] < K.s0 + .3) {
         stopT[i] += STEP; if (stopT[i] > counters.maxStopS) counters.maxStopS = stopT[i];
-        if (stopT[i] > BREAKER_S) respawn(i, true);
+        if (stopT[i] > breakerS) respawn(i, true);
         return;
       }
     }
-    // Xe dẫn trong làn (cùng dải ngang).
+    // Xe dáº«n trong lÃ n (cÃ¹ng dáº£i ngang).
     let gap = Infinity, vl = 0;
     for (let j = idx + 1; j < list.length && j <= idx + 8; j++) { const o = list[j]; if (blocks(i, o)) { gap = s[o] - len[o] / 2 - (si + Li / 2) - lanes.pinch[l] - (inCorner(o) ? cornerPad(i, o) : 0); if (gap < 12 && next[o] !== next[i] && s[o] > laneLen - Rz[lanes.to[l]]) gap = Math.min(gap, geoGap(i, o)); vl = v[o]; break; } }
-    // Nhìn qua ranh giới cạnh theo lộ trình (tối đa 3 làn, 70 m).
+    // NhÃ¬n qua ranh giá»›i cáº¡nh theo lá»™ trÃ¬nh (tá»‘i Ä‘a 3 lÃ n, 70 m).
     const node = lanes.to[l], out0 = path[i * PN];
-    // Xe cùng làn vào đã qua nút nhưng chưa nhả khóa (đang cắt góc) vẫn là xe dẫn, dù khác hướng ra.
+    // Xe cÃ¹ng lÃ n vÃ o Ä‘Ã£ qua nÃºt nhÆ°ng chÆ°a nháº£ khÃ³a (Ä‘ang cáº¯t gÃ³c) váº«n lÃ  xe dáº«n, dÃ¹ khÃ¡c hÆ°á»›ng ra.
     if (inHold[l] > 0 && needsLock[node] && laneLen - si < 60) { const hs = holders.get(node); if (hs) for (const h of hs) { const o = h.car; if (o === i || h.inL !== l || lane[o] === l || !active[o]) continue; const past = s[o] + (lane[o] !== h.outL ? lanes.length[h.outL] : 0); let g = laneLen - (si + Li / 2) + past - len[o] / 2 - cornerPad(i, o, h.inL, h.outL); if (g < 12) g = Math.min(g, geoGap(i, o)); if (g < gap) { gap = g; vl = v[o]; } } }
     let holding = out0 < 0 || !needsLock[node] || holdsFor(i, node) >= 0;
     const front = si + Li / 2;
@@ -779,7 +801,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       let dist = laneLen - front;
       for (let p = 0; p < PN && dist < 70; p++) {
         const nl = path[i * PN + p]; if (nl < 0) break;
-        // vạch dừng của nút cuối làn kế (khi chưa giữ khóa) cũng là vật cản.
+        // váº¡ch dá»«ng cá»§a nÃºt cuá»‘i lÃ n káº¿ (khi chÆ°a giá»¯ khÃ³a) cÅ©ng lÃ  váº­t cáº£n.
         const a = laneCars[nl];
         let found = false;
         if (a) for (const o of a) { if (o !== i && blocks(i, o)) { const g = Math.min(dist + s[o] - len[o] / 2 - Math.max(lanes.pinch[l], lanes.pinch[nl]) - cornerPad(i, o, p === 0 ? l : path[i * PN + p - 1], nl), dist + s[o] < 14 && (p > 0 || (prevLane[o] >= 0 && prevLane[o] !== l)) ? geoGap(i, o) : Infinity); if (g < gap) { gap = g; vl = v[o]; } found = true; break; } }
@@ -787,7 +809,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
         const n2 = lanes.to[nl], nn = path[i * PN + p + 1];
         if (holding && p < PN - 1 && nn !== undefined && nn >= 0 && needsLock[n2] && holdsFor(i, n2) < 0) {
           const g = dist + lanes.length[nl] - Rz[n2];
-          // Vạch dừng nút kế đã trong tầm phanh: xin khóa luôn từ đây, nếu không xe sẽ đứng chờ mãi ở làn trước (khóa chỉ xin ở làn cuối nút).
+          // Váº¡ch dá»«ng nÃºt káº¿ Ä‘Ã£ trong táº§m phanh: xin khÃ³a luÃ´n tá»« Ä‘Ã¢y, náº¿u khÃ´ng xe sáº½ Ä‘á»©ng chá» mÃ£i á»Ÿ lÃ n trÆ°á»›c (khÃ³a chá»‰ xin á»Ÿ lÃ n cuá»‘i nÃºt).
           if (!(holding && g < vi * vi / (2 * K.b) + 6 && acquire(i, false, nl, p + 1))) { if (g < gap) { gap = g; vl = 0; } break; }
         }
         dist += lanes.length[nl];
@@ -796,7 +818,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     { const g = crossGate(i, l, si, Li, vi * vi / (2 * K.b) + 8); if (g < gap) { gap = g; vl = 0; } }
     let stopLimit = Infinity;
     if (!holding) { const g = laneLen - Rz[node] - front; if (g < gap) { gap = g; vl = 0; } stopLimit = laneLen - Rz[node] - Li / 2; }
-    // IDM rút gọn.
+    // IDM rÃºt gá»n.
     const v0 = lanes.speed[l] * vf[i] * (kind[i] >= HEAVY ? .85 : 1);
     const dv = vi - vl, sStar = K.s0 + Math.max(0, vi * K.T + vi * dv / (2 * Math.sqrt(K.a * K.b)));
     const r = vi / v0, r2 = r * r, q = gap < Infinity ? sStar / Math.max(.1, gap) : 0;
@@ -807,10 +829,10 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     if (ds > maxDs) { ds = maxDs; vn = Math.min(vn, vl, ds / STEP); }
     if (si + ds > stopLimit) { ds = Math.max(0, stopLimit - si); vn = Math.min(vn, ds / STEP); }
     si += ds;
-    // Giảm quãng còn lại của khóa đã qua nút; nhả khi đuôi xe rời vùng nút.
+    // Giáº£m quÃ£ng cÃ²n láº¡i cá»§a khÃ³a Ä‘Ã£ qua nÃºt; nháº£ khi Ä‘uÃ´i xe rá»i vÃ¹ng nÃºt.
     for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] >= 0 && lockRemain[i * LK + k] !== Infinity) { lockRemain[i * LK + k] -= ds; if (lockRemain[i * LK + k] <= 0) releaseSlot(i, k); }
     for (let k = 0; k < 2; k++) if (zTok[i * 2 + k] >= 0) { zRem[i * 2 + k] -= ds; if (zRem[i * 2 + k] <= 0) dropZone(i, k); }
-    // Chuyển cạnh.
+    // Chuyá»ƒn cáº¡nh.
     while (si >= laneLen) {
       const nl = path[i * PN];
       if (nl === -2) { v[i] = vn; respawn(i, false); return; }
@@ -828,29 +850,30 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       l = nl; laneLen = lanes.length[nl];
     }
     s[i] = si; v[i] = vn;
-    // Thời gian dừng, chờ ở vạch, phá kẹt.
+    // Thá»i gian dá»«ng, chá» á»Ÿ váº¡ch, phÃ¡ káº¹t.
     if (vn < .15) {
       stopT[i] += STEP; if (stopT[i] > counters.maxStopS) counters.maxStopS = stopT[i];
       if (!holding && !waiting[i]) { waiting[i] = 1; counters.waitsTotal++; }
-      if (stopT[i] > BREAKER_S) respawn(i, true);
+      if (stopT[i] > breakerS) respawn(i, true);
     } else { stopT[i] = 0; waiting[i] = 0; }
   }
 
-  // ---- Một bước chia được thành nhiều lát (theo làn) để trải CPU qua các khung hình: beginStep → workStep(n)… → endStep.
-  // Giữa các lát trạng thái là trạng thái trung gian hợp lệ của đúng một bước tuần tự; kết quả cuối giống hệt step() một lần.
+  // ---- Má»™t bÆ°á»›c chia Ä‘Æ°á»£c thÃ nh nhiá»u lÃ¡t (theo lÃ n) Ä‘á»ƒ tráº£i CPU qua cÃ¡c khung hÃ¬nh: beginStep â†’ workStep(n)â€¦ â†’ endStep.
+  // Giá»¯a cÃ¡c lÃ¡t tráº¡ng thÃ¡i lÃ  tráº¡ng thÃ¡i trung gian há»£p lá»‡ cá»§a Ä‘Ãºng má»™t bÆ°á»›c tuáº§n tá»±; káº¿t quáº£ cuá»‘i giá»‘ng há»‡t step() má»™t láº§n.
   let inStep = false, stepLanes = null, stepPos = 0;
   const swapReq = () => { const t = reqPrev; reqPrev = reqCur; reqCur = t; reqCur.clear(); };
   function beginStep() {
     if (inStep) finishStep();
     counters.step++; counters.t = counters.step * STEP;
+    if (controller) controller.update(counters.t, buildQueues());
     const sec = Math.floor(counters.t); if (sec !== counters.lastSecond) { counters.lastSecond = sec; counters.perSecond[sec & 31] = 0; }
     pLane.set(lane); pS.set(s); pGen.set(gen);
     swapReq();
-    // Tái sinh xe chờ chỗ (tất định theo chỉ số).
+    // TÃ¡i sinh xe chá» chá»— (táº¥t Ä‘á»‹nh theo chá»‰ sá»‘).
     for (let i = 0; i < N; i++) if (pending[i] && wanted[i]) { if (!(gen[i] === pGen[i] && reactivate(i)) && !relocate(i)) respawn(i, false, 32); }
     stepLanes = activeLanes.slice(); stepPos = 0; inStep = true;
   }
-  // Cập nhật tiếp các làn của bước đang dở, dừng ở ranh giới làn khi đã cập nhật ≥ maxCars xe; trả về true khi xong bước.
+  // Cáº­p nháº­t tiáº¿p cÃ¡c lÃ n cá»§a bÆ°á»›c Ä‘ang dá»Ÿ, dá»«ng á»Ÿ ranh giá»›i lÃ n khi Ä‘Ã£ cáº­p nháº­t â‰¥ maxCars xe; tráº£ vá» true khi xong bÆ°á»›c.
   function workStep(maxCars = Infinity) {
     if (!inStep) return true;
     let done = 0;
@@ -865,7 +888,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     endStep(); return true;
   }
   function endStep() {
-    // Sắp lại làn (xe máy vượt nhau khác dải ngang), đếm vi phạm khoảng cách, dọn làn rỗng.
+    // Sáº¯p láº¡i lÃ n (xe mÃ¡y vÆ°á»£t nhau khÃ¡c dáº£i ngang), Ä‘áº¿m vi pháº¡m khoáº£ng cÃ¡ch, dá»n lÃ n rá»—ng.
     const keep = [];
     for (const l of activeLanes) {
       const a = laneCars[l];
@@ -878,6 +901,54 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   function finishStep() { if (inStep) workStep(Infinity); }
   function step() { beginStep(); workStep(Infinity); }
+  // Hàng chờ theo nhóm pha cho controller max-pressure (chỉ nút trong signalPlan).
+  function buildQueues() {
+    const q = new Map();
+    for (const node of (signalPlan ? signalPlan.signalNodes : [])) {
+      const rows = [];
+      const push = new Map();
+      for (let l = 0; l < NL; l++) {
+        if (lanes.to[l] !== node) continue;
+        const st = lanes.st[l];
+        const g = arriveGroup[st];
+        let count = 0, wait_sum = 0, wait_max = 0, vsum = 0, crossed = 0, q_out = 0;
+        const stopPos = lanes.length[l] - Rz[node];
+        const a = laneCars[l];
+        if (a) for (const i of a) {
+          if (!active[i]) continue;
+          if (s[i] > stopPos) {
+            // crossed = SỰ KIỆN qua vạch: s_prev ≤ stopPos < s (đếm 1 lần/xe)
+            if (lastS[i] <= stopPos && lastStepCrossed[i] !== counters.step) { lastStepCrossed[i] = counters.step; crossed++; }
+            continue;
+          }
+          const near = stopPos - s[i] <= 20;
+          if (v[i] < 0.5 || near) {
+            count++;
+            wait_sum += stopT[i];
+            if (stopT[i] > wait_max) wait_max = stopT[i];
+            vsum += v[i];
+          }
+        }
+        // q_out = số xe trong 25 m CUỐI làn (đầu làn ra) — dùng cho áp lực max-pressure.
+        if (a) for (const i of a) { if (active[i] && s[i] <= stopPos && lanes.length[l] - s[i] <= 25) q_out++; }
+        if (count || crossed || q_out) {
+          const key = `${st}`;
+          const rec = push.get(key) || { st, group: g, count: 0, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 0 };
+          rec.count += count;
+          rec.wait_sum_s += wait_sum;
+          rec.wait_max_s = Math.max(rec.wait_max_s, wait_max);
+          rec.speed_mean = count ? vsum / count : 0;
+          rec.crossed += crossed;
+          rec.q_out += q_out;
+          push.set(key, rec);
+        }
+      }
+      if (push.size) q.set(node, [...push.values()]);
+    }
+    // cập nhật s_prev cho mọi xe còn hoạt động
+    for (let i = 0; i < N; i++) lastS[i] = active[i] ? s[i] : -1;
+    return q;
+  }
 
   function stateHash() {
     let h = 2166136261 >>> 0;
@@ -891,23 +962,38 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     return { t: +counters.t.toFixed(3), active: act, total: N, edgeTransitions: counters.edgeTransitions, edgeTransitionsLast30s: last30, gapViolations: counters.gapViolations, onewayViolations: counters.onewayViolations + net.stats.onewayLaneViolations, teleports: counters.teleports, onBridge, respawns: counters.respawns, breakerRespawns: counters.breakerRespawns, waitingNow, waitsTotal: counters.waitsTotal, maxStopS: +counters.maxStopS.toFixed(2), signals: net.stats.signals, controlledNodes: net.stats.controlledNodes, holders: [...holders.values()].reduce((a, h) => a + h.length, 0) };
   }
   reset();
-  return {
+  const simApi = {
     N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters,
     step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, wantedCount: () => { let n = 0; for (let i = 0; i < N; i++) n += wanted[i]; return n; }, pendingCount: () => { let n = 0; for (let i = 0; i < N; i++) n += pending[i]; return n; }, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,
     setRegion, get region() { return region ? { id: region.id, active: true, margin: region.margin, lanes: insideLane.reduce((a, b) => a + b, 0), spawnLanes: spawnList.length } : { id: null, active: false, margin: 0, lanes: NL, spawnLanes: spawnLanes.length }; },
     eligibleCount: () => { let n = 0; for (let i = 0; i < N; i++) n += elig[i]; return n; }, isEligible: i => !!elig[i], insideLaneOf: l => !!insideLane[l],
     setFraction(f) { finishStep(); fraction = Math.max(0, Math.min(1, f)); return select(); },
     setLightFactor(f) { if (Math.abs(f - lightFactor) < 1e-9) return activeCount(); finishStep(); lightFactor = f; return select(); },
-    get fraction() { return fraction; }, get lightFactor() { return lightFactor; }
+    get fraction() { return fraction; }, get lightFactor() { return lightFactor; },
+    attachController(c) {
+      controller = c || null;
+      if (controller && controller.attachSim) controller.attachSim(simApi);
+      return controller;
+    },
+    get controller() { return controller; },
+    get signalPlan() { return signalPlan; },
+    get signalGroups() {
+      if (signalPlan) return signalPlan.clusters;
+      const groups = [];
+      for (let n = 0; n < signal.length; n++) if (signal[n]) groups.push({ cluster_id: `31A-${n}`, nodeIds: [n], offset_s: signalOffset[n] });
+      return groups;
+    }
   };
+  if (controller && controller.attachSim) controller.attachSim(simApi);
+  return simApi;
 }
 
-// ---------------------------------------------------------------- hình học pose (thuần JS)
-// liftY (tuỳ chọn): (làn, s, x, z, yProfile) → y vẽ, để thân xe nằm trên mặt đường vẽ cao nhất cùng cấp tại đúng vị trí xe.
+// ---------------------------------------------------------------- hÃ¬nh há»c pose (thuáº§n JS)
+// liftY (tuá»³ chá»n): (lÃ n, s, x, z, yProfile) â†’ y váº½, Ä‘á»ƒ thÃ¢n xe náº±m trÃªn máº·t Ä‘Æ°á»ng váº½ cao nháº¥t cÃ¹ng cáº¥p táº¡i Ä‘Ãºng vá»‹ trÃ­ xe.
 export function createTrafficGeometry31(net, sim, liftY = null) {
   const { lanes, geo, E } = net;
   const groundY = net.G.frame.groundY;
-  // ---- Vị trí trên làn: tim polyline + pháp tuyến nội suy (đường lệch liên tục), y theo profile.
+  // ---- Vá»‹ trÃ­ trÃªn lÃ n: tim polyline + phÃ¡p tuyáº¿n ná»™i suy (Ä‘Æ°á»ng lá»‡ch liÃªn tá»¥c), y theo profile.
   function lanePoint(l, sl, latv, out) {
     const e = lanes.edge[l], d = lanes.dir[l], L = lanes.length[l], o = geo.off[e], n = E[e].c.length / 2;
     const sd = Math.max(0, Math.min(L, d > 0 ? sl : L - sl)), sp = sd * geo.planar[e] / L;
@@ -915,7 +1001,7 @@ export function createTrafficGeometry31(net, sim, liftY = null) {
     const segL = Math.max(1e-6, geo.s[o + hi] - geo.s[o + lo]), t = Math.max(0, Math.min(1, (sp - geo.s[o + lo]) / segL));
     const cx = geo.x[o + lo] + (geo.x[o + hi] - geo.x[o + lo]) * t, cz = geo.z[o + lo] + (geo.z[o + hi] - geo.z[o + lo]) * t;
     let nx = geo.nx[o + lo] + (geo.nx[o + hi] - geo.nx[o + lo]) * t, nz = geo.nz[o + lo] + (geo.nz[o + hi] - geo.nz[o + lo]) * t; const nl = Math.hypot(nx, nz) || 1; nx /= nl; nz /= nl;
-    const ld = latv * d;   // lệch phải theo chiều đi = lệch theo pháp tuyến phải của chiều vẽ × dir
+    const ld = latv * d;   // lá»‡ch pháº£i theo chiá»u Ä‘i = lá»‡ch theo phÃ¡p tuyáº¿n pháº£i cá»§a chiá»u váº½ Ã— dir
     out.x = cx + nx * ld; out.z = cz + nz * ld;
     out.tx = (geo.x[o + hi] - geo.x[o + lo]) / segL * d; out.tz = (geo.z[o + hi] - geo.z[o + lo]) / segL * d;
     return out;
@@ -929,7 +1015,7 @@ export function createTrafficGeometry31(net, sim, liftY = null) {
   }
   const rcOf = (a, b) => Math.min(net.Rz[lanes.to[a]] * .8, lanes.length[a] * .45, lanes.length[b] * .45);
   const A = {}, B = {};
-  // Điểm trên quỹ đạo xe: trong vùng nút dùng Bezier bậc ba nối làn vào/ra (tiếp tuyến liên tục).
+  // Äiá»ƒm trÃªn quá»¹ Ä‘áº¡o xe: trong vÃ¹ng nÃºt dÃ¹ng Bezier báº­c ba ná»‘i lÃ n vÃ o/ra (tiáº¿p tuyáº¿n liÃªn tá»¥c).
   function pathPoint(i, l, sl, nl, pl, out) {
     const L = lanes.length[l], jit = sim.jit[i];
     let a = -1, b = -1, u = 0;
@@ -946,7 +1032,7 @@ export function createTrafficGeometry31(net, sim, liftY = null) {
     } else lanePoint(l, sl, lanes.offset[l] + jit, out);
     return out;
   }
-  // Điểm quỹ đạo tại quãng s có thể vượt đầu/cuối làn (sang làn trước/làn kế), ngoài cùng thì ngoại suy theo tiếp tuyến.
+  // Äiá»ƒm quá»¹ Ä‘áº¡o táº¡i quÃ£ng s cÃ³ thá»ƒ vÆ°á»£t Ä‘áº§u/cuá»‘i lÃ n (sang lÃ n trÆ°á»›c/lÃ n káº¿), ngoÃ i cÃ¹ng thÃ¬ ngoáº¡i suy theo tiáº¿p tuyáº¿n.
   function pointAlong(i, l, sl, nl, pl, out) {
     const L = lanes.length[l];
     if (sl > L && nl >= 0) return pathPoint(i, nl, Math.min(sl - L, lanes.length[nl]), -1, l, out);
@@ -956,7 +1042,7 @@ export function createTrafficGeometry31(net, sim, liftY = null) {
     return out;
   }
   const F = {}, R = {};
-  // Pose thân xe: hai trục (±0,4 chiều dài) đều nằm trên quỹ đạo, tâm ở giữa, hướng theo dây cung → đuôi xe dài không văng ra ngoài làn khi rẽ.
+  // Pose thÃ¢n xe: hai trá»¥c (Â±0,4 chiá»u dÃ i) Ä‘á»u náº±m trÃªn quá»¹ Ä‘áº¡o, tÃ¢m á»Ÿ giá»¯a, hÆ°á»›ng theo dÃ¢y cung â†’ Ä‘uÃ´i xe dÃ i khÃ´ng vÄƒng ra ngoÃ i lÃ n khi ráº½.
   function poseAt(i, l, sl, nl, pl, out) {
     const L = lanes.length[l], h = (sim.len ? sim.len[i] : 4) * .4;
     pointAlong(i, l, sl + h, nl, pl, F); pointAlong(i, l, sl - h, nl, pl, R);
