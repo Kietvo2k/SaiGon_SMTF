@@ -736,7 +736,13 @@ function advanceUrbanMotion(now){
 // (surfaceChecked/belowRoad) vào materialStatus.motion và API ở materialStatus.traffic.api (bộ điều phối mật độ E/F dùng).
 materialStatus.motion={roadSource:'ROAD_GRAPH_31 (OSM centerlines)',vessels:vesselItems.length,vesselRoute:'illustrative Saigon River lane',vesselAuditSamples,vesselSamplesOutsideWater,vesselHeadingMismatches,classification:'giao thông và tàu minh họa (illustrative); không phải dữ liệu giao thông hay AIS thật'};
 materialStatus.traffic={};
-const traffic=createTraffic31({scene:trafficGroup,graph:window.ROAD_GRAPH_31,roads:D.roads,widthOf:index=>roadWidth31(D.roads[index],widths),drawn:index=>!D.roads[index].tunnel&&window.ROAD_GRAPH_31.roads[index].skipRender!=='hide',roadNetwork,nightLevel,camera,getLight:()=>activeLight,status:materialStatus.traffic,motionStatus:materialStatus.motion});
+const smartQuery=new URLSearchParams(location.search);const isSmart32=smartQuery.get('app')==='smart';
+let createTraffic=createTraffic31,smartMod=null;
+if(isSmart32){({createTraffic31:createTraffic}=await import('./city-traffic-31.js?v=32a'));smartMod=await import('./smart-app-32.js?v=32a');}
+const smartSignalPlan=smartMod?(await smartMod.prepareSmart32({graph:window.ROAD_GRAPH_31})).signalPlan:null;
+const traffic=createTraffic({scene:trafficGroup,graph:window.ROAD_GRAPH_31,roads:D.roads,widthOf:index=>roadWidth31(D.roads[index],widths),drawn:index=>!D.roads[index].tunnel&&window.ROAD_GRAPH_31.roads[index].skipRender!=='hide',roadNetwork,nightLevel,camera,getLight:()=>activeLight,status:materialStatus.traffic,motionStatus:materialStatus.motion,signalPlan:smartSignalPlan,breakerS:smartMod?smartMod.SMART_BREAKER_S:undefined});
+const smartApp=smartMod?smartMod.initSmartApp32({scene,camera,renderer,traffic,status:materialStatus.traffic,root:document}):null;
+if(smartApp){const {regionTrafficPayload}=await import('./city-region-31.js?v=31a');traffic.setRegion(regionTrafficPayload('bac'));window.__smartApp=smartApp;}
 document.body.dataset.motionVessels=String(vesselItems.length);document.body.dataset.motionVesselOutside=String(vesselSamplesOutsideWater);document.body.dataset.motionVesselHeadingMismatch=String(vesselHeadingMismatches);
 
 const fixtureMaterial=new THREE.MeshStandardNodeMaterial({color:'#6d7772',roughness:.68,metalness:.2});
@@ -842,7 +848,7 @@ function selectView(key){
   transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
   transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
   document.querySelectorAll('[data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view===key));
-  $('#viewLabel').textContent=p.label;const density=new URLSearchParams(location.search).get('density');const keepMode=new URLSearchParams(location.search).get(MODE_URL_PARAM);const keepLight=new URLSearchParams(location.search).get('light');history.replaceState(null,'',`?v=${APP_VERSION}&view=${key}${forceWebGL?'&backend=webgl':''}${effectiveQuality!=='presentation'?`&quality=${effectiveQuality}`:''}${density?`&density=${encodeURIComponent(density)}`:''}${regionParam()?`&${REGION_URL_PARAM}=${encodeURIComponent(regionParam())}`:''}${keepMode?`&${MODE_URL_PARAM}=${encodeURIComponent(keepMode)}`:''}${keepLight?`&light=${encodeURIComponent(keepLight)}`:''}`);
+  $('#viewLabel').textContent=p.label;const density=new URLSearchParams(location.search).get('density');const keepMode=new URLSearchParams(location.search).get(MODE_URL_PARAM);const keepLight=new URLSearchParams(location.search).get('light');history.replaceState(null,'',`?v=${isSmart32?'32a':APP_VERSION}&view=${key}${isSmart32?'&app=smart&region=bac':''}${forceWebGL?'&backend=webgl':''}${effectiveQuality!=='presentation'?`&quality=${effectiveQuality}`:''}${density?`&density=${encodeURIComponent(density)}`:''}${regionParam()?`&${REGION_URL_PARAM}=${encodeURIComponent(regionParam())}`:''}${keepMode?`&${MODE_URL_PARAM}=${encodeURIComponent(keepMode)}`:''}${keepLight?`&light=${encodeURIComponent(keepLight)}`:''}`);
 }
 const regionParam=()=>new URLSearchParams(location.search).get(REGION_URL_PARAM);
 document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>selectView(button.dataset.view));

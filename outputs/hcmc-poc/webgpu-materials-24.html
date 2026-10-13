@@ -226,7 +226,7 @@
   <script src="data/signature-registry-31.js?v=31a"></script>
   <script src="data/street-furniture-31.js?v=31a"></script>
   <script>window.addEventListener('error',event=>{console.error('CITY24_ERROR',event.message,event.filename,event.lineno,event.colno);const text=document.getElementById('loaderText');if(text)text.textContent=`Lỗi dựng cảnh · ${event.message} · dòng ${event.lineno||'?'}`;});</script>
-  <script type="module" src="webgpu-materials-24.js?v=31a"></script>
+  <script type="module">import(new URLSearchParams(location.search).get('app')==='smart'?'./webgpu-materials-24.js?v=32a':'./webgpu-materials-24.js?v=31a');</script>
   <script type="module" src="flood-ui-25.js?v=31a"></script>
 </body>
 </html>
