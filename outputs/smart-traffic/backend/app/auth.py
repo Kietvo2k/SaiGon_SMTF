@@ -10,6 +10,10 @@ from app import config
 
 LOGIN_HITS = {}      # ip -> [epoch, count]
 LOGIN_LOCKS = {}     # ip -> locked_until_epoch
+STATION_HITS = {}    # station_id -> [epoch, count]
+# Hash bcrypt hợp lệ của một mật khẩu không tồn tại — dùng để chạy `bcrypt.checkpw` khi
+# user không có, giữ thời gian phản hồi tương đương (không lộ user tồn tại — §11).
+DUMMY_HASH = '$2b$12$QEkSPfjieoHD0TZDORzeWODSQRqRs1y2Sz1Mj2PuHoSzz/nCYcCgm'
 
 
 def hash_password(pw: str) -> str:
@@ -44,9 +48,19 @@ def make_token(user) -> str:
 
 def decode_token(token: str) -> dict:
     try:
-        return jwt.decode(token, load_or_create_secret(), algorithms=['HS256'])
+        claims = jwt.decode(token, load_or_create_secret(), algorithms=['HS256'])
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail={'error': {'code': 'UNAUTHORIZED', 'message': 'Token không hợp lệ', 'detail': None}})
+    # §11: token còn hiệu lực nhưng tài khoản đã bị khóa (`active=0`) cũng phải bị từ chối.
+    from app.db import get_conn
+    conn = get_conn()
+    try:
+        row = conn.execute('SELECT active FROM users WHERE username=?', (claims.get('sub'),)).fetchone()
+    finally:
+        conn.close()
+    if not row or not row['active']:
+        raise HTTPException(status_code=401, detail={'error': {'code': 'UNAUTHORIZED', 'message': 'Tài khoản không hoạt động', 'detail': None}})
+    return claims
 
 
 def bearer_of(request: Request) -> str:
@@ -66,6 +80,13 @@ def require_role(*roles):
     return dep
 
 
+def _purge_stale(bucket: dict, now: float, max_age: float):
+    """Dọn bucket cũ để dict rate-limit không phình vô hạn."""
+    if len(bucket) > 1000:
+        for k in [k for k, v in bucket.items() if now - (v[0] if isinstance(v, tuple) else v) >= max_age]:
+            bucket.pop(k, None)
+
+
 class LoginLimiter:
     @staticmethod
     def check(ip: str):
@@ -78,6 +99,25 @@ class LoginLimiter:
             window, count = now, 0
         count += 1
         LOGIN_HITS[ip] = (window, count)
+        _purge_stale(LOGIN_HITS, now, 120)
+        for k in [k for k, v in LOGIN_LOCKS.items() if now >= v]:
+            LOGIN_LOCKS.pop(k, None)
         if count > config.LOGIN_RATE_LIMIT:
             LOGIN_LOCKS[ip] = now + config.LOGIN_LOCK_S
             raise HTTPException(status_code=429, detail={'error': {'code': 'RATE_LIMITED', 'message': 'Đăng nhập quá nhiều, thử lại sau 5 phút', 'detail': None}})
+
+
+class StationLimiter:
+    """§11: ≤ 200 request/phút/station → 429."""
+
+    @staticmethod
+    def check(station_id: str):
+        now = time.time()
+        window, count = STATION_HITS.get(station_id, (now, 0))
+        if now - window >= 60:
+            window, count = now, 0
+        count += 1
+        STATION_HITS[station_id] = (window, count)
+        _purge_stale(STATION_HITS, now, 120)
+        if count > config.STATION_RATE_LIMIT:
+            raise HTTPException(status_code=429, detail={'error': {'code': 'RATE_LIMITED', 'message': 'Trạm gửi quá nhiều yêu cầu', 'detail': None}})

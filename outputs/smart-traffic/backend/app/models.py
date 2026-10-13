@@ -50,6 +50,10 @@ TABLES = [
     """CREATE TABLE IF NOT EXISTS signal_state_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT, node_id TEXT, cluster_id TEXT, t_sim REAL,
         phase TEXT, grp INTEGER, mode TEXT, override_by TEXT, reason TEXT, created_at TEXT)""",
+    """CREATE TABLE IF NOT EXISTS audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, actor TEXT, role TEXT, action TEXT,
+        target_type TEXT, target_id TEXT, from_state TEXT, to_state TEXT, reason TEXT,
+        payload_json TEXT, created_at TEXT)""",
     """CREATE TABLE IF NOT EXISTS kpi_samples (
         id INTEGER PRIMARY KEY AUTOINCREMENT, t_sim REAL, window_s REAL, wait_avg_s REAL,
         wait_p95_s REAL, queue_max REAL, queue_avg REAL, flow_per_min REAL, mode TEXT, scenario_key TEXT)""",

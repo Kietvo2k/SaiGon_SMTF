@@ -39,3 +39,10 @@ outputs/hcmc-poc/data/tiles-18/**/* 2.json
 
 # Smart traffic backend runtime: SQLite DB, JWT secret, frames, logs.
 outputs/smart-traffic/var/
+
+# Smart traffic agent/work artifacts (mục 11) và media/model lớn (Q23).
+work/oc-*
+work/tmp*
+work/cx-*
+outputs/smart-traffic/media/cameras/*.mp4
+outputs/smart-traffic/models/*.onnx

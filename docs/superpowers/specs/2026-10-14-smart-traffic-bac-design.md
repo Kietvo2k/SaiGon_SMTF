@@ -1045,6 +1045,8 @@ và giữ `verified = false` cho tới khi đối chiếu được điều/kho�
 15. Phụ lục B (bảng điều/khoản/điểm; 22 dòng `verified`, 4 dòng cần xác minh).
 16. §11 (danh sách "không commit" thêm `work/oc-*`, `work/tmp*`, `work/cx-*`).
 17. §4.3 (sửa regex xe máy thành dạng CÓ gạch `^[0-9]{2}-[A-Z][0-9] [0-9]{3}\.[0-9]{2}$` khớp ví dụ `59-X1 234.56` và biển kịch bản; biển sinh DUY NHẤT bằng khử trùng `salt`; slot `1…N`, gen `0…G`) — theo review kế hoạch M1 (2026-10-14).
+18. §4.4 (chốt vòng đời M1: trạm đặt `new` khi đủ ngưỡng tin cậy, `needs_review` khi thiếu ngưỡng; officer `confirm`/`dismiss` từ CẢ `new` và `needs_review`, officer chuyển `new → needs_review`; `confirmed` và `dismissed` là trạng thái CUỐI ở M1 — mọi chuyển tiếp ra khỏi chúng trả 409) — theo review bảo mật backend M1 (2026-10-14).
+19. §4.7 (giữ khóa chính `plates_seed` = `(slot, gen, vehicle_class)` — định danh biển theo `slot`+`gen`+loại xe, đúng mục 4.3; không rút gọn còn `(slot, gen)`) — theo review bảo mật backend M1 (2026-10-14).
 
 ---
 

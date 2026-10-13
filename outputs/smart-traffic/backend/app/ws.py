@@ -9,7 +9,9 @@ SEQ = 0
 CLIENTS = []   # {ws, role, username}
 # Allowlist chiều trạm → backend: CHỈ `station` gửi các event này. `cmd.*` KHÔNG nhận từ WS
 # (chỉ sinh ở REST officer/commander/admin) nên không có đường leo quyền điều khiển đèn.
-STATION_EVENTS = {'station.heartbeat', 'station.metrics', 'station.frame', 'violation.detected', 'violation.evidence'}
+# `violation.detected` KHÔNG nằm trong đường WS: vi phạm chỉ vào qua `POST /station/violations`
+# (tránh bản ghi ma không dedup/không gán status — review bảo mật).
+STATION_EVENTS = {'station.heartbeat', 'station.metrics', 'station.frame', 'violation.evidence'}
 
 
 def _next_seq():
@@ -38,7 +40,9 @@ async def ws_handler(websocket):
             if not event:
                 continue
             if role != 'station' or event not in STATION_EVENTS:
-                print(f'[ws] bỏ qua event không hợp lệ: role={role} event={event}', flush=True)
+                # Không in nguyên payload/event do client gửi (tránh log injection).
+                safe = ''.join(ch for ch in str(event)[:40] if ch.isprintable())
+                print(f'[ws] bỏ qua event không hợp lệ: role={role} event={safe}', flush=True)
                 continue
             await broadcast(event, payload.get('data', {}), to_roles=['officer', 'commander', 'admin'])
     except Exception:

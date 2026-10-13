@@ -1,3 +1,4 @@
+import importlib
 import os
 import sys
 import tempfile
@@ -13,6 +14,9 @@ def client():
     tmp = Path(tempfile.mkdtemp(prefix='smart-traffic-test-'))
     os.environ['SMART_DB_PATH'] = str(tmp / 'test.db')
     os.environ['SMART_VAR_DIR'] = str(tmp)
+    # config đọc env lúc import → PHẢI reload để mỗi test dùng DB/VAR_DIR riêng (cách ly test).
+    from app import config
+    importlib.reload(config)
     from app.db import init_db, get_conn
     from app.seed.run_seed import run_seed
     conn = get_conn()
@@ -22,6 +26,7 @@ def client():
     from app import auth
     auth.LOGIN_HITS.clear()      # bộ đếm rate-limit là biến module — reset giữa các test
     auth.LOGIN_LOCKS.clear()
+    auth.STATION_HITS.clear()
     from app.main import app
     from fastapi.testclient import TestClient
     return TestClient(app)

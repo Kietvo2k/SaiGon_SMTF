@@ -14,10 +14,9 @@ LOGIN_RATE_LIMIT = 5          # lần/phút/IP
 LOGIN_LOCK_S = 300            # khóa tạm 5 phút
 UPLOAD_MAX_BYTES = 50 * 1024 * 1024
 STATION_RATE_LIMIT = 200      # request/phút/station
-BACKEND_PORT = int(os.environ.get('SMART_BACKEND_PORT', 8900))   # đọc env — agent chạy song song tự đổi cổng
-STATIC_PORT = int(os.environ.get('PORT', 8821))
-VITE_PORT = int(os.environ.get('VITE_PORT', 5173))
+# §3.3/§11: cổng do lệnh chạy (uvicorn --port) quyết định; agent song song đổi cổng
+# bằng `SMART_ALLOWED_ORIGINS`, KHÔNG suy CORS từ `PORT`.
 ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
     'SMART_ALLOWED_ORIGINS',
-    f'http://127.0.0.1:{STATIC_PORT},http://localhost:{STATIC_PORT},http://127.0.0.1:{VITE_PORT},http://localhost:{VITE_PORT}'
+    'http://127.0.0.1:8821,http://localhost:8821,http://127.0.0.1:5173,http://localhost:5173'
 ).split(',') if o.strip()]
