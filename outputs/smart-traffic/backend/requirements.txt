@@ -5,3 +5,4 @@ pyjwt
 pydantic
 httpx
 pytest
+python-multipart

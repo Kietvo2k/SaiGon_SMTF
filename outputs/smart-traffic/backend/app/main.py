@@ -1,10 +1,13 @@
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import config
 from app.auth import LoginLimiter, make_token, require_role, verify_password
 from app.db import get_conn
+from app.routers import officer as officer_router
+from app.routers import station as station_router
 from app.schemas import LoginIn
+from app.ws import ws_handler
 
 app = FastAPI(title='SaiGon SMTF · Trung tâm điều hành giao thông khu Bắc', version='32a')
 app.add_middleware(CORSMiddleware, allow_origins=config.ALLOWED_ORIGINS, allow_credentials=True,
@@ -34,3 +37,12 @@ def me(claims=Depends(require_role('citizen', 'officer', 'commander', 'admin', '
     plates = [r['plate'] for r in conn.execute('SELECT plate FROM vehicle_ownerships WHERE user_id=?', (row['id'],))]
     return {'id': row['id'], 'username': row['username'], 'role': row['role'],
             'display_name': row['display_name'], 'plates': plates}
+
+
+app.include_router(station_router.router)
+app.include_router(officer_router.router)
+
+
+@app.websocket('/ws/v1')
+async def ws_endpoint(websocket: WebSocket):
+    await ws_handler(websocket)

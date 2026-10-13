@@ -36,3 +36,6 @@ outputs/tayninh-data-batch-04/derived/s07/materials/original/*.zip
 # Accidental Finder/browser duplicate copies beside canonical streamed tiles.
 outputs/hcmc-poc/data/tiles-18/**/* 2.glb
 outputs/hcmc-poc/data/tiles-18/**/* 2.json
+
+# Smart traffic backend runtime: SQLite DB, JWT secret, frames, logs.
+outputs/smart-traffic/var/
