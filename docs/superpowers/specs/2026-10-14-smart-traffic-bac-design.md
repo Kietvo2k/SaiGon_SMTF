@@ -332,7 +332,7 @@ Mỗi phần tử: `{camera_id, node_id, x, z, height_m, yaw_deg, pitch_deg, fov
 **Định dạng (regex kiểm ở backend, dùng lại ở web):**
 
 - Ô tô: `^[0-9]{2}[A-Z][0-9]?-[0-9]{3}\.[0-9]{2}$` — ví dụ `51K-123.45`
-- Xe máy: `^[0-9]{2}[A-Z][0-9] [0-9]{3}\.[0-9]{2}$` — ví dụ `59-X1 234.56`
+- Xe máy: `^[0-9]{2}-[A-Z][0-9] [0-9]{3}\.[0-9]{2}$` — ví dụ `59-X1 234.56`
 - Tỉnh: ô tô `51` (TP.HCM), xe máy `59` (TP.HCM). Ký tự series: `A–Z` (bỏ `I`, `J`, `O`, `Q`
   theo lệ đặt biển — **cần xác minh** danh sách ký tự series thực tế; bản seed chỉ dùng tập con `A,B,C,D,E,F,G,H,K,L,M,N,P,R,S,T,U,V,W,X,Y,Z`).
 
@@ -1044,6 +1044,7 @@ và giữ `verified = false` cho tới khi đối chiếu được điều/kho�
 14. §11 (rate-limit 5 lần/phút/IP + khóa 5 phút; `SMART_ALLOWED_ORIGINS`; không log JWT secret).
 15. Phụ lục B (bảng điều/khoản/điểm; 22 dòng `verified`, 4 dòng cần xác minh).
 16. §11 (danh sách "không commit" thêm `work/oc-*`, `work/tmp*`, `work/cx-*`).
+17. §4.3 (sửa regex xe máy thành dạng CÓ gạch `^[0-9]{2}-[A-Z][0-9] [0-9]{3}\.[0-9]{2}$` khớp ví dụ `59-X1 234.56` và biển kịch bản; biển sinh DUY NHẤT bằng khử trùng `salt`; slot `1…N`, gen `0…G`) — theo review kế hoạch M1 (2026-10-14).
 
 ---
 
