@@ -32,7 +32,7 @@ check('Canonical cache keys and runtime data remain aligned to 30B',()=>{
   assert(refs.length>=7);
   for(const [,asset,version] of refs)assert(version.startsWith('31a'),`Stale cache key ${version}: ${asset}`);
   assert(renderer.includes("const APP_VERSION=CORRECTIONS.version"));
-  assert.equal(require(path.join(demo,'data/webgpu-materials-24.json')).version,'30b');
+  assert.equal(require(path.join(demo,'data/webgpu-materials-24.json')).version,'31a');
 });
 
 check('Interactive markup has unique IDs, explicit button types and valid control targets',()=>{

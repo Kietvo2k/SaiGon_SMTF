@@ -141,7 +141,7 @@ check('Public entry from the stable demo exists',()=>{
   assert(read('index.html').includes('webgpu-entry-24.js'));
 });
 check('Manifest declares the rendered scope and limitations',()=>{
-  assert.equal(manifest.version,'30b');
+  assert.equal(manifest.version,'31a');
   assert.equal(manifest.scope.renderedBuildings,70726);
   assert.equal(manifest.scope.materialFamilies,8);
   assert(manifest.limits.length>=4);

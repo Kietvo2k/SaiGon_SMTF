@@ -39,7 +39,7 @@ check('Renderer assets are version-aligned at 30b',()=>{
   assert(!html.includes('?v=24d'));
   assert(html.includes('webgpu-materials-24.js?v=31a'));
   assert(entry.includes("version:'30b'"));
-  assert.equal(manifest.version,'30b');
+  assert.equal(manifest.version,'31a');
   assert.equal(evidence.version,'24e');
 });
 
