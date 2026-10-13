@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import config
 from app.auth import LoginLimiter, make_token, require_role, verify_password
 from app.db import get_conn
+from app.routers import citizen as citizen_router
+from app.routers import media as media_router
 from app.routers import officer as officer_router
 from app.routers import station as station_router
 from app.schemas import LoginIn
@@ -41,6 +43,8 @@ def me(claims=Depends(require_role('citizen', 'officer', 'commander', 'admin', '
 
 app.include_router(station_router.router)
 app.include_router(officer_router.router)
+app.include_router(citizen_router.router)
+app.include_router(media_router.router)
 
 
 @app.websocket('/ws/v1')
