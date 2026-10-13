@@ -76,8 +76,9 @@ export function createIdentityFacades30({scene,status={},atlasUrl='assets/facade
       loadTexture(loader,atlasUrl,true,anisotropy),
       loadTexture(loader,maskUrl,false,anisotropy)
     ]);
-    // Lite: texture thu nhỏ đã đủ nhẹ nên tắt mipmap để giảm thêm bộ nhớ GPU (facade signature chỉ giảm độ phân giải, không mất).
-    if(anisotropy<=2){for(const texture of [map,alphaMap]){texture.generateMipmaps=false;texture.minFilter=THREE.LinearFilter;texture.needsUpdate=true;}}
+    // C2 (review-I): GIỮ mipmap cho atlas/mask facade Lite. Ảnh 1024×1280 (~1,3 triệu pixel) nên chi phí mipmap
+    // nhỏ; giữ mipmap để facade ở tầm xa không nhấp nháy. Chỉ anisotropy bị hạ ≤ 2. Facade signature chỉ giảm
+    // độ phân giải, không mất.
     resources.textures.push(map,alphaMap);material.map=map;material.alphaMap=alphaMap;material.needsUpdate=true;ready=true;
     Object.assign(status,{state:'ready',accepted:eligible.length,rendered:rendered.length,heroReplacements:eligible.length-rendered.length,held:manifest.entries.length-eligible.length,atlas:manifest.atlas,alphaMask:manifest.alpha_mask,atlasSize:map.image?[map.image.width,map.image.height]:null,maskSize:alphaMap.image?[alphaMap.image.width,alphaMap.image.height]:null,sources:rendered.map(entry=>({name:entry.name,buildingId:entry.building_id,url:entry.source_url,author:entry.author,license:entry.license}))});
   }).catch(error=>{status.state='error';status.error=String(error?.message||error);root.visible=false;});

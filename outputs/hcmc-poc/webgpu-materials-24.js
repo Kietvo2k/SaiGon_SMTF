@@ -17,7 +17,7 @@ import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furni
 import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=31a';
 import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=31a';
 import { REGION_ALL_ID, REGION_URL_PARAM, REGIONS_31, regionById, regionOf, regionContains } from './city-region-31.js?v=31a';
-import { MODE_STORAGE_KEY, MODE_URL_PARAM, anisotropyForMode, createModeController, modeById, resolveMode, textureUrlsForMode } from './city-mode-31.js?v=31a';
+import { DENSITY_STORAGE_KEY, MODE_URL_PARAM, anisotropyForMode, createModeController, modeById, resolveMode, textureUrlsForMode } from './city-mode-31.js?v=31a';
 import { createTraffic31 } from './city-traffic-31.js?v=31a';
 
 const D=window.CITY_DATA;
@@ -43,7 +43,7 @@ const setProgress=(value,text)=>{loaderProgress.style.width=`${Math.max(3,Math.m
 const yieldMain=()=>new Promise(resolve=>setTimeout(resolve,0));
 const materialStatus=window.webgpuMaterials24={version:APP_VERSION,state:'initializing'};
 // Bước I 31A — trạng thái chế độ (gán sau khi materialStatus khởi tạo để tránh lỗi TDZ).
-materialStatus.mode={version:'mode-31i',id:modePreset.id,label:modePreset.label,source:modeResolved.source,density:modePreset.density,quality:effectiveQuality,textureScale:modePreset.textureScale,uiCompact:modePreset.uiCompact,textures:{sentinel:null,atlas:null,mask:null}};
+materialStatus.mode={version:'mode-31i',id:modePreset.id,label:modePreset.label,source:modeResolved.source,density:modePreset.density,quality:effectiveQuality,textureScale:modePreset.textureScale,uiCompact:modePreset.uiCompact,textures:{sentinel:null,atlas:null,mask:null},texturePixels:null,gpuMemory:null};
 document.body.dataset.mode=modePreset.id;
 
 if(!D?.buildings?.length)throw new Error('CITY_DATA không khả dụng');
@@ -394,8 +394,9 @@ ground.geometry.rotateX(-Math.PI/2);ground.position.y=-1;ground.receiveShadow=tr
 new THREE.TextureLoader().load(modeTextures.sentinel,texture=>{
   texture.colorSpace=THREE.SRGBColorSpace;
   try{texture.anisotropy=anisotropyForMode(modePreset.id,renderer.capabilities.getMaxAnisotropy());}catch{texture.anisotropy=modePreset.id==='lite'?2:8;}
-  // Lite: ảnh nền đã thu nhỏ một nửa mỗi cạnh nên tắt mipmap để giảm thêm bộ nhớ GPU.
-  if(modePreset.id==='lite'){texture.generateMipmaps=false;texture.minFilter=THREE.LinearFilter;}
+  // C2 (review-I): GIỮ mipmap cho mặt đất Lite. Bản 1024² phủ toàn 38,57 km² nên ở overview mỗi pixel
+  // màn hình lấy mẫu << 1 texel; tắt mipmap gây aliasing/nhấp nháy rõ ở vùng xa. Chỉ hạ anisotropy (≤ 2);
+  // chi phí mipmap cho 1024² ≈ 1,4 triệu pixel (~5 MB) không ảnh hưởng mục tiêu bộ nhớ.
   ground.material.map=texture;ground.material.color.set(groundTint);ground.material.needsUpdate=true;
   if(materialStatus.mode&&texture.image)materialStatus.mode.textures.sentinel=[texture.image.width,texture.image.height];
 });
@@ -853,7 +854,11 @@ materialStatus.selectView=selectView;
 // do người dùng chỉ định được bỏ để preset của mode có hiệu lực.
 const modeController=createModeController({root:$('#modeControl'),params,initial:modeResolved,onChoose:({id})=>{
   const preset=modeById(id);
-  try{localStorage.setItem(MODE_STORAGE_KEY,id);localStorage.setItem('citylab.31e.density',preset.density);}catch{}
+  // T3(d): chỉ ghi localStorage MỘT lần — MODE_STORAGE_KEY đã được createModeController.choose ghi trước onChoose;
+  // ở đây chỉ ghi mật độ preset bằng hằng số dùng chung, không lặp chuỗi 'citylab.31e.density'.
+  try{localStorage.setItem(DENSITY_STORAGE_KEY,preset.density);}catch{}
+  // T3(b): đổi mode qua UI xử lý NHẤT QUÁN &density/&quality/&region — BỎ &density và &quality để preset mode có hiệu lực,
+  // GIỮ &region vì khu mô phỏng là lựa chọn nội dung của người dùng, không phải cấu hình hiệu năng.
   const query=new URLSearchParams();
   query.set('v',APP_VERSION);query.set('view',activeView);
   if(forceWebGL)query.set('backend','webgl');
@@ -862,7 +867,6 @@ const modeController=createModeController({root:$('#modeControl'),params,initial
   showRegionNotice(`Đang chuyển sang chế độ ${preset.label} — giữ góc nhìn, trang sẽ tải lại…`);
   setTimeout(()=>{location.search=`?${query}`;},650);
 }});
-materialStatus.mode.controller=true;
 {
   const counts=$('#modeCounts');
   if(counts)counts.textContent=modePreset.id==='lite'
@@ -917,7 +921,10 @@ function bindCollapsible(panel,button,key,defaultCollapsed,labels={}){
   return apply;
 }
 bindCollapsible($('#cityNav'),$('#collapseNav'),'citylab.30b.panel.navigation.collapsed',false,{open:'Mở điều hướng tham quan',close:'Thu gọn điều hướng tham quan'});
-bindCollapsible($('#story'),$('#collapseStory'),'citylab.30b.panel.story.collapsed',true,{open:'Mở thông tin vật liệu',close:'Thu gọn thông tin vật liệu'});
+// L1 (review-I): đặc tả 2c yêu cầu Lite thu gọn bảng "story". Chỉ THU GỌN (giữ nút #collapseStory mở lại, aria-expanded
+// do bindCollapsible cập nhật), không ẩn hẳn: ở Lite ép trạng thái thu gọn lúc khởi động.
+const applyStory=bindCollapsible($('#story'),$('#collapseStory'),'citylab.30b.panel.story.collapsed',true,{open:'Mở thông tin vật liệu',close:'Thu gọn thông tin vật liệu'});
+if(modePreset.uiCompact)applyStory(true);
 bindCollapsible($('#controls'),$('#collapse'),'citylab.30b.panel.controls.collapsed',true,{open:'Mở điều khiển cảnh',close:'Thu gọn điều khiển cảnh'});
 bindCollapsible($('#selection'),$('#collapseSelection'),'citylab.30b.panel.selection.collapsed',false,{open:'Mở thông tin công trình',close:'Thu gọn thông tin công trình'});
 const toggleUiButton=$('#toggleUi');
@@ -1042,7 +1049,11 @@ function render(now){
   if(visualPipeline&&!pipelineFault){try{visualPipeline.render();}catch(error){pipelineFault=true;materialStatus.visualRuntime.pipeline='direct fallback after compile failure';materialStatus.visualRuntime.error=String(error?.message||error);console.warn('City Visual Runtime 30 pipeline failed; switching to direct rendering.',error);renderer.render(scene,camera);}}
   else renderer.render(scene,camera);
   frameCount++;
-  if(now-fpsTime>1000){const fps=Math.round(frameCount*1000/(now-fpsTime));frameCount=0;fpsTime=now;$('#fps').textContent=fps;const triangles=renderer.info?.render?.triangles??0;$('#triangles').textContent=triangles>1e6?`${(triangles/1e6).toFixed(1)}M`:Math.round(triangles/1000)+'K';materialStatus.fps=fps;materialStatus.meshes=sceneMeshCount;materialStatus.triangles=triangles||null;Object.assign(materialStatus.region,{triangles:triangles||null,drawCalls:renderer.info?.render?.drawCalls??null,fps});}
+  if(now-fpsTime>1000){const fps=Math.round(frameCount*1000/(now-fpsTime));frameCount=0;fpsTime=now;$('#fps').textContent=fps;const triangles=renderer.info?.render?.triangles??0;$('#triangles').textContent=triangles>1e6?`${(triangles/1e6).toFixed(1)}M`:Math.round(triangles/1000)+'K';materialStatus.fps=fps;materialStatus.meshes=sceneMeshCount;materialStatus.triangles=triangles||null;Object.assign(materialStatus.region,{triangles:triangles||null,drawCalls:renderer.info?.render?.drawCalls??null,fps});
+    // T1 (review-I): ghi cả hai số cho mode — tổng pixel texture đã nạp (proxy, ×4 byte khi cần) và bộ nhớ GPU thật
+    // (renderer.info.memory.textures / texturesSize). Không được gọi pixel×4 là "bộ nhớ GPU texture".
+    if(materialStatus.mode){materialStatus.mode.texturePixels=Object.values(materialStatus.mode.textures).reduce((sum,size)=>sum+(size?size[0]*size[1]:0),0);const memory=renderer.info?.memory;if(memory)materialStatus.mode.gpuMemory={textures:memory.textures??null,texturesSize:memory.texturesSize??null};}
+  }
 }
 
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();adaptiveQuality.resize();});

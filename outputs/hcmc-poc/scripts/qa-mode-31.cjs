@@ -16,6 +16,20 @@ const BASE = process.env.CITY_URL || `http://127.0.0.1:${process.env.PORT || 876
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
+// L6 (review-I): đọc [w,h] từ header PNG/JPEG để so texture lite với bản đầy đủ cùng tên (không hardcode kích thước).
+function imageSize(file) {
+  const buffer = fs.readFileSync(path.join(root, file));
+  if (buffer.length > 24 && buffer[0] === 0x89 && buffer[1] === 0x50) return [buffer.readUInt32BE(16), buffer.readUInt32BE(20)];
+  let offset = 2;
+  while (offset + 9 < buffer.length) {
+    if (buffer[offset] !== 0xff) { offset++; continue; }
+    const marker = buffer[offset + 1];
+    if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) return [buffer.readUInt16BE(offset + 7), buffer.readUInt16BE(offset + 5)];
+    offset += 2 + buffer.readUInt16BE(offset + 2);
+  }
+  return null;
+}
+
 const checks = [], failures = [];
 const check = (name, fn) => { try { fn(); checks.push(name); } catch (error) { failures.push({ name, error: String(error?.message || error).slice(0, 700) }); } };
 
@@ -133,7 +147,8 @@ async function runBackend(browser, backend) {
         liteHides: {
           legend: !visible(document.querySelector('#controlBody .legend')),
           compare: !visible(document.querySelector('#compare')),
-          audit: !visible(document.querySelector('.flood-audit'))
+          audit: !visible(document.querySelector('.flood-audit')),
+          story: document.querySelector('#story').classList.contains('collapsed')
         },
         essential: {
           views: [...document.querySelectorAll('#controlBody [data-view]')].filter(visible).length,
@@ -188,6 +203,19 @@ async function runBackend(browser, backend) {
     out.errors.push(...errors);
     await context.close();
   }
+  // 4) T3: &density/&quality do người dùng chỉ định THẮNG preset mode; mode vẫn là lite.
+  {
+    const { context, page, errors } = await open(browser, `&view=overview&mode=lite&density=full${q}`);
+    out.liteDensityFull = await page.evaluate(() => ({ mode: window.webgpuMaterials24.mode.id, level: window.webgpuMaterials24.density.level, source: window.webgpuMaterials24.density.source }));
+    out.errors.push(...errors);
+    await context.close();
+    await sleep(1200);   // máy ít RAM: chờ Chromium giải phóng context trước khi mở context kế tiếp
+    const b = await open(browser, `&view=overview&mode=lite&quality=presentation${q}`);
+    out.liteQualityPresentation = await b.page.evaluate(() => ({ mode: window.webgpuMaterials24.mode.id, quality: window.webgpuMaterials24.visualRuntime.profile }));
+    out.errors.push(...b.errors);
+    await b.context.close();
+    await sleep(1200);
+  }
   return out;
 }
 
@@ -230,19 +258,24 @@ async function runBackend(browser, backend) {
         const a = r.liteState.audit;
         assert(a?.complete === true && a.visible === a.total && a.total >= 60, JSON.stringify(a));
       });
-      check(tag + 'texture lite thật sự nhỏ hơn (một nửa mỗi cạnh, pixel × 1/4)', () => {
+      check(tag + 'texture lite thật sự nhỏ hơn (≤ ½ mỗi cạnh so với bản đầy đủ cùng tên)', () => {
         const t = r.liteState.mode.textures;
-        assert.deepEqual(t.sentinel, [1024, 1024], JSON.stringify(t));
-        assert.deepEqual(t.atlas, [1024, 1280], JSON.stringify(t));
-        assert(t.sentinel[0] * t.sentinel[1] <= 2048 * 2048 / 4, JSON.stringify(t));
-        assert(t.atlas[0] * t.atlas[1] <= 2048 * 2560 / 4, JSON.stringify(t));
+        const pairs = [['sentinel', t.sentinel, 'data/sentinel-2016.jpg'], ['atlas', t.atlas, 'assets/facades15/facade-atlas.jpg'], ['mask', t.mask, 'assets/facades15/facade-mask.png']];
+        for (const [name, lite, fullFile] of pairs) {
+          assert(Array.isArray(lite) && lite.length === 2, `${name}: ${JSON.stringify(t)}`);
+          const full = imageSize(fullFile);
+          assert(full, `không đọc được kích thước ${fullFile}`);
+          assert(lite[0] <= full[0] / 2 && lite[1] <= full[1] / 2, `${name} lite ${lite} > ½ đầy đủ ${full}`);
+          assert(lite[0] * lite[1] <= full[0] * full[1] / 4, `${name} pixel ${lite[0] * lite[1]} > ¼ ${full[0] * full[1]}`);
+        }
       });
-      check(tag + 'Lite giảm rõ tam giác (≥ 40 %) và draw call (WebGPU ≥ 40 %, WebGL giảm thật)', () => {
+      check(tag + 'Lite giảm rõ tam giác (≥ 40 %) và draw call (WebGPU ≥ 40 %, WebGL ≤ 0,9×)', () => {
         assert(r.liteInfo.triangles <= r.defaultInfo.triangles * 0.6, `tri ${r.liteInfo.triangles}/${r.defaultInfo.triangles}`);
         if (backend === 'webgpu') assert(r.liteInfo.drawCalls <= r.defaultInfo.drawCalls * 0.6, `dc ${r.liteInfo.drawCalls}/${r.defaultInfo.drawCalls}`);
-        // WebGL vốn đã gọn (pipeline depth-aware nhẹ, 1 cascade, không pass AO/TRAA/bloom) nên draw call nền
-        // thấp; Lite vẫn phải giảm thật và không tăng.
-        else assert(r.liteInfo.drawCalls < r.defaultInfo.drawCalls, `dc ${r.liteInfo.drawCalls}/${r.defaultInfo.drawCalls}`);
+        // T2 (review-I): pipeline WebGL đã gọn (depth-aware nhẹ, 1 cascade, không AO/TRAA/bloom) nên draw call nền thấp,
+        // kết quả thật overview chỉ ~ −9 % (88/97), Ba Son ~ −49 %. Đặt ngưỡng "≤ 0,9×"; vì draw call là số nguyên nên
+        // dùng trần (0,9 × 97 = 87,3 → 88) để không chặt quá do làm tròn; mọi mức TĂNG draw call (≥ 98) đều đỏ.
+        else assert(r.liteInfo.drawCalls <= Math.ceil(r.defaultInfo.drawCalls * 0.9), `dc ${r.liteInfo.drawCalls}/${r.defaultInfo.drawCalls}`);
       });
       check(tag + 'điều khiển Chế độ: radiogroup 2 nút role=radio đúng nhãn, roving tabindex', () => {
         const c = r.modeControl; assert(c.exists, 'không thấy #modeControl radiogroup');
@@ -253,8 +286,8 @@ async function runBackend(browser, backend) {
         assert.equal(c.buttons.find(b => b.checked === 'true').mode, 'lite');
         assert.deepEqual(c.buttons.map(b => b.tabindex), ['-1', '0']);
       });
-      check(tag + 'Lite ẩn bảng phụ nặng, giữ UI thiết yếu', () => {
-        assert(r.modeControl.liteHides.legend && r.modeControl.liteHides.compare && r.modeControl.liteHides.audit, JSON.stringify(r.modeControl.liteHides));
+      check(tag + 'Lite ẩn bảng phụ nặng, thu gọn story, giữ UI thiết yếu', () => {
+        assert(r.modeControl.liteHides.legend && r.modeControl.liteHides.compare && r.modeControl.liteHides.audit && r.modeControl.liteHides.story, JSON.stringify(r.modeControl.liteHides));
         const e = r.modeControl.essential;
         assert(e.views >= 6 && e.lights >= 3 && e.densities >= 4 && e.regions >= 5 && e.modes >= 2, JSON.stringify(e));
       });
@@ -268,6 +301,17 @@ async function runBackend(browser, backend) {
       check(tag + 'localStorage giữ mode khi không có &mode=', () => {
         assert.deepEqual(r.storageMode, { mode: 'lite', source: 'storage', level: 'light' }, JSON.stringify(r.storageMode));
       });
+      check(tag + 'T3: &density do người dùng chỉ định thắng preset mode (&mode=lite&density=full → level full)', () => {
+        assert.equal(r.liteDensityFull.mode, 'lite');
+        assert.equal(r.liteDensityFull.level, 'full');
+      });
+      check(tag + 'T3: &quality do người dùng chỉ định thắng preset mode (&mode=lite&quality=presentation)', () => {
+        assert.equal(r.liteQualityPresentation.mode, 'lite');
+        assert.equal(r.liteQualityPresentation.quality, backend === 'webgl' ? 'balanced-webgl' : 'presentation');
+      });
+      // L7 (review-I): đặc tả mục 5 yêu cầu "khung dài nhất ≤ 300 ms (hoặc có tiến trình)". Ở đây KHÔNG đo khung dài nhất
+      // vì đổi mode = tải lại trang (reload) có thông báo rõ — không có khung render dài nào trong trang hiện tại để đo;
+      // thay vào đó kiểm tra thông báo tiến trình, giữ view/light/region và không lỗi sau reload.
       check(tag + 'đổi mode qua lại: có thông báo tiến trình, giữ trạng thái, không lỗi', () => {
         assert(/Đang chuyển sang chế độ Preview/.test(r.switchNotice || ''), r.switchNotice);
         assert.equal(r.afterSwitch.mode, 'preview'); assert.equal(r.afterSwitch.level, 'full');
@@ -284,7 +328,8 @@ async function runBackend(browser, backend) {
       defaultInfo: r.defaultInfo, previewInfo: r.previewInfo, liteInfo: r.liteInfo,
       liteCounts: r.liteState?.counts, liteAudit: r.liteState?.audit, liteTextures: r.liteState?.mode?.textures,
       modeControl: r.modeControl, manualDensity: r.manualDensity, afterReload: r.afterReload,
-      storageMode: r.storageMode, switchNotice: r.switchNotice, afterSwitch: r.afterSwitch, flood: r.flood, errors: r.errors
+      storageMode: r.storageMode, switchNotice: r.switchNotice, afterSwitch: r.afterSwitch, flood: r.flood, errors: r.errors,
+      liteDensityFull: r.liteDensityFull, liteQualityPresentation: r.liteQualityPresentation
     }]));
     console.log(JSON.stringify({ suite: 'mode-31 · I', passed: checks.length, failed: failures.length, checks, failures, summary }, null, 1));
     if (failures.length) process.exitCode = 1;

@@ -4,9 +4,9 @@
  * `mode` là lớp trên cùng, gói sẵn các thiết lập:
  *   - preview = trải nghiệm hiện tại y nguyên (mặc định): chất lượng, mật độ, texture, UI như bây giờ.
  *   - lite = cho máy yếu: mật độ `light` (signature registry vẫn 100 %), texture thu nhỏ một nửa mỗi
- *     cạnh (pixel × 1/4), anisotropy thấp, tắt mipmap ở texture lite, hồ sơ chất lượng `performance`,
- *     UI gọn (ẩn bảng phụ nặng, giữ điều hướng data-view, ánh sáng, mật độ, khu mô phỏng, chế độ,
- *     chọn công trình, Flood Lab mở được).
+ *     cạnh (pixel × 1/4), anisotropy thấp, GIỮ mipmap (C2: tránh aliasing mặt đất ở overview), hồ sơ chất
+ *     lượng `performance`, UI gọn (thu gọn story, ẩn bảng phụ nặng, giữ điều hướng data-view, ánh sáng,
+ *     mật độ, khu mô phỏng, chế độ, chọn công trình, Flood Lab mở được).
  *
  * Người dùng vẫn chỉnh tay mật độ/khu/chất lượng sau khi chọn mode; lựa chọn tay được giữ
  * (localStorage/URL) và không bị mode ghi đè cho tới khi đổi mode. Đổi mode cần dựng lại pipeline
@@ -35,7 +35,7 @@ export const MODES_31 = Object.freeze([
 const byId = new Map(MODES_31.map(mode => [mode.id, mode]));
 
 // Giá trị URL/localStorage → id hợp lệ ('preview' | 'lite'); giá trị lạ trả về null.
-export const normalizeModeId = value => (value === 'preview' || byId.has(value)) ? value : null;
+export const normalizeModeId = value => byId.has(value) ? value : null;
 export const modeById = id => byId.get(id) || null;
 export const modeIds = () => MODES_31.map(mode => mode.id);
 
