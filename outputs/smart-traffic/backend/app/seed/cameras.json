@@ -1,0 +1,4 @@
+[
+  {"camera_id": "CAM-HX-001", "node_id": "HX-01", "x": -231, "z": -2422, "height_m": 8, "yaw_deg": 222, "pitch_deg": -12, "fov_deg": 60, "range_m": 60, "label": "Cầu vượt Hàng Xanh · hướng Điện Biên Phủ"},
+  {"camera_id": "CAM-HX-002", "node_id": "HX-06", "x": 6, "z": -2437, "height_m": 8, "yaw_deg": 219, "pitch_deg": -12, "fov_deg": 60, "range_m": 60, "label": "Ngã tư Hàng Xanh · hướng Xô Viết Nghệ Tĩnh"}
+]
