@@ -1,0 +1,7 @@
+[
+  {"username": "admin1", "password": "SaiGon@2026", "role": "admin", "display_name": "Quản trị hệ thống"},
+  {"username": "commander1", "password": "SaiGon@2026", "role": "commander", "display_name": "Chỉ huy trực ban"},
+  {"username": "officer1", "password": "SaiGon@2026", "role": "officer", "display_name": "Cán bộ xử lý vi phạm"},
+  {"username": "citizen1", "password": "SaiGon@2026", "role": "citizen", "display_name": "Nguyễn Văn A", "plates": ["51K-888.88"]},
+  {"username": "station-3d", "password": "SaiGon@2026", "role": "station", "display_name": "Trạm 3D STATION-3D-01"}
+]
