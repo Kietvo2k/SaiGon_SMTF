@@ -26,13 +26,13 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
   const clusters = [], clusterOf = new Map();
   if (net.signalPlan && net.signalPlan.clusters) {
     for (const c of net.signalPlan.clusters) {
-      const st = { cluster_id: c.cluster_id, nodeIds: [...c.nodeIds], offset_s: c.offset_s, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity };
+      const st = { cluster_id: c.cluster_id, nodeIds: [...c.nodeIds], offset_s: c.offset_s, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null };
       clusters.push(st);
       for (const n of c.nodeIds) clusterOf.set(n, st);
     }
   } else {
     // Không có signalPlan: một cụm ảo cho mọi nút có đèn 31A (hành vi fixed theo SIGNAL_CYCLE giữ ở sim).
-    const st = { cluster_id: 'NET-C1', nodeIds: [], offset_s: 0, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity };
+    const st = { cluster_id: 'NET-C1', nodeIds: [], offset_s: 0, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null };
     for (let n = 0; n < net.signal.length; n++) if (net.signal[n]) { st.nodeIds.push(n); clusterOf.set(n, st); }
     clusters.push(st);
   }
@@ -40,21 +40,23 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
   const overrides = new Map(); // nodeIndex → {group, by, reason, until_t_sim, until_at}
   // Lịch sử KPI: mẫu mỗi 1 s trong cửa sổ 60 s.
   const WINDOW_S = 60;
-  const samples = []; // {t, wait_avg, nodeWait: Map, nodeQueue: Map, clusterQueue: Map}
-  let switchWindow = [];
+  const samples = []; // {t, wait_avg, nodeWait: Map, nodeQueue: Map, nodeCross: Map}
+  const crossAcc = new Map();   // cộng dồn crossed mỗi bước; mẫu 1 s đọc rồi reset
   const greenOf = c => c.group === 0 ? P.fixed.green0S : P.fixed.green1S;
   const phaseLen = (c, phase) => phase === GREEN ? (curMode === 'fixed' ? greenOf(c) : c.greenLen ?? P.minGreenS) : phase === YELLOW ? P.yellowS : P.allRedS;
   const advancePhase = (c, tSim) => {
     if (c.phase === RED) {
       if (pendingMode) { curMode = pendingMode; pendingMode = null; for (const x of clusters) x.greenLen = P.minGreenS; }
       c.cycle += 1;
-      c.group = c.group === 0 ? 1 : 0;
+      // Ghi đè thủ công đang chờ: đích danh nhóm cần xanh (đã qua vàng + đỏ chung); ngược lại đảo nhóm.
+      c.group = c.ovTarget != null ? c.ovTarget : (c.group === 0 ? 1 : 0);
+      c.ovTarget = null;
       c.phase = GREEN;
       c.greenLen = P.minGreenS;
-      c.cycleStart = tSim;   // mốc để isGreen fixed suy pha trực tiếp từ thời gian
+      // Mốc chu kỳ chỉ đặt khi nhóm 0 bắt đầu xanh (không reset ở mọi RED→GREEN) → pha fixed suy từ đây.
+      if (c.group === 0) c.cycleStart = tSim;
       c.lastDecision = tSim;
       c.switches++;
-      switchWindow.push(tSim);
     } else if (c.phase === GREEN) c.phase = YELLOW;
     else c.phase = RED;
     c.tPhase = tSim;
@@ -64,10 +66,8 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     for (const n of c.nodeIds) {
       const rows = queues.get(n);
       if (!rows) continue;
-      for (const r of rows) {
-        if (r.group !== g) continue;
-        p += Math.max(0, r.count - (r.q_out || 0));   // áp lực = hàng chờ vào − q_out (25 m đầu làn ra)
-      }
+      // P_g = Σ (hàng chờ vào nhóm g) − Σ (q_out làn ra tương thích nhóm g); buildQueues phát cả dòng làn ra (count 0).
+      for (const r of rows) if (r.group === g) p += (r.count || 0) - (r.q_out || 0);
     }
     return p;
   };
@@ -81,7 +81,7 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     const total = Math.max(1, p0 + p1), margin = Math.abs(p0 - p1) / total;
     const want = p0 > p1 ? 0 : 1;
     if (elapsed >= P.maxGreenS || (margin >= P.switchMargin && want !== c.group)) { c.greenLen = elapsed; advancePhase(c, tSim); }
-    else if (c.greenLen === undefined) c.greenLen = Math.min(P.maxGreenS, Math.max(P.minGreenS, elapsed));
+    else c.greenLen = elapsed;   // giữ pha: độ dài xanh lớn dần tới maxGreen (isGreen không cắt đỏ sớm)
   };
   const overrideOf = (node, tSim) => {
     const o = overrides.get(node);
@@ -105,24 +105,43 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     if (!net.signal[node]) return true;
     const c = clusterOf.get(node);
     const o = overrideOf(node, tSim);
-    if (o) return net.arriveGroup[st] === o.group;
+    if (o) {
+      // Ghi đè: chỉ nhóm đích xanh, và phải đã qua chuỗi vàng + đỏ chung (máy trạng thái đã tới nhóm đích).
+      return !!c && c.phase === GREEN && c.group === o.group && net.arriveGroup[st] === o.group;
+    }
     if (!c) return true;
     const g = net.arriveGroup[st];
     if (curMode === 'fixed') return phaseFixed(c, tSim, g) === GREEN;
-    // smart: suy từ (tSim − tPhase); pha đã hết thì không còn xanh (không cần update trước).
+    // smart: pha do update quản (đổi ở maxGreen/áp lực); giữ xanh tới khi máy trạng thái đổi pha.
     const el = tSim - c.tPhase;
-    if (c.phase === GREEN) return g === c.group && el < phaseLen(c, GREEN);
+    if (c.phase === GREEN) return g === c.group && el <= phaseLen(c, GREEN) + 1e-9;
     return false;
+  };
+  // Nút 31A có đèn NGOÀI kế hoạch (không do controller quản): trạng thái theo chu kỳ 44 s riêng của 31A.
+  const stateOf31A = (node, tSim) => {
+    const cyc = 44, off = net.signalOffset[node] || 0;
+    const t = ((tSim + off) % cyc + cyc) % cyc;
+    const phaseOf = g => {
+      const green = g === 0 ? t < 22 : (t >= 25 && t < 41);
+      const end = g === 0 ? 22 : 41;
+      return { group: g, phase: green ? GREEN : RED, countdown_s: +(green ? Math.max(0, end - t) : 0).toFixed(1) };
+    };
+    return { node_id: nodeIdOf(node), cluster_id: `31A-${node}`, cycle_s: cyc, mode: curMode, override: null, phases: [phaseOf(0), phaseOf(1)] };
   };
   const stateOf = (node0, tSim) => {
     const node = normNode(node0);
-    const c = clusterOf.get(node) || clusters[0];
+    const c = clusterOf.get(node);
+    if (!c) return stateOf31A(node, tSim);
     const t = tSim - c.tPhase;
     const len = phaseLen(c, c.phase);
     const remain = phase => Math.max(0, +(len - t).toFixed(1));
     const ov = overrideOf(node, tSim);
     const phaseOf = g => {
-      if (ov) return { group: g, phase: g === ov.group ? GREEN : RED, countdown_s: +(ov.until_t_sim - tSim).toFixed(1) };
+      if (ov) {
+        // Nhóm đích chỉ xanh khi máy trạng thái đã chuyển sang nó (đã qua vàng + đỏ chung); trong lúc chuyển, nhóm cũ giữ vàng/đỏ.
+        if (c.phase === GREEN && c.group === ov.group) return { group: g, phase: g === ov.group ? GREEN : RED, countdown_s: +(ov.until_t_sim - tSim).toFixed(1) };
+        return { group: g, phase: g === c.group ? c.phase : RED, countdown_s: remain(c.phase) };
+      }
       if (g === c.group) return { group: g, phase: c.phase, countdown_s: remain(c.phase) };
       // nhóm kia luôn đỏ khi nhóm này đang xanh/vàng/đỏ chung
       return { group: g, phase: RED, countdown_s: remain(c.phase) };
@@ -137,30 +156,34 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     };
   };
   const update = (tSim, queues) => {
+    const qmap = queues instanceof Map ? queues : new Map();
     for (const c of clusters) {
-      const qmap = queues instanceof Map ? queues : new Map();
       decision(c, tSim, qmap);
-      // Bắt buộc tôn trọng maxGreen cả khi mode fixed lẫn smart đã hết xanh kéo dài.
+      // So theo BƯỚC NGUYÊN (tránh float làm mỗi pha dài thêm 0,1 s); tôn trọng maxGreen.
       const elapsed = tSim - c.tPhase;
       const maxLen = curMode === 'fixed' ? greenOf(c) : P.maxGreenS;
-      if (c.phase === GREEN && elapsed > maxLen) advancePhase(c, tSim);
-      else if (c.phase !== GREEN && elapsed > phaseLen(c, c.phase)) advancePhase(c, tSim);
+      if (c.phase === GREEN && curMode === 'smart') c.greenLen = Math.min(P.maxGreenS, Math.max(P.minGreenS, elapsed));
+      const elapsedSteps = Math.round(elapsed * 10);
+      if (c.phase === GREEN && elapsedSteps >= Math.round(maxLen * 10)) advancePhase(c, tSim);
+      else if (c.phase !== GREEN && elapsedSteps >= Math.round(phaseLen(c, c.phase) * 10)) advancePhase(c, tSim);
     }
+    // crossed: cộng dồn mỗi bước vào bộ đệm; mẫu 1 s đọc rồi reset.
+    for (const [node, rows] of qmap) { let s = 0; for (const r of rows) s += r.crossed || 0; if (s) crossAcc.set(node, (crossAcc.get(node) || 0) + s); }
     // Mẫu KPI mỗi 1 s.
     const tRound = Math.floor(tSim);
     if (!samples.length || samples[samples.length - 1].t !== tRound) {
       let waitSum = 0, waitN = 0; const nodeWait = new Map(), nodeQueue = new Map(), nodeCross = new Map();
-      if (queues instanceof Map) {
-        for (const [node, rows] of queues) {
-          let qw = 0, qs = 0, qc = 0;
-          for (const r of rows) { waitSum += r.wait_sum_s; waitN += Math.max(1, r.count); qw += r.wait_sum_s; qs += Math.max(1, r.count); qc += r.count; nodeCross.set(node, (nodeCross.get(node) || 0) + (r.crossed || 0)); }
-          if (qs) nodeWait.set(node, qw / qs);
-          nodeQueue.set(node, qc);
-        }
+      for (const [node, rows] of qmap) {
+        let qw = 0, qs = 0, qc = 0;
+        // mẫu số = Σcount (không max(1,count)): dòng count=0 (làn ra) không kéo lệch trung bình.
+        for (const r of rows) { waitSum += r.wait_sum_s; waitN += r.count; qw += r.wait_sum_s; qs += r.count; qc += r.count; }
+        if (qs) nodeWait.set(node, qw / qs);
+        nodeQueue.set(node, qc);
       }
+      for (const [node, v] of crossAcc) nodeCross.set(node, v);
+      crossAcc.clear();
       samples.push({ t: tRound, wait_avg: waitN ? waitSum / waitN : 0, nodeWait, nodeQueue, nodeCross });
       while (samples.length && samples[0].t < tRound - WINDOW_S) samples.shift();
-      switchWindow = switchWindow.filter(t => t >= tSim - WINDOW_S);
     }
   };
   const metrics = tSim => {
@@ -238,6 +261,13 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
       const until_t_sim = + (nowSim + dur).toFixed(1);
       const until_at = new Date(Date.now() + dur * 1000).toISOString();
       overrides.set(n, { group, by: String(by), reason: String(reason || ''), until_t_sim, until_at });
+      // Ép đổi nhóm đi qua vàng 3 s + đỏ chung 2 s (không nhảy tức thì); đang xanh đúng nhóm thì giữ.
+      const c = clusterOf.get(n);
+      if (c) {
+        if (c.phase === GREEN && c.group !== group) { c.ovTarget = group; advancePhase(c, nowSim); }
+        else if (c.phase !== GREEN) c.ovTarget = group;
+        else c.ovTarget = null;
+      }
       return { ok: true, until_t_sim, until_at };
     },
     setParams(partial) {
@@ -250,7 +280,13 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
       const node = normNode(node0);
       const c = clusterOf.get(node) || clusters[0];
       const cycleS = P.fixed.green0S + P.fixed.green1S + 2 * P.yellowS + 2 * P.allRedS;   // 48 s danh nghĩa
-      return c.cycle + Math.floor(Math.max(0, tSim - c.tPhase) / cycleS);
+      const origin = c.offset_s || 0;   // gốc chu kỳ cố định (offset cụm), không cộng dồn nửa chu kỳ
+      return Math.floor((tSim - origin) / cycleS);
+    },
+    // Đồng bộ lại khi sim.reset(): pha về gốc, xóa ghi đè + mẫu KPI.
+    reset(tSim = 0) {
+      overrides.clear(); crossAcc.clear(); samples.length = 0;
+      for (const c of clusters) { c.group = 0; c.phase = GREEN; c.tPhase = tSim; c.cycleStart = tSim; c.cycle = 0; c.switches = 0; c.lastDecision = -Infinity; c.greenLen = P.minGreenS; c.ovTarget = null; }
     },
     runsRed: (i, node, st, tSim) => (redRun ? !!redRun(i, node, st, tSim) : false),
     attachSim(s) { simRef = s || null; return simRef; }

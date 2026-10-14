@@ -3,6 +3,9 @@
 // Quy tắc suy trục: đường cấp cao nhất qua nút (trunk > primary > …); cùng cấp thì
 // tổng chiều dài cạnh qua nút lớn nhất; trục = hướng trung bình modulo 180° của các
 // nhánh thuộc đường đó (đã tra trên road-graph-31.json).
+// HX-06 (Ngã tư Hàng Xanh ∩ Xô Viết Nghệ Tĩnh) có hai đường CÙNG CẤP; chọn trục Hàng Xanh
+// 171,4° vì gần trục dọc cụm Hàng Xanh (HX-01/HX-05 ≈ 160°) nên nhóm pha liền mạch dọc Điện
+// Biên Phủ – Hàng Xanh; Xô Viết Nghệ Tĩnh 98° lệch trục rõ rệt nên xếp nhóm 1.
 export const SIGNAL_PLAN_32_VERSION = 'signal-plan-32a';
 
 export const SIGNAL_PLAN_32 = [

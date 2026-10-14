@@ -34,39 +34,35 @@ test('phiên bản + tham số mặc định đúng hợp đồng', () => {
   assert.equal(SIGNAL_PARAMS_32.clusterM, 80);
 });
 
-test('isGreen fixed khớp chu kỳ 48 s (xanh 22/16, vàng 3, đỏ chung 2)', () => {
+test('isGreen fixed khớp chu kỳ 48 s (xanh 22/16, vàng 3, đỏ chung 2) và khớp stateOf 100 % bước', () => {
   const { net, controller, signalPlan } = setup({ withSim: false });
-  const node = signalPlan.signalNodes[0];
-  const stOf = (() => {
-    for (let s = 0; s < net.lanes.st.length; s++) {
-      const e = net.lanes.st[s] >> 1, dir = net.lanes.st[s] & 1 ? -1 : 1;
-      const to = dir > 0 ? net.E[e].to : net.E[e].from;
-      if (net.G.nodes[node].id === to) return net.lanes.st[s];   // ST CODE, không phải chỉ số làn
-    }
-    return -1;
-  })();
-  assert.ok(stOf >= 0);
-  assert.equal(controller.isGreen(node, stOf, 0), true);           // g0 xanh
-  assert.equal(controller.isGreen(node, stOf, 21.9), true);
-  assert.equal(controller.isGreen(node, stOf, 22), false);          // g0 vàng
-  assert.equal(controller.isGreen(node, stOf, 25.5), false);        // đỏ chung
-  const stOther = (() => {
-    for (let s = 0; s < net.lanes.st.length; s++) {
-      const e = net.lanes.st[s] >> 1, dir = net.lanes.st[s] & 1 ? -1 : 1;
-      const to = dir > 0 ? net.E[e].to : net.E[e].from;
-      if (net.G.nodes[node].id === to && net.arriveGroup[net.lanes.st[s]] === 1) return net.lanes.st[s];
-    }
-    return -1;
-  })();
-  if (stOther >= 0) {
-    assert.equal(controller.isGreen(node, stOther, 0), false);      // nhóm 1 đỏ khi g0 xanh
-    assert.equal(controller.isGreen(node, stOther, 27), true);      // g1 xanh (22+3+2)
-    assert.equal(controller.isGreen(node, stOther, 42.9), true);    // 22+3+2+16 = 43 hết xanh
-    assert.equal(controller.isGreen(node, stOther, 43), false);
-  }
+  const node = signalPlan.signalNodes[1];   // HX-02: có làn vào cả hai nhóm pha
+  const stOf = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
+  const st0 = stOf(0), st1 = stOf(1);
+  assert.ok(st0 >= 0 && st1 >= 0, 'HX-02 phải có làn vào cả hai nhóm');
+  assert.equal(controller.isGreen(node, st0, 0), true);           // g0 xanh
+  assert.equal(controller.isGreen(node, st0, 21.9), true);
+  assert.equal(controller.isGreen(node, st0, 22), false);          // g0 vàng
+  assert.equal(controller.isGreen(node, st0, 25.5), false);        // đỏ chung
+  assert.equal(controller.isGreen(node, st1, 0), false);           // nhóm 1 đỏ khi g0 xanh
+  assert.equal(controller.isGreen(node, st1, 27), true);           // g1 xanh (22+3+2)
+  assert.equal(controller.isGreen(node, st1, 42.9), true);         // 22+3+2+16 = 43 hết xanh
+  assert.equal(controller.isGreen(node, st1, 43), false);
   assert.equal(controller.stateOf(node, 0).cycle_s, 48);
-  assert.equal(controller.cycleIdOf(node, 0), 0);
-  assert.equal(controller.cycleIdOf(node, 48), 1);
+  // 480 s (bước nguyên): tỉ lệ xanh + isGreen khớp stateOf 100 %
+  let n0 = 0, n1 = 0, steps = 0, mismatch = 0;
+  for (let k = 0; k <= 4800; k++) {
+    const t = k * 0.1;
+    controller.update(t, new Map());
+    const ph = controller.stateOf(node, t).phases;
+    const g0 = controller.isGreen(node, st0, t), g1 = controller.isGreen(node, st1, t);
+    if (g0 !== (ph.find(p => p.group === 0).phase === 'green')) mismatch++;
+    if (g1 !== (ph.find(p => p.group === 1).phase === 'green')) mismatch++;
+    if (g0) n0++; if (g1) n1++; steps++;
+  }
+  assert.equal(mismatch, 0, 'isGreen phải khớp stateOf mọi bước');
+  assert.ok(Math.abs(n0 / steps - 22 / 48) < 0.02, `nhóm 0 xanh ${(n0 / steps * 100).toFixed(1)} %`);
+  assert.ok(Math.abs(n1 / steps - 16 / 48) < 0.02, `nhóm 1 xanh ${(n1 / steps * 100).toFixed(1)} %`);
 });
 
 test('SignalState có phases[].countdown_s, override null ban đầu', () => {
@@ -83,9 +79,10 @@ test('SignalState có phases[].countdown_s, override null ban đầu', () => {
 
 test('max-pressure đổi pha đúng ngưỡng switchMargin; giữ pha khi chênh < margin', () => {
   const { net, controller, signalPlan } = setup({ mode: 'smart', withSim: false });
-  const node = signalPlan.signalNodes[0];
-  const st0 = (() => { for (let s = 0; s < net.lanes.st.length; s++) if (net.arriveGroup[s] === 0) { const e = net.lanes.st[s] >> 1, dir = net.lanes.st[s] & 1 ? -1 : 1; const to = dir > 0 ? net.E[e].to : net.E[e].from; if (to === net.G.nodes[node].id) return s; } return -1; })();
-  const st1 = (() => { for (let s = 0; s < net.lanes.st.length; s++) if (net.arriveGroup[s] === 1) { const e = net.lanes.st[s] >> 1, dir = net.lanes.st[s] & 1 ? -1 : 1; const to = dir > 0 ? net.E[e].to : net.E[e].from; if (to === net.G.nodes[node].id) return s; } return -1; })();
+  const node = signalPlan.signalNodes[1];   // HX-02: có làn vào cả hai nhóm
+  const pick = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
+  const st0 = pick(0), st1 = pick(1);
+  assert.ok(st0 >= 0 && st1 >= 0);
   const q = (rows) => new Map([[node, rows]]);
   // minGreenS = 8: giữ xanh với t ≤ 7 dù nhóm 1 đông hơn.
   for (let t = 0; t <= 7; t += 1) {
@@ -103,16 +100,30 @@ test('max-pressure đổi pha đúng ngưỡng switchMargin; giữ pha khi chên
   assert.ok(switchedAt >= 8 && switchedAt <= 20, `đổi pha tại t=${switchedAt}`);
 });
 
-test('overridePhase: giữ nhóm xanh, có until_t_sim + until_at; null để hủy', () => {
+test('overridePhase: đổi nhóm đi qua vàng 3 s + đỏ chung 2 s; có until_t_sim + until_at; null để hủy', () => {
   const { controller, signalPlan } = setup({ withSim: false });
   const node = signalPlan.signalNodes[0];
   const r = controller.overridePhase(node, 1, 60, 'officer1', 'ưu tiên xe cứu thương');
   assert.equal(r.ok, true);
   assert.equal(typeof r.until_t_sim, 'number');
   assert.match(r.until_at, /^\d{4}-\d{2}-\d{2}T.*Z$/);
-  const st = controller.stateOf(node, 0);
-  assert.equal(st.override.group, 1);
-  assert.equal(controller.stateOf(node, 0).phases.find(p => p.group === 1).phase, 'green');
+  const st0 = controller.stateOf(node, 0);
+  assert.equal(st0.override.group, 1);
+  // Ghi đè KHÔNG nhảy tức thì: nhóm 0 đang xanh → vàng ngay, nhóm 1 chưa xanh.
+  assert.equal(st0.phases.find(p => p.group === 0).phase, 'yellow');
+  assert.equal(st0.phases.find(p => p.group === 1).phase, 'red');
+  // Qua đỏ chung rồi nhóm 1 mới xanh (~5 s = vàng 3 + đỏ chung 2).
+  let sawAllRed = false, g1GreenAt = -1;
+  for (let k = 1; k <= 70; k++) {
+    const t = k * 0.1;
+    controller.update(t, new Map());
+    const p0 = controller.stateOf(node, t).phases.find(p => p.group === 0).phase;
+    const p1 = controller.stateOf(node, t).phases.find(p => p.group === 1).phase;
+    if (p0 === 'red' && p1 === 'red') sawAllRed = true;
+    if (p1 === 'green') { g1GreenAt = t; break; }
+  }
+  assert.ok(sawAllRed, 'phải đi qua đỏ chung');
+  assert.ok(g1GreenAt >= 4.9 && g1GreenAt <= 5.2, `nhóm 1 xanh tại t=${g1GreenAt}`);
   const c = controller.overridePhase(node, null, 0, 'officer1', 'hủy');
   assert.equal(c.ok, true);
   assert.equal(controller.stateOf(node, 0).override, null);
@@ -170,12 +181,84 @@ test('6 nút có node_id HX-01…HX-06, chỉ HX-01/HX-05 chung cụm HX-C1; met
 
 test('áp lực trừ q_out: hàng chờ bị làn ra triệt tiêu thì không đổi pha', () => {
   const { net, controller, signalPlan } = setup({ mode: 'smart', withSim: false });
-  const node = signalPlan.signalNodes[0];
-  const pick = g => { for (let s = 0; s < net.lanes.st.length; s++) if (net.arriveGroup[s] === g) { const e = net.lanes.st[s] >> 1, dir = net.lanes.st[s] & 1 ? -1 : 1; const to = dir > 0 ? net.E[e].to : net.E[e].from; if (to === net.G.nodes[node].id) return s; } return -1; };
+  const node = signalPlan.signalNodes[1];   // HX-02: có làn vào cả hai nhóm
+  const pick = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
   const rows = new Map([[node, [
     { st: pick(0), group: 0, count: 1, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0, q_out: 0 },
     { st: pick(1), group: 1, count: 20, wait_sum_s: 40, wait_max_s: 3, speed_mean: 0, crossed: 0, q_out: 20 }
   ]]]);
   for (let t = 0; t <= 20; t += 1) controller.update(t, rows);
   assert.equal(controller.stateOf(node, 20).phases.find(p => p.group === 0).phase, 'green');
+});
+
+test('smart: áp lực cân bằng giữ pha, isGreen xanh tới maxGreen 45 s rồi mới đổi', () => {
+  const { net, controller, signalPlan } = setup({ mode: 'smart', withSim: false });
+  const node = signalPlan.signalNodes[1];
+  const st0 = (() => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === 0) return net.lanes.st[l]; return -1; })();
+  const st1 = (() => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === 1) return net.lanes.st[l]; return -1; })();
+  const rows = new Map([[node, [
+    { st: st0, group: 0, count: 5, wait_sum_s: 10, wait_max_s: 2, speed_mean: 1, crossed: 0 },
+    { st: st1, group: 1, count: 5, wait_sum_s: 10, wait_max_s: 2, speed_mean: 1, crossed: 0 }
+  ]]]);
+  let lastGreenT = -1, switchedAt = -1;
+  for (let k = 0; k <= 600; k++) {
+    const t = k * 0.1;
+    controller.update(t, rows);
+    const g = controller.isGreen(node, st0, t);
+    if (g) lastGreenT = t;
+    else if (switchedAt < 0 && t > 1) switchedAt = t;
+  }
+  assert.ok(lastGreenT >= 44.9, `nhóm 0 xanh tới ${lastGreenT}`);
+  assert.ok(switchedAt >= 45 && switchedAt <= 45.5, `đổi pha tại ${switchedAt}`);
+});
+
+test('cycleIdOf = floor((t − origin)/48): t=96→2, t=120→2', () => {
+  const { controller, signalPlan } = setup({ withSim: false });
+  const node = signalPlan.signalNodes[0];   // HX-01 offset 0
+  assert.equal(controller.cycleIdOf(node, 0), 0);
+  assert.equal(controller.cycleIdOf(node, 48), 1);
+  assert.equal(controller.cycleIdOf(node, 96), 2);
+  assert.equal(controller.cycleIdOf(node, 120), 2);
+});
+
+test('flow_per_min cộng dồn crossed mỗi bước rồi lấy mẫu 1 s (không chỉ bước trùng mốc)', () => {
+  const { controller, signalPlan } = setup({ withSim: false });
+  const node = signalPlan.signalNodes[0];
+  const rows = new Map([[node, [{ st: 0, group: 0, count: 1, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 1 }]]]);
+  for (let k = 1; k <= 1200; k++) controller.update(k * 0.1, rows);   // 120 s, 1 sự kiện/0,1 s
+  const row = controller.metrics(120).by_node.find(r => r.node_id === 'HX-01');
+  assert.ok(row.flow_per_min >= 599 && row.flow_per_min <= 601, `flow=${row.flow_per_min} (kỳ vọng 600)`);
+});
+
+test('wait_avg dùng mẫu số Σcount (dòng count=0 không kéo lệch trung bình)', () => {
+  const { controller, signalPlan } = setup({ withSim: false });
+  const node = signalPlan.signalNodes[0];
+  const rows = new Map([[node, [
+    { st: -1, group: 0, count: 0, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 3 },
+    { st: 1, group: 0, count: 5, wait_sum_s: 10, wait_max_s: 3, speed_mean: 0, crossed: 0 }
+  ]]]);
+  for (let k = 1; k <= 61; k++) controller.update(k, rows);
+  assert.equal(controller.metrics(61).wait_avg_s, 2);   // 10/5, không phải 10/6
+});
+
+test('reset(): đưa pha về gốc (nhóm 0 xanh) và xóa ghi đè', () => {
+  const { net, sim, controller, signalPlan } = setup({ mode: 'fixed' });
+  const node = signalPlan.signalNodes[0];
+  for (let k = 0; k < 300; k++) sim.step();   // 30 s → nhóm 0 đã hết xanh
+  assert.notEqual(controller.stateOf(node, sim.counters.t).phases.find(p => p.group === 0).phase, 'green');
+  sim.reset();
+  assert.equal(sim.counters.t, 0);
+  assert.equal(controller.stateOf(node, 0).phases.find(p => p.group === 0).phase, 'green');
+});
+
+test('stateOf nút 31A ngoài kế hoạch: cụm 31A-n, chu kỳ 44 s (không rơi vào HX-C1)', () => {
+  const { net, controller, signalPlan } = setup({ withSim: false });
+  const planSet = new Set(signalPlan.signalNodes);
+  let outside = -1;
+  for (let n = 0; n < net.signal.length; n++) if (net.signal[n] && !planSet.has(n)) { outside = n; break; }
+  assert.ok(outside >= 0, 'cần ≥ 1 nút đèn 31A ngoài kế hoạch');
+  const st = controller.stateOf(outside, 0);
+  assert.equal(st.cycle_s, 44);
+  assert.equal(st.cluster_id, `31A-${outside}`);
+  assert.notEqual(st.cluster_id, 'HX-C1');
 });

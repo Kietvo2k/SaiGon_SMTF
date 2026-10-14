@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
-import { buildTrafficNetwork31, createTrafficSim31, SEED, STEP } from '../city-traffic-sim-31.js?v=32a';
+import { buildTrafficNetwork31, createTrafficSim31, SEED } from '../city-traffic-sim-31.js?v=32a';
 import { buildSignalPlan32 } from '../signal-plan-32.js?v=32a';
 import { createSignalController32 } from '../traffic-controller-32.js?v=32a';
 
@@ -17,7 +17,7 @@ const WIDTHS = { motorway: 16, trunk: 15, primary: 14, secondary: 11, tertiary: 
 const widthOf = i => D.roads[i].lanes ? Math.max(WIDTHS[D.roads[i].type] || 4, D.roads[i].lanes * 3.1) : WIDTHS[D.roads[i].type] || 4;
 const drawn = i => !D.roads[i].tunnel && G.roads[i].skipRender !== 'hide';
 
-test('không tham số mới: hành vi 31A y nguyên (signal 11 nút, breaker 50 s, hash ổn định)', () => {
+test('không tham số mới: hành vi 31A y nguyên (signal 86 nút, breaker 50 s, hash ổn định)', () => {
   const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn });
   const sim = createTrafficSim31(net);
   let signals = 0;
@@ -108,4 +108,42 @@ test('nút 31A có đèn ngoài plan không do controller quản (giữ đèn 31
   const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: Infinity, seed: SEED });
   for (let k = 0; k < 1200; k++) sim.step();
   assert.ok(sim.stats().edgeTransitions > 0, 'giao thông vẫn chảy qua nút 31A ngoài plan khi có controller');
+});
+
+test('buildQueues: q_out lấy từ làn RA (25 m đầu), không phải làn vào', () => {
+  const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
+  const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
+  const controller = createSignalController32({ net, sim: null, mode: 'fixed' });
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: Infinity, seed: SEED });
+  const realUpdate = controller.update;
+  let sawOutRow = false, sawInRowWithQout = false;
+  controller.update = (t, queues) => {
+    if (queues instanceof Map) for (const [, rows] of queues) for (const r of rows) {
+      if (r.st === -1 && r.count === 0 && (r.q_out || 0) > 0) sawOutRow = true;
+      if (r.st !== -1 && (r.q_out || 0) > 0) sawInRowWithQout = true;
+    }
+    return realUpdate(t, queues);
+  };
+  for (let k = 0; k < 400; k++) sim.step();
+  assert.ok(sawOutRow, 'phải có dòng làn RA (count 0, q_out > 0)');
+  assert.ok(!sawInRowWithQout, 'dòng làn vào không được gán q_out');
+});
+
+test('isGreen qua beginStep/workStep/finishStep khớp stateOf (HX-02 có cả hai nhóm)', () => {
+  const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
+  const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
+  const controller = createSignalController32({ net, sim: null, mode: 'fixed' });
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: Infinity, seed: SEED });
+  const node = signalPlan.signalNodes[1];
+  const pick = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
+  const st0 = pick(0), st1 = pick(1);
+  assert.ok(st0 >= 0 && st1 >= 0);
+  let mismatch = 0;
+  for (let k = 0; k < 600; k++) {
+    sim.beginStep(); sim.workStep(Infinity); sim.finishStep();
+    const t = sim.counters.t, ph = controller.stateOf(node, t).phases;
+    if (controller.isGreen(node, st0, t) !== (ph.find(p => p.group === 0).phase === 'green')) mismatch++;
+    if (controller.isGreen(node, st1, t) !== (ph.find(p => p.group === 1).phase === 'green')) mismatch++;
+  }
+  assert.equal(mismatch, 0, 'isGreen phải khớp stateOf qua chuỗi beginStep/workStep/finishStep');
 });

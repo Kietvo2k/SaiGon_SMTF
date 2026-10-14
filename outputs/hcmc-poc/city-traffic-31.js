@@ -3,6 +3,7 @@
 import * as THREE from 'three/webgpu';
 import { attribute, mix, vec3 } from 'three/tsl';
 import { TRAFFIC_31_VERSION, TRAFFIC_KINDS, LIGHT_FACTOR, STEP, MAX_STEPS_PER_FRAME, SEED, hashU32, buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
+import { createSignalController32 } from './traffic-controller-32.js?v=32a';
 
 // ---------------------------------------------------------------- hình xe: khối đa diện có vát + bánh lăng trụ, màu đỉnh + mặt nạ sơn + phát sáng
 // Mỗi khối là tập mặt lồi; pháp tuyến hướng ra ngoài theo tâm khối nên không phụ thuộc thứ tự đỉnh. Bỏ mặt đáy và mặt khuất.
@@ -147,7 +148,7 @@ const paintOf = (kind, i) => { const p = PALETTES[kind]; return p[hashU32((i * 3
 export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null, signalPlan = null, controller = null, breakerS = undefined, seed = undefined }) {
   const t0 = performance.now();
   const net = buildTrafficNetwork31({ graph, roads, widthOf, drawn, signalPlan });
-  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: breakerS === undefined ? undefined : breakerS, seed });
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS, seed });
   const { lanes } = net;
   // ---- Nâng y theo mặt đường vẽ: mặt cao nhất trong 0,5 m trên profile làn (dốc/mảnh đoạn chồng nhau, như baseline 30B).
   // Tính tại đúng vị trí xe (không bảng nội suy) nên không tụt dưới đỉnh giữa hai mẫu.
@@ -336,11 +337,14 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
       return api.setVisibleFraction(f);
     },
     get controller() { return sim.controller; },
-    signalState: nodeId => {
-      const c = sim.controller;
-      if (!c) return null;
-      const idx = typeof nodeId === 'string' ? net.G.nodes.findIndex(n => String(n.id) === nodeId) : nodeId;
-      return idx >= 0 ? c.stateOf(idx, sim.counters.t) : null;
+    // Trạng thái đèn cho UI: gọi thẳng controller.stateOf(nodeId) (nhận cả node_id HX-xx lẫn chỉ số/OSM);
+    // nút 31A ngoài kế hoạch do controller trả trạng thái chu kỳ 44 s riêng.
+    signalState: nodeId => (sim.controller ? sim.controller.stateOf(nodeId, sim.counters.t) : null),
+    // Dựng controller từ net đã có (không dựng net hai lần) rồi gắn vào sim; giữ tham số khởi tạo cũ.
+    attachController: (opts = {}) => {
+      const c = opts.controller || createSignalController32({ net, sim, ...opts });
+      sim.attachController(c);
+      return c;
     },
     setSignalMode: mode => (sim.controller ? sim.controller.setMode(mode) : { ok: false, mode: null }),
     overridePhase: (node, group, duration_s, by, reason) => (sim.controller ? sim.controller.overridePhase(node, group, duration_s, by, reason) : { ok: false, until_t_sim: 0, until_at: '' }),
