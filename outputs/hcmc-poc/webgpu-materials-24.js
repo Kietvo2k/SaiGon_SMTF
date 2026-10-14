@@ -16,7 +16,7 @@ import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=31
 import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=31a';
 import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=31a';
 import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=31a';
-import { REGION_ALL_ID, REGION_URL_PARAM, REGIONS_31, regionById, regionOf, regionContains } from './city-region-31.js?v=31a';
+import { REGION_ALL_ID, REGION_URL_PARAM, REGION_STORAGE_KEY, REGIONS_31, regionById, regionOf, regionContains } from './city-region-31.js?v=31a';
 import { DENSITY_STORAGE_KEY, MODE_URL_PARAM, anisotropyForMode, createModeController, modeById, resolveMode, textureUrlsForMode } from './city-mode-31.js?v=31a';
 import { createTraffic31 } from './city-traffic-31.js?v=31a';
 
@@ -742,7 +742,7 @@ if(isSmart32){({createTraffic31:createTraffic}=await import('./city-traffic-31.j
 const smartPrep=smartMod?await smartMod.prepareSmart32({graph:window.ROAD_GRAPH_31}):null;const smartSignalPlan=smartPrep?smartPrep.signalPlan:null;
 const traffic=createTraffic({scene:trafficGroup,graph:window.ROAD_GRAPH_31,roads:D.roads,widthOf:index=>roadWidth31(D.roads[index],widths),drawn:index=>!D.roads[index].tunnel&&window.ROAD_GRAPH_31.roads[index].skipRender!=='hide',roadNetwork,nightLevel,camera,getLight:()=>activeLight,status:materialStatus.traffic,motionStatus:materialStatus.motion,signalPlan:smartSignalPlan,breakerS:smartMod?smartMod.SMART_BREAKER_S:undefined});
 const smartApp=smartMod?smartMod.initSmartApp32({scene,camera,renderer,traffic,status:materialStatus.traffic,root:document}):null;
-if(smartApp){const {regionTrafficPayload}=await import('./city-region-31.js?v=31a');traffic.setRegion(regionTrafficPayload('bac'));window.__smartApp=smartApp;try{const cameras=await fetch('../smart-traffic/backend/app/seed/cameras.json').then(r=>r.json());smartMod.installSignals32(smartApp,{nodeMap:smartPrep.nodeMap,cameras,THREE});}catch(e){console.warn('signals32:',e);}}
+if(smartApp){const sq=new URLSearchParams(location.search);if(sq.get(REGION_URL_PARAM)!=='bac'){sq.set(REGION_URL_PARAM,'bac');history.replaceState(null,'',`?${sq}`);}try{localStorage.setItem(REGION_STORAGE_KEY,'bac');}catch{}const {regionTrafficPayload}=await import('./city-region-31.js?v=31a');traffic.setRegion(regionTrafficPayload('bac'));window.__smartApp=smartApp;try{const cameras=await fetch('../smart-traffic/backend/app/seed/cameras.json').then(r=>r.json());smartMod.installSignals32(smartApp,{nodeMap:smartPrep.nodeMap,cameras,THREE});}catch(e){console.warn('signals32:',e);}}
 document.body.dataset.motionVessels=String(vesselItems.length);document.body.dataset.motionVesselOutside=String(vesselSamplesOutsideWater);document.body.dataset.motionVesselHeadingMismatch=String(vesselHeadingMismatches);
 
 const fixtureMaterial=new THREE.MeshStandardNodeMaterial({color:'#6d7772',roughness:.68,metalness:.2});
@@ -811,6 +811,7 @@ const presets={
 const regionPreset=id=>{const region=regionById(id),view=region.view;return {target:new THREE.Vector3(...view.target),distance:view.distance,az:view.az,polar:view.polar,label:`KHU · ${region.label.toUpperCase()}`};};
 function resolveView(key,region){
   const base=presets[key];if(!base)return null;
+  if(isSmart32)return {key,preset:base,switchTo:null};
   if(region===REGION_ALL_ID)return {key,preset:base,switchTo:null};
   if(key==='overview')return {key,preset:regionPreset(region),switchTo:null};
   const owner=regionOf(base.target.x,base.target.z);
@@ -854,6 +855,13 @@ const regionParam=()=>new URLSearchParams(location.search).get(REGION_URL_PARAM)
 document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>selectView(button.dataset.view));
 selectView(startKey);
 materialStatus.selectView=selectView;
+// T9b — app smart: panel "Tham quan" = 5 góc khu Bắc (toạ độ từ node_map/registry/road graph) + công tắc vùng quan sát camera.
+if(isSmart32&&smartApp){
+  const north=smartMod.buildNorthViews32({graph:window.ROAD_GRAPH_31,nodeMap:smartPrep.nodeMap,registry:window.SIGNATURE_REGISTRY_31});
+  for(const [key,view] of Object.entries(north.views))presets[key]={target:new THREE.Vector3(...view.target),distance:view.distance,az:view.az,polar:view.polar,label:view.label};
+  smartMod.installNorthTour32(smartApp,{views:north.views,onSelect:key=>selectView(key)});
+  smartApp.modules.signals?.setConeVisible?.(activeView==='hx');
+}
 // Bước I 31A — Chế độ Preview/Lite. Đổi mode cần dựng lại pipeline chất lượng (presentation ↔ performance)
 // nên tải lại trang có giữ trạng thái (view, light, region) và có thông báo rõ; density tay đã lưu trước đó
 // bị preset của mode mới ghi đè (đúng "chỉnh tay được giữ cho tới khi đổi mode"), quality/density trên URL

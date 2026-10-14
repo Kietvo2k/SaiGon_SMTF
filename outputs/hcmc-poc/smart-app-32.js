@@ -3,6 +3,7 @@
 // Các task sau (T9/T10/T11/T14) KHÔNG đổi chữ ký — chỉ mở rộng qua app.registerSmartModule32(name, mod).
 import { buildSignalPlan32 } from './signal-plan-32.js?v=32a';
 import { createSignalController32 } from './traffic-controller-32.js?v=32a';
+import { regionById } from './city-region-31.js?v=31a';
 // T9 — đèn 3D Hàng Xanh: tái xuất để webgpu-materials-24.js gọi qua `smartMod.installSignals32`.
 export { createTrafficSignals32, installSignals32 } from './traffic-signals-32.js?v=32a';
 
@@ -85,6 +86,104 @@ export async function prepareSmart32({ graph }) {
   const res = await fetch('../smart-traffic/backend/app/seed/node_map.json');
   const nodeMap = await res.json();
   return { signalPlan: buildSignalPlan32({ graph, nodeMap }), nodeMap };
+}
+
+// T9b — Panel "Tham quan" của app smart: 5 góc nhìn khu Bắc. Toạ độ suy từ node_map / signature registry / road graph,
+// không đoán tay. Trả về toạ độ mảng [x,y,z] để webgpu-materials-24.js tự bọc THREE.Vector3 (file này chạy được Node).
+export const NORTH_TOUR_32 = [
+  { key: 'hx', label: 'Ngã tư Hàng Xanh' },
+  { key: 'l81', label: 'Landmark 81' },
+  { key: 'csg', label: 'Cầu Sài Gòn' },
+  { key: 'ctn', label: 'Cầu Thị Nghè' },
+  { key: 'bac', label: 'Toàn khu Bắc' }
+];
+export const NORTH_CONE_KEY_32 = 'hx';   // góc cận cảnh: bật "Vùng quan sát camera" mặc định
+
+const centerOf32 = values => {
+  const list = (values || []).filter(Number.isFinite);
+  return list.length ? list.reduce((a, b) => a + b, 0) / list.length : null;
+};
+const placeAnchor32 = (registry, key) => {
+  const entries = registry && Array.isArray(registry.entries) ? registry.entries : [];
+  const entry = entries.find(e => e && e.key === key);
+  return entry && Array.isArray(entry.anchor) ? [entry.anchor[0], 0, entry.anchor[1]] : null;
+};
+function roadCenter32(graph, pred) {
+  if (!graph || !Array.isArray(graph.roads) || !Array.isArray(graph.nodes)) return null;
+  const byId = new Map(graph.nodes.map(n => [n.id, n]));
+  let x = 0, z = 0, n = 0;
+  for (const road of graph.roads) {
+    if (!pred(road)) continue;
+    for (const id of road.nodes || []) { const nd = byId.get(id); if (nd) { x += nd.x; z += nd.z; n++; } }
+  }
+  return n ? [x / n, 0, z / n] : null;
+}
+
+export function buildNorthViews32({ graph = null, nodeMap = [], registry = null } = {}) {
+  const hx = [centerOf32((nodeMap || []).map(m => m.x)) ?? -130, 0, centerOf32((nodeMap || []).map(m => m.z)) ?? -2450];
+  const l81 = placeAnchor32(registry, 'place-landmark-81') || [1137.3, 0, -1758.13];
+  const sgIds = new Set(((registry && registry.entries) || [])
+    .filter(e => e && e.kind === 'bridge' && /^Cầu Sài Gòn/.test(e.label || ''))
+    .flatMap(e => e.ids || []).map(Number));
+  const csg = (sgIds.size ? roadCenter32(graph, r => sgIds.has(Number(r.id))) : null)
+    || roadCenter32(graph, r => /Cầu Sài Gòn/.test(r.name || '')) || [1713, 0, -2201];
+  const ctn = roadCenter32(graph, r => /Cầu Thị Nghè/.test(r.name || '')) || [-800, 0, -350];
+  const region = regionById('bac');
+  const bacView = (region && region.view) || { target: [-800, 0, -1950], distance: 5000, az: .45, polar: .63 };
+  const views = {
+    hx: { target: hx, distance: 120, az: 0.6, polar: 1.1, label: 'Ngã tư Hàng Xanh · cận cảnh' },
+    l81: { target: l81, distance: 420, az: 0.6, polar: 1.02, label: 'LANDMARK 81' },
+    csg: { target: csg, distance: 340, az: 0.95, polar: 1.05, label: 'CẦU SÀI GÒN' },
+    ctn: { target: ctn, distance: 300, az: 0.7, polar: 1.05, label: 'CẦU THỊ NGHÈ' },
+    bac: { target: [...bacView.target], distance: bacView.distance, az: bacView.az, polar: bacView.polar, label: 'KHU · PHÍA BẮC · THỊ NGHÈ · BÌNH THẠNH' }
+  };
+  return { views, tour: NORTH_TOUR_32 };
+}
+
+// Thay panel "Tham quan" (#cityNav) sang các góc khu Bắc + công tắc "Vùng quan sát camera" (mặc định bật ở góc cận cảnh).
+export function installNorthTour32(app, { views = {}, onSelect = null } = {}) {
+  const root = app.root || document;
+  const doc = root.documentElement ? root : document;
+  const nav = root.querySelector('#cityNav');
+  if (nav) { const h = nav.querySelector('.nav-head h2'); if (h) h.textContent = 'Khu Bắc'; }
+  const box = nav && nav.querySelector('.nav-views');
+  const buttons = [];
+  if (box) {
+    box.setAttribute('aria-label', 'Chọn góc nhìn khu Bắc');
+    box.textContent = '';
+    for (const item of NORTH_TOUR_32) {
+      if (!views[item.key]) continue;
+      const button = doc.createElement('button');
+      button.type = 'button';
+      button.dataset.view = item.key;
+      button.textContent = item.label;
+      buttons.push(button);
+      box.append(button);
+    }
+  }
+  const signals = app.modules && app.modules.signals;
+  let toggle = null;
+  const setCone = on => { if (signals && typeof signals.setConeVisible === 'function') signals.setConeVisible(!!on); };
+  const pick = key => {
+    const on = key === NORTH_CONE_KEY_32;
+    setCone(on);
+    if (toggle) toggle.checked = on;
+    if (onSelect) onSelect(key);
+  };
+  for (const button of buttons) button.onclick = () => pick(button.dataset.view);
+  const body = nav && nav.querySelector('.nav-body');
+  if (body) {
+    const label = doc.createElement('label');
+    label.className = 'nav-cone';
+    const input = doc.createElement('input');
+    input.type = 'checkbox';
+    input.id = 'coneToggle';
+    label.append(input, doc.createTextNode(' Vùng quan sát camera'));
+    body.append(label);
+    toggle = input;
+    input.addEventListener('change', () => setCone(input.checked));
+  }
+  return { buttons, setCone, pick, get toggle() { return toggle; }, toggleEl: toggle };
 }
 
 export function initSmartApp32({ scene, camera, renderer, traffic, status, root = document, mode = 'smart' }) {
