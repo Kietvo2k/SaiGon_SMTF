@@ -4,7 +4,8 @@ import { SIGNAL_PLAN_32 } from './signal-plan-32.js?v=32a';
 export const CONTROLLER_32_VERSION = 'controller-32a';
 export const SIGNAL_PARAMS_32 = Object.freeze({
   yellowS: 3, allRedS: 2, minGreenS: 8, maxGreenS: 45, decisionIntervalS: 1, switchMargin: 0.15,
-  fixed: Object.freeze({ green0S: 22, green1S: 16 }), clusterM: 80
+  fixed: Object.freeze({ green0S: 22, green1S: 16 }), clusterM: 80,
+  algorithm: 'max-pressure'
 });
 
 const GREEN = 'green', YELLOW = 'yellow', RED = 'red';
@@ -26,13 +27,13 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
   const clusters = [], clusterOf = new Map();
   if (net.signalPlan && net.signalPlan.clusters) {
     for (const c of net.signalPlan.clusters) {
-      const st = { cluster_id: c.cluster_id, nodeIds: [...c.nodeIds], offset_s: c.offset_s, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null };
+      const st = { cluster_id: c.cluster_id, nodeIds: [...c.nodeIds], offset_s: c.offset_s, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null, bHeld: false, bLast: -Infinity, cLast: -Infinity };
       clusters.push(st);
       for (const n of c.nodeIds) clusterOf.set(n, st);
     }
   } else {
     // Không có signalPlan: một cụm ảo cho mọi nút có đèn 31A (hành vi fixed theo SIGNAL_CYCLE giữ ở sim).
-    const st = { cluster_id: 'NET-C1', nodeIds: [], offset_s: 0, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null };
+    const st = { cluster_id: 'NET-C1', nodeIds: [], offset_s: 0, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null, bHeld: false, bLast: -Infinity, cLast: -Infinity };
     for (let n = 0; n < net.signal.length; n++) if (net.signal[n]) { st.nodeIds.push(n); clusterOf.set(n, st); }
     clusters.push(st);
   }
@@ -60,6 +61,7 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     } else if (c.phase === GREEN) c.phase = YELLOW;
     else c.phase = RED;
     c.tPhase = tSim;
+    c.bHeld = false; c.bLast = -Infinity; c.cLast = -Infinity;
   };
   const pressure = (c, queues, g) => {
     let p = 0;
@@ -71,8 +73,33 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     }
     return p;
   };
-  const decision = (c, tSim, queues) => {
-    if (curMode !== 'smart' || c.phase !== GREEN) return;
+  // ---- Biến thể thuật toán (cờ `algorithm`). Mặc định 'max-pressure' = hành vi cũ.
+  // Bản đồ làn → nút đích + nhóm pha + vị trí vạch, để đọc trực tiếp trạng thái xe từ sim
+  // (giao diện `queues` không có khoảng cách/khe tới; B/C cần số liệu 150 m và khe cảm biến 30 m).
+  const laneStat = new Array(net.lanes.to.length);
+  for (let l = 0; l < laneStat.length; l++) {
+    const t = net.lanes.to[l];
+    if (clusterOf.has(t)) laneStat[l] = { node: t, group: net.arriveGroup[net.lanes.st[l]], stop: net.lanes.length[l] - (net.Rz[t] || 0) };
+  }
+  // Mẫu tiếp cận mỗi bước: hàng chờ, khe gần nhất ≤30 m và số xe ≤150 m theo nhóm (một lượt O(N)).
+  const sampleApproach = () => {
+    if (!simRef) return null;
+    const res = new Map();
+    const get = n => { let r = res.get(n); if (!r) { r = { wait: [0, 0], gap: [Infinity, Infinity], cnt150: [0, 0] }; res.set(n, r); } return r; };
+    for (let i = 0; i < simRef.N; i++) {
+      if (!simRef.active[i]) continue;
+      const st = laneStat[simRef.lane[i]]; if (!st) continue;
+      const g = st.group, dist = st.stop - simRef.s[i];
+      if (dist < -0.5) continue;
+      const rec = get(st.node), v = simRef.v[i];
+      if (dist <= 150) rec.cnt150[g]++;
+      if (v < 0.5 || dist <= 25) rec.wait[g]++;
+      if (v >= 0.5 && dist <= 30) { const gp = dist / Math.max(v, 0.5); if (gp < rec.gap[g]) rec.gap[g] = gp; }
+    }
+    return res;
+  };
+  // A `max-pressure`: áp lực hàng chờ vào − q_out làn ra; khung quyết định 1 s.
+  const decideA = (c, tSim, queues) => {
     const elapsed = tSim - c.tPhase;
     if (elapsed < P.minGreenS) return;
     if (elapsed - (c.lastDecision - c.tPhase) < P.decisionIntervalS && elapsed < P.maxGreenS) return;
@@ -82,6 +109,59 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     const want = p0 > p1 ? 0 : 1;
     if (elapsed >= P.maxGreenS || (margin >= P.switchMargin && want !== c.group)) { c.greenLen = elapsed; advancePhase(c, tSim); }
     else c.greenLen = elapsed;   // giữ pha: độ dài xanh lớn dần tới maxGreen (isGreen không cắt đỏ sớm)
+  };
+  // B `actuated-gap`: giữ xanh khi còn xe tới trong khe ≤2,5 s ở cảm biến ảo cách vạch 30 m;
+  // tối thiểu 8 s, tối đa 45 s; hết khe hoặc tới tối đa thì chuyển nếu nhóm kia chờ ≥1; không ai chờ thì giữ.
+  const decideB = (c, tSim, queues, sample) => {
+    const elapsed = tSim - c.tPhase;
+    if (elapsed < P.minGreenS) { c.bHeld = false; return; }
+    if (elapsed - (c.bLast - c.tPhase) < P.decisionIntervalS && elapsed < P.maxGreenS) return;
+    c.bLast = tSim;
+    const g = c.group, other = g === 0 ? 1 : 0;
+    let otherWait = 0, gapNow = Infinity;
+    if (sample) {
+      for (const n of c.nodeIds) { const r = sample.get(n); if (!r) continue; otherWait += r.wait[other]; gapNow = Math.min(gapNow, r.gap[g]); }
+    } else {
+      for (const n of c.nodeIds) for (const r of (queues.get(n) || [])) {
+        if (r.group === other) otherWait += (r.count || 0);
+        if (r.group === g && (r.speed_mean || 0) >= 0.5 && (r.count || 0) > 0) gapNow = 1;
+      }
+    }
+    const gapOk = gapNow <= 2.5;
+    if (elapsed >= P.maxGreenS) {
+      if (otherWait >= 1) { c.greenLen = elapsed; c.bHeld = false; advancePhase(c, tSim); }
+      else { c.greenLen = elapsed; c.bHeld = true; }   // tới tối đa nhưng không ai chờ → giữ
+    } else if (!gapOk && otherWait >= 1) { c.greenLen = elapsed; c.bHeld = false; advancePhase(c, tSim); }
+    else { c.greenLen = elapsed; c.bHeld = false; }
+  };
+  // C `max-pressure-150`: áp lực = số xe ≤150 m trước vạch (trọng số theo thời gian chờ) − xe 25 m đầu làn ra;
+  // khung quyết định 5 s; cụm quyết định chung cho mọi nút trong cụm (đã đúng theo `clusters`).
+  const decideC = (c, tSim, queues, sample) => {
+    const elapsed = tSim - c.tPhase;
+    if (elapsed < P.minGreenS) return;
+    const interval = 5;
+    if (elapsed - (c.cLast - c.tPhase) < interval && elapsed < P.maxGreenS) return;
+    c.cLast = tSim;
+    const p = [0, 0], waitSum = [0, 0], qout = [0, 0];
+    for (const n of c.nodeIds) {
+      if (sample) { const r = sample.get(n); if (r) { p[0] += r.cnt150[0]; p[1] += r.cnt150[1]; } }
+      const rows = queues.get(n) || [];
+      for (const r of rows) {
+        if (r.st === -1) qout[r.group] += (r.q_out || 0);
+        else { if (!sample) p[r.group] += (r.count || 0); waitSum[r.group] += (r.wait_sum_s || 0); }
+      }
+    }
+    const Pg = [p[0] + waitSum[0] / 60 - qout[0], p[1] + waitSum[1] / 60 - qout[1]];
+    const total = Math.max(1, Pg[0] + Pg[1]), margin = Math.abs(Pg[0] - Pg[1]) / total;
+    const want = Pg[0] > Pg[1] ? 0 : 1;
+    if (elapsed >= P.maxGreenS || (margin >= P.switchMargin && want !== c.group)) { c.greenLen = elapsed; advancePhase(c, tSim); }
+    else c.greenLen = elapsed;
+  };
+  const decision = (c, tSim, queues, sample) => {
+    if (curMode !== 'smart' || c.phase !== GREEN) return;
+    if (P.algorithm === 'actuated-gap') return decideB(c, tSim, queues, sample);
+    if (P.algorithm === 'max-pressure-150') return decideC(c, tSim, queues, sample);
+    return decideA(c, tSim, queues);
   };
   const overrideOf = (node, tSim) => {
     const o = overrides.get(node);
@@ -157,14 +237,16 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
   };
   const update = (tSim, queues) => {
     const qmap = queues instanceof Map ? queues : new Map();
+    const sample = (curMode === 'smart' && P.algorithm !== 'max-pressure' && simRef) ? sampleApproach() : null;
     for (const c of clusters) {
-      decision(c, tSim, qmap);
+      decision(c, tSim, qmap, sample);
       // So theo BƯỚC NGUYÊN (tránh float làm mỗi pha dài thêm 0,1 s); tôn trọng maxGreen.
       const elapsed = tSim - c.tPhase;
       const maxLen = curMode === 'fixed' ? greenOf(c) : P.maxGreenS;
       if (c.phase === GREEN && curMode === 'smart') c.greenLen = Math.min(P.maxGreenS, Math.max(P.minGreenS, elapsed));
       const elapsedSteps = Math.round(elapsed * 10);
-      if (c.phase === GREEN && elapsedSteps >= Math.round(maxLen * 10)) advancePhase(c, tSim);
+      const skipMax = curMode === 'smart' && P.algorithm === 'actuated-gap' && c.bHeld;   // B: tới max mà không ai chờ → giữ
+      if (c.phase === GREEN && !skipMax && elapsedSteps >= Math.round(maxLen * 10)) advancePhase(c, tSim);
       else if (c.phase !== GREEN && elapsedSteps >= Math.round(phaseLen(c, c.phase) * 10)) advancePhase(c, tSim);
     }
     // crossed: cộng dồn mỗi bước vào bộ đệm; mẫu 1 s đọc rồi reset.
@@ -286,7 +368,7 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     // Đồng bộ lại khi sim.reset(): pha về gốc, xóa ghi đè + mẫu KPI.
     reset(tSim = 0) {
       overrides.clear(); crossAcc.clear(); samples.length = 0;
-      for (const c of clusters) { c.group = 0; c.phase = GREEN; c.tPhase = tSim; c.cycleStart = tSim; c.cycle = 0; c.switches = 0; c.lastDecision = -Infinity; c.greenLen = P.minGreenS; c.ovTarget = null; }
+      for (const c of clusters) { c.group = 0; c.phase = GREEN; c.tPhase = tSim; c.cycleStart = tSim; c.cycle = 0; c.switches = 0; c.lastDecision = -Infinity; c.greenLen = P.minGreenS; c.ovTarget = null; c.bHeld = false; c.bLast = -Infinity; c.cLast = -Infinity; }
     },
     runsRed: (i, node, st, tSim) => (redRun ? !!redRun(i, node, st, tSim) : false),
     attachSim(s) { simRef = s || null; return simRef; }

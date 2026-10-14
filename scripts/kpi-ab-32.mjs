@@ -17,6 +17,9 @@ const SEED_ARG = Number(args.seed ?? 31031);
 const DURATION = Number(args.duration ?? 600);
 const MODE = args.mode === 'smart' ? 'smart' : args.mode === 'both' ? 'both' : 'fixed';
 const SCENARIO = args.scenario ?? 'peak-hang-xanh';
+const ALGORITHM = args.algorithm ?? 'max-pressure';
+const EXTRA_PARAMS = {};
+for (const k of ['decisionIntervalS', 'switchMargin', 'minGreenS', 'maxGreenS']) if (args[k] !== undefined) EXTRA_PARAMS[k] = Number(args[k]);
 const OUT = args.out ?? `work/kpi-${MODE}-${SEED_ARG}.json`;
 const SEEDS = args.seeds
   ? args.seeds.split(',').flatMap(s => { const m = /^(\d+)-(\d+)$/.exec(s.trim()); return m ? Array.from({ length: Number(m[2]) - Number(m[1]) + 1 }, (_, k) => Number(m[1]) + k) : [Number(s)]; })
@@ -39,7 +42,7 @@ const drawn = i => !D.roads[i].tunnel && G.roads[i].skipRender !== 'hide';
 function runOnce(mode, seed, duration) {
   const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
   const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
-  const controller = createSignalController32({ net, sim: null, mode });
+  const controller = createSignalController32({ net, sim: null, mode, params: { algorithm: ALGORITHM, ...EXTRA_PARAMS } });
   const demand = SCENARIO === 'peak-hang-xanh' ? PEAK_HANG_XANH_DEMAND : null;
   // Kịch bản cao điểm cần dòng xe chảy (không kẹt cứng) để đo A1 → dùng breaker mặc định 50;
   // các kịch bản khác giữ Infinity (đồng bộ app=smart).
@@ -125,7 +128,7 @@ if (SEEDS) {
   writeMarkdown(summary, `${base}.md`);
   console.log(JSON.stringify({ scenario: SCENARIO, seeds: SEEDS, mean_delta_pct: +mean_delta_pct.toFixed(1), throughput_delta_pct: +throughput_delta_pct.toFixed(1), pass_threshold: summary.pass_threshold, out: `${base}.json` }));
 } else {
-  const result = runOnce(MODE, SEED_ARG, DURATION);
+  const result = runOnce(MODE === 'both' ? 'smart' : MODE, SEED_ARG, DURATION);
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, JSON.stringify(result, null, 2));
   console.log(JSON.stringify({ mode: MODE, seed: SEED_ARG, wait_avg_s_hx: result.wait_avg_s_hx, a1_delay_s_hx: result.a1_delay_s_hx, a1_crossings_hx: result.a1_crossings_hx, out: OUT }));

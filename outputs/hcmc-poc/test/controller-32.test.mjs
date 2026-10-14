@@ -100,6 +100,28 @@ test('max-pressure đổi pha đúng ngưỡng switchMargin; giữ pha khi chên
   assert.ok(switchedAt >= 8 && switchedAt <= 20, `đổi pha tại t=${switchedAt}`);
 });
 
+test('switchMargin được nối vào quyết định: margin nhỏ đổi pha, margin lớn giữ', () => {
+  const run = (switchMargin) => {
+    const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
+    const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
+    const controller = createSignalController32({ net, sim: null, mode: 'smart', params: { switchMargin } });
+    const node = signalPlan.signalNodes[1];   // HX-02
+    const pick = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
+    const rows = new Map([[node, [
+      { st: pick(0), group: 0, count: 10, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0 },
+      { st: pick(1), group: 1, count: 12, wait_sum_s: 24, wait_max_s: 2, speed_mean: 0, crossed: 0 }
+    ]]]);
+    const seq = [];
+    for (let t = 0; t <= 12; t += 1) { controller.update(t, rows); seq.push(controller.stateOf(node, t).phases.find(p => p.group === 0).phase); }
+    return seq;
+  };
+  const small = run(0.05);   // chênh 2/22 ≈ 0,09 ≥ 0,05 → đổi ngay sau minGreen
+  const big = run(0.5);      // chênh 0,09 < 0,5 → giữ pha tới maxGreen
+  assert.notDeepEqual(small, big, 'hai switchMargin phải cho chuỗi pha khác nhau');
+  assert.equal(big[12], 'green', 'margin lớn giữ pha');
+  assert.notEqual(small[12], 'green', 'margin nhỏ đã đổi pha');
+});
+
 test('overridePhase: đổi nhóm đi qua vàng 3 s + đỏ chung 2 s; có until_t_sim + until_at; null để hủy', () => {
   const { controller, signalPlan } = setup({ withSim: false });
   const node = signalPlan.signalNodes[0];
@@ -261,4 +283,45 @@ test('stateOf nút 31A ngoài kế hoạch: cụm 31A-n, chu kỳ 44 s (không r
   assert.equal(st.cycle_s, 44);
   assert.equal(st.cluster_id, `31A-${outside}`);
   assert.notEqual(st.cluster_id, 'HX-C1');
+});
+
+test('algorithm mặc định max-pressure; actuated-gap giữ xanh khi còn xe tới, khác max-pressure', () => {
+  assert.equal(SIGNAL_PARAMS_32.algorithm, 'max-pressure');
+  const seq = (algorithm) => {
+    const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
+    const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
+    const controller = createSignalController32({ net, sim: null, mode: 'smart', params: { algorithm } });
+    const node = signalPlan.signalNodes[1];
+    const pick = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
+    const rows = new Map([[node, [
+      { st: pick(0), group: 0, count: 1, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0 },
+      { st: pick(1), group: 1, count: 20, wait_sum_s: 40, wait_max_s: 3, speed_mean: 0, crossed: 0 }
+    ]]]);
+    const out = [];
+    for (let t = 0; t <= 20; t += 1) { controller.update(t, rows); out.push(controller.stateOf(node, t).phases.find(p => p.group === 0).phase); }
+    return out;
+  };
+  const mp = seq('max-pressure');
+  const gap = seq('actuated-gap');
+  assert.notDeepEqual(mp, gap, 'actuated-gap phải khác max-pressure');
+  assert.notEqual(mp[20], 'green', 'max-pressure đã đổi pha');
+  assert.equal(gap[20], 'green', 'actuated-gap giữ xanh khi còn xe tới trong khe');
+});
+
+test('max-pressure-150: áp lực 150 m theo nhóm đổi pha; khác actuated-gap', () => {
+  const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
+  const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
+  const controller = createSignalController32({ net, sim: null, mode: 'smart', params: { algorithm: 'max-pressure-150' } });
+  const node = signalPlan.signalNodes[1];
+  const pick = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
+  const rows = new Map([[node, [
+    { st: pick(0), group: 0, count: 1, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0 },
+    { st: pick(1), group: 1, count: 20, wait_sum_s: 40, wait_max_s: 3, speed_mean: 0, crossed: 0 }
+  ]]]);
+  let switchedAt = -1;
+  for (let t = 0; t <= 20; t += 1) {
+    controller.update(t, rows);
+    if (switchedAt < 0 && t >= 8 && controller.stateOf(node, t).phases.find(p => p.group === 0).phase !== 'green') switchedAt = t;
+  }
+  assert.ok(switchedAt >= 8 && switchedAt <= 20, `đổi pha tại t=${switchedAt}`);
 });
