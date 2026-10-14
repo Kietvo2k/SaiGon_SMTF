@@ -6,6 +6,9 @@ import { createSignalController32 } from './traffic-controller-32.js?v=32a';
 import { regionById } from './city-region-31.js?v=31a';
 // T9 — đèn 3D Hàng Xanh: tái xuất để webgpu-materials-24.js gọi qua `smartMod.installSignals32`.
 export { createTrafficSignals32, installSignals32 } from './traffic-signals-32.js?v=32a';
+// T10 — camera render-to-texture: tái xuất để webgpu-materials-24.js gọi `smartMod.installCameraCapture32`
+// (đặt `window.__smartCapture`). Giữ chữ ký initSmartApp32 không đổi.
+export { createCameraCapture32, installCameraCapture32, projectToCamera32, projectToPixel32 } from './camera-capture-32.js?v=32a';
 
 export const SMART_APP_32_VERSION = 'smart-app-32a';
 export const SMART_BREAKER_S = Infinity;

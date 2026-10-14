@@ -79,11 +79,12 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
       group.add(column);
       const coneLen = cam.range_m;
       const geometry = new THREE.ConeGeometry(Math.tan((cam.fov_deg * Math.PI / 180) / 2) * coneLen, coneLen, 18, 1, true);
+      // Một mặt (FrontSide) để nón không bị chồng lớp kép khiến trông đậm hơn mức cần.
       const cone = new THREE.Mesh(geometry,
-        new THREE.MeshBasicMaterial({ color: 0x69a7ff, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false }));
-      // Viền mảnh để thấy biên vùng quan sát mà không che mặt đường.
+        new THREE.MeshBasicMaterial({ color: 0x69a7ff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false }));
+      // Viền mảnh (≤ 0,1) để thấy biên vùng quan sát mà không che mặt đường.
       const frame = new THREE.Mesh(geometry,
-        new THREE.MeshBasicMaterial({ color: 0x9cc6ff, wireframe: true, transparent: true, opacity: 0.22, depthWrite: false }));
+        new THREE.MeshBasicMaterial({ color: 0x9cc6ff, wireframe: true, transparent: true, opacity: 0.08, depthWrite: false }));
       const yaw = cam.yaw_deg * Math.PI / 180, pitch = cam.pitch_deg * Math.PI / 180;
       const pos = new THREE.Vector3(
         cam.x + Math.cos(yaw) * coneLen / 2 * Math.cos(pitch),
