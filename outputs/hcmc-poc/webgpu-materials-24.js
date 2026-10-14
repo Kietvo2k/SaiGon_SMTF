@@ -739,10 +739,10 @@ materialStatus.traffic={};
 const smartQuery=new URLSearchParams(location.search);const isSmart32=smartQuery.get('app')==='smart';
 let createTraffic=createTraffic31,smartMod=null;
 if(isSmart32){({createTraffic31:createTraffic}=await import('./city-traffic-31.js?v=32a'));smartMod=await import('./smart-app-32.js?v=32a');}
-const smartSignalPlan=smartMod?(await smartMod.prepareSmart32({graph:window.ROAD_GRAPH_31})).signalPlan:null;
+const smartPrep=smartMod?await smartMod.prepareSmart32({graph:window.ROAD_GRAPH_31}):null;const smartSignalPlan=smartPrep?smartPrep.signalPlan:null;
 const traffic=createTraffic({scene:trafficGroup,graph:window.ROAD_GRAPH_31,roads:D.roads,widthOf:index=>roadWidth31(D.roads[index],widths),drawn:index=>!D.roads[index].tunnel&&window.ROAD_GRAPH_31.roads[index].skipRender!=='hide',roadNetwork,nightLevel,camera,getLight:()=>activeLight,status:materialStatus.traffic,motionStatus:materialStatus.motion,signalPlan:smartSignalPlan,breakerS:smartMod?smartMod.SMART_BREAKER_S:undefined});
 const smartApp=smartMod?smartMod.initSmartApp32({scene,camera,renderer,traffic,status:materialStatus.traffic,root:document}):null;
-if(smartApp){const {regionTrafficPayload}=await import('./city-region-31.js?v=31a');traffic.setRegion(regionTrafficPayload('bac'));window.__smartApp=smartApp;}
+if(smartApp){const {regionTrafficPayload}=await import('./city-region-31.js?v=31a');traffic.setRegion(regionTrafficPayload('bac'));window.__smartApp=smartApp;try{const cameras=await fetch('../smart-traffic/backend/app/seed/cameras.json').then(r=>r.json());smartMod.installSignals32(smartApp,{nodeMap:smartPrep.nodeMap,cameras,THREE});}catch(e){console.warn('signals32:',e);}}
 document.body.dataset.motionVessels=String(vesselItems.length);document.body.dataset.motionVesselOutside=String(vesselSamplesOutsideWater);document.body.dataset.motionVesselHeadingMismatch=String(vesselHeadingMismatches);
 
 const fixtureMaterial=new THREE.MeshStandardNodeMaterial({color:'#6d7772',roughness:.68,metalness:.2});

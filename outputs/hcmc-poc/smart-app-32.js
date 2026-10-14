@@ -3,6 +3,8 @@
 // Các task sau (T9/T10/T11/T14) KHÔNG đổi chữ ký — chỉ mở rộng qua app.registerSmartModule32(name, mod).
 import { buildSignalPlan32 } from './signal-plan-32.js?v=32a';
 import { createSignalController32 } from './traffic-controller-32.js?v=32a';
+// T9 — đèn 3D Hàng Xanh: tái xuất để webgpu-materials-24.js gọi qua `smartMod.installSignals32`.
+export { createTrafficSignals32, installSignals32 } from './traffic-signals-32.js?v=32a';
 
 export const SMART_APP_32_VERSION = 'smart-app-32a';
 export const SMART_BREAKER_S = Infinity;
