@@ -5,7 +5,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { buildTrafficNetwork31, createTrafficSim31, SEED } from '../city-traffic-sim-31.js?v=32a';
 import { buildSignalPlan32 } from '../signal-plan-32.js?v=32a';
-import { createSignalController32, SIGNAL_PARAMS_32, CONTROLLER_32_VERSION } from '../traffic-controller-32.js?v=32a';
+import { createSignalController32, SIGNAL_PARAMS_32, CONTROLLER_32_VERSION, CYCLE_MAX_PRESSURE_32, cycleMaxPressureSplit32 } from '../traffic-controller-32.js?v=32a';
 
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
@@ -306,6 +306,89 @@ test('algorithm mặc định max-pressure; actuated-gap giữ xanh khi còn xe 
   assert.notDeepEqual(mp, gap, 'actuated-gap phải khác max-pressure');
   assert.notEqual(mp[20], 'green', 'max-pressure đã đổi pha');
   assert.equal(gap[20], 'green', 'actuated-gap giữ xanh khi còn xe tới trong khe');
+});
+
+test('D cycle-max-pressure: chia 38 s tỉ lệ áp lực, kẹp [10,28], EMA α=0,5; 0 áp lực → 19/19', () => {
+  const eq = (a, b) => Math.abs(a - b) < 1e-9;
+  assert.equal(CYCLE_MAX_PRESSURE_32.cycleS, 48);
+  assert.equal(CYCLE_MAX_PRESSURE_32.greenTotalS, 38);
+  assert.deepEqual([CYCLE_MAX_PRESSURE_32.greenMinS, CYCLE_MAX_PRESSURE_32.greenMaxS], [10, 28]);
+  assert.equal(CYCLE_MAX_PRESSURE_32.emaAlpha, 0.5);
+  let r = cycleMaxPressureSplit32(null, [3, 7]);
+  assert.ok(eq(r.green0S, 11.4) && eq(r.green1S, 26.6), `tỉ lệ: ${r.green0S}/${r.green1S}`);
+  assert.deepEqual(r.ema, [3, 7]);
+  r = cycleMaxPressureSplit32(null, [100, 1]);   // kẹp trên
+  assert.ok(eq(r.green0S, 28) && eq(r.green1S, 10), `kẹp trên: ${r.green0S}/${r.green1S}`);
+  r = cycleMaxPressureSplit32(null, [1, 100]);   // kẹp dưới
+  assert.ok(eq(r.green0S, 10) && eq(r.green1S, 28), `kẹp dưới: ${r.green0S}/${r.green1S}`);
+  const e1 = cycleMaxPressureSplit32(null, [20, 0]);      // chu kỳ 1: ema = đo được
+  assert.deepEqual(e1.ema, [20, 0]);
+  const e2 = cycleMaxPressureSplit32(e1.ema, [0, 20]);    // chu kỳ 2: α=0,5 → (10,10)
+  assert.ok(eq(e2.ema[0], 10) && eq(e2.ema[1], 10), `EMA: ${e2.ema}`);
+  assert.ok(eq(e2.green0S, 19) && eq(e2.green1S, 19));
+  r = cycleMaxPressureSplit32(null, [0, 0]);     // không áp lực → chia đều
+  assert.ok(eq(r.green0S, 19) && eq(r.green1S, 19));
+});
+
+test('D cycle-max-pressure: chu kỳ 48 s, mặc định g0=19/g1=19, đúng 2 lần chuyển nhóm mỗi chu kỳ', () => {
+  const { controller, signalPlan } = setup({ mode: 'smart', params: { algorithm: 'cycle-max-pressure' }, withSim: false });
+  const node = signalPlan.signalNodes[1];
+  const phase = (t, g) => controller.stateOf(node, t).phases.find(p => p.group === g).phase;
+  assert.equal(controller.stateOf(node, 0).cycle_s, 48);
+  assert.ok(Math.abs(controller.stateOf(node, 0).phases.find(p => p.group === 0).countdown_s - 19) < 1e-6,
+    `xanh g0 mặc định 19 s, nhận ${controller.stateOf(node, 0).phases.find(p => p.group === 0).countdown_s}`);
+  let changes = 0, prevGroup = 0;
+  for (let k = 1; k <= 960; k++) {   // 96 s = 2 chu kỳ
+    const t = k * 0.1;
+    controller.update(t, new Map());
+    const cur = phase(t, 0) === 'green' ? 0 : (phase(t, 1) === 'green' ? 1 : prevGroup);
+    if (cur !== prevGroup) { changes++; prevGroup = cur; }
+  }
+  assert.equal(changes, 4, `2 lần chuyển nhóm/chu kỳ × 2 chu kỳ = 4, nhận ${changes}`);
+});
+
+test('E max-pressure-abs: chỉ chuyển khi (áp lực nhóm kia − nhóm hiện tại) ≥ switchAbs', () => {
+  const roll = (switchAbs) => {
+    const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
+    const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
+    const controller = createSignalController32({ net, sim: null, mode: 'smart',
+      params: { algorithm: 'max-pressure-abs', switchAbs, minGreenS: 10, maxGreenS: 300, maxRedS: 1000 } });
+    const node = signalPlan.signalNodes[1];
+    const pick = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
+    const rows = new Map([[node, [
+      { st: pick(0), group: 0, count: 10, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0 },
+      { st: pick(1), group: 1, count: 12, wait_sum_s: 24, wait_max_s: 2, speed_mean: 0, crossed: 0 }
+    ]]]);
+    let switchedAt = -1;
+    for (let t = 0; t <= 60; t += 1) {
+      controller.update(t, rows);
+      if (controller.stateOf(node, t).phases.find(p => p.group === 0).phase !== 'green') { switchedAt = t; break; }
+    }
+    return switchedAt;
+  };
+  assert.equal(roll(3), -1, 'chênh 2 < switchAbs 3 → giữ pha');
+  assert.equal(roll(2), 10, 'chênh 2 ≥ switchAbs 2 → đổi đúng tại minGreenS = 10');
+});
+
+test('E max-pressure-abs: chống đói — nhóm đỏ liên tục ≥ maxRedS được phục vụ dù áp lực thấp hơn', () => {
+  const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
+  const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
+  const controller = createSignalController32({ net, sim: null, mode: 'smart',
+    params: { algorithm: 'max-pressure-abs', switchAbs: 100, minGreenS: 10, maxGreenS: 300, maxRedS: 40 } });
+  const node = signalPlan.signalNodes[1];
+  const pick = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
+  const rows = new Map([[node, [
+    { st: pick(0), group: 0, count: 20, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0 },
+    { st: pick(1), group: 1, count: 1, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0 }
+  ]]]);
+  let g1GreenAt = -1;
+  for (let k = 0; k <= 600; k++) {
+    const t = k * 0.1;
+    controller.update(t, rows);
+    if (controller.stateOf(node, t).phases.find(p => p.group === 1).phase === 'green') { g1GreenAt = t; break; }
+  }
+  // Bắt đầu nhường tại t≈40 (maxRedS), qua vàng 3 + đỏ chung 2 → nhóm 1 xanh ở t≈45.
+  assert.ok(g1GreenAt >= 44.9 && g1GreenAt <= 45.5, `nhóm 1 được phục vụ tại t≈45 (40 + vàng 3 + đỏ chung 2), nhận ${g1GreenAt}`);
 });
 
 test('max-pressure-150: áp lực 150 m theo nhóm đổi pha; khác actuated-gap', () => {

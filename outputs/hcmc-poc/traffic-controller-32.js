@@ -4,9 +4,31 @@ import { SIGNAL_PLAN_32 } from './signal-plan-32.js?v=32a';
 export const CONTROLLER_32_VERSION = 'controller-32a';
 export const SIGNAL_PARAMS_32 = Object.freeze({
   yellowS: 3, allRedS: 2, minGreenS: 8, maxGreenS: 45, decisionIntervalS: 1, switchMargin: 0.15,
+  switchAbs: 3, maxRedS: 50,
   fixed: Object.freeze({ green0S: 22, green1S: 16 }), clusterM: 80,
   algorithm: 'max-pressure'
 });
+
+// Biến thể D `cycle-max-pressure` (T2d): chu kỳ cố định 48 s, chia 38 s xanh theo áp lực đo ở
+// chu kỳ trước, kẹp [10,28] s mỗi nhóm, làm mượt EMA α = 0,5.
+export const CYCLE_MAX_PRESSURE_32 = Object.freeze({
+  cycleS: 48, greenTotalS: 38, greenMinS: 10, greenMaxS: 28, emaAlpha: 0.5
+});
+
+// Hàm thuần (test được): trả ema + độ dài xanh hai nhóm cho chu kỳ tới.
+//   prevEma = null ở chu kỳ đầu (ema khởi tạo = áp lực đo được); avgPressure = [p0, p1] ≥ 0.
+export function cycleMaxPressureSplit32(prevEma, avgPressure, opts = {}) {
+  const A = opts.emaAlpha ?? CYCLE_MAX_PRESSURE_32.emaAlpha;
+  const G = opts.greenTotalS ?? CYCLE_MAX_PRESSURE_32.greenTotalS;
+  const lo = opts.greenMinS ?? CYCLE_MAX_PRESSURE_32.greenMinS;
+  const hi = opts.greenMaxS ?? CYCLE_MAX_PRESSURE_32.greenMaxS;
+  const p = [Math.max(0, avgPressure?.[0] ?? 0), Math.max(0, avgPressure?.[1] ?? 0)];
+  const ema = prevEma ? [A * p[0] + (1 - A) * prevEma[0], A * p[1] + (1 - A) * prevEma[1]] : [p[0], p[1]];
+  const sum = ema[0] + ema[1];
+  let green0S = sum > 0 ? G * ema[0] / sum : G / 2;
+  green0S = Math.min(hi, Math.max(lo, green0S));
+  return { ema, green0S, green1S: G - green0S };
+}
 
 const GREEN = 'green', YELLOW = 'yellow', RED = 'red';
 
@@ -27,13 +49,13 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
   const clusters = [], clusterOf = new Map();
   if (net.signalPlan && net.signalPlan.clusters) {
     for (const c of net.signalPlan.clusters) {
-      const st = { cluster_id: c.cluster_id, nodeIds: [...c.nodeIds], offset_s: c.offset_s, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null, bHeld: false, bLast: -Infinity, cLast: -Infinity };
+      const st = { cluster_id: c.cluster_id, nodeIds: [...c.nodeIds], offset_s: c.offset_s, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null, bHeld: false, bLast: -Infinity, cLast: -Infinity, dEma: null, dAcc: [0, 0], dAccN: 0, dGreen0: CYCLE_MAX_PRESSURE_32.greenTotalS / 2, dGreen1: CYCLE_MAX_PRESSURE_32.greenTotalS / 2, lastServeStart: [0, 0] };
       clusters.push(st);
       for (const n of c.nodeIds) clusterOf.set(n, st);
     }
   } else {
     // Không có signalPlan: một cụm ảo cho mọi nút có đèn 31A (hành vi fixed theo SIGNAL_CYCLE giữ ở sim).
-    const st = { cluster_id: 'NET-C1', nodeIds: [], offset_s: 0, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null, bHeld: false, bLast: -Infinity, cLast: -Infinity };
+    const st = { cluster_id: 'NET-C1', nodeIds: [], offset_s: 0, group: 0, phase: GREEN, tPhase: 0, cycleStart: 0, cycle: 0, switches: 0, lastDecision: -Infinity, greenLen: P.minGreenS, ovTarget: null, bHeld: false, bLast: -Infinity, cLast: -Infinity, dEma: null, dAcc: [0, 0], dAccN: 0, dGreen0: CYCLE_MAX_PRESSURE_32.greenTotalS / 2, dGreen1: CYCLE_MAX_PRESSURE_32.greenTotalS / 2, lastServeStart: [0, 0] };
     for (let n = 0; n < net.signal.length; n++) if (net.signal[n]) { st.nodeIds.push(n); clusterOf.set(n, st); }
     clusters.push(st);
   }
@@ -44,7 +66,10 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
   const samples = []; // {t, wait_avg, nodeWait: Map, nodeQueue: Map, nodeCross: Map}
   const crossAcc = new Map();   // cộng dồn crossed mỗi bước; mẫu 1 s đọc rồi reset
   const greenOf = c => c.group === 0 ? P.fixed.green0S : P.fixed.green1S;
-  const phaseLen = (c, phase) => phase === GREEN ? (curMode === 'fixed' ? greenOf(c) : c.greenLen ?? P.minGreenS) : phase === YELLOW ? P.yellowS : P.allRedS;
+  // Độ dài xanh đang áp dụng: fixed theo bảng, D theo phép chia chu kỳ, còn lại theo greenLen.
+  const greenLenOf = c => curMode === 'fixed' ? greenOf(c)
+    : (P.algorithm === 'cycle-max-pressure' ? (c.group === 0 ? c.dGreen0 : c.dGreen1) : c.greenLen ?? P.minGreenS);
+  const phaseLen = (c, phase) => phase === GREEN ? greenLenOf(c) : phase === YELLOW ? P.yellowS : P.allRedS;
   const advancePhase = (c, tSim) => {
     if (c.phase === RED) {
       if (pendingMode) { curMode = pendingMode; pendingMode = null; for (const x of clusters) x.greenLen = P.minGreenS; }
@@ -54,6 +79,8 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
       c.ovTarget = null;
       c.phase = GREEN;
       c.greenLen = P.minGreenS;
+      // E: mốc phục vụ gần nhất mỗi nhóm (chống đói theo maxRedS).
+      c.lastServeStart[c.group] = tSim;
       // Mốc chu kỳ chỉ đặt khi nhóm 0 bắt đầu xanh (không reset ở mọi RED→GREEN) → pha fixed suy từ đây.
       if (c.group === 0) c.cycleStart = tSim;
       c.lastDecision = tSim;
@@ -85,14 +112,14 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
   const sampleApproach = () => {
     if (!simRef) return null;
     const res = new Map();
-    const get = n => { let r = res.get(n); if (!r) { r = { wait: [0, 0], gap: [Infinity, Infinity], cnt150: [0, 0] }; res.set(n, r); } return r; };
+    const get = n => { let r = res.get(n); if (!r) { r = { wait: [0, 0], gap: [Infinity, Infinity], cnt150: [0, 0], q150: [0, 0] }; res.set(n, r); } return r; };
     for (let i = 0; i < simRef.N; i++) {
       if (!simRef.active[i]) continue;
       const st = laneStat[simRef.lane[i]]; if (!st) continue;
       const g = st.group, dist = st.stop - simRef.s[i];
       if (dist < -0.5) continue;
       const rec = get(st.node), v = simRef.v[i];
-      if (dist <= 150) rec.cnt150[g]++;
+      if (dist <= 150) { rec.cnt150[g]++; if (v < 0.5) rec.q150[g]++; }   // q150 = hàng chờ (v<0,5) trong 150 m
       if (v < 0.5 || dist <= 25) rec.wait[g]++;
       if (v >= 0.5 && dist <= 30) { const gp = dist / Math.max(v, 0.5); if (gp < rec.gap[g]) rec.gap[g] = gp; }
     }
@@ -157,10 +184,46 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     if (elapsed >= P.maxGreenS || (margin >= P.switchMargin && want !== c.group)) { c.greenLen = elapsed; advancePhase(c, tSim); }
     else c.greenLen = elapsed;
   };
+  // E `max-pressure-abs`: như A nhưng chuyển khi chênh áp lực TUYỆT ĐỐI (nhóm kia − nhóm hiện tại)
+  // ≥ `switchAbs` (xe) VÀ đã xanh ≥ `minGreenS`; chống đói: nhóm đỏ liên tục ≥ `maxRedS` phải phục vụ.
+  const decideE = (c, tSim, queues) => {
+    const elapsed = tSim - c.tPhase;
+    if (elapsed < P.minGreenS) return;
+    if (elapsed - (c.lastDecision - c.tPhase) < P.decisionIntervalS && elapsed < P.maxGreenS) return;
+    c.lastDecision = tSim;
+    const g = c.group, other = g === 0 ? 1 : 0;
+    const p0 = pressure(c, queues, 0), p1 = pressure(c, queues, 1);
+    const pCur = g === 0 ? p0 : p1, pOther = g === 0 ? p1 : p0;
+    const starved = (tSim - c.lastServeStart[other]) >= P.maxRedS;
+    if (elapsed >= P.maxGreenS || starved || (pOther - pCur) >= P.switchAbs) { c.greenLen = elapsed; advancePhase(c, tSim); }
+    else c.greenLen = elapsed;
+  };
+  // D `cycle-max-pressure`: áp lực đo = số xe ≤150 m trước vạch − xe 25 m đầu làn ra, chặn dưới 0.
+  const dPressure = (c, queues, sample, g) => {
+    let ingress = 0, qout = 0;
+    for (const n of c.nodeIds) {
+      const r = sample && sample.get(n);
+      if (r) ingress += r.q150[g];
+      const rows = queues.get(n);
+      if (rows) for (const row of rows) if (row.st === -1 && row.group === g) qout += (row.q_out || 0);
+    }
+    return Math.max(0, ingress - qout);
+  };
+  // Đầu chu kỳ (nhóm 0 bắt đầu xanh): chia lại 38 s xanh theo áp lực trung bình đo ở chu kỳ trước.
+  const dOnGreenStart = c => {
+    if (c.dAccN > 0) {
+      const avg = [c.dAcc[0] / c.dAccN, c.dAcc[1] / c.dAccN];
+      const r = cycleMaxPressureSplit32(c.dEma, avg);
+      c.dEma = r.ema; c.dGreen0 = r.green0S; c.dGreen1 = r.green1S;
+    }
+    c.dAcc[0] = 0; c.dAcc[1] = 0; c.dAccN = 0;
+  };
   const decision = (c, tSim, queues, sample) => {
     if (curMode !== 'smart' || c.phase !== GREEN) return;
     if (P.algorithm === 'actuated-gap') return decideB(c, tSim, queues, sample);
     if (P.algorithm === 'max-pressure-150') return decideC(c, tSim, queues, sample);
+    if (P.algorithm === 'max-pressure-abs') return decideE(c, tSim, queues);
+    if (P.algorithm === 'cycle-max-pressure') return;   // D: chu kỳ do update quản, không quyết định giữa pha
     return decideA(c, tSim, queues);
   };
   const overrideOf = (node, tSim) => {
@@ -242,12 +305,19 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
       decision(c, tSim, qmap, sample);
       // So theo BƯỚC NGUYÊN (tránh float làm mỗi pha dài thêm 0,1 s); tôn trọng maxGreen.
       const elapsed = tSim - c.tPhase;
-      const maxLen = curMode === 'fixed' ? greenOf(c) : P.maxGreenS;
-      if (c.phase === GREEN && curMode === 'smart') c.greenLen = Math.min(P.maxGreenS, Math.max(P.minGreenS, elapsed));
+      const maxLen = curMode === 'fixed' ? greenOf(c) : (P.algorithm === 'cycle-max-pressure' ? greenLenOf(c) : P.maxGreenS);
+      // D giữ greenLen = độ dài xanh chia theo chu kỳ; không ghi đè bằng `elapsed`.
+      if (c.phase === GREEN && curMode === 'smart' && P.algorithm !== 'cycle-max-pressure') c.greenLen = Math.min(P.maxGreenS, Math.max(P.minGreenS, elapsed));
       const elapsedSteps = Math.round(elapsed * 10);
       const skipMax = curMode === 'smart' && P.algorithm === 'actuated-gap' && c.bHeld;   // B: tới max mà không ai chờ → giữ
       if (c.phase === GREEN && !skipMax && elapsedSteps >= Math.round(maxLen * 10)) advancePhase(c, tSim);
       else if (c.phase !== GREEN && elapsedSteps >= Math.round(phaseLen(c, c.phase) * 10)) advancePhase(c, tSim);
+      // D: vào đầu chu kỳ mới (nhóm 0 bắt đầu xanh) → chia lại 38 s xanh theo áp lực chu kỳ trước.
+      if (P.algorithm === 'cycle-max-pressure' && curMode === 'smart' && c.group === 0 && c.phase === GREEN && c.tPhase === tSim) dOnGreenStart(c);
+    }
+    // D: cộng dồn áp lực đo mỗi bước để tính trung bình chu kỳ.
+    if (P.algorithm === 'cycle-max-pressure' && curMode === 'smart' && sample) {
+      for (const c of clusters) { c.dAcc[0] += dPressure(c, qmap, sample, 0); c.dAcc[1] += dPressure(c, qmap, sample, 1); c.dAccN++; }
     }
     // crossed: cộng dồn mỗi bước vào bộ đệm; mẫu 1 s đọc rồi reset.
     for (const [node, rows] of qmap) { let s = 0; for (const r of rows) s += r.crossed || 0; if (s) crossAcc.set(node, (crossAcc.get(node) || 0) + s); }
@@ -368,7 +438,7 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     // Đồng bộ lại khi sim.reset(): pha về gốc, xóa ghi đè + mẫu KPI.
     reset(tSim = 0) {
       overrides.clear(); crossAcc.clear(); samples.length = 0;
-      for (const c of clusters) { c.group = 0; c.phase = GREEN; c.tPhase = tSim; c.cycleStart = tSim; c.cycle = 0; c.switches = 0; c.lastDecision = -Infinity; c.greenLen = P.minGreenS; c.ovTarget = null; c.bHeld = false; c.bLast = -Infinity; c.cLast = -Infinity; }
+      for (const c of clusters) { c.group = 0; c.phase = GREEN; c.tPhase = tSim; c.cycleStart = tSim; c.cycle = 0; c.switches = 0; c.lastDecision = -Infinity; c.greenLen = P.minGreenS; c.ovTarget = null; c.bHeld = false; c.bLast = -Infinity; c.cLast = -Infinity; c.dEma = null; c.dAcc = [0, 0]; c.dAccN = 0; c.dGreen0 = CYCLE_MAX_PRESSURE_32.greenTotalS / 2; c.dGreen1 = CYCLE_MAX_PRESSURE_32.greenTotalS / 2; c.lastServeStart = [0, 0]; }
     },
     runsRed: (i, node, st, tSim) => (redRun ? !!redRun(i, node, st, tSim) : false),
     attachSim(s) { simRef = s || null; return simRef; }

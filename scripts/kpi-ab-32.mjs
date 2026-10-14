@@ -19,7 +19,7 @@ const MODE = args.mode === 'smart' ? 'smart' : args.mode === 'both' ? 'both' : '
 const SCENARIO = args.scenario ?? 'peak-hang-xanh';
 const ALGORITHM = args.algorithm ?? 'max-pressure';
 const EXTRA_PARAMS = {};
-for (const k of ['decisionIntervalS', 'switchMargin', 'minGreenS', 'maxGreenS']) if (args[k] !== undefined) EXTRA_PARAMS[k] = Number(args[k]);
+for (const k of ['decisionIntervalS', 'switchMargin', 'minGreenS', 'maxGreenS', 'switchAbs', 'maxRedS']) if (args[k] !== undefined) EXTRA_PARAMS[k] = Number(args[k]);
 const OUT = args.out ?? `work/kpi-${MODE}-${SEED_ARG}.json`;
 const SEEDS = args.seeds
   ? args.seeds.split(',').flatMap(s => { const m = /^(\d+)-(\d+)$/.exec(s.trim()); return m ? Array.from({ length: Number(m[2]) - Number(m[1]) + 1 }, (_, k) => Number(m[1]) + k) : [Number(s)]; })
