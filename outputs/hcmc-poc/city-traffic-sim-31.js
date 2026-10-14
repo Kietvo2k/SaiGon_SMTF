@@ -359,14 +359,32 @@ function buildCrossZones31(net) {
 }
 
 // ---------------------------------------------------------------- mô phỏng (thuần JS, tất định)
-export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TARGET, signalPlan = null, controller: controller0 = null, breakerS = BREAKER_S, seed = SEED } = {}) {
+export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TARGET, signalPlan = null, controller: controller0 = null, breakerS = BREAKER_S, seed = SEED, demand = null } = {}) {
   let controller = controller0;
   const { lanes, NL, nextSt, lanesOfSt, laneCountOfSt, needsLock, Rz, signal, signalOffset, arriveGroup, arriveHead, spawnLanes, E, G } = net;
   const KL = TRAFFIC_KINDS.map(k => k.length), KW = TRAFFIC_KINDS.map(k => k.width);
+  // ---- Kịch bản nhu cầu (tùy chọn, mặc định null = hành vi y nguyên): tăng trọng số sinh xe
+  // trên làn gần tâm (`spawnBias`) và thiên hướng rẽ về tâm (`turnBias`).
+  const demandCfg = demand ? {
+    cx: demand.center?.[0] ?? 0, cz: demand.center?.[1] ?? 0,
+    r2: Math.max(0, Number(demand.radius_m) || 0) ** 2,
+    turnBias: Math.max(0, Number(demand.turnBias) || 0),
+    spawnBias: Math.max(1, Number(demand.spawnBias) || 1),
+    poolScale: Math.max(1, Number(demand.poolScale) || 1)
+  } : null;
+  const demW = new Float32Array(NL).fill(1);
+  if (demandCfg) {
+    const sp = net.sphere;
+    for (let l = 0; l < NL; l++) {
+      const e = lanes.edge[l], dx = sp[e * 4] - demandCfg.cx, dz = sp[e * 4 + 2] - demandCfg.cz;
+      if (dx * dx + dz * dz <= demandCfg.r2) demW[l] = demandCfg.spawnBias;
+    }
+    poolTarget *= demandCfg.poolScale;
+  }
   // ---- Bố trí pool ban đầu (tất định): xe/km làn theo cấp × hệ số trung tâm, rải đều dọc làn ngoài vùng nút.
   const centrality = l => { const s = net.sphere, e = lanes.edge[l]; const d = Math.hypot(s[e * 4] - centre[0], s[e * 4 + 2] - centre[1]); return .35 + .65 * Math.max(0, 1 - d / 4200); };
   let raw = 0; const expect = new Float32Array(NL);
-  for (let l = 0; l < NL; l++) { expect[l] = DENSITY_BY_RANK[lanes.rank[l]] * lanes.length[l] / 1000 * centrality(l); raw += expect[l]; }
+  for (let l = 0; l < NL; l++) { expect[l] = DENSITY_BY_RANK[lanes.rank[l]] * lanes.length[l] / 1000 * centrality(l) * demW[l]; raw += expect[l]; }
   const scale = poolTarget / Math.max(1, raw);
   const spawnPlan = [];   // [lane, s, kind, rngSeed]
   let carry = 0, rngSpawn = seed >>> 0;
@@ -468,6 +486,16 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       if (busAvoid && c.rank < 2) x = 0;
       // Xe buýt không rẽ cắt ngang làn bên cạnh (rẽ phải từ làn trong / rẽ trái từ làn ngoài): thân 10,5 m quét qua xe chờ ở vạch.
       if (kind[i] >= HEAVY && a >= .6 && (c.turn > 0 ? lanes.k[l] > 0 : lanes.k[l] < lanes.n[l] - 1)) x *= 1e-4;
+      // Kịch bản nhu cầu: thiên hướng chọn lối rẽ VỀ tâm (không đổi số lần rút rand → tất định).
+      if (demandCfg && demandCfg.turnBias && x > 0) {
+        const cur = G.nodes[lanes.to[l]], dst = G.nodes[lanes.to[lanesOfSt[c.st]]];
+        if (cur && dst) {
+          const dCur = Math.hypot(cur.x - demandCfg.cx, cur.z - demandCfg.cz);
+          const dDst = Math.hypot(dst.x - demandCfg.cx, dst.z - demandCfg.cz);
+          if (dDst < dCur) x *= 1 + demandCfg.turnBias;
+          else if (dDst > dCur) x /= 1 + demandCfg.turnBias;
+        }
+      }
       w.push(x); total += x;
     }
     let r = rand(i) * total, pick = 0; for (; pick < w.length - 1; pick++) { r -= w[pick]; if (r < 0) break; }
