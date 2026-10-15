@@ -9,6 +9,12 @@ export { createTrafficSignals32, installSignals32 } from './traffic-signals-32.j
 // T10 — camera render-to-texture: tái xuất để webgpu-materials-24.js gọi `smartMod.installCameraCapture32`
 // (đặt `window.__smartCapture`). Giữ chữ ký initSmartApp32 không đổi.
 export { createCameraCapture32, installCameraCapture32, projectToCamera32, projectToPixel32 } from './camera-capture-32.js?v=32a';
+// T11 — client trạm: hàng đợi IndexedDB, REST/WS tới backend, HUD A/B/KPI (xem installStation32 cuối file).
+import { createPerception32 } from './violation-perception-32.js?v=32a';
+import { createQueue32, createIndexedDbStore32, createMemoryStore32 } from './station-queue-32.js?v=32a';
+import { createTransport32, startStationLoop32, resolveApiBase32, readStoredToken32, loginStation32 } from './station-client-32.js?v=32a';
+import { installHud32 } from './kpi-panel-32.js?v=32a';
+export { installHud32 } from './kpi-panel-32.js?v=32a';
 
 export const SMART_APP_32_VERSION = 'smart-app-32a';
 export const SMART_BREAKER_S = 180;   // M2a: ngắt chu kỳ đèn/thải xe 180 s trong app smart
@@ -203,4 +209,33 @@ export function initSmartApp32({ scene, camera, renderer, traffic, status, root 
     dispose() { for (const m of Object.values(modules)) if (m && typeof m.dispose === 'function') m.dispose(); }
   };
   return app;
+}
+
+// T11 — nối trạm: perception → (vi phạm + bằng chứng) → transport → backend; HUD A/B/KPI; nhận lệnh đèn.
+// Gọi SAU installCameraCapture32 (cần app.modules.capture). Không đổi chữ ký initSmartApp32.
+export function installStation32(app, { cameras = [], nodeMap = [], search = (typeof location !== 'undefined' ? location.search : ''),
+  storage = (typeof sessionStorage !== 'undefined' ? sessionStorage : null) } = {}) {
+  const capture = app.modules && app.modules.capture;
+  if (!capture) throw new Error('installStation32 cần camera capture (gọi installCameraCapture32 trước)');
+  const { baseUrl, wsUrl } = resolveApiBase32(search);
+  const store = typeof indexedDB !== 'undefined' ? createIndexedDbStore32() : createMemoryStore32();
+  const queue = createQueue32({ store });
+  const perception = createPerception32({ net: app.traffic.net, sim: app.traffic.sim, controller: app.controller, nodeMap, cameras });
+  let hud = null;
+  const transport = createTransport32({
+    baseUrl, wsUrl, token: readStoredToken32(storage),
+    login: () => loginStation32({ baseUrl, storage }),
+    queue,
+    wsImpl: typeof WebSocket !== 'undefined' ? WebSocket : null,
+    uptimeS: () => (typeof performance !== 'undefined' ? performance.now() / 1000 : 0),
+    fpsOf: () => (hud && hud.fps ? hud.fps() : 0)
+  });
+  hud = installHud32(app, { transport });
+  transport.start();
+  const loop = startStationLoop32(app, { perception, capture, transport, cameras });
+  transport.dispose = () => { loop.stop(); transport.stop(); };
+  app.registerSmartModule32('perception', perception);
+  app.registerSmartModule32('transport', transport);
+  app.registerSmartModule32('station-loop', loop);
+  return { transport, perception, loop, hud };
 }
