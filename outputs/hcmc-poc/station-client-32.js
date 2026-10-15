@@ -375,6 +375,42 @@ export function vehiclePose32(traffic, rec) {
   return { x: c[0] + (c[n * 2 - 2] - c[0]) * k, z: c[1] + (c[n * 2 - 1] - c[1]) * k };
 }
 
+// M5a — lệnh từ backend (WS cmd.*, cùng dạng {event, data}). Giá trị sai bị bỏ qua, không làm dừng vòng chạy.
+//   cmd.scenario {key, params?}: 'none' → dừng; khác → scenarios.start(key, params) (khóa lạ bị từ chối, ví dụ priority-run).
+//   cmd.vms {vms_id, mode, text, lines?}: manual → đặt chữ (tối đa 2 dòng, ≤ 60 ký tự/dòng); auto → trở về hệ thống.
+export const VMS_IDS_32 = Object.freeze(['VMS-01', 'VMS-02', 'VMS-03', 'VMS-04']);
+export const VMS_LINE_MAX_32 = 60;
+export function createCommandRouter32({ scenarios = null, vms = null, log = defaultLog32 } = {}) {
+  return function routeCommand32(msg) {
+    if (!msg || typeof msg.event !== 'string') return null;
+    const d = msg.data && typeof msg.data === 'object' ? msg.data : {};
+    if (msg.event === 'cmd.scenario') {
+      if (!scenarios) return { ok: false, reason: 'chưa có kịch bản' };
+      const key = String(d.key ?? '');
+      try {
+        if (key === 'none') scenarios.stop();
+        else scenarios.start(key, d.params && typeof d.params === 'object' ? d.params : {});
+        return { ok: true, key };
+      } catch (e) {
+        log(`[station] kịch bản "${key.slice(0, 40)}" bị từ chối: ${e && e.message}`);
+        return { ok: false, reason: e && e.message };
+      }
+    }
+    if (msg.event === 'cmd.vms') {
+      const id = String(d.vms_id ?? '');
+      if (!vms || !VMS_IDS_32.includes(id)) return { ok: false, reason: 'bảng VMS không hợp lệ' };
+      if (d.mode === 'auto') { vms.clearManual(id); return { ok: true, vms_id: id, mode: 'auto' }; }
+      if (d.mode !== 'manual') return { ok: false, reason: 'mode phải là auto hoặc manual' };
+      const raw = Array.isArray(d.lines) && d.lines.length ? d.lines : [d.text];
+      const lines = raw.map(x => String(x ?? '').replace(/\s+/g, ' ').trim().slice(0, VMS_LINE_MAX_32)).filter(Boolean).slice(0, 2);
+      if (!lines.length) { vms.clearManual(id); return { ok: true, vms_id: id, mode: 'auto' }; }
+      vms.setManual(id, lines);
+      return { ok: true, vms_id: id, mode: 'manual', lines };
+    }
+    return null;
+  };
+}
+
 // Vòng trạm: quét vi phạm 0,5 s → chụp bằng chứng → gửi (có bằng chứng kèm); ảnh "trước vạch" ~1 fps
 // cho camera không stream; khung stream ≤ 2 fps cho camera đang mở (mặc định camera đầu registry).
 export function startStationLoop32(app, { perception, capture, transport, cameras = [], scanMs = 500, beforeMs = 1000,

@@ -447,6 +447,11 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   const CZ = net.cross, zoneHold = new Map(), zTok = new Int32Array(N * 2).fill(-1), zLane = new Int32Array(N * 2), zRem = new Float32Array(N * 2);
   const counters = { t: 0, step: 0, edgeTransitions: 0, teleports: 0, onewayViolations: 0, gapViolations: 0, respawns: 0, breakerRespawns: 0, waitsTotal: 0, maxStopS: 0, perSecond: new Int32Array(32), lastSecond: 0, pendingFails: 0 };
   let fraction = 1, lightFactor = 1;
+  // ---- Hạn chế làn (M5a, mặc định trung tính: hệ số 1, không chắn, không đóng → hành vi cũ không đổi):
+  // laneVmul[l] nhân tốc độ mong muốn của làn; laneBlockS[l] = vị trí (m) mép sau xe hỏng đứng yên trên làn (∞ = không chắn);
+  // laneClosed[l] = 1 → lộ trình không chọn làn này (xe đang trên làn vẫn đi hết).
+  const laneVmul = new Float32Array(NL).fill(1), laneBlockS = new Float64Array(NL).fill(Infinity), laneClosed = new Uint8Array(NL);
+  let closedCount = 0;
   // ---- Khu mô phỏng (bước H): region = null → toàn thành phố; {id, poly[x0,z0,x1,z1…]} → chỉ xe trên cạnh nằm hẳn trong đa giác.
   // insideLane: làn thuộc cạnh mà mọi đỉnh nằm trong khu; spawnList: làn điểm tái sinh (nút biên thật hoặc nút trong khu kề nút ngoài khu);
   // elig: xe được tính vào khu (đặt theo vị trí lúc setRegion; xe đang chờ chỗ giữ nguyên, xe đặt/tái sinh trong khu luôn hợp lệ).
@@ -481,6 +486,11 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const st = lanes.st[l]; let cands = nextSt[st];
     if (region && cands) cands = cands.filter(c => insideLane[lanesOfSt[c.st]]);   // ra khỏi khu = nút biên
     if (!cands || !cands.length) return -2;   // tới nút biên → tái sinh
+    // M5a: lối rẽ mà mọi làn đều bị đóng bị loại; nếu không còn lối nào thì giữ nguyên (không dịch chuyển xe).
+    if (closedCount && cands.length > 1) {
+      const open = cands.filter(c => { const b = lanesOfSt[c.st], n2 = laneCountOfSt[c.st]; for (let k = 0; k < n2; k++) if (!laneClosed[b + k]) return true; return false; });
+      if (open.length) cands = open;
+    }
     let total = 0; const w = [];
     // Xe buýt (2,5 m) không chui đường nội bộ làn 2,7 m: thân dài quét sang làn ngược chiều khi rẽ; chỉ đi khi không còn lối khác.
     const busAvoid = kind[i] >= HEAVY && cands.some(c => c.rank >= 2);
@@ -506,7 +516,9 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     }
     let r = rand(i) * total, pick = 0; for (; pick < w.length - 1; pick++) { r -= w[pick]; if (r < 0) break; }
     const c = cands[pick], n2 = laneCountOfSt[c.st], base = lanesOfSt[c.st];
-    const k2 = Math.abs(c.turn) < .6 ? Math.min(lanes.k[l], n2 - 1) : c.turn > 0 ? 0 : n2 - 1;
+    let k2 = Math.abs(c.turn) < .6 ? Math.min(lanes.k[l], n2 - 1) : c.turn > 0 ? 0 : n2 - 1;
+    // M5a: làn đích đang bị chắn (xe hỏng) → xe đổi sang làn kề còn thông NGAY TẠI NÚT (không đổi làn giữa đoạn).
+    if (laneBlockS[base + k2] < Infinity) { for (const dk of [1, -1, 2, -2]) { const kk = k2 + dk; if (kk >= 0 && kk < n2 && laneBlockS[base + kk] === Infinity) { k2 = kk; break; } } }
     return base + k2;
   }
   function fillPath(i) { for (let p = 0; p < PN; p++) { const prev = p === 0 ? lane[i] : path[i * PN + p - 1]; path[i * PN + p] = prev >= 0 ? planNext(i, prev) : -2; } next[i] = path[i * PN]; }
@@ -763,9 +775,25 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       if (!Number.isFinite(margin) || margin < 0) throw new TypeError('setRegion: margin phải là số hữu hạn ≥ 0');
       const poly = new Float64Array(pts.length * 2); pts.forEach((p, k) => { poly[k * 2] = p[0]; poly[k * 2 + 1] = p[1]; });
       const inRegion = margin > 0 ? (x, z) => inPoly(poly, x, z) || distPoly(poly, x, z) <= margin : (x, z) => inPoly(poly, x, z);
+      // M5a: cầu vắt ranh dài ~1 km (cầu Sài Gòn): biên nới riêng bridgeMargin, chỉ cho các cạnh cầu có tên trong bridgeNames
+      // (không truyền bridgeNames = mọi cầu). Mặc định bridgeMargin = margin → hành vi cũ không đổi.
+      const bridgeMargin = reg.bridgeMargin === undefined ? margin : reg.bridgeMargin;
+      if (!Number.isFinite(bridgeMargin) || bridgeMargin < margin) throw new TypeError('setRegion: bridgeMargin phải là số hữu hạn ≥ margin');
+      const bridgeNames = Array.isArray(reg.bridgeNames) ? new Set(reg.bridgeNames) : null;
+      const bridgeAllowed = e => net.bridgeEdge[e] && (!bridgeNames || bridgeNames.has(G.roads[E[e].road]?.name));
+      const inRegionBridge = bridgeMargin > margin ? (x, z) => inPoly(poly, x, z) || distPoly(poly, x, z) <= bridgeMargin : inRegion;
       const inNode = new Uint8Array(G.nodes.length); for (let n = 0; n < inNode.length; n++) inNode[n] = inRegion(G.nodes[n].x, G.nodes[n].z) ? 1 : 0;
       const inEdge = new Uint8Array(net.NE);
-      for (let e = 0; e < net.NE; e++) { const c = E[e].c; let ok = inNode[nodeIdx.get(E[e].from)] && inNode[nodeIdx.get(E[e].to)]; for (let k = 0; ok && k < c.length; k += 2) ok = inRegion(c[k], c[k + 1]); inEdge[e] = ok ? 1 : 0; }
+      for (let e = 0; e < net.NE; e++) {
+        const c = E[e].c;
+        // Cầu vắt ranh: có điểm trong khu (đa giác thật) và mọi điểm trong biên nới bridgeMargin; cầu nằm hẳn ngoài khu vẫn loại.
+        if (bridgeMargin > margin && bridgeAllowed(e)) {
+          let anyIn = false, okB = true;
+          for (let k = 0; k < c.length; k += 2) { if (inPoly(poly, c[k], c[k + 1])) anyIn = true; else if (!inRegionBridge(c[k], c[k + 1])) { okB = false; break; } }
+          inEdge[e] = anyIn && okB ? 1 : 0; continue;
+        }
+        let ok = inNode[nodeIdx.get(E[e].from)] && inNode[nodeIdx.get(E[e].to)]; for (let k = 0; ok && k < c.length; k += 2) ok = inRegion(c[k], c[k + 1]); inEdge[e] = ok ? 1 : 0;
+      }
       for (let l = 0; l < NL; l++) insideLane[l] = inEdge[lanes.edge[l]];
       const edgeNode = (e2, end) => nodeIdx.get(end === 0 ? E[e2].to : E[e2].from);
       spawnList = [];
@@ -774,7 +802,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
         const n = lanes.from[l], nd = G.nodes[n];
         if (nd.kind === 'boundary' || nd.adj.some(([e2, end]) => !inNode[edgeNode(e2, end)])) spawnList.push(l);
       }
-      region = { id: reg.id, poly, margin };
+      region = { id: reg.id, poly, margin, bridgeMargin, bridgeNames: bridgeNames ? [...bridgeNames] : null };
     }
     for (let i = 0; i < N; i++) elig[i] = !region || pending[i] ? 1 : insideLane[lane[i]];
     // Lộ trình: giữ đoạn còn hợp lệ, lập lại đoạn trỏ ra ngoài khu (hoặc đoạn -2 nay đi tiếp được); xe đã giữ khóa nút không đổi làn kế.
@@ -790,6 +818,31 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     }
     rankStep = -1;
     return select();
+  }
+
+  // ---- Hạn chế làn (M5a): setRestrictions({blocks:[{lane, s}], speedMul:[{lane, k}], closed:[lane…]}) đặt lại TOÀN BỘ hạn chế
+  // (rỗng = bình thường). blocks: xe hỏng đứng yên, mép sau tại s (m) — xe phía sau dừng trước nó; speedMul: tốc độ mong muốn × k;
+  // closed: lộ trình không chọn làn này nữa; xe đang có lộ trình qua làn đóng được lập lại đoạn đó (đoạn 0 giữ nguyên khi đang giữ khóa nút).
+  function setRestrictions(r = {}) {
+    finishStep();
+    laneVmul.fill(1); laneBlockS.fill(Infinity); laneClosed.fill(0); closedCount = 0;
+    const lane0 = l => { const v = Number(l); if (!Number.isInteger(v) || v < 0 || v >= NL) throw new RangeError('setRestrictions: làn không hợp lệ ' + l); return v; };
+    for (const b of r.blocks || []) laneBlockS[lane0(b.lane)] = Math.max(0, Number(b.s) || 0);
+    for (const m of r.speedMul || []) { const k = Number(m.k); if (!(k > 0 && k <= 1)) throw new RangeError('setRestrictions: hệ số tốc độ phải thuộc (0, 1]'); laneVmul[lane0(m.lane)] = k; }
+    for (const l0 of r.closed || []) { const l = lane0(l0); if (!laneClosed[l]) { laneClosed[l] = 1; closedCount++; } }
+    if (closedCount || laneBlockS.some(b => b < Infinity)) {
+      for (let i = 0; i < N; i++) {
+        let holdsLock = false; for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] >= 0) holdsLock = true;
+        for (let p = holdsLock ? 1 : 0; p < PN; p++) {
+          const cur = path[i * PN + p];
+          if (cur < 0 || !(laneClosed[cur] || laneBlockS[cur] < Infinity)) continue;
+          const prev = p === 0 ? lane[i] : path[i * PN + p - 1];
+          path[i * PN + p] = prev < 0 ? -2 : planNext(i, prev);
+        }
+        next[i] = path[i * PN];
+      }
+    }
+    return { blocked: r.blocks ? r.blocks.length : 0, closed: closedCount };
   }
 
   function reset() {
@@ -857,11 +910,13 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
         dist += lanes.length[nl];
       }
     }
+    // M5a: xe hỏng đứng yên trên làn (laneBlockS = mép sau của xe hỏng): xe phía sau dừng trước nó.
+    { const sb = laneBlockS[l]; if (sb < Infinity && sb > si) { const g = sb - (si + Li / 2); if (g < gap) { gap = g; vl = 0; } } }
     { const g = crossGate(i, l, si, Li, vi * vi / (2 * K.b) + 8); if (g < gap) { gap = g; vl = 0; } }
     let stopLimit = Infinity;
     if (!holding) { const g = laneLen - Rz[node] - front; if (g < gap) { gap = g; vl = 0; } stopLimit = laneLen - Rz[node] - Li / 2; }
     // IDM rút gọn.
-    const v0 = lanes.speed[l] * vf[i] * (kind[i] >= HEAVY ? .85 : 1);
+    const v0 = lanes.speed[l] * laneVmul[l] * vf[i] * (kind[i] >= HEAVY ? .85 : 1);
     const dv = vi - vl, sStar = K.s0 + Math.max(0, vi * K.T + vi * dv / (2 * Math.sqrt(K.a * K.b)));
     const r = vi / v0, r2 = r * r, q = gap < Infinity ? sStar / Math.max(.1, gap) : 0;
     let acc = K.a * (1 - r2 * r2 - q * q);
@@ -1006,7 +1061,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       format: 1, N, NL,
       counters: { ...counters, perSecond: counters.perSecond.slice() },
       fraction, lightFactor, rankStep,
-      region: region ? { id: region.id, poly: Array.from(region.poly), margin: region.margin } : null,
+      region: region ? { id: region.id, poly: Array.from(region.poly), margin: region.margin, bridgeMargin: region.bridgeMargin, bridgeNames: region.bridgeNames } : null,
       insideLane: cp(insideLane), spawnList: spawnList.slice(), elig: cp(elig),
       lane: cp(lane), s: cp(s), v: cp(v), lat: cp(lat), jit: cp(jit), gen: cp(gen), active: cp(active),
       kind: cp(kind), len: cp(len), wid: cp(wid), next: cp(next), prevLane: cp(prevLane),
@@ -1015,6 +1070,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       selRank: cp(selRank), pending: cp(pending), vf: cp(vf), rng: cp(rng),
       lockNode: cp(lockNode), lockIn: cp(lockIn), lockOut: cp(lockOut), lockRemain: cp(lockRemain),
       zTok: cp(zTok), zLane: cp(zLane), zRem: cp(zRem),
+      laneVmul: cp(laneVmul), laneBlockS: cp(laneBlockS), laneClosed: cp(laneClosed), closedCount,
       activeLanes: activeLanes.slice(),
       laneCars: activeLanes.map(l => [l, laneCars[l].slice()]),
       holders: [...holders.entries()].map(([n, list]) => [n, list.map(h => ({ car: h.car, inL: h.inL, outL: h.outL, straight: h.straight }))]),
@@ -1035,6 +1091,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     put(selRank, st.selRank); put(pending, st.pending); put(vf, st.vf); put(rng, st.rng);
     put(lockNode, st.lockNode); put(lockIn, st.lockIn); put(lockOut, st.lockOut); put(lockRemain, st.lockRemain);
     put(zTok, st.zTok); put(zLane, st.zLane); put(zRem, st.zRem);
+    if (st.laneVmul) { put(laneVmul, st.laneVmul); put(laneBlockS, st.laneBlockS); put(laneClosed, st.laneClosed); closedCount = st.closedCount | 0; }
+    else { laneVmul.fill(1); laneBlockS.fill(Infinity); laneClosed.fill(0); closedCount = 0; }
     for (const [l, cars] of st.laneCars) { laneCars[l] = cars.slice(); laneActive[l] = 1; activeLanes.push(l); }
     holders.clear(); inHold.fill(0);
     for (const [n, list] of st.holders) holders.set(n, list.map(h => ({ car: h.car, inL: h.inL, outL: h.outL, straight: h.straight })));
@@ -1050,7 +1108,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const { perSecond, ...rest } = st.counters;
     Object.assign(counters, rest); counters.perSecond.set(perSecond);
     fraction = st.fraction; lightFactor = st.lightFactor; rankStep = st.rankStep;
-    region = st.region ? { id: st.region.id, poly: Float64Array.from(st.region.poly), margin: st.region.margin } : null;
+    region = st.region ? { id: st.region.id, poly: Float64Array.from(st.region.poly), margin: st.region.margin, bridgeMargin: st.region.bridgeMargin ?? st.region.margin, bridgeNames: st.region.bridgeNames ?? null } : null;
     spawnList = st.spawnList.slice();
     return { t: counters.t, active: activeCount() };
   }
@@ -1069,6 +1127,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   const simApi = {
     N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters, exportState, importState,
     step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, wantedCount: () => { let n = 0; for (let i = 0; i < N; i++) n += wanted[i]; return n; }, pendingCount: () => { let n = 0; for (let i = 0; i < N; i++) n += pending[i]; return n; }, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,
+    setRestrictions, clearRestrictions: () => setRestrictions({}), restrictionCounts: () => ({ closed: closedCount, blocked: laneBlockS.reduce((a, b) => a + (b < Infinity ? 1 : 0), 0), slowed: laneVmul.reduce((a, k) => a + (k < 1 ? 1 : 0), 0) }),
     setRegion, get region() { return region ? { id: region.id, active: true, margin: region.margin, lanes: insideLane.reduce((a, b) => a + b, 0), spawnLanes: spawnList.length } : { id: null, active: false, margin: 0, lanes: NL, spawnLanes: spawnLanes.length }; },
     eligibleCount: () => { let n = 0; for (let i = 0; i < N; i++) n += elig[i]; return n; }, isEligible: i => !!elig[i], insideLaneOf: l => !!insideLane[l],
     setFraction(f) { finishStep(); fraction = Math.max(0, Math.min(1, f)); return select(); },

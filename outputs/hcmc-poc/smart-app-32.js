@@ -16,12 +16,42 @@ import { createTransport32, startStationLoop32, resolveApiBase32, readStoredToke
 import { installHud32 } from './kpi-panel-32.js?v=32a';
 export { installHud32 } from './kpi-panel-32.js?v=32a';
 // M4b1 — bản đồ nhiệt, dự báo kẹt, lệch tuyến và bảng VMS (heat-live-32.js, heat-scene-32.js).
-import { createHeatLive32, createRouteBias32, chooseVmsBoards32, expandHeatHistory32 } from './heat-live-32.js?v=32a';
+import { createHeatLive32, createRouteBias32, chooseVmsBoards32, expandHeatHistory32, createVmsBus32 } from './heat-live-32.js?v=32a';
 import { createHeatScene32, mountHeatPanel32 } from './heat-scene-32.js?v=32a';
-export { createRouteBias32 } from './heat-live-32.js?v=32a';
+// M5a — kịch bản (scenarios-32.js) và lệnh trạm (station-client-32.js: cmd.scenario, cmd.vms).
+import { createScenarios32, mountScenarioPanel32, createBlockProps32 } from './scenarios-32.js?v=32a';
+import { createCommandRouter32 } from './station-client-32.js?v=32a';
+export { createRouteBias32, createVmsBus32, vmsDisplay32 } from './heat-live-32.js?v=32a';
+export { createScenarios32, findLaneBlock32, findFloodEdges32, SCENARIO_KEYS_32, SCENARIO_LABELS_32 } from './scenarios-32.js?v=32a';
+export { createCommandRouter32 } from './station-client-32.js?v=32a';
 // M4b2 — đồng hồ trong ngày + tua (clock-32.js) và tua trước trong Worker (forecast-client-32.js).
 export { installClock32, clockAt32, lightOf32, demandOfHour32 } from './clock-32.js?v=32a';
 export { installForecast32 } from './forecast-client-32.js?v=32a';
+// M5a — nhu cầu khu Bắc: cùng tâm/bán kính/thiên hướng/trọng số làn như PEAK_HANG_XANH_DEMAND của kịch bản A1
+// (scripts/a1-metric-32.mjs; test so khớp) NHƯNG poolScale 5 thay vì 10: đo ở 17:30 (300 s, cùng seed) lưu lượng TB 6 nút
+// Hàng Xanh = 5,7 xe/phút (đèn cố định; A1 poolScale 10 cho 4,8), xe quanh HX ~440, xe trên cầu Sài Gòn ~370, pool nhẹ hơn.
+// Pool dựng một lần; mật độ theo giờ (DEMAND_BY_HOUR_32) và kịch bản cao điểm chỉ đổi tỉ lệ xe hiện.
+export const NORTH_DEMAND_32 = Object.freeze({ center: Object.freeze([-130, -2540]), radius_m: 1500, turnBias: 15, spawnBias: 200, poolScale: 5 });
+// M5a — cầu Sài Gòn (~1 km) vắt ranh: cho phép xe trên nhịp cầu (biên nới 1200 m, chỉ cạnh tên "Cầu Sài Gòn").
+// Mọi đường khác giữ biên 0 (M2a: 0 xe ngoài khu Bắc).
+export const NORTH_BRIDGE_OPTS_32 = Object.freeze({ bridgeMargin: 1200, bridgeNames: Object.freeze(['Cầu Sài Gòn']) });
+export const NORTH_BRIDGE_NAME_32 = 'Cầu Sài Gòn';
+// M5a — khóa khu Bắc cho xe: mọi lần đặt khu của sim đều đưa về đúng khu Bắc (biên 0 + ngoại lệ cầu Sài Gòn).
+// Lý do: mô-đun mật độ đặt khu cho xe lúc nạp (previewRegion cho từng khu, rồi khôi phục) bằng regionTrafficPayload
+// (biên 250, không ngoại lệ cầu) — sau đó cầu Sài Gòn mất hết xe và khu có thể đổi sang khu bị khóa. Trả về hàm gỡ khóa.
+export function lockNorthRegion32(traffic, polygon) {
+  if (!traffic || typeof traffic.setRegion !== 'function' || !Array.isArray(polygon)) return null;
+  const orig = traffic.setRegion;
+  const payload = () => ({ id: 'bac', polygon: polygon.map(p => [p[0], p[1]]), margin: 0, ...NORTH_BRIDGE_OPTS_32 });
+  traffic.setRegion = () => orig(payload());
+  const out = traffic.setRegion();
+  return { out, restore() { traffic.setRegion = orig; } };
+}
+export function isNorthBridgeException32(net, e) {
+  if (!net || !net.bridgeEdge || !net.bridgeEdge[e]) return false;
+  const road = net.E && net.E[e] ? net.G.roads[net.E[e].road] : null;
+  return !!road && road.name === NORTH_BRIDGE_NAME_32;
+}
 export const HEAT_TICK_MS_32 = 250;   // ms thực: nhịp gọi engine (việc nặng chỉ chạy theo giây sim)
 
 export const SMART_APP_32_VERSION = 'smart-app-32a';
@@ -213,6 +243,7 @@ export function initSmartApp32({ scene, camera, renderer, traffic, status, root 
   const modules = {};
   const app = {
     controller, traffic, scene, camera, renderer, status, root, modules,
+    vms: createVmsBus32(),   // M5a: nội dung bảng VMS (cán bộ từ trạm / kịch bản ngập / cảnh báo kẹt)
     registerSmartModule32(name, mod) { modules[name] = mod; return mod; },
     dispose() { for (const m of Object.values(modules)) if (m && typeof m.dispose === 'function') m.dispose(); }
   };
@@ -270,7 +301,7 @@ export function installHeat32(app, { THREE, routing = null, nodeMap = [], root =
     }).catch(e => console.warn('heat-history-32:', e && e.message));
   }
   const boards = chooseVmsBoards32({ net, nodeMap, max: 4 });
-  const scene = createHeatScene32({ THREE, scene: app.scene, traffic, net, sim, boards });
+  const scene = createHeatScene32({ THREE, scene: app.scene, traffic, net, sim, boards, vmsBus: app.vms || null });
   const host = root && (root.querySelector ? root.querySelector('#smartHud32') : null);
   const panel = host ? mountHeatPanel32(host, { onToggle: on => { scene.setHeatVisible(on); } }) : null;
   let shown = '';
@@ -288,4 +319,42 @@ export function installHeat32(app, { THREE, routing = null, nodeMap = [], root =
     dispose() { clearInterval(timer); scene.dispose(); if (panel) panel.dispose(); }
   };
   return app.registerSmartModule32('heat', mod);
+}
+
+// M5a — kịch bản (scenarios-32.js): panel "Kịch bản" trong #smartHud32, lệnh trạm (cmd.scenario, cmd.vms) và trường
+// vms/scenario/flow_per_min_per_node của /station/metrics (qua app.metricsExtra32). Gọi SAU installHeat32 và installClock32.
+export function installScenarios32(app, { THREE = null, nodeMap = [], routing = null, root = (typeof document !== 'undefined' ? document : null), log = (m => console.info(m)) } = {}) {
+  const traffic = app.traffic, net = traffic.net;
+  const heat = app.modules && app.modules.heat ? app.modules.heat : null;
+  const clock = app.modules && app.modules.clock ? app.modules.clock : null;
+  const transport = app.modules && app.modules.transport ? app.modules.transport : null;
+  const vms = app.vms;
+  const boards = heat && heat.boards ? heat.boards : chooseVmsBoards32({ net, nodeMap, max: 4 });
+  const props = THREE && app.scene ? createBlockProps32({ THREE, scene: app.scene, traffic, net }) : null;
+  const scn = createScenarios32({ traffic, clock, routing, vms, nodeMap, boards, props, log });
+  const host = root && root.querySelector ? root.querySelector('#smartHud32') : null;
+  const panel = host ? mountScenarioPanel32(host, {
+    onPick: (k, p) => { try { scn.start(k, p); } catch (e) { panel.setActive('none', `Không chạy được: ${e.message}`); } },
+    onStop: () => { scn.stop(); }
+  }) : null;
+  const describe32 = st => {
+    if (!st.active) return undefined;
+    if (st.key === 'lane-block' && st.remainingS !== null) return `Đang chạy: ${st.label} · còn ${Math.ceil(st.remainingS / 60)} phút sim`;
+    return `Đang chạy: ${st.label} · ${Math.floor(st.simElapsedS / 60)} phút sim`;
+  };
+  const timer = setInterval(() => {
+    scn.tick();
+    if (panel) { const st = scn.status(); panel.setActive(st.key, describe32(st)); }
+  }, 1000);
+  const off = transport && typeof transport.onCommand === 'function' ? transport.onCommand(createCommandRouter32({ scenarios: scn, vms, log })) : null;
+  app.metricsExtra32 = () => ({
+    vms: vms.snapshot(boards, heat && heat.live ? heat.live.alerts() : []),
+    scenario: scn.metricsStatus(),
+    flow_per_min_per_node: app.controller ? app.controller.metrics(traffic.sim.counters.t).flow_per_node_min : 0
+  });
+  const mod = {
+    scenarios: scn, panel, props, boards,
+    dispose() { clearInterval(timer); if (off) off(); scn.dispose(); if (props) props.remove(); if (panel) panel.dispose(); }
+  };
+  return app.registerSmartModule32('scenarios', mod);
 }

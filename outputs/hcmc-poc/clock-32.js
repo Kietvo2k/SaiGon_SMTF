@@ -145,6 +145,23 @@ export function installClock32(app, { traffic, setLight, getLight, forecast = nu
     return true;
   }
 
+  // M5a: đặt đồng hồ tới giờ:phút gần nhất (≤ 12 giờ về trước hoặc tới trước, không chạy sim); dựng lại ánh sáng/nhu cầu.
+  function goTo(hour, minute = 0) {
+    if (!alive || ffActive) return false;
+    const target = Math.floor(Number(hour) || 0) * 3600 + Math.floor(Number(minute) || 0) * 60;
+    const cur = clock();
+    let delta = target - (((cur.total % 86400) + 86400) % 86400);
+    if (delta > 43200) delta -= 86400;
+    if (delta <= -43200) delta += 86400;
+    offsetS += delta;
+    invalidate();
+    const c = clock();
+    lastHour = c.hour;
+    applyHour(c.hour, true);
+    status(`Đã đặt đồng hồ ${c.label} · ${c.dateLabel} · lịch sử và dự báo làm mới`);
+    return true;
+  }
+
   function setButtonsDisabled(on) {
     if (el) el.querySelectorAll('[data-jump]').forEach(b => { b.disabled = !!on; });
   }
@@ -181,7 +198,7 @@ export function installClock32(app, { traffic, setLight, getLight, forecast = nu
 
   const api = {
     clock, heatTime: () => clock().heatTime, offsetS: () => offsetS,
-    jump, speed: () => speed, setSpeed, tick,
+    jump, goTo, speed: () => speed, setSpeed, tick,
     dispose() { alive = false; if (timer) clearInterval(timer); if (el) el.remove(); }
   };
   if (app && typeof app.registerSmartModule32 === 'function') app.registerSmartModule32('clock', api);   // bản đồ nhiệt đọc giờ qua app.modules.clock

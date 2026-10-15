@@ -16,12 +16,12 @@ export const BREAKER_SMART_32 = 180;              // = SMART_BREAKER_S của app
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
 // Một bộ chạy tua cho một mạng. Giữ một sim (tái dùng) và nạp lại ảnh trạng thái mỗi lần chạy.
-export function createLookaheadRunner32({ net, breakerS = BREAKER_SMART_32, seed = SEED } = {}) {
+export function createLookaheadRunner32({ net, breakerS = BREAKER_SMART_32, seed = SEED, demand = null } = {}) {
   if (!net) throw new TypeError('createLookaheadRunner32 cần net');
   const NE = net.NE;
   const speedLim = speedLimitsOf32(net);
   const routing = createRouteBias32({ seed });
-  const sim = createTrafficSim31(net, { signalPlan: net.signalPlan || null, controller: null, breakerS, seed, routeBias: routing.routeBias });
+  const sim = createTrafficSim31(net, { signalPlan: net.signalPlan || null, controller: null, breakerS, seed, routeBias: routing.routeBias, demand });
 
   // Chạy một lần với tỉ lệ `scale`. Nếu budget10 (ms cho 10 phút đầu) bị vượt thì trả {slow: true} để gọi lại với scale nhỏ hơn.
   function once(job, scale, budget10) {

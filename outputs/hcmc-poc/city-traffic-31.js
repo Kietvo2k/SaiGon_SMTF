@@ -145,10 +145,11 @@ const PALETTES = [
 const paintOf = (kind, i) => { const p = PALETTES[kind]; return p[hashU32((i * 31 + 7) ^ SEED) % p.length]; };
 
 // ---------------------------------------------------------------- pose (hình học) + vẽ
-export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null, signalPlan = null, controller = null, breakerS = undefined, seed = undefined, routeBias = null }) {
+export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null, signalPlan = null, controller = null, breakerS = undefined, seed = undefined, routeBias = null, demand = null }) {
   const t0 = performance.now();
   const net = buildTrafficNetwork31({ graph, roads, widthOf, drawn, signalPlan });
-  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS, seed, routeBias });
+  // M5a: demand (tùy chọn) = nhu cầu khu cao điểm/khu Bắc, đặt lúc dựng pool; không truyền = hành vi cũ.
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS, seed, routeBias, demand });
   const { lanes } = net;
   // ---- Nâng y theo mặt đường vẽ: mặt cao nhất trong 0,5 m trên profile làn (dốc/mảnh đoạn chồng nhau, như baseline 30B).
   // Tính tại đúng vị trí xe (không bảng nội suy) nên không tụt dưới đỉnh giữa hai mẫu.
@@ -340,6 +341,9 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
     // Khu mô phỏng (bước H): null = toàn thành phố; {id: string, polygon: [[x, z], …]} tọa độ cảnh (cùng hệ ROAD_GRAPH_31/CITY_DATA).
     // Xe ngoài đa giác tắt; sinh/tái sinh chỉ ở nút trong khu; setVisibleFraction áp lên tập xe trong khu. Trả về số xe đang hoạt động.
     setRegion: region => { const n = sim.setRegion(region); rebase(); publish(performance.now()); return n; },
+    // M5a: hạn chế làn (xe hỏng chắn làn, làn đóng, giảm tốc). {} = bình thường. Trả về số làn/độ dài đã đặt.
+    setRestrictions: r => { const out = sim.setRestrictions(r || {}); rebase(); publish(performance.now()); return out; },
+    restrictionCounts: () => sim.restrictionCounts(),
     getRegion: () => ({ ...sim.region, eligible: sim.eligibleCount() }),
     // M4b2: tốc độ chạy và tua nhanh (giây sim). Mặc định 1 và không tua: hành vi cũ không đổi.
     setTimeScale: k => { const v = Number(k); timeScale = Number.isFinite(v) ? Math.max(0, Math.min(20, v)) : 1; return timeScale; },

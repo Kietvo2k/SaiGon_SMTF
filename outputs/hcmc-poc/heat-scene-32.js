@@ -3,7 +3,7 @@
 // Phần hình học (ribbonEdges32, buildRibbon32, paintRibbon32) là thuần JS để test Node; THREE chỉ nạp qua tham số.
 import { colorOf, HEAT_COLORS_32 } from './heat-32.js?v=32a';
 import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
-import { vmsMessage32, groupAlertsByRoad32 } from './heat-live-32.js?v=32a';
+import { vmsDisplay32, groupAlertsByRoad32 } from './heat-live-32.js?v=32a';
 
 export const HEAT_SCENE_32_VERSION = 'heat-scene-32a';
 export const RIBBON_LIFT_M_32 = 0.6;      // m: ribbon nằm trên mặt đường; camera xa (~5 km, near 3 m) cần ≥ 0,5 m để không lún vào mặt đường
@@ -97,7 +97,7 @@ export function paintVms32(ctx, msg, W = VMS_W_32, H = VMS_H_32) {
 }
 
 // Dựng lớp 3D. THREE được truyền vào (app không import three trong module này). Gọi update(tSim, live) mỗi nhịp.
-export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = [], edges = null }) {
+export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = [], edges = null, vmsBus = null }) {
   if (!THREE || !scene) throw new TypeError('createHeatScene32 cần THREE và scene');
   const geo = createTrafficGeometry31(net, { jit: [], len: [] });
   const firstLane = new Int32Array(net.NE).fill(-1);
@@ -163,7 +163,7 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
     group.rotation.y = b.yaw;
     scene.add(group);
     const entry = { board: b, ctx, tex, key: null, group, parts: [pole, frame, sign] };
-    showVms(entry, vmsMessage32(b, []));
+    showVms(entry, vmsDisplay32(b, [], vmsBus));
     return entry;
   });
   function showVms(entry, msg) {
@@ -177,12 +177,12 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
   return {
     mesh,
     setHeatVisible(on) { mesh.visible = !!on; if (on) lastPaint = -Infinity; },
-    vmsStates(alerts = []) { return vms.map(entry => ({ id: entry.board.id, ...vmsMessage32(entry.board, alerts) })); },
+    vmsStates(alerts = []) { return vms.map(entry => ({ id: entry.board.id, ...vmsDisplay32(entry.board, alerts, vmsBus) })); },
     // Gọi mỗi nhịp: tô lại ribbon mỗi RIBBON_PAINT_S_32 giây sim khi đang hiện; cập nhật bảng VMS theo cảnh báo hiện tại.
     update(tSim, live) {
       if (mesh.visible && tSim - lastPaint >= RIBBON_PAINT_S_32) { paint(live); lastPaint = tSim; }
       const alerts = live.alerts();
-      for (const entry of vms) showVms(entry, vmsMessage32(entry.board, alerts));
+      for (const entry of vms) showVms(entry, vmsDisplay32(entry.board, alerts, vmsBus));
     },
     dispose() {
       scene.remove(mesh);

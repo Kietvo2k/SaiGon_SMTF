@@ -17,7 +17,7 @@ export function collectBuffers32(o, out = new Set()) {
   return out;
 }
 
-export function installForecast32(app, { G, roads, widths, drawn, signalPlan = null, stats = null, breakerS = 180,
+export function installForecast32(app, { G, roads, widths, drawn, signalPlan = null, stats = null, breakerS = 180, demand = null,
   createWorker = null, startDelayMs = FORECAST_START_DELAY_MS_32, doc = (typeof document !== 'undefined' ? document : null) } = {}) {
   if (!app || !app.traffic) throw new TypeError('installForecast32 cần app.traffic');
   const sim = app.traffic.sim;
@@ -85,7 +85,8 @@ export function installForecast32(app, { G, roads, widths, drawn, signalPlan = n
     worker = make();
     worker.onmessage = onMessage;
     worker.onerror = e => { busy = false; setStatus(`Tua trước lỗi: ${e && e.message ? e.message : 'Worker'}`); };
-    worker.postMessage({ type: 'init', graph: G, roads, widths, drawn, signalPlan, breakerS, expectStats: stats ? JSON.stringify(stats) : null });
+    // M5a: nhu cầu phải giống sim chính (cùng số xe trong pool), nếu không importState sẽ từ chối trạng thái.
+    worker.postMessage({ type: 'init', graph: G, roads, widths, drawn, signalPlan, breakerS, demand, expectStats: stats ? JSON.stringify(stats) : null });
     setStatus(describe());
   };
   const startTimer = setTimeout(start, Math.max(0, startDelayMs));

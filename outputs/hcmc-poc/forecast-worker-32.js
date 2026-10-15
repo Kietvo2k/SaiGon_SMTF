@@ -18,7 +18,7 @@ self.onmessage = ev => {
       });
       const stats = JSON.stringify(net.stats);
       if (m.expectStats && stats !== m.expectStats) throw new Error('mạng trong Worker khác mạng của trạm chính');
-      runner = createLookaheadRunner32({ net, breakerS: m.breakerS });
+      runner = createLookaheadRunner32({ net, breakerS: m.breakerS, demand: m.demand || null });
       self.postMessage({ type: 'ready', NE: net.NE, NL: net.NL, stats: net.stats });
     } else if (m.type === 'run') {
       if (!runner) throw new Error('Worker chưa init');

@@ -79,7 +79,11 @@ export function installHud32(app, { transport = null } = {}) {
     if (transport) {
       const tSim = simT();
       const m = controller.metrics(tSim);
+      // M5a: trường thêm (vms, scenario) lấy lúc gửi qua app.metricsExtra32 do smart-app-32 gắn sau.
+      const extra = typeof app.metricsExtra32 === 'function' ? (app.metricsExtra32() || {}) : {};
       transport.sendMetrics({
+        ...extra,
+        flow_per_min_per_node: m.flow_per_node_min,
         station_id: STATION_ID_32, t: new Date().toISOString(), t_sim: +Number(tSim).toFixed(1),
         fps, draw_calls: (app.renderer && app.renderer.info && app.renderer.info.render && app.renderer.info.render.calls) || 0,
         kpi: { wait_avg_s: m.wait_avg_s, queue_max: m.queue_max, flow_per_node_min: m.flow_per_node_min, flow_per_min: m.flow_per_min },

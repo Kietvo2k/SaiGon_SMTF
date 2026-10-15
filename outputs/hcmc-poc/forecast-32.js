@@ -1,6 +1,32 @@
 // forecast-32.js - du bao ket thong ke M4, thuan JS, ES module, chay duoc trong Node va trinh duyet.
 // Khong tua sim o day. Phan tua ban sao sim trong Web Worker se do task sau lam (can serialize trang thai sim).
 
+// M5a — hiệu chỉnh xác suất (công thức mới, đã thử trong test/m5a-32.test.mjs):
+//   1) Cạnh đang thông (mức hiện tại < FREE_LEVEL_32 = 0,3) ở horizon ≥ 30 phút: prob ≤ PROB_CAP_FREE_32 (0,5),
+//      TRỪ KHI xu hướng tăng rõ: mức tăng quan sát trong cửa sổ gần nhất ≥ RISE_CLEAR_32 (0,15) VÀ mức tăng dự kiến
+//      slope·60·h ≥ RISE_CLEAR_32 (0,15).
+//   2) Độ tin cậy giảm theo horizon: rel ← rel · (1 − REL_DECAY_32 · min(1, h/30)); 10 phút ×0,917, 20 phút ×0,833, 30 phút ×0,75.
+// Trước M5a: cạnh thông vẫn đạt 92–93 % ở 30 phút (tua trước + sigmoid) nên cảnh báo tràn lan.
+export const CAL_VERSION_32 = 'forecast-cal-32a';
+export const PROB_CAP_FREE_32 = 0.5;
+export const FREE_LEVEL_32 = 0.3;
+export const RISE_CLEAR_32 = 0.15;
+export const REL_DECAY_32 = 0.25;
+const clamp01 = v => (Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0);
+
+export function calibrateForecast32({ prob, reliability, level, horizonMin, slope = 0, n = 0, observedRise = 0 }) {
+  const h = Math.max(0, Number(horizonMin) || 0);
+  let p = clamp01(Number(prob));
+  const projRise = (Number(slope) || 0) * h * 60;
+  const rising = n >= 2 && Number(observedRise) >= RISE_CLEAR_32 && projRise >= RISE_CLEAR_32;
+  if (h >= 30 && Number.isFinite(level) && level < FREE_LEVEL_32 && !rising) p = Math.min(p, PROB_CAP_FREE_32);
+  const rel = clamp01(Number(reliability) * (1 - REL_DECAY_32 * Math.min(1, h / 30)));
+  return { prob: p, reliability: rel };
+}
+
+// Độ dốc (mức/giây) của chuỗi điểm {t, level}; dùng chung cho hiệu chỉnh.
+export function slopeOf32(points) { return linregSlope(Array.isArray(points) ? points : []); }
+
 function linregSlope(points) {
   const n = points.length;
   if (n < 2) return 0;
@@ -31,7 +57,8 @@ function horizonWeight(horizonMin) {
   return Math.max(0, Math.min(1, 0.1 + h / 50));
 }
 
-export function forecastEdge32(o) {
+// Dự báo thô (chưa hiệu chỉnh): dùng để trộn với tua trước rồi hiệu chỉnh MỘT lần ở heat-live-32.
+export function forecastRaw32(o) {
   const hist = Array.isArray(o.history) ? o.history : [];
   const rec = Array.isArray(o.recent) ? o.recent : [];
   const h = Math.max(0, Number(o.horizonMin) || 10);
@@ -54,7 +81,14 @@ export function forecastEdge32(o) {
   const noiseFactor = Math.max(0, 1 - noise / 0.3);
   const horizonFactor = Math.max(0, 1 - h / 60);
   const reliability = Math.max(0, Math.min(1, dataFactor * 0.5 + noiseFactor * 0.25 + horizonFactor * 0.25));
-  return { prob, reliability };
+  const observedRise = rec.length >= 2 ? Number(rec[rec.length - 1].level) - Number(rec[0].level) : 0;
+  return { prob, reliability, level: lastLevel, slope, n, observedRise };
+}
+
+// Dự báo đã hiệu chỉnh (công thức mục M5a ở trên).
+export function forecastEdge32(o) {
+  const r = forecastRaw32(o);
+  return calibrateForecast32({ prob: r.prob, reliability: r.reliability, level: r.level, horizonMin: Math.max(0, Number(o.horizonMin) || 10), slope: r.slope, n: r.n, observedRise: r.observedRise });
 }
 
 export function alerts32(levels, forecasts, opts) {

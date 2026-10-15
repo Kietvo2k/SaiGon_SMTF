@@ -3,7 +3,7 @@
 // (routeBias của sim) → chọn vị trí + thông điệp bảng VMS → payload gửi trạm (POST /station/heat).
 // Không tự đặt hẹn giờ: người gọi gọi engine.tick() theo nhịp của mình; mọi mốc tính theo giây sim.
 import { createHeat32 } from './heat-32.js?v=32a';
-import { forecastEdge32, alerts32, combineWithLookahead32 } from './forecast-32.js?v=32a';
+import { forecastRaw32, alerts32, combineWithLookahead32, calibrateForecast32, slopeOf32 } from './forecast-32.js?v=32a';
 import { hashU32, SEED, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
 
 export const HEAT_LIVE_32_VERSION = 'heat-live-32b';
@@ -68,12 +68,15 @@ export function complies32(i, seed = SEED, share = COMPLY_SHARE_32) {
 }
 
 // Bộ điều hướng: routeBias(edge, i) cho sim. Chỉ xe tuân thủ mới bị giảm trọng số rẽ vào cạnh cảnh báo.
+// M5a: `extra` = cạnh tránh do kịch bản (ngập): cùng cơ chế xe tuân thủ; không bị ghi đè bởi setAvoid của dự báo.
 export function createRouteBias32({ seed = SEED, share = COMPLY_SHARE_32, factor = BIAS_FACTOR_32 } = {}) {
-  let avoid = new Set();
+  let avoid = new Set(), extra = new Set();
   return {
-    routeBias(edge, i) { return avoid.has(edge) && complies32(i, seed, share) ? factor : 1; },
+    routeBias(edge, i) { return (avoid.has(edge) || extra.has(edge)) && complies32(i, seed, share) ? factor : 1; },
     setAvoid(edges) { avoid = new Set(edges || []); },
+    setExtraAvoid(edges) { extra = new Set(edges || []); },
     avoided() { return [...avoid]; },
+    extraAvoided() { return [...extra]; },
     share, factor
   };
 }
@@ -147,10 +150,14 @@ export function createHeatLive32({ net, sim, routing = null, onPayload = null, n
       const hist = histOf(hourly, e);
       const rec = (series.get(e) || []).concat([{ t, level: lv[e] }]).slice(-SERIES_KEEP_32);
       let best = null;
+      const slope = slopeOf32(rec);
+      const observedRise = rec.length >= 2 ? rec[rec.length - 1].level - rec[0].level : 0;
       for (const h of HORIZONS_MIN_32) {
-        let f = forecastEdge32({ history: hist, recent: rec, horizonMin: h });
+        // M5a: hiệu chỉnh MỘT lần sau khi trộn tua trước (không hiệu chỉnh hai lần).
+        let f = forecastRaw32({ history: hist, recent: rec, horizonMin: h });
         const lk = lookLevels(h, t);
         if (lk) f = combineWithLookahead32(f, { prob: probOfLevel32(lk[e]), reliability: LOOK_REL_32 * look.scale }, LOOK_W_32);
+        f = calibrateForecast32({ prob: f.prob, reliability: f.reliability, level: lv[e], horizonMin: h, slope, n: rec.length, observedRise });
         if (!best || f.prob > best.prob) best = { prob: f.prob, reliability: f.reliability, horizonMin: h };
       }
       forecasts[e] = best;
@@ -317,4 +324,45 @@ export function vmsMessage32(board, alerts = []) {
   const alt = board.altName ? `ĐI ${board.altName}` : 'ĐI TUYẾN KHÁC';
   const lines = ['KẸT XE PHÍA TRƯỚC', alt];
   return { state: 'alert', lines, text: lines.join(' · '), key: `alert|${board.altName || ''}`, edge: hit.edge, prob: hit.prob, horizonMin: hit.horizonMin };
+}
+
+// M5a: "bus" nội dung bảng VMS. Ưu tiên: (1) nội dung cán bộ đặt từ trạm (cmd.vms, mode manual); (2) kịch bản ngập
+// (cảnh báo ngập); (3) cảnh báo kẹt theo dự báo (vmsMessage32). mode auto/không có → trở về hệ thống.
+export function createVmsBus32() {
+  const manual = new Map();   // vms_id → {text, lines}
+  const flood = new Map();    // vms_id → {lines}
+  return {
+    setManual(id, lines) {
+      const arr = (Array.isArray(lines) ? lines : [lines]).map(x => String(x ?? '').trim()).filter(Boolean).slice(0, 2);
+      if (!arr.length) { manual.delete(id); return false; }
+      manual.set(id, { lines: arr, text: arr.join(' · ') }); return true;
+    },
+    clearManual(id) { return manual.delete(id); },
+    setFlood(id, lines) { flood.set(id, { lines: lines.slice(0, 2) }); },
+    clearFlood(id) { return flood.delete(id); },
+    clearFloodAll() { flood.clear(); },
+    manualOf: id => manual.get(id) || null,
+    floodOf: id => flood.get(id) || null,
+    // Nội dung đang hiển thị gửi trạm (vms_id, text, mode): mode manual khi cán bộ đặt, còn lại auto.
+    snapshot(boards, alerts = []) {
+      return (boards || []).map(b => {
+        const m = manual.get(b.id);
+        if (m) return { vms_id: b.id, text: m.text, mode: 'manual' };
+        const msg = vmsDisplay32(b, alerts, { manualOf: id => manual.get(id) || null, floodOf: id => flood.get(id) || null });
+        return { vms_id: b.id, text: msg.text, mode: 'auto' };
+      });
+    }
+  };
+}
+
+export function vmsDisplay32(board, alerts = [], bus = null) {
+  if (bus && bus.manualOf) {
+    const m = bus.manualOf(board && board.id);
+    if (m) return { state: 'manual', lines: m.lines.slice(), text: m.text, key: `manual|${m.text}`, edge: null, prob: 0, horizonMin: 0 };
+  }
+  if (bus && bus.floodOf) {
+    const f = bus.floodOf(board && board.id);
+    if (f) return { state: 'alert', lines: f.lines.slice(), text: f.lines.join(' · '), key: `flood|${f.lines.join('|')}`, edge: null, prob: 0, horizonMin: 0 };
+  }
+  return vmsMessage32(board, alerts);
 }
