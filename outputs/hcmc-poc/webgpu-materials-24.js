@@ -236,14 +236,20 @@ if(isSmart32){
   const signalPoints=signalRows.map(row=>nodeById.get(row.osm_id)).filter(Boolean).map(node=>[node.x,node.z]);
   const roadsFilter=lockMod32.lockRoadFilter32({roads:D.roads,regionOf,signalPoints,isSignatureWay:id=>registry32.isSignatureWay(id)});
   const simHidden=new Set(roadsFilter.hidden);for(const index of roadsFilter.keptMinor)simHidden.add(index);
-  lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints};
-  materialStatus.lock32={version:lockMod32.CITY_LOCK_32_VERSION,roads:roadsFilter.stats,hiddenRoads:roadsFilter.hidden.size,simHiddenRoads:simHidden.size,signalPoints:signalPoints.length};
+  const buildingsFilter=lockMod32.selectNorthBuildings32({buildings:renderBuildings,roads:D.roads,regionOf,isSignature:id=>signatureGate.isSignatureBuilding(id)});
+  lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints,buildings:buildingsFilter,boxes:[]};
+  materialStatus.lock32={version:lockMod32.CITY_LOCK_32_VERSION,roads:roadsFilter.stats,buildings:{before:buildingsFilter.before,ordinary:buildingsFilter.ordinary,signature:buildingsFilter.signature,keptOrdinary:buildingsFilter.keptOrdinary,dropped:buildingsFilter.dropped,keptPercent:+(buildingsFilter.ratio*100).toFixed(1)},hiddenRoads:roadsFilter.hidden.size,simHiddenRoads:simHidden.size,signalPoints:signalPoints.length};
 }
 
 for(let bi=0;bi<renderBuildings.length;bi++){
   const b=renderBuildings[bi];
   if(heroEnvelopeIds.has(Number(b.id))){faceEnds.push(positions.length/9);continue;}
   if(b.hiddenByCorrection){faceEnds.push(positions.length/9);continue;}   // bảng sửa lỗi 31C: footprint ẩn không vẽ
+  // M2a: nhà thường khu Bắc → bỏ chi tiết dựng sẵn; nhà giữ lại (tâm ≤ 40 m tim trunk/primary/secondary) vào danh sách hộp đơn giản.
+  if(lock32&&lock32.buildings.ordinaryIndices.has(bi)){
+    if(lock32.buildings.indices.has(bi))lock32.boxes.push(b);
+    faceEnds.push(positions.length/9);continue;
+  }
   const kind=classify(b),seed=hash01(b.id),tones=baseColors(b,kind);
   const y=b.h+1.5,base=b.min+1.5,ring=b.r[0];
   const flat=[],holes=[];let count=0;
@@ -275,6 +281,26 @@ for(let bi=0;bi<renderBuildings.length;bi++){
     roofFixtures.push({x:b.center[0],z:b.center[1],y:y+1.1,scale:Math.min(5,Math.max(1.4,Math.sqrt(area)*.11)),seed});
   }
   if(bi%5000===0){setProgress(12+bi/renderBuildings.length*42,`Đang phân loại ${bi.toLocaleString('vi-VN')} / ${renderBuildings.length.toLocaleString('vi-VN')} công trình…`);await yieldMain();}
+}
+
+// M2a — nhà thường khu Bắc giữ lại (tâm ≤ 40 m tim trunk/primary/secondary) vẽ bằng MỘT InstancedMesh hộp xám:
+// mái phẳng, không texture, 1 draw call; chi tiết facet của nhóm này đã bỏ ở vòng lặp trên.
+if(lock32&&lock32.boxes.length){
+  const lockBoxMaterial=new THREE.MeshStandardNodeMaterial({color:'#a9aaa3',roughness:.96,metalness:.01});
+  const lockBoxes32=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),lockBoxMaterial,lock32.boxes.length);
+  const boxDummy=new THREE.Object3D();
+  lock32.boxes.forEach((building,i)=>{
+    let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
+    for(const point of building.r[0]){if(point[0]<minX)minX=point[0];if(point[0]>maxX)maxX=point[0];if(point[1]<minZ)minZ=point[1];if(point[1]>maxZ)maxZ=point[1];}
+    const boxBase=building.min+1.5,boxTop=Math.max(boxBase+2,building.h+1.5);
+    boxDummy.position.set((minX+maxX)/2,(boxBase+boxTop)/2,(minZ+maxZ)/2);
+    boxDummy.rotation.set(0,0,0);
+    boxDummy.scale.set(Math.max(2,maxX-minX),boxTop-boxBase,Math.max(2,maxZ-minZ));
+    boxDummy.updateMatrix();lockBoxes32.setMatrixAt(i,boxDummy.matrix);
+  });
+  lockBoxes32.name='M2a · hộp nhà tối giản khu Bắc';lockBoxes32.receiveShadow=true;scene.add(lockBoxes32);
+  lock32.boxMesh=lockBoxes32;
+  materialStatus.lock32.boxes={count:lock32.boxes.length,drawCalls:1};
 }
 
 setProgress(57,'Đang biên dịch vật liệu TSL…');
@@ -767,9 +793,9 @@ const fixtures=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),fixtureMater
 roofFixtures.forEach((item,i)=>{dummy.position.set(item.x,item.y,item.z);dummy.rotation.set(0,item.seed*5.3,0);dummy.scale.set(item.scale,1.4+item.seed*1.8,item.scale*.62);dummy.updateMatrix();fixtures.setMatrixAt(i,dummy.matrix);});
 fixtures.castShadow=true;scene.add(fixtures);
 materialStatus.heroDetail={};
-const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))&&!building.hiddenByCorrection),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
+const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))&&!building.hiddenByCorrection&&!(lock32&&lock32.buildings.ordinaryIds.has(Number(building.id)))),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
 materialStatus.heroCorridor={};
-const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetwork,buildings:renderBuildings.filter(building=>!building.hiddenByCorrection),status:materialStatus.heroCorridor});
+const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetwork,buildings:renderBuildings.filter(building=>!building.hiddenByCorrection&&!(lock32&&lock32.buildings.ordinaryIds.has(Number(building.id)))),status:materialStatus.heroCorridor});
 // Bước E2: cột đèn theo mép đường hợp nhất + vạch zebra (thay đèn đặt theo tim từng way của runtime 28).
 materialStatus.streetFurniture={};
 const streetFurniture=createStreetFurniture31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,data:window.STREET_FURNITURE_31,widths,nightLevel,status:materialStatus.streetFurniture});
