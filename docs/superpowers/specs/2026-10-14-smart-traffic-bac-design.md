@@ -556,6 +556,42 @@ và `/citizen/violations/{id}/pay` là **M6** (cùng `notified/paid/disputed`, m
 | GET | `/media/stream/{camera_id}` | Khung mới nhất (JPEG) hoặc MJPEG; query `?fps=2` |
 | GET | `/media/video/{camera_id}` | `media/cameras/<CAM-ID>.mp4` nếu có file (Q14) |
 
+#### API M6 (cập nhật M6a — endpoint thực tế đã triển khai)
+
+Lỗi vẫn theo `{"error": {...}}`. Vai trò lấy từ JWT; token bị từ chối ngay khi tài khoản bị khóa hoặc đổi vai trò (đối chiếu DB). Vòng đời: `new → confirmed → notified → paid`; `notified → disputed → notified | dismissed`; cạnh khác → 409; mọi chuyển tiếp ghi `audit_log`.
+
+| Method | Path | Vai trò | Body / ghi chú |
+|---|---|---|---|
+| POST | `/citizen/account/register` | công khai, 5 lần/phút/IP | `{username, password (8–72 byte), full_name, email, phone?}` → `{"ok":true}`; có `role` trong body → 422; email chỉ lưu hồ sơ, không gửi thư |
+| GET | `/citizen/account` | citizen | `{username, full_name, email, plates:[{plate, vehicle_class, bound_at}], max_plates:5}` |
+| POST | `/citizen/account/plates` | citizen | `{plate, vehicle_class, registration_code}` → `{ok, plates}`. Mã đăng ký 8 chữ số tất định từ seed (`plates_seed.registration_code`); sai mã đếm theo tài khoản, quá 5 lần → 429 và khóa 5 phút; tối đa 5 biển; biển đã thuộc tài khoản khác → 409 |
+| DELETE | `/citizen/account/plates/{plate}` | citizen | bỏ gắn biển → `{ok, plates}` |
+| GET | `/citizen/violations` | citizen | `?status=confirmed\|notified\|paid\|disputed&page&page_size` — chỉ biển đã gắn cho tài khoản |
+| GET | `/citizen/violations/{id}` | chủ xe | không trả `owner_*`, `is_scenario_plate`, `sim`, `review`; kèm `can_pay`, `can_complain`, `complaints` của mình |
+| POST | `/citizen/violations/{id}/pay` | chủ xe | `{confirm: true}` → chỉ `notified → paid`; ghi `payments` (`status=recorded`, `amount_vnd` NULL), không có thông tin thẻ/tài khoản |
+| POST | `/citizen/complaints` | chủ xe | `{violation_id, kind: priority_vehicle\|wrong_plate\|other, reason (bắt buộc, ≤200), message? (≤1000)}` → `{id:"CB-…", status:"open"}`; vi phạm `notified → disputed` |
+| GET | `/citizen/complaints/{id}` | người khiếu nại | `{status, resolution, …}`; không lộ người xử lý |
+| GET | `/citizen/notifications` | citizen | `?unread=true&page&page_size` → `{items, total, unread}` |
+| POST | `/citizen/notifications/read` | citizen | `{ids:[…]}` → `{ok, updated}`; chỉ đánh dấu thông báo của chính mình |
+| POST | `/officer/violations/{id}/notify` | officer, commander, admin | `confirmed → notified` (biển chưa gắn tài khoản → 409) |
+| GET | `/officer/complaints` | officer+ | `?status=open\|resolved\|rejected&page` |
+| POST | `/officer/complaints/{id}/resolve` | officer+ | `{action: confirm\|dismiss, note (bắt buộc)}`. `confirm` = giữ: vi phạm → `notified`, khiếu nại `rejected`; `dismiss` = gỡ: vi phạm → `dismissed`, khiếu nại `resolved` |
+| GET | `/officer/stats` | officer+ | `?from&to` → `{total, by_node, by_code, by_status, by_hour[24]}`; giờ theo múi UTC+7 |
+| GET | `/officer/violations` | officer+ | thêm `from`, `to`, `priority_flag`, `priority_reason` (cờ xe ưu tiên) |
+| GET | `/admin/users` | admin | `?role=officer\|commander`; không trả hash mật khẩu |
+| POST | `/admin/users` | admin | `{username, password, display_name, role: officer\|commander}` (không tạo được admin/citizen) |
+| POST | `/admin/users/{id}/active` | admin | `{active: bool}`; khóa có hiệu lực ngay với token đang dùng |
+| PUT | `/admin/users/{id}/role` | admin | `{role: officer\|commander}`; chỉ với tài khoản cán bộ; không tự đổi quyền hoặc tự khóa mình |
+
+**WebSocket M6a** (bổ sung §4.6): `notification.new` `{id, title, body, violation_id, kind, created_at}` chỉ gửi tới chủ tài khoản (tên thực tế; §4.6 ghi `notification.created`); `violation.updated` gửi cán bộ kèm `review`, gửi chủ xe với `review: null`; `complaint.updated` `{id, status, violation_id}`.
+
+**Điểm lệch đặc tả (chốt theo brief M6a):**
+1. Giữ vi phạm khi khiếu nại đi tới `notified` (§4.4 vẽ `confirmed`), để chủ xe còn nộp phạt. `disputed` không cho `paid` (§4.5 ghi `{notified, disputed}`, §4.4 chỉ vẽ `notified → paid`; chọn §4.4).
+2. Đăng ký không nhận `plates`; gắn biển thực hiện sau đăng nhập để giới hạn thử mã theo tài khoản.
+3. Khiếu nại chưa có `attachments` (chưa có API tải ảnh cho công dân).
+4. Cán bộ chưa ghi nhận nộp phạt tại quầy (§4.4 cho phép officer chuyển `paid`).
+5. Cột bổ sung (tự migrate khi `init_db`): `complaints.kind, reason, resolved_by`; `plates_seed.registration_code`.
+
 ### 4.6 Sự kiện WebSocket
 
 Kết nối: `ws://localhost:8900/ws/v1` — **không để token trong query**. Client gửi tin nhắn đầu
