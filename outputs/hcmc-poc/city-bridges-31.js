@@ -358,8 +358,9 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
           const u = (next - acc) / L, x = ax + (bx - ax) * u, z = az + (bz - az) * u, y = ay + (by - ay) * u, top = y - thick;
           next += spacing;
           if (top - groundY < PIER_MIN_CLEAR_M) continue;
+          // M2b: đoạn sông/rạch qua đất (dốc dẫn, đoạn cao trên đất) cũng đặt trụ xuống đất; trước đây chỉ trụ trên nước
+          // nên mặt cầu 4–13 m trên đất lơ lửng. Trụ dưới mặt đường khác vẫn bị chặn bởi probe bên dưới.
           const wet = onWater(x, z);
-          if ((cls === 'river' || cls === 'canal') && !wet) continue;
           const halfAcross = Math.min(piece.halfWidth * 0.6, 4.5), radius = Math.max(halfAcross, 0.7);
           const nx = -(bz - az) / L, nz = (bx - ax) / L;
           const probe = [[0, 0], [nx * radius, nz * radius], [-nx * radius, -nz * radius], [radius, 0], [-radius, 0], [0, radius], [0, -radius]];
