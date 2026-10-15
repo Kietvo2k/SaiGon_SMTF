@@ -114,3 +114,47 @@ test('lockRegionLabels32: nhãn khóa + tên khu, tâm nhãn trong bbox khu đó
   }
   assert.equal(lockRegionLabels32(regions, []).length, 0);
 });
+
+// M2c — ẩn signature ngoài khu Bắc, cầu vắt ranh giữ, mặt nạ nền/nước khớp regionOf.
+import {
+  signatureHidden32, bridgeHidden32, lockMaskGrid32, roadPoints32, LOCK_MASK_32, LOCK_TINT_32, LOCK_RENDER_TARGET_32
+} from '../city-lock-32.js?v=32a';
+
+test('M2c: signature có tâm ngoài khu Bắc bị ẩn; trong khu Bắc giữ', () => {
+  assert.equal(signatureHidden32(1124, -1768, regionOf), false);   // Landmark 81 (bac)
+  assert.equal(signatureHidden32(-907, 254, regionOf), true);      // Nhà hát Thành phố (trung-tam)
+  assert.equal(signatureHidden32(-399, -351, regionOf), true);     // Marina Central (ven-song)
+});
+
+test('M2c: cầu vắt ranh (có điểm trong bac) giữ trọn; cầu nằm hẳn ngoài khu Bắc bị ẩn', () => {
+  assert.equal(bridgeHidden32([[-900, 254], [1124, -1768]], regionOf), false);
+  assert.equal(bridgeHidden32([[-900, 254], [-800, 300]], regionOf), true);
+  assert.equal(bridgeHidden32([], regionOf), true);
+});
+
+test('M2c: mặt nạ khu khóa đúng 1024² và khớp regionOf tại tâm từng ô', () => {
+  const cfg = LOCK_MASK_32, cell = cfg.size / cfg.n;
+  const mask = lockMaskGrid32(regionOf, cfg);
+  assert.equal(mask.length, cfg.n * cfg.n);
+  for (let k = 0; k < 400; k++) {
+    const i = (k * 97) % cfg.n, j = (k * 53 + 11) % cfg.n;
+    const want = regionOf(cfg.x0 + (i + 0.5) * cell, cfg.z0 + (j + 0.5) * cell) === 'bac' ? 0 : 255;
+    assert.equal(mask[j * cfg.n + i], want, `ô ${i},${j}`);
+  }
+  const at = (x, z) => mask[Math.floor((z - cfg.z0) / cell) * cfg.n + Math.floor((x - cfg.x0) / cell)];
+  assert.equal(at(1124, -1768), 0);
+  assert.equal(at(-907, 254), 255);
+});
+
+test('M2c: albedo khu khóa đã hiệu chỉnh; mục tiêu hiển thị là xám trầm và xám-xanh bão hòa thấp', () => {
+  assert.equal(LOCK_RENDER_TARGET_32.land, '#9aa0a6');
+  assert.equal(LOCK_RENDER_TARGET_32.water, '#7f97a6');
+  assert.equal(LOCK_TINT_32.land, '#7a7e81');
+  assert.equal(LOCK_TINT_32.water, '#455d6d');
+});
+
+test('M2c: roadPoints32 nhận cả mảng cặp và mảng phẳng', () => {
+  assert.deepEqual(roadPoints32({ c: [[1, 2], [3, 4]] }), [[1, 2], [3, 4]]);
+  assert.deepEqual(roadPoints32({ c: [1, 2, 3, 4] }), [[1, 2], [3, 4]]);
+  assert.deepEqual(roadPoints32({}), []);
+});

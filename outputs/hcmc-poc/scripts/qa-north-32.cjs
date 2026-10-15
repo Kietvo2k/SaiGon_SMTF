@@ -1,6 +1,7 @@
 // QA T9b + M2a — app smart: khu Bắc cố định, panel Tham quan 5 góc, đèn + vùng camera, 0 chuỗi cấm;
 // M2a: khóa 3 khu (nền xám, viền khu Bắc, 3 nhãn khóa, bấm nút khu khóa → thông báo, KHÔNG đổi khu),
-// 0 nhà/cây/xe hiển thị có tâm ngoài khu Bắc, camera trong giới hạn, ≥ 60 xe quanh Hàng Xanh sau 60 s.
+// 0 nhà/cây/xe hiển thị có tâm ngoài khu Bắc, camera trong giới hạn, ≥ 60 xe quanh Hàng Xanh sau 60 s;
+// M2c: signature (công trình, cầu, module, nhãn) ngoài khu Bắc không hiển thị, cầu vắt ranh vẫn có, nền khóa xám trầm.
 // Chạy: PORT=8841 node outputs/hcmc-poc/scripts/qa-north-32.cjs   (cần server tĩnh đang chạy)
 const PW = process.env.PW_MODULE || 'C:/Users/Admin/AppData/Roaming/npm/node_modules/@playwright/mcp/node_modules/playwright';
 const CHROME = process.env.PW_CHROME || 'C:/Users/Admin/AppData/Local/ms-playwright/chromium-1243/chrome-win64/chrome.exe';
@@ -19,6 +20,8 @@ const EXPECT_TOUR = [
 ];
 const BANNED = ['giả lập', 'mô phỏng', 'minh họa', 'illustrative', 'simulated', 'demo', 'fake'];
 const LOCK_LABEL = '🔒 Khu vực đang khóa';
+// M2c — nhãn địa danh signature nằm ngoài khu Bắc: không được xuất hiện (LANDMARK 81 nằm trong khu Bắc nên không có ở đây).
+const OUTSIDE_SIGNATURE_LABELS = ['BITEXCO', 'NHÀ HÁT THÀNH PHỐ', 'BẾN BẠCH ĐẰNG', 'QUẢNG TRƯỜNG LAM SƠN', 'ĐỒNG KHỞI', 'NGUYỄN HUỆ', 'MARINA CENTRAL', 'GRAND MARINA', 'CẦU BA SON', 'THẢO ĐIỀN', 'QUỐC HƯƠNG', 'NGUYỄN VĂN HƯỞNG'];
 
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: CHROME, args: ['--enable-unsafe-webgpu', '--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
@@ -51,7 +54,7 @@ const LOCK_LABEL = '🔒 Khu vực đang khóa';
         buildings: m.region?.buildingsInRegion ?? 0,
         vehicles: m.region?.vehicles ?? 0,
         lockLabels: [...document.querySelectorAll('#labels .lock-label')].map(e => e.textContent),
-        overlay: !!m.lock32?.overlay,
+        tint: m.lock32?.tint || null,
         border: !!m.lock32?.border,
         cameraLimits: m.lock32?.cameraLimits || null,
         camera: m.lock32?.camera || null,
@@ -67,7 +70,9 @@ const LOCK_LABEL = '🔒 Khu vực đang khóa';
     check(base.hasToggle && !base.coneVisible, 'công tắc vùng quan sát camera tồn tại, mặc định tắt ở toàn cảnh');
 
     // M2a · A1/A2 — 3 khu khóa: nền xám + viền khu Bắc + 3 nhãn khóa.
-    check(base.overlay, 'M2a: mesh nền xám 3 khu khóa tồn tại');
+    // M2c — đất/công viên/nước khu khóa tô bằng mặt nạ (không còn tấm phủ polygon che sông).
+    check(!!base.tint && base.tint.land === '#7a7e81' && base.tint.water === '#455d6d',
+      `M2c: albedo khóa đã hiệu chỉnh (đất ${base.tint?.land} → hiển thị ≈ #9aa0a6, nước ${base.tint?.water} → ≈ #7f97a6) qua mặt nạ`);
     check(base.border, 'M2a: viền sáng khu Bắc tồn tại');
     check(base.lockLabels.length === 3 && base.lockLabels.every(t => t.startsWith(LOCK_LABEL)),
       `M2a: đúng 3 nhãn "${LOCK_LABEL}" (${base.lockLabels.join(' | ')})`);
@@ -126,6 +131,15 @@ const LOCK_LABEL = '🔒 Khu vực đang khóa';
     check(audit.buildingsOutside === 0, `M2a: nhà hiển thị ngoài khu Bắc = 0 (shown ${audit.buildingsShown})`);
     check(audit.treesOutside === 0, `M2a: cây hiển thị ngoài khu Bắc = 0 (shown ${audit.treesShown})`);
     check(audit.vehiclesOutside === 0, `M2a: xe hiển thị ngoài khu Bắc = 0 (active ${audit.vehiclesActive})`);
+
+    // M2c — signature ngoài khu Bắc không hiển thị: công trình, cầu (trừ cầu vắt ranh), module, nhãn.
+    const sig = await page.evaluate(() => window.webgpuMaterials24.lock32.signatureAudit());
+    check(sig.signatureBuildingsOutsideShown === 0, `M2c: công trình signature hiển thị ngoài khu Bắc = 0 (tổng signature đang vẽ ${sig.signatureBuildingsShown})`);
+    check(sig.bridgeWaysHiddenShown === 0, `M2c: cầu signature ngoài khu Bắc, không vắt ranh, đang vẽ = 0 (${sig.bridgeWaysHiddenShown})`);
+    check(sig.bridgeWaysKeptShown > 0, `M2c: cầu vắt ranh (Sài Gòn, Thủ Thiêm…) vẫn vẽ (${sig.bridgeWaysKeptShown} way)`);
+    check(sig.modulesOutsideShown.length === 0, `M2c: module signature ngoài khu Bắc đang vẽ = 0 (${sig.modulesOutsideShown.join(', ') || 'không có'})`);
+    const outsideLabels = await page.evaluate(names => [...document.querySelectorAll('#labels .label')].map(e => e.textContent).filter(t => names.some(n => t.includes(n))), OUTSIDE_SIGNATURE_LABELS);
+    check(outsideLabels.length === 0, `M2c: nhãn signature ngoài khu Bắc không hiển thị = 0 (${outsideLabels.join(' | ') || 'không có'})`);
 
     // M2a · C6/D — ban ngày, mật độ mặc định: ≥ 60 xe trong 300 m quanh Hàng Xanh sau 60 s.
     const hxTraffic = await page.evaluate(() => {

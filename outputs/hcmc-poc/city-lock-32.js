@@ -52,12 +52,17 @@ export function lockedKeepsRoad32(type) {
   return roadClassRank32(type) >= LOCKED_MIN_RENDER_RANK_32;
 }
 
-// Điểm đường [[x,z],…] → đoạn [[ax,az,bx,bz],…]; chấp nhận cả mảng phẳng [x,z,x,z,…].
-export function roadSegments32(road) {
+// Điểm đường [[x,z],…]; chấp nhận cả mảng phẳng [x,z,x,z,…].
+export function roadPoints32(road) {
   const c = road?.c || road?.centerline || [];
   const points = [];
   if (c.length && Array.isArray(c[0])) for (const p of c) points.push([+p[0], +p[1]]);
   else for (let i = 0; i + 1 < c.length; i += 2) points.push([+c[i], +c[i + 1]]);
+  return points;
+}
+// Điểm đường → đoạn [[ax,az,bx,bz],…].
+export function roadSegments32(road) {
+  const points = roadPoints32(road);
   const segments = [];
   for (let i = 0; i + 1 < points.length; i++) segments.push([points[i][0], points[i][1], points[i + 1][0], points[i + 1][1]]);
   return segments;
@@ -210,7 +215,36 @@ export function lockRegionLabels32(regions, lockedIds = LOCKED_REGION_IDS_32) {
   }
   return out;
 }
+/*
+ * M2c — hoàn thiện khóa khu (chỉ app smart):
+ *   - signature (công trình, nhãn, module, cầu) có tâm NGOÀI khu Bắc: không vẽ; cầu vắt ranh (có điểm trong khu Bắc) giữ trọn;
+ *   - đất, công viên và mặt nước khu khóa tô xám trầm bằng mặt nạ 1024² (không còn tấm phủ polygon đè lên sông).
+ */
+// Albedo TSL của khu khóa, đã hiệu chỉnh để SAU ánh sáng/tone-mapping ngày hiển thị ≈ #9aa0a6 (đất) và ≈ #7f97a6 (nước)
+// (đo ảnh QA: đất hiện #b7bdc6 khi albedo #9aa0a6, nước hiện #b4bfca khi albedo #7f97a6 do phản xạ Fresnel).
+export const LOCK_TINT_32 = Object.freeze({ land: '#7a7e81', water: '#455d6d' });
+export const LOCK_RENDER_TARGET_32 = Object.freeze({ land: '#9aa0a6', water: '#7f97a6' });
+export const LOCK_MASK_32 = Object.freeze({ x0: -3400, z0: -3400, size: 6800, n: 1024 });
+
+// Signature có tâm ngoài khu northId: ẩn (true).
+export function signatureHidden32(x, z, regionOf, northId = NORTH_REGION_ID_32) {
+  return regionOf(x, z) !== northId;
+}
+// Cầu signature: ẩn khi KHÔNG có điểm nào trong khu northId; cầu vắt ranh (có điểm trong khu) giữ.
+export function bridgeHidden32(points, regionOf, northId = NORTH_REGION_ID_32) {
+  return !points.some(([x, z]) => regionOf(x, z) === northId);
+}
+// Mặt nạ khu khóa: byte 255 = ngoài khu northId, 0 = trong khu; mỗi ô lấy mẫu tại tâm ô (hàng j theo z, cột i theo x).
+export function lockMaskGrid32(regionOf, { x0 = LOCK_MASK_32.x0, z0 = LOCK_MASK_32.z0, size = LOCK_MASK_32.size, n = LOCK_MASK_32.n } = {}, northId = NORTH_REGION_ID_32) {
+  const data = new Uint8Array(n * n), cell = size / n;
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    data[j * n + i] = regionOf(x0 + (i + 0.5) * cell, z0 + (j + 0.5) * cell) === northId ? 0 : 255;
+  }
+  return data;
+}
+
 export const CITY_LOCK_PURE_32 = Object.freeze({
   version: CITY_LOCK_32_VERSION,
-  selectNorthBuildings32, lockRoadFilter32, northCameraLimits32, clampNorthCamera32, lockRegionLabels32
+  selectNorthBuildings32, lockRoadFilter32, northCameraLimits32, clampNorthCamera32, lockRegionLabels32,
+  signatureHidden32, bridgeHidden32, lockMaskGrid32, roadPoints32
 });

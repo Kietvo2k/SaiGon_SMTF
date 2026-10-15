@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import {
   abs, attribute, cameraPosition, color, distance as nodeDistance, dot, float, floor,
   fract, max, min, mix, normalWorldGeometry, positionWorld, pow, select, sin, smoothstep,
-  step, time, uniform, uv, varying, vec2, vec3
+  step, texture, time, uniform, uv, varying, vec2, vec3
 } from 'three/tsl';
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import {
@@ -227,25 +227,50 @@ function tri(a,b,c,ta,tb,tc,tint,surface,kind,seed,direct){
 // Chỉ chạy khi ?app=smart; chế độ classic không đổi. Bộ lọc thuần ở city-lock-32.js (test Node riêng).
 const smartQuery=new URLSearchParams(location.search);const isSmart32=smartQuery.get('app')==='smart';
 const signatureGate=createSignatureGate31({buildings:renderBuildings});
-let lock32=null;
+let lock32=null,lockFactor32=null;   // lockFactor32: 1 ở khu khóa, 0 trong khu Bắc (mặt nạ tô xám đất/công viên/nước)
 if(isSmart32){
   const lockMod32=await import('./city-lock-32.js?v=32a');
   const signalRows=(await import('./signal-plan-32.js?v=32a')).SIGNAL_PLAN_32;
   const registry32=(await import('./signature-registry-31.js?v=31a')).loadSignatureRegistry();
   const nodeById=new Map((window.ROAD_GRAPH_31?.nodes||[]).map(node=>[node.id,node]));
   const signalPoints=signalRows.map(row=>nodeById.get(row.osm_id)).filter(Boolean).map(node=>[node.x,node.z]);
+  // M2c — signature có tâm ngoài khu Bắc không vẽ: công trình (bỏ khỏi chunk), cầu (ẩn way), module, nhãn; cầu vắt ranh giữ trọn.
+  const sigIdx=new Set(),sigIds=new Set(),bldCenter=new Map();
+  renderBuildings.forEach((building,i)=>{
+    if(!building.center)return;const id=Number(building.id);bldCenter.set(id,building.center);
+    if(registry32.isSignatureBuilding(id)&&lockMod32.signatureHidden32(building.center[0],building.center[1],regionOf)){sigIdx.add(i);sigIds.add(id);}
+  });
+  const wayIndex=new Map(D.roads.map((road,i)=>[Number(road.id),i]));
+  const bridgeHide=new Set(),bridgeKeep=new Set();
+  for(const entry of registry32.entries.filter(e=>e.kind==='bridge')){
+    const indices=(entry.ids||[]).map(id=>wayIndex.get(Number(id))).filter(i=>i!==undefined);
+    if(!indices.length)continue;
+    const points=indices.flatMap(i=>lockMod32.roadPoints32(D.roads[i]));
+    for(const i of indices)(lockMod32.bridgeHidden32(points,regionOf)?bridgeHide:bridgeKeep).add(i);
+  }
+  for(const i of bridgeKeep)bridgeHide.delete(i);
   const roadsFilter=lockMod32.lockRoadFilter32({roads:D.roads,regionOf,signalPoints,isSignatureWay:id=>registry32.isSignatureWay(id)});
+  for(const i of bridgeHide)roadsFilter.hidden.add(i);
   const simHidden=new Set(roadsFilter.hidden);for(const index of roadsFilter.keptMinor)simHidden.add(index);
   const buildingsFilter=lockMod32.selectNorthBuildings32({buildings:renderBuildings,roads:D.roads,regionOf,isSignature:id=>signatureGate.isSignatureBuilding(id)});
   const cameraLimits=lockMod32.northCameraLimits32(REGIONS_31.find(region=>region.id===lockMod32.NORTH_REGION_ID_32).bbox);
-  lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints,buildings:buildingsFilter,boxes:[],cameraLimits};
-  materialStatus.lock32={version:lockMod32.CITY_LOCK_32_VERSION,roads:roadsFilter.stats,buildings:{before:buildingsFilter.before,ordinary:buildingsFilter.ordinary,signature:buildingsFilter.signature,keptOrdinary:buildingsFilter.keptOrdinary,dropped:buildingsFilter.dropped,keptPercent:+(buildingsFilter.ratio*100).toFixed(1)},hiddenRoads:roadsFilter.hidden.size,simHiddenRoads:simHidden.size,signalPoints:signalPoints.length,cameraLimits};
+  lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints,buildings:buildingsFilter,boxes:[],cameraLimits,
+    signatureHiddenIdx:sigIdx,signatureHiddenIds:sigIds,bridgeHiddenIdx:bridgeHide,bridgeKeptIdx:bridgeKeep,bldCenter,registry:registry32,hiddenModules:new Set(),moduleRefs:{}};
+  // M2c — mặt nạ khu khóa 1024² (≈6,6 m/ô) lấy mẫu bằng texture: nền đất, công viên, nước khu khóa đổi màu, sông vẫn thấy.
+  const maskCfg=lockMod32.LOCK_MASK_32;
+  const lockMaskTexture=new THREE.DataTexture(lockMod32.lockMaskGrid32(regionOf,maskCfg),maskCfg.n,maskCfg.n,THREE.RedFormat);
+  lockMaskTexture.magFilter=THREE.LinearFilter;lockMaskTexture.minFilter=THREE.LinearFilter;lockMaskTexture.generateMipmaps=false;
+  lockMaskTexture.wrapS=THREE.ClampToEdgeWrapping;lockMaskTexture.wrapT=THREE.ClampToEdgeWrapping;lockMaskTexture.needsUpdate=true;
+  lockFactor32=texture(lockMaskTexture,vec2(positionWorld.x,positionWorld.z).sub(vec2(maskCfg.x0,maskCfg.z0)).div(maskCfg.size)).r;
+  materialStatus.lock32={version:lockMod32.CITY_LOCK_32_VERSION,roads:roadsFilter.stats,buildings:{before:buildingsFilter.before,ordinary:buildingsFilter.ordinary,signature:buildingsFilter.signature,keptOrdinary:buildingsFilter.keptOrdinary,dropped:buildingsFilter.dropped,keptPercent:+(buildingsFilter.ratio*100).toFixed(1)},hiddenRoads:roadsFilter.hidden.size,simHiddenRoads:simHidden.size,signalPoints:signalPoints.length,cameraLimits,
+    signature:{buildingsHidden:sigIdx.size,bridgeWaysHidden:bridgeHide.size,bridgeWaysKept:bridgeKeep.size},tint:lockMod32.LOCK_TINT_32};
 }
 
 for(let bi=0;bi<renderBuildings.length;bi++){
   const b=renderBuildings[bi];
   if(heroEnvelopeIds.has(Number(b.id))){faceEnds.push(positions.length/9);continue;}
   if(b.hiddenByCorrection){faceEnds.push(positions.length/9);continue;}   // bảng sửa lỗi 31C: footprint ẩn không vẽ
+  if(lock32&&lock32.signatureHiddenIdx.has(bi)){faceEnds.push(positions.length/9);continue;}   // M2c: signature ngoài khu Bắc không vẽ
   // M2a: nhà thường khu Bắc → bỏ chi tiết dựng sẵn; nhà giữ lại (tâm ≤ 40 m tim trunk/primary/secondary) vào danh sách hộp đơn giản.
   if(lock32&&lock32.buildings.ordinaryIndices.has(bi)){
     if(lock32.buildings.indices.has(bi))lock32.boxes.push(b);
@@ -304,24 +329,10 @@ if(lock32&&lock32.boxes.length){
   materialStatus.lock32.boxes={count:lock32.boxes.length,drawCalls:1};
 }
 
-// M2a · A1/A2 — ba khu khóa (trung-tâm, ven-song, nam): một mesh nền xám nhạt phủ đúng 3 đa giác (gộp chung bằng
-// window.earcut có sẵn — rẻ hơn tách mesh theo khu hay shader mặt nạ, không đụng pipeline đang chạy), đặt ở y=0.85:
-// trên mặt nước (0.7) và nền đất (−1), dưới mặt đường (y≈1.0) nên đường ≥ secondary ngoài khu Bắc vẫn còn thấy.
-// Viền khu Bắc là dải phẳng sáng rộng 26 m ở y=1.25 (Line của WebGPU chỉ 1 px nên không dùng Line).
+// M2c — không còn tấm phủ polygon 3 khu khóa: nó nằm trên mặt nước (y=0.7) nên che mất sông. Đất, công viên và nước khu khóa
+// đổi màu bằng lockFactor32 trong vật liệu của chúng (ground/parks/water bên dưới). Viền khu Bắc là dải phẳng sáng rộng
+// 26 m ở y=1.25 (Line của WebGPU chỉ 1 px nên không dùng Line).
 if(lock32){
-  const overlayPoints=[];
-  for(const region of REGIONS_31){
-    if(!lock32.mod.LOCKED_REGION_IDS_32.includes(region.id))continue;
-    const flat=[];for(const point of region.polygon)flat.push(point[0],point[1]);
-    const ids=window.earcut(flat,[],2);
-    for(let i=0;i<ids.length;i+=3)for(const k of [ids[i],ids[i+2],ids[i+1]])overlayPoints.push(flat[k*2],0.85,flat[k*2+1]);
-  }
-  if(overlayPoints.length){
-    const overlayGeometry=new THREE.BufferGeometry();overlayGeometry.setAttribute('position',new THREE.Float32BufferAttribute(overlayPoints,3));overlayGeometry.computeVertexNormals();
-    const overlayMaterial=new THREE.MeshStandardNodeMaterial({color:'#c7c8c3',roughness:1,metalness:0,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
-    const overlay=new THREE.Mesh(overlayGeometry,overlayMaterial);overlay.name='M2a · nền xám 3 khu khóa';overlay.receiveShadow=true;scene.add(overlay);
-    lock32.overlay=overlay;materialStatus.lock32.overlay={regions:lock32.mod.LOCKED_REGION_IDS_32.length,triangles:overlayPoints.length/9};
-  }
   const bacPoly=regionById('bac').polygon,borderPoints=[];
   ribbon([...bacPoly,bacPoly[0]],26,1.25,borderPoints);
   const borderGeometry=new THREE.BufferGeometry();borderGeometry.setAttribute('position',new THREE.Float32BufferAttribute(borderPoints,3));borderGeometry.computeVertexNormals();
@@ -461,7 +472,7 @@ const groundMaterial=new THREE.MeshStandardNodeMaterial({color:groundTint,roughn
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(D.meta.width,D.meta.depth),groundMaterial);
 ground.name='Nền đất · Sentinel-2 2016';
 ground.geometry.rotateX(-Math.PI/2);ground.position.y=-1;ground.receiveShadow=true;scene.add(ground);
-new THREE.TextureLoader().load(modeTextures.sentinel,texture=>{
+const groundTexture=new THREE.TextureLoader().load(modeTextures.sentinel,texture=>{
   texture.colorSpace=THREE.SRGBColorSpace;
   try{texture.anisotropy=anisotropyForMode(modePreset.id,renderer.capabilities.getMaxAnisotropy());}catch{texture.anisotropy=modePreset.id==='lite'?2:8;}
   // C2 (review-I): GIỮ mipmap cho mặt đất Lite. Bản 1024² phủ toàn 38,57 km² nên ở overview mỗi pixel
@@ -470,9 +481,15 @@ new THREE.TextureLoader().load(modeTextures.sentinel,texture=>{
   ground.material.map=texture;ground.material.color.set(groundTint);ground.material.needsUpdate=true;
   if(materialStatus.mode&&texture.image)materialStatus.mode.textures.sentinel=[texture.image.width,texture.image.height];
 });
+// M2c — app smart: đất khu khóa = ảnh Sentinel × màu nền, trộn sang xám trầm theo mặt nạ; khu Bắc giữ nguyên.
+if(lockFactor32){
+  groundTexture.colorSpace=THREE.SRGBColorSpace;
+  groundMaterial.colorNode=mix(texture(groundTexture,uv()).rgb.mul(color(groundTint)),color(lock32.mod.LOCK_TINT_32.land),lockFactor32);
+}
 const outsideMaterial=new THREE.MeshStandardNodeMaterial({color:'#536b58',roughness:1});
 const outside=new THREE.Mesh(new THREE.PlaneGeometry(60000,60000),outsideMaterial);outside.rotation.x=-Math.PI/2;outside.position.y=-3;scene.add(outside);
 const parksMaterial=new THREE.MeshStandardNodeMaterial({color:'#315b38',roughness:.96,side:THREE.DoubleSide});
+if(lockFactor32)parksMaterial.colorNode=mix(color('#315b38'),color(lock32.mod.LOCK_TINT_32.land),lockFactor32);   // M2c: công viên khu khóa xám như đất
 const parks=new THREE.Mesh(mergeGeometry(D.green.map(r=>flatGeometry(r,.35))),parksMaterial);parks.receiveShadow=true;scene.add(parks);
 
 const waterMaterial=new THREE.MeshPhysicalNodeMaterial({roughness:.34,metalness:.09,side:THREE.DoubleSide,clearcoat:.72,clearcoatRoughness:.2,envMapIntensity:1.18});
@@ -489,6 +506,8 @@ const waterMid=color('#24677b');
 const waterHigh=color('#a4cad0');
 let waterColor=mix(waterLow,waterMid,waterWave.mul(.66));
 waterColor=mix(waterColor,waterHigh,waterFresnel.mul(.48).add(smoothstep(.9,1,waterWave).mul(.08)));
+// M2c — app smart: nước khu khóa xám-xanh bão hòa thấp (sông vẫn thấy); trong khu Bắc giữ màu xanh cũ.
+if(lockFactor32)waterColor=mix(waterColor,color(lock32.mod.LOCK_TINT_32.water),lockFactor32);
 waterMaterial.colorNode=waterColor;
 waterMaterial.roughnessNode=mix(float(.43),float(.17),currentBand.mul(.58).add(fineRipple.mul(.18))).add(waterFresnel.mul(.04));
 const water=new THREE.Mesh(mergeGeometry(D.water.map(r=>flatGeometry(r,.7))),waterMaterial);water.receiveShadow=true;scene.add(water);
@@ -820,9 +839,11 @@ const fixtures=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),fixtureMater
 roofFixtures.forEach((item,i)=>{dummy.position.set(item.x,item.y,item.z);dummy.rotation.set(0,item.seed*5.3,0);dummy.scale.set(item.scale,1.4+item.seed*1.8,item.scale*.62);dummy.updateMatrix();fixtures.setMatrixAt(i,dummy.matrix);});
 fixtures.castShadow=true;scene.add(fixtures);
 materialStatus.heroDetail={};
-const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))&&!building.hiddenByCorrection&&!(lock32&&lock32.buildings.ordinaryIds.has(Number(building.id)))),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
+// M2c: công trình đã ẩn (nhà thường khu Bắc bỏ, signature ngoài khu Bắc ẩn) không dựng chi tiết/hero.
+const dropBuilding32=building=>!!lock32&&(lock32.buildings.ordinaryIds.has(Number(building.id))||lock32.signatureHiddenIds.has(Number(building.id)));
+const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))&&!building.hiddenByCorrection&&!dropBuilding32(building)),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
 materialStatus.heroCorridor={};
-const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetwork,buildings:renderBuildings.filter(building=>!building.hiddenByCorrection&&!(lock32&&lock32.buildings.ordinaryIds.has(Number(building.id)))),status:materialStatus.heroCorridor});
+const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetwork,buildings:renderBuildings.filter(building=>!building.hiddenByCorrection&&!dropBuilding32(building)),status:materialStatus.heroCorridor});
 // Bước E2: cột đèn theo mép đường hợp nhất + vạch zebra (thay đèn đặt theo tim từng way của runtime 28).
 materialStatus.streetFurniture={};
 const streetFurniture=createStreetFurniture31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,data:window.STREET_FURNITURE_31,widths,nightLevel,status:materialStatus.streetFurniture});
@@ -834,6 +855,24 @@ materialStatus.density={};
 materialStatus.region={};
 for(const group of [bridgeDeckGroup,bridgeSupportGroup,bridgeCableGroup,marinaDetail,grandMarinaDetail])mergeStaticMeshes31(group);
 const bridgesApi=materialStatus.bridges.api;
+// M2c — module signature ngoài khu Bắc: Ba Sơn, Marina, Grand Marina, cầu đi bộ Bạch Đằng ẩn từng mesh (gộp tối thiểu
+// chỉ gộp mesh đang hiển thị nên không lấy lại); Hero Corridor và Identity Facades gỡ khỏi cảnh vì controller của chúng
+// bật lại root.visible mỗi khung. Tâm module: hộp bao (module có hình học sẵn) hoặc tâm công trình registry của module.
+if(lock32){
+  const boxCenter=objects=>{const box=new THREE.Box3();for(const object of objects)box.expandByObject(object);return box.isEmpty()?null:[(box.min.x+box.max.x)/2,(box.min.z+box.max.z)/2];};
+  const outsideCenter=center=>!!center&&lock32.mod.signatureHidden32(center[0],center[1],regionOf);
+  const registryCenters=prefix=>lock32.registry.entries.filter(e=>e.kind==='building'&&e.key.startsWith(prefix)).flatMap(e=>(e.ids||[]).map(id=>lock32.bldCenter.get(Number(id)))).filter(Boolean);
+  const allOutside=list=>list.length>0&&list.every(([x,z])=>lock32.mod.signatureHidden32(x,z,regionOf));
+  const bdMeshes=bridgesApi?.signature||[];
+  for(const [key,objects] of [['ba-son-bridge-structure',[bridgeGroup]],['marina-central-detail',[marinaDetail]],['grand-marina-detail',[grandMarinaDetail]],['bach-dang-footbridge-structure',bdMeshes]]){
+    lock32.moduleRefs[key]=objects;
+    if(outsideCenter(boxCenter(objects))){for(const object of objects)object.traverse(node=>{node.visible=false;});lock32.hiddenModules.add(key);}
+  }
+  if(allOutside(registryCenters('hero-corridor-'))){heroCorridor.root.removeFromParent();lock32.hiddenModules.add('hero-corridor-module');}
+  if(allOutside(registryCenters('identity-facade-'))){identityFacades.root.removeFromParent();lock32.hiddenModules.add('extra-identity-facades-module');}
+  lock32.moduleRefs['hero-corridor-module']=[heroCorridor.root];lock32.moduleRefs['extra-identity-facades-module']=[identityFacades.root];
+  materialStatus.lock32.modules=[...lock32.hiddenModules];
+}
 const TREE_NEAR_M=1100;   // cây trong bán kính này (tính tới ô 500 m gần nhất) vẽ đầy đủ; xa hơn vẽ khối tán xa
 // Bán kính còn nhìn thấy được của chi tiết 28 (1 px ≈ 1172/d m ở FOV 42° × 900 px): lan can mái 0,95 m ~ 1 px ở 1 km.
 const DETAIL_VISIBLE_M={'Hero roof parapets · inferred':1000,'Hero facade ledges · inferred':500,'Hero podium cornices · inferred':700,'Street awnings · inferred':550,'Ground-floor lightbox signs · inferred':400,'Rooftop water and plant tanks · inferred':1000};
@@ -850,9 +889,9 @@ const cityDensity=createDensityController31({
   streetFurniture,traffic:{api:()=>materialStatus.traffic?.api??materialStatus.motion?.api,group:trafficGroup},vesselGroup,   // xe: API city-traffic-31 (bước D) gắn ở status hoặc motionStatus
   bridgeRails:(bridgesApi?.procedural||[]).filter(mesh=>/lan can/.test(mesh.name)),
   audit:{
-    extraBuildingIds:()=>[...heroEnvelopeIds],   // 3 hero envelope do hero corridor vẽ thay mesh công trình
+    extraBuildingIds:()=>[...heroEnvelopeIds].filter(id=>!(lock32&&lock32.signatureHiddenIds.has(id))),   // 3 hero envelope do hero corridor vẽ thay mesh công trình (M2c: trừ phần đã ẩn)
     ways:()=>D.roads.filter((road,index)=>roadNetwork.pieces(index).length).map(road=>road.id),
-    modules:{'ba-son-bridge-structure':bridgeGroup,'bach-dang-footbridge-structure':bridgesApi?.signature||[],'marina-central-detail':marinaDetail,'grand-marina-detail':grandMarinaDetail,'hero-corridor-module':heroCorridor.root,'extra-identity-facades-module':identityFacades.root}
+    modules:Object.fromEntries(Object.entries({'ba-son-bridge-structure':bridgeGroup,'bach-dang-footbridge-structure':bridgesApi?.signature||[],'marina-central-detail':marinaDetail,'grand-marina-detail':grandMarinaDetail,'hero-corridor-module':heroCorridor.root,'extra-identity-facades-module':identityFacades.root}).filter(([key])=>!(lock32&&lock32.hiddenModules.has(key))))   // M2c: module đã ẩn không đếm là đang hiển thị
   },
   regionOf,regionStatus:materialStatus.region,onRegionChange:event=>onRegionChosen(event),
   defaultLevel:modePreset.density,
@@ -864,7 +903,10 @@ let sceneMeshCount=0;scene.traverse(object=>{if(object.isMesh)sceneMeshCount++;}
 setProgress(84,'Đang hoàn tất cảnh và biên dịch pipeline…');
 
 const places=[['BITEXCO',106.70435,10.7716,278],['NGUYỄN HUỆ',106.7035,10.7751,18],['BẾN BẠCH ĐẰNG',106.7067,10.7762,16],['NHÀ HÁT THÀNH PHỐ',106.7033,10.7765,34],['QUẢNG TRƯỜNG LAM SƠN',106.7030,10.7768,16],['ĐỒNG KHỞI',106.7027,10.7776,18],['LANDMARK 81',106.7219,10.7949,470],['MARINA CENTRAL · 240 M',106.707826,10.782198,252],['GRAND MARINA · 4 THÁP',106.70895,10.78472,184],['CẦU BA SON',106.71073,10.77927,122],['THẢO ĐIỀN · VÙNG HIỆU CHỈNH',106.7312,10.8037,34],['QUỐC HƯƠNG',106.7322,10.8044,15],['NGUYỄN VĂN HƯỞNG',106.7282,10.8022,15]];
-const labels=places.map(place=>{const el=document.createElement('div');el.className='label';el.textContent=place[0];$('#labels').append(el);return{el,pos:xyz(place[1],place[2],place[3])};});
+// M2c — nhãn signature ngoài khu Bắc không tạo (BITEXCO, NHÀ HÁT THÀNH PHỐ, MARINA…); LANDMARK 81 và nhãn khóa vẫn có.
+const placeShown32=place=>{if(!lock32)return true;const p=xyz(place[1],place[2],place[3]);return !lock32.mod.signatureHidden32(p.x,p.z,regionOf);};
+const labels=places.filter(placeShown32).map(place=>{const el=document.createElement('div');el.className='label';el.textContent=place[0];$('#labels').append(el);return{el,pos:xyz(place[1],place[2],place[3])};});
+if(lock32)materialStatus.lock32.signature={...materialStatus.lock32.signature,labelsHidden:places.length-labels.length};
 floodAlertLabels=floodAlertPoints.map(point=>{const el=document.createElement('div');el.className='label alert-label';el.textContent=point.name;$('#labels').append(el);const item={el,pos:new THREE.Vector3(point.x,155,point.z),active:false};labels.push(item);return item;});
 // M2a · A2 — 3 nhãn "🔒 Khu vực đang khóa · <tên khu>" ở tâm bbox từng khu khóa; active:true để luôn hiện ngoài lọc khu.
 const lockLabelItems32=lock32?lock32.mod.lockRegionLabels32(REGIONS_31):[];
@@ -965,6 +1007,21 @@ if(isSmart32&&smartApp){
     return {buildingsShown,buildingsOutside,treesShown,treesOutside,vehiclesActive,vehiclesOutside};
   };
   materialStatus.lock32.audit=lock32.audit;
+  // M2c — QA: signature ngoài khu Bắc đang hiển thị phải = 0 (công trình, cầu, module); cầu vắt ranh vẫn hiển thị (> 0).
+  lock32.signatureAudit=()=>{
+    const shownSignature=cityChunks.shownIds().map(Number).filter(id=>lock32.registry.isSignatureBuilding(id));
+    const outsideShown=shownSignature.filter(id=>{const c=lock32.bldCenter.get(id);return !!c&&lock32.mod.signatureHidden32(c[0],c[1],regionOf);});
+    const wayShown=i=>roadNetwork.pieces(i).length>0;
+    const shownInScene=object=>{for(let p=object;p;p=p.parent){if(p.visible===false)return false;if(p.isScene)return true;}return false;};
+    return {
+      signatureBuildingsShown:shownSignature.length,
+      signatureBuildingsOutsideShown:outsideShown.length,
+      bridgeWaysHiddenShown:[...lock32.bridgeHiddenIdx].filter(wayShown).length,
+      bridgeWaysKeptShown:[...lock32.bridgeKeptIdx].filter(wayShown).length,
+      modulesOutsideShown:Object.entries(lock32.moduleRefs).filter(([key,objects])=>lock32.hiddenModules.has(key)&&objects.some(shownInScene)).map(([key])=>key)
+    };
+  };
+  materialStatus.lock32.signatureAudit=lock32.signatureAudit;
 }
 // Bước I 31A — Chế độ Preview/Lite. Đổi mode cần dựng lại pipeline chất lượng (presentation ↔ performance)
 // nên tải lại trang có giữ trạng thái (view, light, region) và có thông báo rõ; density tay đã lưu trước đó
