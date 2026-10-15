@@ -48,7 +48,7 @@ export function installHud32(app, { transport = null } = {}) {
     + '<dl>'
     + '<div><dt>Thời gian chờ TB</dt><dd id="kpiWait32">–<small>giây</small></dd></div>'
     + '<div><dt>Hàng chờ max</dt><dd id="kpiQueue32">–<small>xe</small></dd></div>'
-    + '<div><dt>Lưu lượng</dt><dd id="kpiFlow32">–<small>xe/phút</small></dd></div>'
+    + '<div><dt>Lưu lượng TB/nút</dt><dd id="kpiFlow32">–<small>xe/phút/nút</small></dd></div>'
     + '</dl>'
     + '<p class="hud-status" id="stationStatus32" aria-live="polite">Trạm: đang kết nối</p>';
   (app.root && app.root.body ? app.root.body : document.body).append(panel);
@@ -62,7 +62,7 @@ export function installHud32(app, { transport = null } = {}) {
     const m = controller.metrics(simT());
     el('#kpiWait32').firstChild.textContent = fmt1(m.wait_avg_s);
     el('#kpiQueue32').firstChild.textContent = fmt0(m.queue_max);
-    el('#kpiFlow32').firstChild.textContent = fmt0(m.flow_per_min);
+    el('#kpiFlow32').firstChild.textContent = fmt1(m.flow_per_node_min);
     sw.checked = controller.getMode() === 'smart';
     fps = frames; frames = 0;
     if (transport) {
@@ -82,7 +82,7 @@ export function installHud32(app, { transport = null } = {}) {
       transport.sendMetrics({
         station_id: STATION_ID_32, t: new Date().toISOString(), t_sim: +Number(tSim).toFixed(1),
         fps, draw_calls: (app.renderer && app.renderer.info && app.renderer.info.render && app.renderer.info.render.calls) || 0,
-        kpi: { wait_avg_s: m.wait_avg_s, queue_max: m.queue_max, flow_per_min: m.flow_per_min },
+        kpi: { wait_avg_s: m.wait_avg_s, queue_max: m.queue_max, flow_per_node_min: m.flow_per_node_min, flow_per_min: m.flow_per_min },
         signal_mode: controller.getMode(),
         overrides: m.overrides.map(o => ({
           node_id: o.node_id, group: o.group, by: o.by, reason: o.reason, until_t_sim: o.until_t_sim, until_at: o.until_at

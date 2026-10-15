@@ -3,10 +3,10 @@
 // (routeBias của sim) → chọn vị trí + thông điệp bảng VMS → payload gửi trạm (POST /station/heat).
 // Không tự đặt hẹn giờ: người gọi gọi engine.tick() theo nhịp của mình; mọi mốc tính theo giây sim.
 import { createHeat32 } from './heat-32.js?v=32a';
-import { forecastEdge32, alerts32 } from './forecast-32.js?v=32a';
+import { forecastEdge32, alerts32, combineWithLookahead32 } from './forecast-32.js?v=32a';
 import { hashU32, SEED, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
 
-export const HEAT_LIVE_32_VERSION = 'heat-live-32a';
+export const HEAT_LIVE_32_VERSION = 'heat-live-32b';
 export const SAMPLE_S_32 = 1;           // s sim: nhịp thu mẫu
 export const SERIES_S_32 = 60;          // s sim: nhịp lịch sử ngắn hạn (xu hướng 5 phút gần nhất)
 export const FORECAST_S_32 = 30;        // s sim: nhịp dự báo
@@ -21,10 +21,18 @@ export const STOP_SPEED_32 = 0.5;       // m/s: dưới ngưỡng này xe đư�
 export const BOARD_OFFSET_M_32 = 1.8;   // m: khoảng cách bảng VMS ra mép đường
 export const BOARD_BACK_M_32 = 32;      // m: vị trí bảng cách nút Hàng Xanh (theo chiều đi)
 const SERIES_KEEP_32 = 6;
-const ALPHA_32 = 0.25;
-const DAY_START_HOUR_32 = 6;
+export const ALPHA_32 = 0.25;
+export const DAY_START_HOUR_32 = 6;
 const APPROACH_MIN_RANK_32 = 2;         // ≥ tertiary
 const BOARD_MIN_GAP_M_32 = 120;
+// M4b2: tua trước (kết quả Worker) trộn với thống kê; chỉ dùng khi thời điểm hiện tại cách gốc tua ≤ LOOK_USE_S_32.
+export const LOOK_W_32 = 0.5;           // trọng số tua trước trong dự báo (0 = chỉ thống kê, 1 = chỉ tua trước)
+export const LOOK_REL_32 = 0.7;         // độ tin cậy gốc của tua trước; nhân với tỉ lệ xe còn lại khi tua đã giảm số xe
+export const LOOK_USE_S_32 = 60;        // s sim
+export const UNNAMED_ROAD_32 = 'đường không tên';
+export const ALERT_ROWS_MAX_32 = 5;     // số dòng cảnh báo tối đa (sau khi gộp theo tên đường)
+// Xác suất kẹt từ mức nhiệt: cùng hàm logistic với forecast-32 (mức 0,7 ↔ 50 %).
+export const probOfLevel32 = L => 1 / (1 + Math.exp(-10 * (Number(L) - 0.7)));
 
 const r3 = v => Math.round(v * 1000) / 1000;
 const r1 = v => Math.round(v * 10) / 10;
@@ -73,10 +81,13 @@ export function createRouteBias32({ seed = SEED, share = COMPLY_SHARE_32, factor
 const hourOf32 = t => ((Math.floor(t / 3600 + DAY_START_HOUR_32) % 24) + 24) % 24;
 
 // Engine: giữ bản đồ nhiệt, lịch sử ngắn hạn, cảnh báo hiện tại; mỗi tick đọc sim.counters.t và làm các việc đến hạn.
-export function createHeatLive32({ net, sim, routing = null, onPayload = null, nameOf = e => roadNameOf32(net, e) } = {}) {
+// clockOf() (M4b2): giây "giờ heat" = giây đồng hồ − 06:00 (heat đếm giờ từ 06:00). Mặc định: giây sim. Quyết định giờ của lịch sử.
+export function createHeatLive32({ net, sim, routing = null, onPayload = null, nameOf = e => roadNameOf32(net, e), clockOf = null } = {}) {
   if (!net || !sim) throw new TypeError('createHeatLive32 cần net và sim');
   const NE = net.NE;
   let heat = null, series = new Map(), hourSeen = new Uint8Array(24), alertList = [];
+  let base = null;      // lịch sử offline: {hourly: Float32Array(24·NE), seen: Uint8Array(24)}
+  let look = null;      // tua trước gần nhất: {t0, scale, levels: Map(phút → Float32Array(NE))}
   let nextSample = 0, nextSeries = 0, nextForecast = 0, nextPost = 0, lastT = -Infinity;
 
   function reset() {
@@ -85,6 +96,7 @@ export function createHeatLive32({ net, sim, routing = null, onPayload = null, n
     series = new Map(); hourSeen = new Uint8Array(24); alertList = [];
     nextSample = nextSeries = nextForecast = nextPost = 0;
     if (routing) routing.setAvoid([]);
+    look = null;
   }
   reset();
 
@@ -98,22 +110,47 @@ export function createHeatLive32({ net, sim, routing = null, onPayload = null, n
     }
   }
 
+  // Lịch sử theo giờ: giờ đã thấy trong phiên dùng số liệu phiên; giờ chưa thấy lấy từ lịch sử offline (nếu đã nạp).
   function histOf(hourly, e) {
     const out = [];
-    for (let h = 0; h < 24; h++) if (hourSeen[h]) out.push(hourly[h * NE + e]);
+    for (let h = 0; h < 24; h++) {
+      if (hourSeen[h]) out.push(hourly[h * NE + e]);
+      else if (base && base.seen[h]) out.push(base.hourly[h * NE + e]);
+    }
     return out;
+  }
+
+  function lookLevels(h, t) {
+    if (!look || Math.abs(t - look.t0) > LOOK_USE_S_32) return null;
+    return look.levels.get(h) || null;
+  }
+
+  // Cạnh có mức tua trước đạt ngưỡng ở một horizon nào đó (để không bỏ sót cạnh đang trống nhưng sắp kẹt).
+  function lookMaxOf(t) {
+    const out = new Float32Array(NE);
+    let any = false;
+    for (const h of HORIZONS_MIN_32) {
+      const arr = lookLevels(h, t);
+      if (!arr) continue;
+      any = true;
+      for (let e = 0; e < NE; e++) if (arr[e] > out[e]) out[e] = arr[e];
+    }
+    return any ? out : null;
   }
 
   function runForecast(t) {
     const lv = heat.snapshot(), hourly = heat.hourly();
     const forecasts = new Array(NE);
+    const lookMax = lookMaxOf(t);
     for (let e = 0; e < NE; e++) {
-      if (!(lv[e] >= LEVEL_MIN_32)) continue;
+      if (!(lv[e] >= LEVEL_MIN_32) && !(lookMax && lookMax[e] >= LEVEL_MIN_32)) continue;
       const hist = histOf(hourly, e);
       const rec = (series.get(e) || []).concat([{ t, level: lv[e] }]).slice(-SERIES_KEEP_32);
       let best = null;
       for (const h of HORIZONS_MIN_32) {
-        const f = forecastEdge32({ history: hist, recent: rec, horizonMin: h });
+        let f = forecastEdge32({ history: hist, recent: rec, horizonMin: h });
+        const lk = lookLevels(h, t);
+        if (lk) f = combineWithLookahead32(f, { prob: probOfLevel32(lk[e]), reliability: LOOK_REL_32 * look.scale }, LOOK_W_32);
         if (!best || f.prob > best.prob) best = { prob: f.prob, reliability: f.reliability, horizonMin: h };
       }
       forecasts[e] = best;
@@ -132,7 +169,29 @@ export function createHeatLive32({ net, sim, routing = null, onPayload = null, n
     onPayload({ t_sim: r1(t), levels, alerts });
   }
 
-  function state() { return { t: lastT, alerts: alertList.slice(), avoided: routing ? routing.avoided() : [] }; }
+  function state() { return { t: lastT, alerts: alertList.slice(), avoided: routing ? routing.avoided() : [], lookT0: look ? look.t0 : null }; }
+
+  // Nạp lịch sử offline: {hourly: Float32Array(24·NE) (giờ h, cạnh e ở h·NE+e), seen: Uint8Array|Array(24)}.
+  function loadHistory(hist) {
+    if (!hist || !hist.hourly || hist.hourly.length !== 24 * NE || !hist.seen) return false;
+    base = { hourly: Float32Array.from(hist.hourly), seen: Uint8Array.from({ length: 24 }, (_, h) => (hist.seen[h] ? 1 : 0)) };
+    return true;
+  }
+
+  // Nạp kết quả Worker: {t0, scale, levels: {10: Float32Array(NE), 20: …, 30: …}}. Sai kích thước → từ chối (trả false).
+  function applyLookahead(res) {
+    if (!res || !Number.isFinite(Number(res.t0)) || !res.levels) return false;
+    const levels = new Map();
+    for (const h of HORIZONS_MIN_32) {
+      const arr = res.levels[h];
+      if (!arr || arr.length !== NE) return false;
+      levels.set(h, Float32Array.from(arr));
+    }
+    const scale = Math.max(0.05, Math.min(1, Number(res.scale) || 1));
+    look = { t0: Number(res.t0), scale, levels };
+    return true;
+  }
+  function clearLookahead() { look = null; }
 
   // Gọi định kỳ (ví dụ mỗi 250 ms thực). Làm đủ mọi việc đến hạn theo giây sim; trả về trạng thái hiện tại.
   function tick() {
@@ -140,9 +199,10 @@ export function createHeatLive32({ net, sim, routing = null, onPayload = null, n
     if (!Number.isFinite(t)) return state();
     if (t < lastT - 1e-6) reset();   // sim đã đặt lại: xóa lịch sử
     lastT = t;
+    const tc = clockOf ? Number(clockOf()) : t;   // giây giờ heat: quyết định giờ của lịch sử theo đồng hồ
     if (t >= nextSample) {
-      heat.ingest(t, collectSamples32(sim, net));
-      hourSeen[hourOf32(t)] = 1;
+      heat.ingest(tc, collectSamples32(sim, net));
+      hourSeen[hourOf32(tc)] = 1;
       nextSample = Math.floor(t / SAMPLE_S_32) * SAMPLE_S_32 + SAMPLE_S_32;
     }
     if (t >= nextSeries) { pushSeries(t); nextSeries = Math.floor(t / SERIES_S_32) * SERIES_S_32 + SERIES_S_32; }
@@ -152,12 +212,42 @@ export function createHeatLive32({ net, sim, routing = null, onPayload = null, n
   }
 
   return {
-    tick, state, reset,
+    tick, state, reset, loadHistory, applyLookahead, clearLookahead,
     level: e => heat.level(e),
     levels: () => heat.snapshot(),
     hourly: () => heat.hourly(),
     alerts: () => alertList.slice()
   };
+}
+
+// M4b2: gộp cảnh báo theo TÊN đường (một dòng mỗi tên, lấy xác suất cao nhất, đếm số đoạn); đường không tên gộp theo cạnh.
+// Trả về tối đa `max` dòng, sắp giảm dần theo xác suất.
+export function groupAlertsByRoad32(alerts, max = ALERT_ROWS_MAX_32) {
+  const groups = new Map();
+  for (const a of alerts || []) {
+    const named = !!a.name && a.name !== UNNAMED_ROAD_32;
+    const key = named ? a.name : `#${a.edge}`;
+    const g = groups.get(key);
+    if (!g) { groups.set(key, { name: a.name || UNNAMED_ROAD_32, prob: a.prob, reliability: a.reliability, horizonMin: a.horizonMin, edge: a.edge, segments: 1 }); continue; }
+    g.segments++;
+    if (a.prob > g.prob) Object.assign(g, { prob: a.prob, reliability: a.reliability, horizonMin: a.horizonMin, edge: a.edge });
+  }
+  return [...groups.values()].sort((x, y) => y.prob - x.prob).slice(0, Math.max(0, max));
+}
+
+// M4b2: lịch sử offline (file JSON chỉ giữ cạnh đã chọn) → mảng đầy đủ 24·NE. Sai định dạng/số cạnh → null.
+// json: {version, ne, edges: [chỉ số cạnh], hours: 24, levels: [h·K + k]} với K = edges.length.
+export function expandHeatHistory32(json, NE) {
+  if (!json || json.ne !== NE || !Array.isArray(json.edges) || json.hours !== 24) return null;
+  const K = json.edges.length;
+  if (!Array.isArray(json.levels) || json.levels.length !== 24 * K) return null;
+  const hourly = new Float32Array(24 * NE);
+  for (let h = 0; h < 24; h++) for (let k = 0; k < K; k++) {
+    const e = json.edges[k];
+    if (!Number.isInteger(e) || e < 0 || e >= NE) return null;
+    hourly[h * NE + e] = json.levels[h * K + k];
+  }
+  return { hourly, seen: Uint8Array.from({ length: 24 }, () => 1) };
 }
 
 // Vị trí bảng VMS: làn đi vào nút Hàng Xanh từ ngoài cụm, hạng ≥ tertiary, cách nhau ≥ 120 m, tối đa `max` bảng.

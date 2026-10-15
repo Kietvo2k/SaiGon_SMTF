@@ -16,9 +16,12 @@ import { createTransport32, startStationLoop32, resolveApiBase32, readStoredToke
 import { installHud32 } from './kpi-panel-32.js?v=32a';
 export { installHud32 } from './kpi-panel-32.js?v=32a';
 // M4b1 — bản đồ nhiệt, dự báo kẹt, lệch tuyến và bảng VMS (heat-live-32.js, heat-scene-32.js).
-import { createHeatLive32, createRouteBias32, chooseVmsBoards32 } from './heat-live-32.js?v=32a';
+import { createHeatLive32, createRouteBias32, chooseVmsBoards32, expandHeatHistory32 } from './heat-live-32.js?v=32a';
 import { createHeatScene32, mountHeatPanel32 } from './heat-scene-32.js?v=32a';
 export { createRouteBias32 } from './heat-live-32.js?v=32a';
+// M4b2 — đồng hồ trong ngày + tua (clock-32.js) và tua trước trong Worker (forecast-client-32.js).
+export { installClock32, clockAt32, lightOf32, demandOfHour32 } from './clock-32.js?v=32a';
+export { installForecast32 } from './forecast-client-32.js?v=32a';
 export const HEAT_TICK_MS_32 = 250;   // ms thực: nhịp gọi engine (việc nặng chỉ chạy theo giây sim)
 
 export const SMART_APP_32_VERSION = 'smart-app-32a';
@@ -247,14 +250,25 @@ export function installStation32(app, { cameras = [], nodeMap = [], search = (ty
 
 // M4b1 — nối lớp nhiệt/dự báo/VMS vào app smart. Cần installStation32 trước (để gửi /station/heat qua transport).
 // routing = createRouteBias32() đã truyền cho createTraffic31 (routeBias), để cảnh báo đổi hướng xe thật.
-export function installHeat32(app, { THREE, routing = null, nodeMap = [], root = (typeof document !== 'undefined' ? document : null) } = {}) {
+export function installHeat32(app, { THREE, routing = null, nodeMap = [], root = (typeof document !== 'undefined' ? document : null),
+  historyUrl = 'data/heat-history-32.json?v=32a' } = {}) {
   if (!THREE) throw new TypeError('installHeat32 cần THREE');
   const traffic = app.traffic, net = traffic.net, sim = traffic.sim;
   const transport = app.modules && app.modules.transport;
+  // M4b2: giờ của lịch sử theo đồng hồ trong ngày (nếu đã cài đồng hồ), không thì theo giây sim.
   const live = createHeatLive32({
     net, sim, routing,
+    clockOf: () => (app.modules && app.modules.clock ? app.modules.clock.heatTime() : sim.counters.t),
     onPayload: payload => { if (transport && typeof transport.sendHeat === 'function') transport.sendHeat(payload); }
   });
+  // Lịch sử offline (scripts/build-heat-history-32.mjs) làm nền cho dự báo thống kê ngay từ đầu. Lỗi tải → chỉ cảnh báo.
+  if (typeof fetch === 'function' && historyUrl) {
+    fetch(historyUrl).then(r => (r.ok ? r.json() : null)).then(j => {
+      const hist = j ? expandHeatHistory32(j, net.NE) : null;
+      if (hist) live.loadHistory(hist);
+      else console.warn('heat-history-32: không nạp được lịch sử (sai số cạnh hoặc định dạng)');
+    }).catch(e => console.warn('heat-history-32:', e && e.message));
+  }
   const boards = chooseVmsBoards32({ net, nodeMap, max: 4 });
   const scene = createHeatScene32({ THREE, scene: app.scene, traffic, net, sim, boards });
   const host = root && (root.querySelector ? root.querySelector('#smartHud32') : null);

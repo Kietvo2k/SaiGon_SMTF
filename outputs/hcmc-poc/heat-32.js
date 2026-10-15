@@ -70,6 +70,8 @@ export function createHeat32(o) {
       }
       if (changed) hourCount++;
     },
+    // M4b2: nạp mức nhiệt hiện có (dùng trong Worker tua trước để bắt đầu từ đúng trạng thái của trạm chính).
+    setLevels(arr) { for (let e = 0; e < N; e++) levels[e] = Math.max(0, Math.min(1, Number(arr && arr[e]) || 0)); },
     level(edge) {
       if (!Number.isInteger(edge) || edge < 0 || edge >= N) throw new RangeError('edge out of range');
       return levels[edge];

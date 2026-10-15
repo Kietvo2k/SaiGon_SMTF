@@ -372,13 +372,29 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
         });
       }
     }
+    // M4b2: lưu lượng TB mỗi nút được điều khiển (xe/phút/nút) = trung bình by_node.flow_per_min. flow_per_min giữ nguyên là
+    // TỔNG toàn mạng (đừng hiển thị như lưu lượng nút: đó là lỗi "4502 xe/phút" của M4b1).
+    const flow_per_node_min = by_node.length ? +(by_node.reduce((a, r) => a + r.flow_per_min, 0) / by_node.length).toFixed(1) : 0;
     return {
       window_s: WINDOW_S, wait_avg_s, wait_p95_s, queue_max: queueMax,
       queue_avg: +(queueSum / Math.max(1, queueN)).toFixed(2),
-      flow_per_min: flow_global, mode: curMode,
+      flow_per_min: flow_global, flow_per_node_min, mode: curMode,
       overrides: [...overrides.entries()].map(([n, o]) => ({ node_id: nodeIdOf(n), ...o })),
       by_node
     };
+  };
+  // M4b2 (chỉ THÊM): ảnh pha của controller để tua trước trong Worker chạy đúng pha hiện tại (không đổi quyết định nào).
+  const exportPhases = () => ({
+    format: 1, curMode, pendingMode,
+    clusters: clusters.map(c => ({ ...c, nodeIds: [...c.nodeIds], dAcc: [...c.dAcc], lastServeStart: [...c.lastServeStart], dEma: c.dEma ? [...c.dEma] : null })),
+    overrides: [...overrides.entries()].map(([n, o]) => [n, { ...o }])
+  });
+  const importPhases = st => {
+    if (!st || st.format !== 1 || !Array.isArray(st.clusters) || st.clusters.length !== clusters.length) throw new RangeError('importPhases: không khớp số cụm đèn');
+    curMode = st.curMode; pendingMode = st.pendingMode;
+    st.clusters.forEach((s, i) => Object.assign(clusters[i], { ...s, nodeIds: [...s.nodeIds], dAcc: [...s.dAcc], lastServeStart: [...s.lastServeStart], dEma: s.dEma ? [...s.dEma] : null }));
+    overrides.clear();
+    for (const [n, o] of st.overrides) overrides.set(n, { ...o });
   };
   const stateHash = () => {
     let h = 2166136261;
@@ -389,7 +405,7 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     return h.toString(16).padStart(8, '0');
   };
   return {
-    isGreen, stateOf, update, metrics, stateHash,
+    isGreen, stateOf, update, metrics, stateHash, exportPhases, importPhases,
     setMode(next, opts = {}) {
       if (next !== 'fixed' && next !== 'smart') throw new TypeError('setMode: fixed|smart');
       if (opts.immediate) {

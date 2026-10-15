@@ -3,7 +3,7 @@
 // Phần hình học (ribbonEdges32, buildRibbon32, paintRibbon32) là thuần JS để test Node; THREE chỉ nạp qua tham số.
 import { colorOf, HEAT_COLORS_32 } from './heat-32.js?v=32a';
 import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
-import { vmsMessage32 } from './heat-live-32.js?v=32a';
+import { vmsMessage32, groupAlertsByRoad32 } from './heat-live-32.js?v=32a';
 
 export const HEAT_SCENE_32_VERSION = 'heat-scene-32a';
 export const RIBBON_LIFT_M_32 = 0.6;      // m: ribbon nằm trên mặt đường; camera xa (~5 km, near 3 m) cần ≥ 0,5 m để không lún vào mặt đường
@@ -239,9 +239,11 @@ export function mountHeatPanel32(host, { onToggle = () => {} } = {}) {
     setAlerts(alerts) {
       list.textContent = '';
       if (!alerts || !alerts.length) { list.append(row('Chưa có cảnh báo kẹt')); return 0; }
-      const top = alerts.slice(0, ALERT_ROWS_32);
+      // M4b2: gộp theo tên đường (mỗi đường một dòng, ghi số đoạn), tối đa ALERT_ROWS_32 dòng.
+      const top = groupAlertsByRoad32(alerts, ALERT_ROWS_32);
       for (const a of top) {
-        list.append(row(a.name, `${Math.round(a.prob * 100)}% · sau ${a.horizonMin} phút · tin cậy ${Math.round(a.reliability * 100)}%`));
+        const seg = a.segments > 1 ? ` · ${a.segments} đoạn` : '';
+        list.append(row(a.name, `${Math.round(a.prob * 100)}% · sau ${a.horizonMin} phút · tin cậy ${Math.round(a.reliability * 100)}%${seg}`));
       }
       return top.length;
     },

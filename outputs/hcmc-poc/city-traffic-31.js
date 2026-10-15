@@ -217,6 +217,9 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
   const MIN_PX = .6, kindLen = TRAFFIC_KINDS.map(k => k.length);
   let pxPerM = 0;
   let frame = 0, acc = 0, lastNow = null, drawRadius = 4500;
+  // M4b2: tốc độ chạy (×1/×5/×10: nhân dt, vẫn bị giới hạn MAX_STEPS_PER_FRAME mỗi khung) và tua nhanh theo ngân sách ms/khung.
+  let timeScale = 1, ffTarget = null;
+  const FF_BUDGET_MS = 10;
   const P = {};
   function edgeVisible(e) {
     if (edgeStamp[e] === frame) return edgeVis[e];
@@ -298,7 +301,14 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
     const light = getLight(), lf = LIGHT_FACTOR[light] ?? 1;
     if (Math.abs(lf - sim.lightFactor) > 1e-9) { sim.setLightFactor(lf); rebase(); }
     const dt = lastNow === null ? 0 : Math.min(.25, Math.max(0, (now - lastNow) / 1000)); lastNow = now;
-    acc += dt; let steps = 0;
+    if (ffTarget !== null) {
+      // Tua nhanh: chạy bước theo ngân sách mỗi khung, không vẽ giữa chừng; xong mới chốt trạng thái hiển thị.
+      const t0 = performance.now();
+      while (sim.counters.t < ffTarget - 1e-9 && performance.now() - t0 < FF_BUDGET_MS) { sim.finishStep(); sim.step(); }
+      if (sim.counters.t < ffTarget - 1e-9) { if (now - lastStatus > 500) publish(now); return; }
+      ffTarget = null; rebase(); acc = 0;
+    }
+    acc += dt * timeScale; let steps = 0;
     // Đến hạn bước: hoàn tất bước đang tính dở (thường đã xong từ các khung trước) rồi chốt làm trạng thái hiển thị mới.
     while (acc >= STEP && steps < MAX_STEPS_PER_FRAME) { if (!pendingStep()) sim.beginStep(); sim.finishStep(); commit(); acc -= STEP; steps++; }
     if (acc > STEP) acc = STEP;   // bị tụt khung: bỏ thời gian thừa thay vì dồn bước
@@ -331,6 +341,11 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
     // Xe ngoài đa giác tắt; sinh/tái sinh chỉ ở nút trong khu; setVisibleFraction áp lên tập xe trong khu. Trả về số xe đang hoạt động.
     setRegion: region => { const n = sim.setRegion(region); rebase(); publish(performance.now()); return n; },
     getRegion: () => ({ ...sim.region, eligible: sim.eligibleCount() }),
+    // M4b2: tốc độ chạy và tua nhanh (giây sim). Mặc định 1 và không tua: hành vi cũ không đổi.
+    setTimeScale: k => { const v = Number(k); timeScale = Number.isFinite(v) ? Math.max(0, Math.min(20, v)) : 1; return timeScale; },
+    getTimeScale: () => timeScale,
+    fastForward: seconds => { sim.finishStep(); ffTarget = sim.counters.t + Math.max(0, Number(seconds) || 0); return ffTarget; },
+    ffRemaining: () => (ffTarget === null ? 0 : Math.max(0, ffTarget - sim.counters.t)),
     setDensity: level => {
       const named = { full: 1, high: 1, balanced: .6, light: .35, minimal: .15 };
       const f = typeof level === 'number' ? level : named[level] ?? 1;

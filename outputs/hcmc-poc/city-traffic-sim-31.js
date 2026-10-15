@@ -436,7 +436,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       set(n, v) { if (!seen[n]) { seen[n] = 1; used.push(n); } a[n] = v; },
       delete(n) { a[n] = undefined; },
       clear() { for (const n of used) { a[n] = undefined; seen[n] = 0; } used.length = 0; },
-      *values() { for (const n of used) if (a[n]) yield a[n]; }
+      *values() { for (const n of used) if (a[n]) yield a[n]; },
+      *entries() { for (const n of used) if (a[n]) yield [n, a[n]]; }
     };
   })();
   let reqPrev = new Map(), reqCur = new Map();
@@ -995,6 +996,64 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     return q;
   }
 
+  // ---- Ảnh trạng thái (M4b2, chỉ THÊM): exportState() hoàn tất bước đang dở rồi chụp mọi mảng xe, khóa nút, token vùng,
+  // hàng chờ làn, đếm, khu, tỉ lệ và hệ số ánh sáng. importState(st) đặt lại đúng các mảng đó lên một sim CÙNG mạng
+  // (kiểm N/NL); khi đó sim chạy tiếp cho cùng stateHash như sim gốc (kiểm bằng test). Không đổi bước mô phỏng nào.
+  function exportState() {
+    finishStep();
+    const cp = a => a.slice();
+    return {
+      format: 1, N, NL,
+      counters: { ...counters, perSecond: counters.perSecond.slice() },
+      fraction, lightFactor, rankStep,
+      region: region ? { id: region.id, poly: Array.from(region.poly), margin: region.margin } : null,
+      insideLane: cp(insideLane), spawnList: spawnList.slice(), elig: cp(elig),
+      lane: cp(lane), s: cp(s), v: cp(v), lat: cp(lat), jit: cp(jit), gen: cp(gen), active: cp(active),
+      kind: cp(kind), len: cp(len), wid: cp(wid), next: cp(next), prevLane: cp(prevLane),
+      pLane: cp(pLane), pS: cp(pS), pGen: cp(pGen), path: cp(path), stopT: cp(stopT), lastStep: cp(lastStep),
+      waiting: cp(waiting), lastStepCrossed: cp(lastStepCrossed), lastS: cp(lastS), wanted: cp(wanted),
+      selRank: cp(selRank), pending: cp(pending), vf: cp(vf), rng: cp(rng),
+      lockNode: cp(lockNode), lockIn: cp(lockIn), lockOut: cp(lockOut), lockRemain: cp(lockRemain),
+      zTok: cp(zTok), zLane: cp(zLane), zRem: cp(zRem),
+      activeLanes: activeLanes.slice(),
+      laneCars: activeLanes.map(l => [l, laneCars[l].slice()]),
+      holders: [...holders.entries()].map(([n, list]) => [n, list.map(h => ({ car: h.car, inL: h.inL, outL: h.outL, straight: h.straight }))]),
+      reqPrev: [...reqPrev].map(([n, r]) => [n, r.p, r.car]),
+      reqCur: [...reqCur].map(([n, r]) => [n, r.p, r.car])
+    };
+  }
+  function importState(st) {
+    if (!st || st.format !== 1 || st.N !== N || st.NL !== NL) throw new RangeError('importState: trạng thái không khớp mạng (N/NL)');
+    const put = (dst, src) => { if (!src || src.length !== dst.length) throw new RangeError('importState: sai độ dài mảng ' + dst.length); dst.set(src); };
+    for (const l of activeLanes) { laneCars[l] = []; laneActive[l] = 0; }
+    activeLanes = []; inStep = false; stepLanes = null;
+    put(insideLane, st.insideLane); put(elig, st.elig);
+    put(lane, st.lane); put(s, st.s); put(v, st.v); put(lat, st.lat); put(jit, st.jit); put(gen, st.gen); put(active, st.active);
+    put(kind, st.kind); put(len, st.len); put(wid, st.wid); put(next, st.next); put(prevLane, st.prevLane);
+    put(pLane, st.pLane); put(pS, st.pS); put(pGen, st.pGen); put(path, st.path); put(stopT, st.stopT); put(lastStep, st.lastStep);
+    put(waiting, st.waiting); put(lastStepCrossed, st.lastStepCrossed); put(lastS, st.lastS); put(wanted, st.wanted);
+    put(selRank, st.selRank); put(pending, st.pending); put(vf, st.vf); put(rng, st.rng);
+    put(lockNode, st.lockNode); put(lockIn, st.lockIn); put(lockOut, st.lockOut); put(lockRemain, st.lockRemain);
+    put(zTok, st.zTok); put(zLane, st.zLane); put(zRem, st.zRem);
+    for (const [l, cars] of st.laneCars) { laneCars[l] = cars.slice(); laneActive[l] = 1; activeLanes.push(l); }
+    holders.clear(); inHold.fill(0);
+    for (const [n, list] of st.holders) holders.set(n, list.map(h => ({ car: h.car, inL: h.inL, outL: h.outL, straight: h.straight })));
+    for (let i = 0; i < N; i++) for (let k = 0; k < LK; k++) if (lockNode[i * LK + k] >= 0 && lockIn[i * LK + k] >= 0) inHold[lockIn[i * LK + k]]++;
+    zoneHold.clear();
+    for (let i = 0; i < N; i++) for (let k = 0; k < 2; k++) {
+      const z = zTok[i * 2 + k]; if (z < 0) continue;
+      let h = zoneHold.get(z); if (!h) zoneHold.set(z, h = new Map());
+      const l = zLane[i * 2 + k]; h.set(l, (h.get(l) || 0) + 1);
+    }
+    reqPrev = new Map(st.reqPrev.map(([n, p, car]) => [n, { p, car }]));
+    reqCur = new Map(st.reqCur.map(([n, p, car]) => [n, { p, car }]));
+    const { perSecond, ...rest } = st.counters;
+    Object.assign(counters, rest); counters.perSecond.set(perSecond);
+    fraction = st.fraction; lightFactor = st.lightFactor; rankStep = st.rankStep;
+    region = st.region ? { id: st.region.id, poly: Float64Array.from(st.region.poly), margin: st.region.margin } : null;
+    spawnList = st.spawnList.slice();
+    return { t: counters.t, active: activeCount() };
+  }
   function stateHash() {
     let h = 2166136261 >>> 0;
     const mix = x => { h ^= x >>> 0; h = Math.imul(h, 16777619) >>> 0; };
@@ -1008,7 +1067,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   reset();
   const simApi = {
-    N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters,
+    N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters, exportState, importState,
     step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, wantedCount: () => { let n = 0; for (let i = 0; i < N; i++) n += wanted[i]; return n; }, pendingCount: () => { let n = 0; for (let i = 0; i < N; i++) n += pending[i]; return n; }, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,
     setRegion, get region() { return region ? { id: region.id, active: true, margin: region.margin, lanes: insideLane.reduce((a, b) => a + b, 0), spawnLanes: spawnList.length } : { id: null, active: false, margin: 0, lanes: NL, spawnLanes: spawnLanes.length }; },
     eligibleCount: () => { let n = 0; for (let i = 0; i < N; i++) n += elig[i]; return n; }, isEligible: i => !!elig[i], insideLaneOf: l => !!insideLane[l],
