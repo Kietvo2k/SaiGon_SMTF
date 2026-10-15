@@ -395,6 +395,9 @@ button:focus-visible,select:focus-visible,a:focus-visible{
 .region-options button:first-child{grid-column:1/-1}
 .region-notice{top:calc(var(--edge) + 56px);bottom:auto;max-width:min(520px,calc(100% - 2 * var(--edge)))}
 body.ui-hidden .region-notice{opacity:0;pointer-events:none}
+.region-options button.region-locked{border-color:rgba(255,122,80,.42);color:rgba(255,206,182,.92);background:rgba(120,42,20,.18)}
+.region-options button.region-locked:hover{border-color:rgba(255,150,110,.72)}
+.lock-label{border-color:rgba(255,196,86,.85);background:rgba(66,42,8,.82);color:#ffe6ac;box-shadow:0 0 20px rgba(255,176,45,.28)}
 .density-suggest p{margin:0;font-size:11px;line-height:1.4}
 .density-suggest div{display:flex;gap:6px;flex:none}
 .density-suggest button{min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:rgba(202,222,216,.06);color:var(--ink);font-size:11px;font-weight:700;cursor:pointer}

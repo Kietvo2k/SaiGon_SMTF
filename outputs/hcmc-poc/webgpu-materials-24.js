@@ -16,7 +16,7 @@ import { createRoadNetwork31, roadWidth31 } from './city-road-network-31.js?v=31
 import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furniture-31.js?v=31a';
 import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=31a';
 import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=31a';
-import { REGION_ALL_ID, REGION_URL_PARAM, REGION_STORAGE_KEY, REGIONS_31, regionById, regionOf, regionContains } from './city-region-31.js?v=31a';
+import { REGION_ALL_ID, REGION_URL_PARAM, REGION_STORAGE_KEY, REGIONS_31, regionById, regionOf, regionContains, regionPolygon } from './city-region-31.js?v=31a';
 import { DENSITY_STORAGE_KEY, MODE_URL_PARAM, anisotropyForMode, createModeController, modeById, resolveMode, textureUrlsForMode } from './city-mode-31.js?v=31a';
 import { createTraffic31 } from './city-traffic-31.js?v=31a';
 
@@ -237,8 +237,9 @@ if(isSmart32){
   const roadsFilter=lockMod32.lockRoadFilter32({roads:D.roads,regionOf,signalPoints,isSignatureWay:id=>registry32.isSignatureWay(id)});
   const simHidden=new Set(roadsFilter.hidden);for(const index of roadsFilter.keptMinor)simHidden.add(index);
   const buildingsFilter=lockMod32.selectNorthBuildings32({buildings:renderBuildings,roads:D.roads,regionOf,isSignature:id=>signatureGate.isSignatureBuilding(id)});
-  lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints,buildings:buildingsFilter,boxes:[]};
-  materialStatus.lock32={version:lockMod32.CITY_LOCK_32_VERSION,roads:roadsFilter.stats,buildings:{before:buildingsFilter.before,ordinary:buildingsFilter.ordinary,signature:buildingsFilter.signature,keptOrdinary:buildingsFilter.keptOrdinary,dropped:buildingsFilter.dropped,keptPercent:+(buildingsFilter.ratio*100).toFixed(1)},hiddenRoads:roadsFilter.hidden.size,simHiddenRoads:simHidden.size,signalPoints:signalPoints.length};
+  const cameraLimits=lockMod32.northCameraLimits32(REGIONS_31.find(region=>region.id===lockMod32.NORTH_REGION_ID_32).bbox);
+  lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints,buildings:buildingsFilter,boxes:[],cameraLimits};
+  materialStatus.lock32={version:lockMod32.CITY_LOCK_32_VERSION,roads:roadsFilter.stats,buildings:{before:buildingsFilter.before,ordinary:buildingsFilter.ordinary,signature:buildingsFilter.signature,keptOrdinary:buildingsFilter.keptOrdinary,dropped:buildingsFilter.dropped,keptPercent:+(buildingsFilter.ratio*100).toFixed(1)},hiddenRoads:roadsFilter.hidden.size,simHiddenRoads:simHidden.size,signalPoints:signalPoints.length,cameraLimits};
 }
 
 for(let bi=0;bi<renderBuildings.length;bi++){
@@ -301,6 +302,32 @@ if(lock32&&lock32.boxes.length){
   lockBoxes32.name='M2a · hộp nhà tối giản khu Bắc';lockBoxes32.receiveShadow=true;scene.add(lockBoxes32);
   lock32.boxMesh=lockBoxes32;
   materialStatus.lock32.boxes={count:lock32.boxes.length,drawCalls:1};
+}
+
+// M2a · A1/A2 — ba khu khóa (trung-tâm, ven-song, nam): một mesh nền xám nhạt phủ đúng 3 đa giác (gộp chung bằng
+// window.earcut có sẵn — rẻ hơn tách mesh theo khu hay shader mặt nạ, không đụng pipeline đang chạy), đặt ở y=0.85:
+// trên mặt nước (0.7) và nền đất (−1), dưới mặt đường (y≈1.0) nên đường ≥ secondary ngoài khu Bắc vẫn còn thấy.
+// Viền khu Bắc là dải phẳng sáng rộng 26 m ở y=1.25 (Line của WebGPU chỉ 1 px nên không dùng Line).
+if(lock32){
+  const overlayPoints=[];
+  for(const region of REGIONS_31){
+    if(!lock32.mod.LOCKED_REGION_IDS_32.includes(region.id))continue;
+    const flat=[];for(const point of region.polygon)flat.push(point[0],point[1]);
+    const ids=window.earcut(flat,[],2);
+    for(let i=0;i<ids.length;i+=3)for(const k of [ids[i],ids[i+2],ids[i+1]])overlayPoints.push(flat[k*2],0.85,flat[k*2+1]);
+  }
+  if(overlayPoints.length){
+    const overlayGeometry=new THREE.BufferGeometry();overlayGeometry.setAttribute('position',new THREE.Float32BufferAttribute(overlayPoints,3));overlayGeometry.computeVertexNormals();
+    const overlayMaterial=new THREE.MeshStandardNodeMaterial({color:'#c7c8c3',roughness:1,metalness:0});
+    const overlay=new THREE.Mesh(overlayGeometry,overlayMaterial);overlay.name='M2a · nền xám 3 khu khóa';overlay.receiveShadow=true;scene.add(overlay);
+    lock32.overlay=overlay;materialStatus.lock32.overlay={regions:lock32.mod.LOCKED_REGION_IDS_32.length,triangles:overlayPoints.length/9};
+  }
+  const bacPoly=regionById('bac').polygon,borderPoints=[];
+  ribbon([...bacPoly,bacPoly[0]],26,1.25,borderPoints);
+  const borderGeometry=new THREE.BufferGeometry();borderGeometry.setAttribute('position',new THREE.Float32BufferAttribute(borderPoints,3));borderGeometry.computeVertexNormals();
+  const borderMaterial=new THREE.MeshStandardNodeMaterial({color:'#ffd23f',emissive:'#ffb300',emissiveIntensity:1.3,roughness:.5});
+  const border=new THREE.Mesh(borderGeometry,borderMaterial);border.name='M2a · viền khu Bắc';border.renderOrder=6;scene.add(border);
+  lock32.border=border;materialStatus.lock32.border={widthM:26,triangles:borderPoints.length/9};
 }
 
 setProgress(57,'Đang biên dịch vật liệu TSL…');
@@ -839,6 +866,11 @@ setProgress(84,'Đang hoàn tất cảnh và biên dịch pipeline…');
 const places=[['BITEXCO',106.70435,10.7716,278],['NGUYỄN HUỆ',106.7035,10.7751,18],['BẾN BẠCH ĐẰNG',106.7067,10.7762,16],['NHÀ HÁT THÀNH PHỐ',106.7033,10.7765,34],['QUẢNG TRƯỜNG LAM SƠN',106.7030,10.7768,16],['ĐỒNG KHỞI',106.7027,10.7776,18],['LANDMARK 81',106.7219,10.7949,470],['MARINA CENTRAL · 240 M',106.707826,10.782198,252],['GRAND MARINA · 4 THÁP',106.70895,10.78472,184],['CẦU BA SON',106.71073,10.77927,122],['THẢO ĐIỀN · VÙNG HIỆU CHỈNH',106.7312,10.8037,34],['QUỐC HƯƠNG',106.7322,10.8044,15],['NGUYỄN VĂN HƯỞNG',106.7282,10.8022,15]];
 const labels=places.map(place=>{const el=document.createElement('div');el.className='label';el.textContent=place[0];$('#labels').append(el);return{el,pos:xyz(place[1],place[2],place[3])};});
 floodAlertLabels=floodAlertPoints.map(point=>{const el=document.createElement('div');el.className='label alert-label';el.textContent=point.name;$('#labels').append(el);const item={el,pos:new THREE.Vector3(point.x,155,point.z),active:false};labels.push(item);return item;});
+// M2a · A2 — 3 nhãn "🔒 Khu vực đang khóa · <tên khu>" ở tâm bbox từng khu khóa; active:true để luôn hiện ngoài lọc khu.
+const lockLabelItems32=lock32?lock32.mod.lockRegionLabels32(REGIONS_31):[];
+lockLabelItems32.forEach(item=>{const el=document.createElement('div');el.className='label lock-label';el.textContent=item.text;$('#labels').append(el);labels.push({el,pos:new THREE.Vector3(item.x,120,item.z),active:true,pinned:true,region:item.id});});
+if(lock32){lock32.labelItems=lockLabelItems32.map(item=>({id:item.id,text:item.text,x:item.x,z:item.z}));materialStatus.lock32.labels=lock32.labelItems;}
+
 
 const presets={
   materials:{target:xyz(106.7060,10.7764,68),distance:1120,az:.92,polar:1.08,label:'MATERIAL DISTRICT'},
@@ -887,6 +919,8 @@ function selectView(key){
     showRegionNotice(`Góc nhìn “${presets[key].label}” nằm ở khu “${owner.label}” — đã chuyển khu để giữ tải GPU thấp.`);
   }
   const p=resolved.preset;desired={...p,target:p.target.clone()};
+  // M2a · A3 — kẹp tâm/khoảng cách đích ngay khi chọn góc để chuyển cảnh hội tụ về trong giới hạn khu Bắc.
+  if(lock32&&lock32.cameraLimits){const limited=lock32.mod.clampNorthCamera32({x:desired.target.x,z:desired.target.z,distance:desired.distance},lock32.cameraLimits);desired.target.set(limited.x,desired.target.y,limited.z);desired.distance=limited.distance;}
   activeView=key;
   camera.fov=p.fov||42;camera.updateProjectionMatrix();
   transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
@@ -904,6 +938,33 @@ if(isSmart32&&smartApp){
   for(const [key,view] of Object.entries(north.views))presets[key]={target:new THREE.Vector3(...view.target),distance:view.distance,az:view.az,polar:view.polar,label:view.label};
   smartMod.installNorthTour32(smartApp,{views:north.views,onSelect:key=>selectView(key)});
   smartApp.modules.signals?.setConeVisible?.(activeView==='hx');
+  // M2a · A2 — nút khu bị khóa vẫn nhận bấm: bắt ở pha capture (chạy trước listener chọn khu của bộ điều phối mật độ)
+  // nên chỉ báo ngắn và KHÔNG đổi khu. Mở lại disabled (đã đặt aria-disabled ở lockRegions32) để nút nhận sự kiện.
+  const regionRoot=$('#regionControl');
+  if(regionRoot){
+    for(const button of regionRoot.querySelectorAll('[data-region]')){if(button.dataset.region==='bac')continue;button.disabled=false;button.classList.add('region-locked');}
+    const lockedNotice=button=>{const region=regionById(button.dataset.region);showRegionNotice(`🔒 Khu vực đang khóa · ${region?region.label:button.dataset.region}`);};
+    regionRoot.addEventListener('click',event=>{const button=event.target.closest?.('[data-region]');if(!button||button.dataset.region==='bac')return;event.stopPropagation();event.preventDefault();lockedNotice(button);},true);
+    regionRoot.addEventListener('keydown',event=>{if(!['ArrowRight','ArrowDown','ArrowLeft','ArrowUp','Home','End'].includes(event.key))return;event.stopPropagation();event.preventDefault();const focused=document.activeElement;if(focused&&focused.dataset&&focused.dataset.region&&focused.dataset.region!=='bac')lockedNotice(focused);},true);
+  }
+  // M2a · C6 — sim trong app smart chỉ chạy trong ĐÚNG đa giác khu Bắc (margin 0) ⇒ 0 xe hiển thị ngoài khu Bắc;
+  // biên hợp lệ giữ nguyên: sim vẫn sinh/tái sinh xe ở nút trong khu (đo: 0 teleport, 193 respawn tổng).
+  traffic.setRegion({id:'bac',polygon:regionPolygon('bac'),margin:0});
+  lock32.smartRegion={id:'bac',margin:0};
+  materialStatus.lock32.smartRegion=lock32.smartRegion;
+  // M2a · D — số liệu LIVE cho QA: nhà/cây/xe ĐANG VẼ có tâm ngoài khu Bắc (bỏ qua signature theo bất biến F).
+  lock32.audit=()=>{
+    const outside=(x,z)=>regionOf(x,z)!=='bac';
+    const buildingById=new Map();for(const building of renderBuildings)if(!buildingById.has(Number(building.id)))buildingById.set(Number(building.id),building);
+    let buildingsShown=0,buildingsOutside=0;
+    for(const id of cityChunks.shownIds()){const building=buildingById.get(Number(id));if(!building)continue;buildingsShown++;const x=building.center[0],z=building.center[1];if(outside(x,z)&&!signatureGate.isSignatureBuilding(Number(id)))buildingsOutside++;}
+    let treesShown=0,treesOutside=0;const matrix=new THREE.Matrix4();
+    scene.traverse(object=>{if(!object.isInstancedMesh||object.visible===false)return;if(object.layers&&object.layers.mask===0)return;const info=object.userData&&object.userData.densityInstances;if(!info||(info.source!=='trunks'&&info.source!=='farCanopies'))return;const stride=info.stride||1,count=object.count||0,array=object.instanceMatrix.array;for(let i=0;i<count;i+=stride){const offset=i*16;if(info.source==='farCanopies'&&!array[offset]&&!array[offset+5]&&!array[offset+10])continue;object.getMatrixAt(i,matrix);const x=matrix.elements[12],z=matrix.elements[14];treesShown++;if(outside(x,z)&&!signatureGate.protects(x,z,'tree'))treesOutside++;}});
+    const snapshot=traffic.snapshot(),poses=traffic.poses();let vehiclesActive=0,vehiclesOutside=0;
+    for(let i=0;i<snapshot.active.length;i++){if(!snapshot.active[i])continue;const x=poses[i*5],z=poses[i*5+2];vehiclesActive++;if(outside(x,z))vehiclesOutside++;}
+    return {buildingsShown,buildingsOutside,treesShown,treesOutside,vehiclesActive,vehiclesOutside};
+  };
+  materialStatus.lock32.audit=lock32.audit;
 }
 // Bước I 31A — Chế độ Preview/Lite. Đổi mode cần dựng lại pipeline chất lượng (presentation ↔ performance)
 // nên tải lại trang có giữ trạng thái (view, light, region) và có thông báo rõ; density tay đã lưu trước đó
@@ -1060,8 +1121,11 @@ function updateLabels(){
     .map(element=>element.getBoundingClientRect());
   const candidates=[];
   for(const label of labels){
-    const projected=label.pos.clone().project(camera),x=(projected.x*.5+.5)*innerWidth,y=(-projected.y*.5+.5)*innerHeight;
-    const visible=(label.active!==false)&&projected.z<1&&x>30&&x<innerWidth-30&&y>60&&y<innerHeight-48&&labelInRegion(label);
+    const projected=label.pos.clone().project(camera);let x=(projected.x*.5+.5)*innerWidth,y=(-projected.y*.5+.5)*innerHeight;
+    const inFrame=projected.z<1&&x>30&&x<innerWidth-30&&y>60&&y<innerHeight-48;
+    // M2a: nhãn khu khóa luôn hiện từ toàn cảnh — nếu tâm khu ra ngoài khung (khu nam ở xa phía nam) thì dán vào mép khung.
+    if(label.pinned&&!inFrame&&projected.z<1){x=Math.min(innerWidth-30,Math.max(30,x));y=Math.min(innerHeight-48,Math.max(60,y));}
+    const visible=(label.active!==false)&&(inFrame||label.pinned)&&projected.z<1&&labelInRegion(label);
     label.el.style.display='none';
     if(visible)candidates.push({label,x,y,priority:label.active===true?0:1});
   }
@@ -1086,6 +1150,8 @@ function render(now){
     azimuth+=orbitVelocity;polar=THREE.MathUtils.clamp(polar+polarVelocity,.16,1.43);target.add(panVelocity);cameraDistance=THREE.MathUtils.clamp(cameraDistance*Math.exp(zoomVelocity),180,13000);
     const orbitDecay=Math.exp(-dt*8.5),panDecay=Math.exp(-dt*9.5),zoomDecay=Math.exp(-dt*10.5);orbitVelocity*=orbitDecay;polarVelocity*=orbitDecay;panVelocity.multiplyScalar(panDecay);zoomVelocity*=zoomDecay;
   }
+  // M2a · A3 — kẹp tâm quay trong bbox khu Bắc + 400 m và khoảng cách ≤ mức thấy toàn khu, mỗi khung (đè cả khi kéo chuột).
+  if(lock32&&lock32.cameraLimits){const limited=lock32.mod.clampNorthCamera32({x:target.x,z:target.z,distance:cameraDistance},lock32.cameraLimits);if(limited.clamped){target.x=limited.x;target.z=limited.z;cameraDistance=limited.distance;}lock32.camera={x:target.x,z:target.z,distance:cameraDistance};}if(materialStatus.lock32&&lock32)materialStatus.lock32.camera=lock32.camera;
   camera.position.set(target.x+cameraDistance*Math.sin(polar)*Math.sin(azimuth),target.y+cameraDistance*Math.cos(polar),target.z+cameraDistance*Math.sin(polar)*Math.cos(azimuth));camera.lookAt(target);
   scene.fog.density=Math.min(activeFogDensity,Math.max(.000018,.22/cameraDistance));
   shadowSystem.update(target,cameraDistance);
