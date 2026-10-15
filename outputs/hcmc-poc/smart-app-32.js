@@ -15,6 +15,11 @@ import { createQueue32, createIndexedDbStore32, createMemoryStore32 } from './st
 import { createTransport32, startStationLoop32, resolveApiBase32, readStoredToken32, loginStation32 } from './station-client-32.js?v=32a';
 import { installHud32 } from './kpi-panel-32.js?v=32a';
 export { installHud32 } from './kpi-panel-32.js?v=32a';
+// M4b1 — bản đồ nhiệt, dự báo kẹt, lệch tuyến và bảng VMS (heat-live-32.js, heat-scene-32.js).
+import { createHeatLive32, createRouteBias32, chooseVmsBoards32 } from './heat-live-32.js?v=32a';
+import { createHeatScene32, mountHeatPanel32 } from './heat-scene-32.js?v=32a';
+export { createRouteBias32 } from './heat-live-32.js?v=32a';
+export const HEAT_TICK_MS_32 = 250;   // ms thực: nhịp gọi engine (việc nặng chỉ chạy theo giây sim)
 
 export const SMART_APP_32_VERSION = 'smart-app-32a';
 export const SMART_BREAKER_S = 180;   // M2a: ngắt chu kỳ đèn/thải xe 180 s trong app smart
@@ -238,4 +243,35 @@ export function installStation32(app, { cameras = [], nodeMap = [], search = (ty
   app.registerSmartModule32('transport', transport);
   app.registerSmartModule32('station-loop', loop);
   return { transport, perception, loop, hud };
+}
+
+// M4b1 — nối lớp nhiệt/dự báo/VMS vào app smart. Cần installStation32 trước (để gửi /station/heat qua transport).
+// routing = createRouteBias32() đã truyền cho createTraffic31 (routeBias), để cảnh báo đổi hướng xe thật.
+export function installHeat32(app, { THREE, routing = null, nodeMap = [], root = (typeof document !== 'undefined' ? document : null) } = {}) {
+  if (!THREE) throw new TypeError('installHeat32 cần THREE');
+  const traffic = app.traffic, net = traffic.net, sim = traffic.sim;
+  const transport = app.modules && app.modules.transport;
+  const live = createHeatLive32({
+    net, sim, routing,
+    onPayload: payload => { if (transport && typeof transport.sendHeat === 'function') transport.sendHeat(payload); }
+  });
+  const boards = chooseVmsBoards32({ net, nodeMap, max: 4 });
+  const scene = createHeatScene32({ THREE, scene: app.scene, traffic, net, sim, boards });
+  const host = root && (root.querySelector ? root.querySelector('#smartHud32') : null);
+  const panel = host ? mountHeatPanel32(host, { onToggle: on => { scene.setHeatVisible(on); } }) : null;
+  let shown = '';
+  const timer = setInterval(() => {
+    live.tick();
+    scene.update(sim.counters.t, live);
+    if (panel) {
+      const alerts = live.alerts();
+      const key = alerts.map(a => `${a.edge}:${a.horizonMin}`).join(',');
+      if (key !== shown) { shown = key; panel.setAlerts(alerts); }
+    }
+  }, HEAT_TICK_MS_32);
+  const mod = {
+    live, scene, boards, panel,
+    dispose() { clearInterval(timer); scene.dispose(); if (panel) panel.dispose(); }
+  };
+  return app.registerSmartModule32('heat', mod);
 }

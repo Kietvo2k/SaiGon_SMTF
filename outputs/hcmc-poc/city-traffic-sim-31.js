@@ -359,8 +359,11 @@ function buildCrossZones31(net) {
 }
 
 // ---------------------------------------------------------------- mô phỏng (thuần JS, tất định)
-export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TARGET, signalPlan = null, controller: controller0 = null, breakerS = BREAKER_S, seed = SEED, demand = null } = {}) {
+export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TARGET, signalPlan = null, controller: controller0 = null, breakerS = BREAKER_S, seed = SEED, demand = null, routeBias = null } = {}) {
   let controller = controller0;
+  // M4b1: routeBias(edge, carIndex) → hệ số 0..1 nhân vào trọng số rẽ vào cạnh `edge` (không truyền / trả về ≥ 1 = y nguyên;
+  // không rút thêm số ngẫu nhiên nên hash cổ điển giữ nguyên).
+  const routeBiasFn = typeof routeBias === 'function' ? routeBias : null;
   const { lanes, NL, nextSt, lanesOfSt, laneCountOfSt, needsLock, Rz, signal, signalOffset, arriveGroup, arriveHead, spawnLanes, E, G } = net;
   const KL = TRAFFIC_KINDS.map(k => k.length), KW = TRAFFIC_KINDS.map(k => k.width);
   // ---- Kịch bản nhu cầu (tùy chọn, mặc định null = hành vi y nguyên): tăng trọng số sinh xe
@@ -496,6 +499,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
           else if (dDst > dCur) x /= 1 + demandCfg.turnBias;
         }
       }
+      // M4b1: điều hướng tránh cảnh báo kẹt — giảm trọng số rẽ vào cạnh bị cảnh báo (chỉ khi hàm trả hệ số < 1).
+      if (routeBiasFn && x > 0) { const f = routeBiasFn(c.st >> 1, i); if (Number.isFinite(f) && f < 1) x *= Math.max(.02, f); }
       w.push(x); total += x;
     }
     let r = rand(i) * total, pick = 0; for (; pick < w.length - 1; pick++) { r -= w[pick]; if (r < 0) break; }

@@ -246,6 +246,12 @@ export function createTransport32({
     try { const res = await request('/api/v1/station/metrics', { body: payload }); return !!res.ok; } catch (e) { return false; }
   };
 
+  // M4b1: ảnh nhiệt + cảnh báo kẹt (mỗi 10 s). Không xếp hàng IndexedDB: snapshot cũ bị thay ngay sau 10 s, và lỗi 404
+  // (backend chưa có endpoint) không được đẩy vào dead-letter như lỗi dữ liệu. Mọi lỗi → false, không ném.
+  const sendHeat = async payload => {
+    try { const res = await request('/api/v1/station/heat', { body: payload }); return !!(res && res.ok); } catch (e) { return false; }
+  };
+
   const sendFrame = async (cameraId, seq, jpegBase64, w, h) => {
     try {
       const res = await request('/api/v1/station/frames', {
@@ -327,7 +333,7 @@ export function createTransport32({
   };
 
   return {
-    start, stop, flush, sendViolation, sendEvidence, sendMetrics, sendFrame,
+    start, stop, flush, sendViolation, sendEvidence, sendMetrics, sendFrame, sendHeat,
     onCommand(fn) {
       listeners.push(fn);
       return () => { const i = listeners.indexOf(fn); if (i >= 0) listeners.splice(i, 1); };

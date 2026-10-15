@@ -145,10 +145,10 @@ const PALETTES = [
 const paintOf = (kind, i) => { const p = PALETTES[kind]; return p[hashU32((i * 31 + 7) ^ SEED) % p.length]; };
 
 // ---------------------------------------------------------------- pose (hình học) + vẽ
-export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null, signalPlan = null, controller = null, breakerS = undefined, seed = undefined }) {
+export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null, signalPlan = null, controller = null, breakerS = undefined, seed = undefined, routeBias = null }) {
   const t0 = performance.now();
   const net = buildTrafficNetwork31({ graph, roads, widthOf, drawn, signalPlan });
-  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS, seed });
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS, seed, routeBias });
   const { lanes } = net;
   // ---- Nâng y theo mặt đường vẽ: mặt cao nhất trong 0,5 m trên profile làn (dốc/mảnh đoạn chồng nhau, như baseline 30B).
   // Tính tại đúng vị trí xe (không bảng nội suy) nên không tụt dưới đỉnh giữa hai mẫu.
