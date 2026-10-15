@@ -128,7 +128,7 @@ function buildSegmentGrid32(roads, ranks, cellM) {
  */
 export function selectNorthBuildings32({ buildings, roads, regionOf, isSignature = () => false, maxM = NORTH_KEEP_BUILDING_MAX_M_32, northId = NORTH_REGION_ID_32, ranks = MAJOR_RANKS }) {
   const grid = buildSegmentGrid32(roads, ranks, Math.max(8, maxM));
-  const ids = new Set(), indices = new Set();
+  const ids = new Set(), indices = new Set(), ordinaryIndices = new Set(), ordinaryIds = new Set();
   const stats = { before: 0, ordinary: 0, kept: 0, dropped: 0, signature: 0, outside: 0 };
   for (let i = 0; i < buildings.length; i++) {
     const building = buildings[i], center = building?.center || building?.c;
@@ -137,13 +137,13 @@ export function selectNorthBuildings32({ buildings, roads, regionOf, isSignature
     if (regionOf(x, z) !== northId) { stats.outside++; continue; }
     stats.before++;
     const id = building.id ?? i;
-    if (isSignature(id)) { stats.signature++; ids.add(id); indices.add(i); continue; }
-    stats.ordinary++;
+    if (isSignature(id)) { stats.signature++; ids.add(id); continue; }
+    stats.ordinary++; ordinaryIndices.add(i); ordinaryIds.add(id);
     if (grid.nearest(x, z) <= maxM) { stats.kept++; ids.add(id); indices.add(i); }
     else stats.dropped++;
   }
   return {
-    ids, indices, grid,
+    ids, indices, ordinaryIndices, ordinaryIds, grid,
     before: stats.before, ordinary: stats.ordinary, signature: stats.signature,
     kept: stats.kept + stats.signature, keptOrdinary: stats.kept, dropped: stats.dropped,
     ratio: stats.ordinary ? stats.kept / stats.ordinary : 0
@@ -160,6 +160,7 @@ export function selectNorthBuildings32({ buildings, roads, regionOf, isSignature
  */
 export function lockRoadFilter32({ roads, regionOf, signalPoints = [], isSignatureWay = () => false, northId = NORTH_REGION_ID_32, signalRadiusM = NORTH_SIGNAL_RADIUS_M_32, lockedMinRank = LOCKED_MIN_RENDER_RANK_32 }) {
   const hidden = new Set();
+  const keptMinor = new Set();
   const stats = { total: roads.length, northMinorHidden: 0, northMinorKept: 0, northMajorKept: 0, lockedHidden: 0, lockedKept: 0, signatureKept: 0 };
   for (let i = 0; i < roads.length; i++) {
     const road = roads[i];
@@ -167,12 +168,12 @@ export function lockRoadFilter32({ roads, regionOf, signalPoints = [], isSignatu
     const inNorth = roadSamples32(road).some(([x, z]) => regionOf(x, z) === northId);
     if (inNorth) {
       if (!isMinorRoadClass32(road.type)) { stats.northMajorKept++; continue; }
-      if (roadTouchesSignal32(road, signalPoints, signalRadiusM)) stats.northMinorKept++;
+      if (roadTouchesSignal32(road, signalPoints, signalRadiusM)) { stats.northMinorKept++; keptMinor.add(i); continue; }
       else { hidden.add(i); stats.northMinorHidden++; }
     } else if (roadClassRank32(road.type) >= lockedMinRank) stats.lockedKept++;
     else { hidden.add(i); stats.lockedHidden++; }
   }
-  return { hidden, stats };
+  return { hidden, keptMinor, stats };
 }
 
 // Giới hạn camera khu Bắc (M2a · A3): tâm quay trong bbox khu + 400 m, khoảng cách trong [min,max].

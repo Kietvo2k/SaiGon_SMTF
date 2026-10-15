@@ -11,7 +11,7 @@ export { createTrafficSignals32, installSignals32 } from './traffic-signals-32.j
 export { createCameraCapture32, installCameraCapture32, projectToCamera32, projectToPixel32 } from './camera-capture-32.js?v=32a';
 
 export const SMART_APP_32_VERSION = 'smart-app-32a';
-export const SMART_BREAKER_S = Infinity;
+export const SMART_BREAKER_S = 180;   // M2a: ngắt chu kỳ đèn/thải xe 180 s trong app smart
 export const BANNED_STRINGS = ['giả lập', 'mô phỏng', 'minh họa', 'illustrative', 'simulated', 'demo', 'fake'];
 // Selector panel cổ điển THẬT trong webgpu-materials-24.html (giữ #controls để còn nút Flood Lab, #floodLab).
 export const HIDDEN_PANELS_32 = ['#story'];

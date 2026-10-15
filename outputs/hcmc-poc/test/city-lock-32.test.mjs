@@ -53,6 +53,9 @@ test('selectNorthBuildings32: giữ nhà khu Bắc ≤ 40 m tới tim đường 
     buildings, roads, regionOf, isSignature: id => id === 14
   });
   assert.deepEqual([...result.ids].sort((a, b) => a - b), [11, 14]);
+  assert.deepEqual([...result.ordinaryIndices].sort((a, b) => a - b), [0, 1, 4]);
+  assert.deepEqual([...result.ordinaryIds].sort((a, b) => a - b), [11, 12, 15]);
+  assert.deepEqual([...result.indices].sort((a, b) => a - b), [0]);
   assert.equal(result.kept, 2);
   assert.equal(result.before, 4);          // 4 công trình khu Bắc (11,12,14,15)
   assert.equal(result.dropped, 2);         // 12, 15

@@ -223,6 +223,23 @@ function tri(a,b,c,ta,tb,tc,tint,surface,kind,seed,direct){
   vertex(a,ta,tint,surface,kind,seed,direct);vertex(b,tb,tint,surface,kind,seed,direct);vertex(c,tc,tint,surface,kind,seed,direct);
 }
 
+// M2a — app smart: khóa 3 khu trung-tâm/ven-song/nam (chỉ giữ đường ≥ secondary) và dồn xe khu Bắc lên cạnh ≥ tertiary.
+// Chỉ chạy khi ?app=smart; chế độ classic không đổi. Bộ lọc thuần ở city-lock-32.js (test Node riêng).
+const smartQuery=new URLSearchParams(location.search);const isSmart32=smartQuery.get('app')==='smart';
+const signatureGate=createSignatureGate31({buildings:renderBuildings});
+let lock32=null;
+if(isSmart32){
+  const lockMod32=await import('./city-lock-32.js?v=32a');
+  const signalRows=(await import('./signal-plan-32.js?v=32a')).SIGNAL_PLAN_32;
+  const registry32=(await import('./signature-registry-31.js?v=31a')).loadSignatureRegistry();
+  const nodeById=new Map((window.ROAD_GRAPH_31?.nodes||[]).map(node=>[node.id,node]));
+  const signalPoints=signalRows.map(row=>nodeById.get(row.osm_id)).filter(Boolean).map(node=>[node.x,node.z]);
+  const roadsFilter=lockMod32.lockRoadFilter32({roads:D.roads,regionOf,signalPoints,isSignatureWay:id=>registry32.isSignatureWay(id)});
+  const simHidden=new Set(roadsFilter.hidden);for(const index of roadsFilter.keptMinor)simHidden.add(index);
+  lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints};
+  materialStatus.lock32={version:lockMod32.CITY_LOCK_32_VERSION,roads:roadsFilter.stats,hiddenRoads:roadsFilter.hidden.size,simHiddenRoads:simHidden.size,signalPoints:signalPoints.length};
+}
+
 for(let bi=0;bi<renderBuildings.length;bi++){
   const b=renderBuildings[bi];
   if(heroEnvelopeIds.has(Number(b.id))){faceEnds.push(positions.length/9);continue;}
@@ -363,7 +380,7 @@ cityMaterial.emissiveNode=color('#ffc47f').mul(litRoom);
 
 // Bước E 31A: công trình chia chunk lưới (frustum culling), trong chunk xếp theo hạng ưu tiên để mỗi mức mật độ
 // chỉ là drawRange khác. Cùng vật liệu/thuộc tính đỉnh như mesh gộp cũ; signature (registry) luôn trong drawRange.
-const signatureGate=createSignatureGate31({buildings:renderBuildings});
+// (M2a) signatureGate đã dựng sớm trước vòng lặp công trình vì bộ lọc khóa khu cần biết công trình signature.
 const cityChunks=createBuildingChunks31({
   arrays:{position:positions,uv:uvs,baseColor24:baseRgb,surface24:surfaces,class24:classes,seed24:seeds,direct24:directs},
   itemSizes:{position:3,uv:2,baseColor24:3,surface24:1,class24:1,seed24:1,direct24:1},
@@ -437,7 +454,7 @@ function ribbon(coords,width,y,target){
 const roadColors={edge:'#8c9188',asphalt:'#293534',pedestrian:'#c8ad84',marking:'#f4db80'};
 setProgress(58,'Đang dựng mạng đường liền mạch…');
 materialStatus.roadNetwork={};
-const roadNetwork=await createRoadNetwork31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,widths,colors:roadColors,hiddenRoads:new Set([...hiddenFootwayRoads(D.roads,window.STREET_FURNITURE_31),...footbridgeRoads31(D.roads,window.BRIDGE_CORRECTIONS_31)]),buildings:D.buildings,yieldMain,status:materialStatus.roadNetwork,
+const roadNetwork=await createRoadNetwork31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,widths,colors:roadColors,hiddenRoads:new Set([...hiddenFootwayRoads(D.roads,window.STREET_FURNITURE_31),...footbridgeRoads31(D.roads,window.BRIDGE_CORRECTIONS_31),...(lock32?lock32.hidden:[])]),buildings:D.buildings,yieldMain,status:materialStatus.roadNetwork,
   onProgress:value=>setProgress(58+value*12,`Đang dựng mạng đường liền mạch · ${Math.round(value*100)}%`)});
 
 // Flood 25A visual calibration layer. The ribbons follow named OSM road centrelines
@@ -736,11 +753,11 @@ function advanceUrbanMotion(now){
 // (surfaceChecked/belowRoad) vào materialStatus.motion và API ở materialStatus.traffic.api (bộ điều phối mật độ E/F dùng).
 materialStatus.motion={roadSource:'ROAD_GRAPH_31 (OSM centerlines)',vessels:vesselItems.length,vesselRoute:'illustrative Saigon River lane',vesselAuditSamples,vesselSamplesOutsideWater,vesselHeadingMismatches,classification:'giao thông và tàu minh họa (illustrative); không phải dữ liệu giao thông hay AIS thật'};
 materialStatus.traffic={};
-const smartQuery=new URLSearchParams(location.search);const isSmart32=smartQuery.get('app')==='smart';
+// (M2a) smartQuery/isSmart32 đã khai báo sớm ở khối khóa khu trước vòng dựng công trình.
 let createTraffic=createTraffic31,smartMod=null;
 if(isSmart32){({createTraffic31:createTraffic}=await import('./city-traffic-31.js?v=32a'));smartMod=await import('./smart-app-32.js?v=32a');}
 const smartPrep=smartMod?await smartMod.prepareSmart32({graph:window.ROAD_GRAPH_31}):null;const smartSignalPlan=smartPrep?smartPrep.signalPlan:null;
-const traffic=createTraffic({scene:trafficGroup,graph:window.ROAD_GRAPH_31,roads:D.roads,widthOf:index=>roadWidth31(D.roads[index],widths),drawn:index=>!D.roads[index].tunnel&&window.ROAD_GRAPH_31.roads[index].skipRender!=='hide',roadNetwork,nightLevel,camera,getLight:()=>activeLight,status:materialStatus.traffic,motionStatus:materialStatus.motion,signalPlan:smartSignalPlan,breakerS:smartMod?smartMod.SMART_BREAKER_S:undefined});
+const traffic=createTraffic({scene:trafficGroup,graph:window.ROAD_GRAPH_31,roads:D.roads,widthOf:index=>roadWidth31(D.roads[index],widths),drawn:index=>!D.roads[index].tunnel&&window.ROAD_GRAPH_31.roads[index].skipRender!=='hide'&&!(lock32&&lock32.simHidden.has(index)),roadNetwork,nightLevel,camera,getLight:()=>activeLight,status:materialStatus.traffic,motionStatus:materialStatus.motion,signalPlan:smartSignalPlan,breakerS:smartMod?smartMod.SMART_BREAKER_S:undefined});
 const smartApp=smartMod?smartMod.initSmartApp32({scene,camera,renderer,traffic,status:materialStatus.traffic,root:document}):null;
 if(smartApp){const sq=new URLSearchParams(location.search);if(sq.get(REGION_URL_PARAM)!=='bac'){sq.set(REGION_URL_PARAM,'bac');history.replaceState(null,'',`?${sq}`);}try{localStorage.setItem(REGION_STORAGE_KEY,'bac');}catch{}const {regionTrafficPayload}=await import('./city-region-31.js?v=31a');traffic.setRegion(regionTrafficPayload('bac'));window.__smartApp=smartApp;try{const cameras=await fetch('../smart-traffic/backend/app/seed/cameras.json').then(r=>r.json());smartMod.installSignals32(smartApp,{nodeMap:smartPrep.nodeMap,cameras,THREE});smartMod.installCameraCapture32(smartApp,{cameras,THREE});}catch(e){console.warn('signals32:',e);}}
 document.body.dataset.motionVessels=String(vesselItems.length);document.body.dataset.motionVesselOutside=String(vesselSamplesOutsideWater);document.body.dataset.motionVesselHeadingMismatch=String(vesselHeadingMismatches);
