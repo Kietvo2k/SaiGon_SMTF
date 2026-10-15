@@ -9,7 +9,9 @@ from app import config
 from app.auth import DUMMY_HASH, LoginLimiter, make_token, require_role, verify_password
 from app.db import connect
 from app.errors import err
+from app.routers import admin as admin_router
 from app.routers import citizen as citizen_router
+from app.routers import citizen_portal as citizen_portal_router
 from app.routers import media as media_router
 from app.routers import officer as officer_router
 from app.routers import station as station_router
@@ -70,6 +72,8 @@ def me(claims=Depends(require_role('citizen', 'officer', 'commander', 'admin', '
 app.include_router(station_router.router)
 app.include_router(officer_router.router)
 app.include_router(citizen_router.router)
+app.include_router(citizen_portal_router.router)
+app.include_router(admin_router.router)
 app.include_router(media_router.router)
 
 

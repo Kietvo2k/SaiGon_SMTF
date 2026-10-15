@@ -7,28 +7,22 @@ from app import audit
 from app.auth import require_role
 from app.db import connect
 from app.errors import err
-from app.schemas import ReviewIn, SignalOverrideIn
+from app.lifecycle import (OFFICER_ROLES, announce_violation, create_notifications, load,
+                           owners_of, push_notifications, range_clauses, transition)
+from app.schemas import ReviewIn, ResolveIn, SignalOverrideIn
 from app.ws import broadcast
 
 router = APIRouter(prefix='/api/v1/officer', tags=['officer'])
 OFFICER = require_role('officer', 'commander', 'admin')
 COMMANDER = require_role('commander', 'admin')
-# Cạnh hợp lệ M1 (chốt sau review): new/needs_review → confirmed|dismissed, new → needs_review.
-# confirmed/dismissed là trạng thái CUỐI ở M1 — mọi chuyển tiếp ra khỏi chúng → 409.
-ALLOWED = {'new': {'confirmed', 'dismissed', 'needs_review'},
-           'needs_review': {'confirmed', 'dismissed'},
-           'confirmed': set(),
-           'dismissed': set()}
+# Cạnh vòng đời nằm ở app/lifecycle.py (§4.4, M6a). Ở đây chỉ còn các endpoint của cán bộ.
 OVERRIDES = {}   # node_id → {group, by, reason, until_t_sim, until_at} — trạng thái ghi đè đang có
-
-
-def _now():
-    return datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
 
 @router.get('/violations')
 def list_violations(status: str = '', code: str = '', camera_id: str = '', page: int = Query(1, ge=1),
-                    page_size: int = Query(50, ge=1, le=200), claims=Depends(OFFICER)):
+                    page_size: int = Query(50, ge=1, le=200), from_: str = Query('', alias='from'),
+                    to: str = '', claims=Depends(OFFICER)):
     with connect() as conn:
         where, args = [], []
         if status:
@@ -37,7 +31,10 @@ def list_violations(status: str = '', code: str = '', camera_id: str = '', page:
             where.append('violation_code=?'); args.append(code)
         if camera_id:
             where.append('camera_id=?'); args.append(camera_id)
-        sql = 'SELECT id, violation_code, status, plate, vehicle_class, occurred_at, node_id, camera_id, confidence, penalty_json FROM violations'
+        rclauses, rargs = range_clauses(from_, to)
+        where += rclauses; args += rargs
+        sql = ('SELECT id, violation_code, status, plate, vehicle_class, occurred_at, node_id, camera_id, confidence, '
+               'penalty_json, priority_flag, priority_reason FROM violations')
         if where:
             sql += ' WHERE ' + ' AND '.join(where)
         total = conn.execute(f'SELECT COUNT(*) AS n FROM ({sql})', args).fetchone()['n']
@@ -46,6 +43,7 @@ def list_violations(status: str = '', code: str = '', camera_id: str = '', page:
     for r in rows:
         item = dict(r)
         item['penalty'] = json.loads(item.pop('penalty_json') or 'null')   # UI hiển thị mức phạt
+        item['priority_flag'] = bool(item['priority_flag'])                 # cờ xe ưu tiên (§4.4)
         items.append(item)
     return {'items': items, 'total': total, 'page': page}
 
@@ -53,32 +51,33 @@ def list_violations(status: str = '', code: str = '', camera_id: str = '', page:
 @router.get('/violations/{vid}')
 def get_violation(vid: str, claims=Depends(OFFICER)):
     with connect() as conn:
-        row = conn.execute('SELECT * FROM violations WHERE id=?', (vid,)).fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail=err('NOT_FOUND', 'Không có vi phạm'))
+        row = load(conn, vid)
         out = dict(row)
         out['evidence'] = [dict(r) for r in conn.execute('SELECT * FROM evidence WHERE violation_id=?', (vid,))]
+        out['complaints'] = [dict(r) for r in conn.execute(
+            'SELECT id, kind, reason, message, status, resolution, created_at, resolved_at, resolved_by '
+            'FROM complaints WHERE violation_id=? ORDER BY created_at', (vid,))]
     for key in ('signal_json', 'detection_json', 'penalty_json', 'sim_json', 'review_json'):
         out[key.replace('_json', '')] = json.loads(out.pop(key) or 'null')
+    out['priority_flag'] = bool(out['priority_flag'])
     return out
 
 
 async def _review(vid: str, target: str, note: str, claims):
     with connect() as conn:
-        row = conn.execute('SELECT * FROM violations WHERE id=?', (vid,)).fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail=err('NOT_FOUND', 'Không có vi phạm'))
-        if target not in ALLOWED.get(row['status'], set()):
-            raise HTTPException(status_code=409, detail=err('CONFLICT', f"Không thể chuyển {row['status']} → {target}"))
-        review = {'by': claims['sub'], 'at': _now(), 'note': note}
-        conn.execute('UPDATE violations SET status=?, review_json=?, updated_at=? WHERE id=?',
-                     (target, json.dumps(review, ensure_ascii=False), _now(), vid))
-        # Nhật ký bền vững: giữ MỌI lần duyệt (kể cả các lần trước đã bị ghi đè trong review_json).
-        audit.write(conn, actor=claims['sub'], role=claims.get('role'), action='review',
-                    target_type='violation', target_id=vid, from_state=row['status'], to_state=target,
-                    reason=note, payload={'review': review})
-    await broadcast('violation.updated', {'id': vid, 'status': target, 'review': review}, to_roles=['officer', 'commander', 'admin'])
-    return {'id': vid, 'status': target, 'review': review}
+        row = transition(conn, vid, target, actor=claims['sub'], role=claims.get('role'), note=note, action='review')
+        notified = []
+        if target == 'confirmed':
+            # M6a: xác nhận biển đã gắn tài khoản → backend tự chuyển notified và gửi thông báo.
+            owners = owners_of(conn, row['plate'])
+            if owners:
+                row = transition(conn, vid, 'notified', actor='system', role='system', action='notify',
+                                 note='Tự động thông báo: biển đã gắn tài khoản công dân')
+                notified = create_notifications(conn, row, owners)
+        owners = owners_of(conn, row['plate'])
+    await announce_violation(row, [o['username'] for o in owners])
+    await push_notifications(notified)
+    return {'id': vid, 'status': row['status'], 'review': row['review']}
 
 
 @router.post('/violations/{vid}/confirm')
@@ -94,6 +93,94 @@ async def dismiss(vid: str, body: ReviewIn, claims=Depends(OFFICER)):
 @router.post('/violations/{vid}/needs-review')
 async def needs_review(vid: str, body: ReviewIn, claims=Depends(OFFICER)):
     return await _review(vid, 'needs_review', body.note, claims)
+
+
+@router.post('/violations/{vid}/notify')
+async def notify(vid: str, body: ReviewIn, claims=Depends(OFFICER)):
+    """Officer bấm "Gửi thông báo" cho vi phạm đã confirmed (M6a). Không có tài khoản gắn biển → 409."""
+    with connect() as conn:
+        row = transition(conn, vid, 'notified', actor=claims['sub'], role=claims.get('role'), note=body.note, action='notify')
+        owners = owners_of(conn, row['plate'])
+        if not owners:
+            raise HTTPException(status_code=409, detail=err('CONFLICT', 'Biển chưa gắn tài khoản công dân nào, không thể thông báo'))
+        notified = create_notifications(conn, row, owners)
+    await announce_violation(row, [o['username'] for o in owners])
+    await push_notifications(notified)
+    return {'id': vid, 'status': row['status'], 'review': row['review']}
+
+
+@router.get('/complaints')
+def list_complaints(status: str = '', page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200),
+                    claims=Depends(OFFICER)):
+    if status and status not in ('open', 'resolved', 'rejected'):
+        raise HTTPException(status_code=422, detail=err('VALIDATION', 'status phải là open|resolved|rejected'))
+    where, args = ('WHERE c.status=?', [status]) if status else ('', [])
+    base = (f'FROM complaints c JOIN violations v ON v.id=c.violation_id {where}')
+    with connect() as conn:
+        total = conn.execute(f'SELECT COUNT(*) AS n {base}', args).fetchone()['n']
+        rows = conn.execute(
+            'SELECT c.id, c.violation_id, c.kind, c.reason, c.message, c.status, c.resolution, c.created_at, c.resolved_at, '
+            'v.plate, v.violation_code, v.status AS violation_status, v.priority_flag, v.priority_reason '
+            f'{base} ORDER BY c.created_at DESC LIMIT ? OFFSET ?', (*args, page_size, (page - 1) * page_size)).fetchall()
+    items = []
+    for r in rows:
+        item = dict(r)
+        item['priority_flag'] = bool(item['priority_flag'])
+        items.append(item)
+    return {'items': items, 'total': total, 'page': page}
+
+
+@router.post('/complaints/{cid}/resolve')
+async def resolve_complaint(cid: str, body: ResolveIn, claims=Depends(OFFICER)):
+    """`confirm` = giữ vi phạm (violation → notified, khiếu nại `rejected`);
+    `dismiss` = gỡ vi phạm (violation → dismissed, khiếu nại `resolved`). Lý do bắt buộc."""
+    keep = body.action == 'confirm'
+    new_status = 'rejected' if keep else 'resolved'
+    with connect() as conn:
+        c = conn.execute('SELECT * FROM complaints WHERE id=?', (cid,)).fetchone()
+        if not c:
+            raise HTTPException(status_code=404, detail=err('NOT_FOUND', 'Không có khiếu nại'))
+        if c['status'] != 'open':
+            raise HTTPException(status_code=409, detail=err('CONFLICT', f"Khiếu nại đã {c['status']}"))
+        row = transition(conn, c['violation_id'], 'notified' if keep else 'dismissed', actor=claims['sub'],
+                         role=claims.get('role'), note=body.note, action='complaint-resolve',
+                         payload={'complaint_id': cid, 'action': body.action})
+        resolved_at = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+        conn.execute('UPDATE complaints SET status=?, resolution=?, resolved_at=?, resolved_by=? WHERE id=?',
+                     (new_status, body.note, resolved_at, claims['sub'], cid))
+        audit.write(conn, actor=claims['sub'], role=claims.get('role'), action='complaint-status',
+                    target_type='complaint', target_id=cid, from_state='open', to_state=new_status, reason=body.note,
+                    payload={'violation_id': row['id'], 'action': body.action})
+        owners = owners_of(conn, row['plate'])
+    usernames = [o['username'] for o in owners]
+    await announce_violation(row, usernames)
+    await broadcast('complaint.updated', {'id': cid, 'status': new_status, 'violation_id': row['id']},
+                    to_roles=OFFICER_ROLES, to_users=usernames or None)
+    return {'id': cid, 'status': new_status, 'violation': {'id': row['id'], 'status': row['status']}}
+
+
+@router.get('/stats')
+def stats(from_: str = Query('', alias='from'), to: str = '', claims=Depends(OFFICER)):
+    """Thống kê theo nút, loại lỗi, giờ trong ngày (giờ Việt Nam) và trạng thái trong khoảng thời gian."""
+    rclauses, rargs = range_clauses(from_, to)
+    where = (' WHERE ' + ' AND '.join(rclauses)) if rclauses else ''
+    with connect() as conn:
+        total = conn.execute(f'SELECT COUNT(*) AS n FROM violations{where}', rargs).fetchone()['n']
+        by_node = [dict(r) for r in conn.execute(
+            f'SELECT node_id, node_label, COUNT(*) AS count FROM violations{where} GROUP BY node_id, node_label '
+            'ORDER BY count DESC, node_id', rargs)]
+        by_code = [dict(r) for r in conn.execute(
+            f'SELECT violation_code, COUNT(*) AS count FROM violations{where} GROUP BY violation_code ORDER BY count DESC', rargs)]
+        by_status = [dict(r) for r in conn.execute(
+            f'SELECT status, COUNT(*) AS count FROM violations{where} GROUP BY status ORDER BY status', rargs)]
+        hour_rows = conn.execute(
+            f"SELECT CAST(strftime('%H', occurred_at, '+7 hours') AS INTEGER) AS hour, COUNT(*) AS count "
+            f'FROM violations{where} GROUP BY hour', rargs).fetchall()
+    hours = {h: 0 for h in range(24)}
+    for r in hour_rows:
+        hours[r['hour']] = r['count']
+    return {'from': from_ or None, 'to': to or None, 'total': total, 'by_node': by_node, 'by_code': by_code,
+            'by_status': by_status, 'by_hour': [{'hour': h, 'count': hours[h]} for h in range(24)]}
 
 
 @router.get('/kpi')

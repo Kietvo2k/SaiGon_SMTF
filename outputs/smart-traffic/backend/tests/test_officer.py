@@ -1,10 +1,10 @@
 from tests.test_station import officer_headers, station_headers, violation_body
 
 
-def test_lifecycle_m1_only_4_states(client):
+def test_lifecycle_confirmed_only_leads_to_notified(client):
     h = station_headers(client)
     oh = officer_headers(client)
-    # new → confirmed; confirmed KHÔNG có cạnh ra trong M1 (notified/paid/disputed thuộc M6).
+    # new → confirmed; từ confirmed chỉ còn cạnh sang notified (M6a), nên needs-review/dismiss vẫn 409.
     vid = client.post('/api/v1/station/violations', headers=h, json=violation_body(vehicle_id='V-000010', cycle_id=20)).json()['id']
     r = client.post(f'/api/v1/officer/violations/{vid}/confirm', headers=oh, json={'note': 'đúng'})
     assert r.status_code == 200 and r.json()['status'] == 'confirmed'

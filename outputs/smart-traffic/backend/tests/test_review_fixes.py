@@ -17,15 +17,19 @@ def make_violation(client, h, **over):
 
 # ---------- Item 1: vòng đời M1 ----------
 
-def test_dismissed_and_confirmed_are_final(client):
+def test_dismissed_is_final_and_confirmed_only_goes_notified(client):
+    # M6a: dismissed vẫn là trạng thái cuối; confirmed KHÔNG còn cuối — chỉ đi tiếp sang notified.
     h, oh = station_headers(client), officer_headers(client)
     v1 = make_violation(client, h, vehicle_id='V-F001', cycle_id=101)
     assert client.post(f'/api/v1/officer/violations/{v1}/dismiss', headers=oh, json={'note': 'x'}).status_code == 200
-    for act in ('confirm', 'dismiss', 'needs-review'):
+    for act in ('confirm', 'dismiss', 'needs-review', 'notify'):
         assert client.post(f'/api/v1/officer/violations/{v1}/{act}', headers=oh, json={'note': 'x'}).status_code == 409, act
     v2 = make_violation(client, h, vehicle_id='V-F002', cycle_id=102)
     assert client.post(f'/api/v1/officer/violations/{v2}/confirm', headers=oh, json={'note': 'x'}).status_code == 200
     assert client.post(f'/api/v1/officer/violations/{v2}/needs-review', headers=oh, json={'note': 'x'}).status_code == 409
+    assert client.post(f'/api/v1/officer/violations/{v2}/dismiss', headers=oh, json={'note': 'x'}).status_code == 409
+    # Không có tài khoản gắn biển 51K-123.45 → không thông báo được (409), trạng thái vẫn confirmed.
+    assert client.post(f'/api/v1/officer/violations/{v2}/notify', headers=oh, json={'note': 'x'}).status_code == 409
 
 
 def test_new_to_needs_review_and_needs_review_confirm(client):
