@@ -6,6 +6,7 @@ import { AuthPanel } from './AuthPanel';
 import { LookupPanel } from './LookupPanel';
 import { NotificationCenter } from './NotificationCenter';
 import { PlatesPanel } from './PlatesPanel';
+import { TrafficAlertsPanel } from './TrafficAlertsPanel';
 import { ViolationsPanel } from './ViolationsPanel';
 
 const EXPIRED = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
@@ -93,6 +94,8 @@ export function App() {
             <ViolationsPanel api={api} tick={tick} hasPlates={account.plates.length > 0} onChanged={bump} />
           </>
         )}
+
+        <TrafficAlertsPanel />
 
         <LookupPanel />
       </main>

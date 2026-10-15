@@ -209,3 +209,6 @@ button.ghost { background: transparent; color: var(--accent); border: 1px solid 
   .row-form { grid-template-columns: 2fr 1.2fr auto; align-items: end; }
   .row-form button { justify-self: stretch; }
 }
+
+/* Cảnh báo giao thông công khai (M4c) */
+.alert-list { margin: 8px 0 4px; padding-left: 18px; display: grid; gap: 6px; }

@@ -233,3 +233,51 @@ td.empty { text-align: center; color: var(--muted); padding: 22px; }
   .topbar { flex-direction: column; align-items: flex-start; }
   .toolbar label, .toolbar select, .toolbar input { width: 100%; }
 }
+
+/* Bản đồ nhiệt khu Bắc (M4c) */
+.heat { display: grid; gap: 12px; }
+.heat-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.heat-top .count { margin: 0; }
+.heat-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.heat-actions button { padding: 6px 10px; font-size: 13px; }
+.warn { color: var(--warn); background: #fff4d6; border-radius: 6px; padding: 8px 10px; margin: 0; }
+.heat-stage {
+  position: relative; width: 100%; height: clamp(300px, 60vh, 620px); min-height: 300px;
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #eef2f6;
+}
+.heat-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.heat-canvas:active { cursor: grabbing; }
+.heat-overlay {
+  position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 16px;
+  color: var(--muted); text-align: center; pointer-events: none;
+}
+.heat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.heat-box { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfcfe; min-width: 0; }
+.heat-box h3 { margin: 0 0 8px; }
+.heat-box .hint { margin: 8px 0 0; }
+.heat-legend { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: 13px; }
+.heat-legend li { display: flex; align-items: center; gap: 8px; }
+.swatch { width: 18px; height: 12px; border-radius: 3px; flex: 0 0 auto; }
+.heat-alerts-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.heat-alerts-head h3 { margin: 0; }
+.heat-alerts { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.alert-item {
+  width: 100%; text-align: left; display: grid; gap: 2px; background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-weight: normal;
+}
+.alert-item.on { border-color: var(--accent); box-shadow: 0 0 0 2px #cfe0ff; }
+.alert-name { font-weight: 600; }
+.alert-detail { font-size: 12px; color: var(--muted); }
+.alert-band { justify-self: start; font-size: 12px; border-radius: 999px; padding: 1px 8px; background: #eceff3; color: #475467; }
+.alert-band.b0 { background: #e3f0fb; color: #0d47a1; }
+.alert-band.b1 { background: #fff8d1; color: #7a5b00; }
+.alert-band.b2 { background: #ffe9cc; color: #8a4500; }
+.alert-band.b3 { background: #fdecea; color: #9b1c1c; }
+.alert-band.b4 { background: #f1e3f7; color: #5b1a74; }
+.heat-hours { display: flex; align-items: flex-end; gap: 3px; height: 130px; }
+.heat-hour { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; }
+.heat-track { flex: 1 1 auto; width: 100%; display: flex; align-items: flex-end; background: #eceff3; border-radius: 3px 3px 0 0; overflow: hidden; }
+.heat-fill { width: 100%; border-radius: 3px 3px 0 0; }
+.heat-hour-label { font-size: 11px; color: var(--muted); height: 16px; line-height: 16px; }
+.alert-live { margin-top: 0; }
+@media (max-width: 720px) { .heat-stage { height: 58vh; } }

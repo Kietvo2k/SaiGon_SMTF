@@ -2,6 +2,7 @@ import json
 
 from fastapi import APIRouter, HTTPException
 
+from app import heat
 from app.db import connect
 from app.errors import err
 
@@ -35,3 +36,10 @@ def lookup(plate: str, vehicle_class: str = 'car'):
                 'evidence': [{'kind': e['kind'], 'url': f"/api/v1/media/{e['media_id']}"} for e in ev],
             })
     return {'items': items, 'total': len(items)}
+
+
+@router.get('/alerts')
+def public_alerts():
+    """Cảnh báo kẹt công khai (M4c): chỉ tên đường, mức, xác suất làm tròn và số phút; không cần đăng nhập."""
+    with connect() as conn:
+        return heat.public_view(conn)

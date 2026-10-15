@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app import audit
+from app import audit, heat
 from app.auth import require_role
 from app.db import connect
 from app.errors import err
@@ -197,6 +197,13 @@ def kpi(from_: str = Query('', alias='from'), to: str = '', node_id: str = '', c
     return {'wait_avg_s': last['wait_avg_s'], 'queue_max': last['queue_max'],
             'flow_per_min': last['flow_per_min'], 'mode': last['mode'], 'samples': samples,
             'node_id': node_id or None}
+
+
+@router.get('/heat')
+def heat_view(claims=Depends(OFFICER)):
+    """Bản đồ nhiệt mới nhất + cảnh báo kẹt + trung bình theo giờ từ lịch sử (M4c)."""
+    with connect() as conn:
+        return heat.officer_view(conn)
 
 
 @router.get('/streams')

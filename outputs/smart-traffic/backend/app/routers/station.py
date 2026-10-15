@@ -8,11 +8,11 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
-from app import config
+from app import config, heat
 from app.auth import StationLimiter, require_role
 from app.db import connect
 from app.errors import err
-from app.schemas import ViolationIn
+from app.schemas import HeatIn, ViolationIn
 from app.ws import broadcast
 
 router = APIRouter(prefix='/api/v1/station', tags=['station'])
@@ -169,6 +169,13 @@ async def upload_media(file: UploadFile = File(...), claims=Depends(STATION)):
                      (mid, 'video' if mime.startswith('video/') else 'image', str(dest), mime, len(data), sha, m.group(1), _now()))
     dest.write_bytes(data)
     return {'media_id': mid, 'camera_id': m.group(1)}
+
+
+@router.post('/heat')
+async def post_heat(body: HeatIn, claims=Depends(STATION)):
+    """Bản đồ nhiệt + cảnh báo kẹt từ trạm (M4c). Lỗi hình dạng/giới hạn → 422 thống nhất."""
+    result = await heat.ingest(body)
+    return {'ok': True, **result}
 
 
 @router.post('/frames')

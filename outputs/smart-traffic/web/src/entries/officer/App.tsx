@@ -4,11 +4,14 @@ import { OFFICER_TAB_LABELS, OfficerTab, officerTabs } from '../../lib/access';
 import { roleLabel } from '../../lib/labels';
 import { connectSmartWs, WsMessage } from '../../lib/ws';
 import type { Kpi, Me } from '../../lib/types';
+import type { HeatView } from '../../lib/heat';
+import { alertDetail } from '../../lib/alerts';
 import { ViolationsTab } from './ViolationsTab';
 import { ComplaintsTab } from './ComplaintsTab';
 import { StatsTab } from './StatsTab';
 import { AuditTab } from './AuditTab';
 import { StaffTab } from './StaffTab';
+import { HeatMapTab } from './HeatMapTab';
 
 const TITLE = 'SaiGon SMTF · Trung tâm điều hành giao thông khu Bắc';
 const EXPIRED = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
@@ -21,12 +24,16 @@ export function App() {
   const [tick, setTick] = useState(0);
   const [kpi, setKpi] = useState<Kpi>({});
   const [notice, setNotice] = useState('');
+  const [heatLive, setHeatLive] = useState<HeatView | null>(null);
+  const [alertNotice, setAlertNotice] = useState('');
 
   const signOut = useCallback((message: string) => {
     saveToken('officer', null);
     setToken(null);
     setMe(null);
     setKpi({});
+    setHeatLive(null);
+    setAlertNotice('');
     setNotice(message);
   }, []);
 
@@ -60,6 +67,8 @@ export function App() {
     if (!token || !me) return;
     const stop = connectSmartWs(token, (msg: WsMessage) => {
       if (msg.event === 'kpi.update') setKpi(msg.data ?? {});
+      else if (msg.event === 'heat.update') setHeatLive(msg.data ?? null);
+      else if (msg.event === 'alert.congestion' && msg.data) setAlertNotice(`Cảnh báo kẹt mới trên ${msg.data.name}: ${alertDetail(msg.data)}.`);
       else if (['violation.created', 'violation.updated', 'complaint.updated'].includes(msg.event)) bump();
     });
     const timer = setInterval(bump, 15000);
@@ -68,6 +77,13 @@ export function App() {
       clearInterval(timer);
     };
   }, [token, me, bump]);
+
+  // Thông báo cảnh báo kẹt mới tự ẩn sau 15 giây.
+  useEffect(() => {
+    if (!alertNotice) return;
+    const t = setTimeout(() => setAlertNotice(''), 15000);
+    return () => clearTimeout(t);
+  }, [alertNotice]);
 
   useEffect(() => {
     if (!me) return;
@@ -105,6 +121,7 @@ export function App() {
       </section>
 
       {notice && <p className="notice" role="status">{notice}</p>}
+      {alertNotice && <p className="notice alert-live" role="status">{alertNotice}</p>}
 
       <nav className="tabs" role="tablist" aria-label="Chức năng">
         {tabs.map(t => (
@@ -125,6 +142,7 @@ export function App() {
         {current === 'violations' && <ViolationsTab api={api} tick={tick} onChanged={bump} />}
         {current === 'complaints' && <ComplaintsTab api={api} tick={tick} onChanged={bump} />}
         {current === 'stats' && <StatsTab api={api} tick={tick} />}
+        {current === 'heat' && <HeatMapTab api={api} tick={tick} live={heatLive} />}
         {current === 'audit' && <AuditTab api={api} tick={tick} />}
         {current === 'staff' && <StaffTab api={api} selfId={me.id} />}
       </main>

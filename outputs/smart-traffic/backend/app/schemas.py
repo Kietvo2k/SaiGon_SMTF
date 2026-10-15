@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -112,6 +112,28 @@ class StaffActiveIn(BaseModel):
 
 class StaffRoleIn(BaseModel):
     role: Literal['officer', 'commander']
+
+
+class HeatAlertIn(BaseModel):
+    """Cảnh báo kẹt của một cạnh (M4c): xác suất kẹt, độ tin cậy, sau bao nhiêu phút, mức hiện tại 0–1."""
+    edge: int = Field(ge=0, le=10_000_000)
+    prob: float = Field(ge=0, le=1)
+    reliability: float = Field(ge=0, le=1)
+    horizon_min: float = Field(ge=0, le=120)
+    level: float = Field(ge=0, le=1)
+
+
+class HeatIn(BaseModel):
+    """Bản đồ nhiệt từ trạm (M4c): `levels` là [cạnh, mức 0–1], trạm chỉ gửi cạnh mức ≥ 0,05.
+
+    `day_start_hour` (tùy chọn, mặc định 0) cho giờ trong ngày = (t_sim/3600 + day_start_hour) mod 24,
+    cùng quy ước với heat-32.js. Tối đa 5000 phần tử mỗi danh sách.
+    """
+    t_sim: float = Field(ge=0)
+    day_start_hour: float = Field(default=0, ge=0, lt=24)
+    levels: list[tuple[Annotated[int, Field(ge=0, le=10_000_000)], Annotated[float, Field(ge=0, le=1)]]] = Field(
+        default_factory=list, max_length=5000)
+    alerts: list[HeatAlertIn] = Field(default_factory=list, max_length=5000)
 
 
 class SignalOverrideIn(BaseModel):

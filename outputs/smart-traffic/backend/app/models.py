@@ -70,6 +70,10 @@ TABLES = [
     """CREATE TABLE IF NOT EXISTS scenario_runs (
         id TEXT PRIMARY KEY, key TEXT, seed INTEGER, mode TEXT, params_json TEXT,
         result_json TEXT, started_at TEXT, finished_at TEXT)""",
+    """CREATE TABLE IF NOT EXISTS heat_snapshots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, t_sim REAL, hour INTEGER, mean_level REAL,
+        max_level REAL, n_cells INTEGER, n_alerts INTEGER, levels_json TEXT, alerts_json TEXT,
+        created_at TEXT)""",   # M4c: lịch sử bản đồ nhiệt (mỗi 5 phút sim, giữ 288 bản)
     "CREATE UNIQUE INDEX IF NOT EXISTS ux_violations_dup ON violations(vehicle_id, node_id, cycle_id, violation_code)",
     "CREATE INDEX IF NOT EXISTS ix_violations_status ON violations(status, occurred_at)",
     "CREATE INDEX IF NOT EXISTS ix_violations_plate ON violations(plate, occurred_at)",
