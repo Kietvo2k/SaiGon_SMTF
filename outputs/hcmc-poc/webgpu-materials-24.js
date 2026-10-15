@@ -318,7 +318,7 @@ if(lock32){
   }
   if(overlayPoints.length){
     const overlayGeometry=new THREE.BufferGeometry();overlayGeometry.setAttribute('position',new THREE.Float32BufferAttribute(overlayPoints,3));overlayGeometry.computeVertexNormals();
-    const overlayMaterial=new THREE.MeshStandardNodeMaterial({color:'#c7c8c3',roughness:1,metalness:0});
+    const overlayMaterial=new THREE.MeshStandardNodeMaterial({color:'#c7c8c3',roughness:1,metalness:0,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
     const overlay=new THREE.Mesh(overlayGeometry,overlayMaterial);overlay.name='M2a · nền xám 3 khu khóa';overlay.receiveShadow=true;scene.add(overlay);
     lock32.overlay=overlay;materialStatus.lock32.overlay={regions:lock32.mod.LOCKED_REGION_IDS_32.length,triangles:overlayPoints.length/9};
   }
