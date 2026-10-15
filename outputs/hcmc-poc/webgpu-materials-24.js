@@ -943,7 +943,7 @@ if(isSmart32&&smartApp){
   const regionRoot=$('#regionControl');
   if(regionRoot){
     for(const button of regionRoot.querySelectorAll('[data-region]')){if(button.dataset.region==='bac')continue;button.disabled=false;button.classList.add('region-locked');}
-    const lockedNotice=button=>{const region=regionById(button.dataset.region);showRegionNotice(`🔒 Khu vực đang khóa · ${region?region.label:button.dataset.region}`);};
+    const lockedNotice=button=>{const region=regionById(button.dataset.region);const name=button.dataset.region==='all'?'Toàn bộ':(region?region.label:button.dataset.region);showRegionNotice(`🔒 Khu vực đang khóa · ${name}`);};
     regionRoot.addEventListener('click',event=>{const button=event.target.closest?.('[data-region]');if(!button||button.dataset.region==='bac')return;event.stopPropagation();event.preventDefault();lockedNotice(button);},true);
     regionRoot.addEventListener('keydown',event=>{if(!['ArrowRight','ArrowDown','ArrowLeft','ArrowUp','Home','End'].includes(event.key))return;event.stopPropagation();event.preventDefault();const focused=document.activeElement;if(focused&&focused.dataset&&focused.dataset.region&&focused.dataset.region!=='bac')lockedNotice(focused);},true);
   }
