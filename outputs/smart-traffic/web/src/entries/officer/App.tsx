@@ -1,81 +1,171 @@
-import React, { useEffect, useState } from 'react';
-import { authHeaders, getKpi, listViolations, login, review, streamUrl } from '../../lib/api';
-import { connectSmartWs } from '../../lib/ws';
-import { formatPenalty } from '../../lib/format';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { Api, ApiError, errorMessage, login, loadToken, makeApi, saveToken } from '../../lib/api';
+import { OFFICER_TAB_LABELS, OfficerTab, officerTabs } from '../../lib/access';
+import { roleLabel } from '../../lib/labels';
+import { connectSmartWs, WsMessage } from '../../lib/ws';
+import type { Kpi, Me } from '../../lib/types';
+import { ViolationsTab } from './ViolationsTab';
+import { ComplaintsTab } from './ComplaintsTab';
+import { StatsTab } from './StatsTab';
+import { AuditTab } from './AuditTab';
+import { StaffTab } from './StaffTab';
+
+const TITLE = 'SaiGon SMTF · Trung tâm điều hành giao thông khu Bắc';
+const EXPIRED = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
+const MODE_LABEL: Record<string, string> = { fixed: 'Cố định', smart: 'Thông minh' };
 
 export function App() {
-  const [token, setToken] = useState(localStorage.getItem('smart_token'));
-  const [user, setUser] = useState('');
-  const [pw, setPw] = useState('');
-  const [items, setItems] = useState<any[]>([]);
-  const [kpi, setKpi] = useState<any>({});
-  const [err, setErr] = useState('');
+  const [token, setToken] = useState<string | null>(() => loadToken('officer'));
+  const [me, setMe] = useState<Me | null>(null);
+  const [tab, setTab] = useState<OfficerTab>('violations');
+  const [tick, setTick] = useState(0);
+  const [kpi, setKpi] = useState<Kpi>({});
+  const [notice, setNotice] = useState('');
 
-  const refresh = async () => {
-    // Danh sách sống: cả `new` lẫn `needs_review` (không chỉ `new`).
-    const body = await listViolations({ page: '1', page_size: '50' });
-    setItems((body.items || []).filter((v: any) => v.status === 'new' || v.status === 'needs_review'));
-    setKpi(await getKpi());
-  };
+  const signOut = useCallback((message: string) => {
+    saveToken('officer', null);
+    setToken(null);
+    setMe(null);
+    setKpi({});
+    setNotice(message);
+  }, []);
 
+  const api: Api = useMemo(() => makeApi(token, () => signOut(EXPIRED)), [token, signOut]);
+  const bump = useCallback(() => setTick(t => t + 1), []);
+
+  // Vai trò lấy từ /auth/me; không có tab nào (công dân, trạm) thì không cho vào.
   useEffect(() => {
     if (!token) return;
-    refresh();
-    const stop = connectSmartWs(token, msg => {
-      if (['violation.created', 'violation.updated', 'kpi.update'].includes(msg.event)) refresh();
+    let alive = true;
+    makeApi(token).get<Me>('/auth/me')
+      .then(info => {
+        if (!alive) return;
+        const tabs = officerTabs(info.role);
+        if (tabs.length === 0) {
+          signOut('Tài khoản này không có quyền vào trang cán bộ.');
+          return;
+        }
+        setMe(info);
+        setTab(tabs[0]);
+      })
+      .catch(e => {
+        if (!alive) return;
+        signOut(e instanceof ApiError && e.status === 401 ? EXPIRED : errorMessage(e));
+      });
+    return () => { alive = false; };
+  }, [token, signOut]);
+
+  // Thời gian thực: sự kiện vi phạm/khiếu nại làm tải lại; KPI cập nhật trực tiếp; dự phòng làm mới 15 s.
+  useEffect(() => {
+    if (!token || !me) return;
+    const stop = connectSmartWs(token, (msg: WsMessage) => {
+      if (msg.event === 'kpi.update') setKpi(msg.data ?? {});
+      else if (['violation.created', 'violation.updated', 'complaint.updated'].includes(msg.event)) bump();
     });
-    const timer = setInterval(refresh, 10000);
-    return () => { stop(); clearInterval(timer); };
-  }, [token]);
+    const timer = setInterval(bump, 15000);
+    return () => {
+      stop();
+      clearInterval(timer);
+    };
+  }, [token, me, bump]);
+
+  useEffect(() => {
+    if (!me) return;
+    api.get<Kpi>('/officer/kpi').then(setKpi).catch(() => undefined);
+  }, [api, me, tick]);
 
   if (!token) {
-    return (
-      <form onSubmit={async e => {
-        e.preventDefault();
-        const body = await login(user, pw);
-        if (body.access_token) setToken(body.access_token);
-        else setErr('Sai tài khoản hoặc mật khẩu');
-      }}>
-        <h1>SaiGon SMTF · Trung tâm điều hành giao thông khu Bắc</h1>
-        <input value={user} onChange={e => setUser(e.target.value)} placeholder="Tài khoản" />
-        <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="Mật khẩu" />
-        <button type="submit">Đăng nhập</button>
-        <p>{err}</p>
-      </form>
-    );
+    return <LoginForm notice={notice} onLogin={async (u, p) => {
+      const body = await login(u, p);
+      saveToken('officer', body.access_token);
+      setNotice('');
+      setToken(body.access_token);
+    }} />;
   }
+  if (!me) return <p className="loading" role="status">Đang kiểm tra phiên đăng nhập…</p>;
+
+  const tabs = officerTabs(me.role);
+  const current = tabs.includes(tab) ? tab : tabs[0];
 
   return (
-    <main>
-      <h1>SaiGon SMTF · Trung tâm điều hành giao thông khu Bắc</h1>
-      <section aria-label="KPI">
-        <span>Chờ TB: <b>{kpi.wait_avg_s ?? '–'}</b> s</span>
-        <span>Hàng chờ max: <b>{kpi.queue_max ?? '–'}</b></span>
-        <span>Lưu lượng: <b>{kpi.flow_per_min ?? '–'}</b>/phút</span>
-        <span>Chế độ: <b>{kpi.mode ?? '–'}</b></span>
+    <div className="app">
+      <header className="topbar">
+        <div>
+          <h1>{TITLE}</h1>
+          <p className="who">{me.display_name || me.username} · {roleLabel(me.role)}</p>
+        </div>
+        <button type="button" className="ghost" onClick={() => signOut('')}>Đăng xuất</button>
+      </header>
+
+      <section className="kpi" aria-label="Chỉ số hệ thống">
+        <span>Chờ trung bình <b>{kpi.wait_avg_s ?? '–'}</b> s</span>
+        <span>Hàng chờ lớn nhất <b>{kpi.queue_max ?? '–'}</b></span>
+        <span>Lưu lượng <b>{kpi.flow_per_min ?? '–'}</b> xe/phút</span>
+        <span>Chế độ đèn <b>{MODE_LABEL[kpi.mode ?? ''] ?? (kpi.mode || '–')}</b></span>
       </section>
-      <section aria-label="Stream">
-        <img src={streamUrl('CAM-HX-001')} alt="Camera Hàng Xanh" width={480} />
-      </section>
-      <section aria-label="Danh sách vi phạm">
-        <table>
-          <thead><tr><th>Mã</th><th>Biển</th><th>Lỗi</th><th>Thời gian</th><th>Nút</th><th>Mức phạt</th><th>Thao tác</th></tr></thead>
-          <tbody>
-            {items.map(v => (
-              <tr key={v.id}>
-                <td>{v.id}</td><td>{v.plate}</td><td>{v.violation_code}</td>
-                <td>{v.occurred_at}</td><td>{v.node_id}</td>
-                <td>{formatPenalty(v.penalty ?? { verified: false })}</td>
-                <td>
-                  <button type="button" onClick={() => review(v.id, 'confirm', 'xác nhận')}>Xác nhận</button>
-                  <button type="button" onClick={() => review(v.id, 'dismiss', 'gỡ')}>Gỡ</button>
-                  <button type="button" onClick={() => review(v.id, 'needs-review', 'cần xác minh')}>Cần xác minh</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-    </main>
+
+      {notice && <p className="notice" role="status">{notice}</p>}
+
+      <nav className="tabs" role="tablist" aria-label="Chức năng">
+        {tabs.map(t => (
+          <button
+            key={t}
+            type="button"
+            role="tab"
+            aria-selected={current === t}
+            className={current === t ? 'tab active' : 'tab'}
+            onClick={() => setTab(t)}
+          >
+            {OFFICER_TAB_LABELS[t]}
+          </button>
+        ))}
+      </nav>
+
+      <main role="tabpanel">
+        {current === 'violations' && <ViolationsTab api={api} tick={tick} onChanged={bump} />}
+        {current === 'complaints' && <ComplaintsTab api={api} tick={tick} onChanged={bump} />}
+        {current === 'stats' && <StatsTab api={api} tick={tick} />}
+        {current === 'audit' && <AuditTab api={api} tick={tick} />}
+        {current === 'staff' && <StaffTab api={api} selfId={me.id} />}
+      </main>
+    </div>
+  );
+}
+
+function LoginForm({ notice, onLogin }: { notice: string; onLogin: (u: string, p: string) => Promise<void> }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await onLogin(username.trim(), password);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setPassword('');   // không giữ mật khẩu trong state sau khi gửi
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="login-wrap">
+      <form className="login" onSubmit={submit}>
+        <h1>{TITLE}</h1>
+        <p className="hint">Đăng nhập tài khoản cán bộ hoặc quản trị.</p>
+        <label>Tài khoản
+          <input value={username} onChange={e => setUsername(e.target.value)} autoComplete="username" required />
+        </label>
+        <label>Mật khẩu
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" required />
+        </label>
+        <button type="submit" disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</button>
+        {(error || notice) && <p className="error" role="alert">{error || notice}</p>}
+      </form>
+    </div>
   );
 }
