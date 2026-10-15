@@ -10,6 +10,10 @@ from app import config
 
 LOGIN_HITS = {}      # ip -> [epoch, count]
 LOGIN_LOCKS = {}     # ip -> locked_until_epoch
+REGISTER_HITS = {}   # ip -> [epoch, count] (đăng ký công dân, M6a)
+REGISTER_LOCKS = {}
+BIND_FAILS = {}      # user -> [epoch, count] số lần NHẬP SAI mã đăng ký xe (M6a)
+BIND_LOCKS = {}
 STATION_HITS = {}    # station_id -> [epoch, count]
 # Hash bcrypt hợp lệ của một mật khẩu không tồn tại — dùng để chạy `bcrypt.checkpw` khi
 # user không có, giữ thời gian phản hồi tương đương (không lộ user tồn tại — §11).
@@ -52,14 +56,16 @@ def decode_token(token: str) -> dict:
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail={'error': {'code': 'UNAUTHORIZED', 'message': 'Token không hợp lệ', 'detail': None}})
     # §11: token còn hiệu lực nhưng tài khoản đã bị khóa (`active=0`) cũng phải bị từ chối.
+    # M6a: vai trò luôn đối chiếu với DB — token cũ sau khi admin đổi vai trò bị từ chối ngay,
+    # không để cán bộ bị hạ quyền vẫn dùng quyền cũ tới khi hết 8 giờ.
     from app.db import get_conn
     conn = get_conn()
     try:
-        row = conn.execute('SELECT active FROM users WHERE username=?', (claims.get('sub'),)).fetchone()
+        row = conn.execute('SELECT active, role FROM users WHERE username=?', (claims.get('sub'),)).fetchone()
     finally:
         conn.close()
-    if not row or not row['active']:
-        raise HTTPException(status_code=401, detail={'error': {'code': 'UNAUTHORIZED', 'message': 'Tài khoản không hoạt động', 'detail': None}})
+    if not row or not row['active'] or row['role'] != claims.get('role'):
+        raise HTTPException(status_code=401, detail={'error': {'code': 'UNAUTHORIZED', 'message': 'Tài khoản không hoạt động hoặc vai trò đã thay đổi', 'detail': None}})
     return claims
 
 
@@ -87,24 +93,77 @@ def _purge_stale(bucket: dict, now: float, max_age: float):
             bucket.pop(k, None)
 
 
-class LoginLimiter:
-    @staticmethod
-    def check(ip: str):
+class _Window:
+    """Giới hạn `limit` lần/phút theo khóa; vượt → khóa tạm `lock_s` giây (§11).
+
+    `check` chỉ kiểm khóa; `hit` đếm một lần (vượt ngưỡng thì khóa và raise 429).
+    """
+
+    def __init__(self, hits: dict, locks: dict, limit, lock_s, message: str):
+        self.hits, self.locks, self.limit, self.lock_s, self.message = hits, locks, limit, lock_s, message
+
+    def _limited(self):
+        return HTTPException(status_code=429, detail={'error': {'code': 'RATE_LIMITED', 'message': self.message, 'detail': None}})
+
+    def check(self, key: str):
+        if time.time() < self.locks.get(key, 0):
+            raise self._limited()
+
+    def hit(self, key: str):
         now = time.time()
-        until = LOGIN_LOCKS.get(ip, 0)
-        if now < until:
-            raise HTTPException(status_code=429, detail={'error': {'code': 'RATE_LIMITED', 'message': 'Đăng nhập quá nhiều, thử lại sau 5 phút', 'detail': None}})
-        window, count = LOGIN_HITS.get(ip, (now, 0))
+        window, count = self.hits.get(key, (now, 0))
         if now - window >= 60:
             window, count = now, 0
         count += 1
-        LOGIN_HITS[ip] = (window, count)
-        _purge_stale(LOGIN_HITS, now, 120)
-        for k in [k for k, v in LOGIN_LOCKS.items() if now >= v]:
-            LOGIN_LOCKS.pop(k, None)
-        if count > config.LOGIN_RATE_LIMIT:
-            LOGIN_LOCKS[ip] = now + config.LOGIN_LOCK_S
-            raise HTTPException(status_code=429, detail={'error': {'code': 'RATE_LIMITED', 'message': 'Đăng nhập quá nhiều, thử lại sau 5 phút', 'detail': None}})
+        self.hits[key] = (window, count)
+        _purge_stale(self.hits, now, 120)
+        for k in [k for k, v in self.locks.items() if now >= v]:
+            self.locks.pop(k, None)
+        if count > self.limit:
+            self.locks[key] = now + self.lock_s
+            raise self._limited()
+
+
+_LOGIN = _Window(LOGIN_HITS, LOGIN_LOCKS, config.LOGIN_RATE_LIMIT, config.LOGIN_LOCK_S,
+                 'Đăng nhập quá nhiều, thử lại sau 5 phút')
+_REGISTER = _Window(REGISTER_HITS, REGISTER_LOCKS, config.LOGIN_RATE_LIMIT, config.LOGIN_LOCK_S,
+                    'Đăng ký quá nhiều, thử lại sau 5 phút')
+_BIND = _Window(BIND_FAILS, BIND_LOCKS, config.LOGIN_RATE_LIMIT, config.LOGIN_LOCK_S,
+                'Nhập sai mã đăng ký xe quá nhiều, thử lại sau 5 phút')
+
+
+def reset_limits():
+    """Xóa toàn bộ bộ đếm giới hạn (chỉ dùng trong test: mỗi test một bộ đếm riêng)."""
+    for d in (LOGIN_HITS, LOGIN_LOCKS, REGISTER_HITS, REGISTER_LOCKS, BIND_FAILS, BIND_LOCKS, STATION_HITS):
+        d.clear()
+
+
+class LoginLimiter:
+    @staticmethod
+    def check(ip: str):
+        _LOGIN.check(ip)
+        _LOGIN.hit(ip)
+
+
+class RegisterLimiter:
+    """Đăng ký công dân: giới hạn như đăng nhập, tính theo IP (M6a, §11)."""
+
+    @staticmethod
+    def check(ip: str):
+        _REGISTER.check(ip)
+        _REGISTER.hit(ip)
+
+
+class BindLimiter:
+    """Gắn biển: chỉ đếm LẦN NHẬP SAI mã đăng ký theo tài khoản — chống dò 8 chữ số (M6a)."""
+
+    @staticmethod
+    def check(username: str):
+        _BIND.check(username)
+
+    @staticmethod
+    def fail(username: str):
+        _BIND.hit(username)
 
 
 class StationLimiter:

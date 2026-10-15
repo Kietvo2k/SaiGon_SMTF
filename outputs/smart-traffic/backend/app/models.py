@@ -9,7 +9,8 @@ TABLES = [
     """CREATE TABLE IF NOT EXISTS plates_seed (
         slot INTEGER, gen INTEGER, vehicle_class TEXT, plate TEXT UNIQUE,
         color TEXT, owner_name TEXT, owner_phone TEXT, is_scenario INTEGER DEFAULT 0,
-        PRIMARY KEY (slot, gen, vehicle_class))""",   # PK (slot, gen, vehicle_class) — điểm tự quyết, xem Task 4
+        registration_code TEXT,
+        PRIMARY KEY (slot, gen, vehicle_class))""",   # PK (slot, gen, vehicle_class) — điểm tự quyết, xem Task 4; registration_code: M6a (migrate ở db.py)
     """CREATE TABLE IF NOT EXISTS vehicles (
         id INTEGER PRIMARY KEY AUTOINCREMENT, plate TEXT REFERENCES plates_seed(plate),
         vehicle_class TEXT, color TEXT, owner_name TEXT,
@@ -34,7 +35,8 @@ TABLES = [
         camera_id TEXT, created_at TEXT)""",
     """CREATE TABLE IF NOT EXISTS complaints (
         id TEXT PRIMARY KEY, violation_id TEXT REFERENCES violations(id), user_id INTEGER REFERENCES users(id),
-        message TEXT, status TEXT, resolution TEXT, created_at TEXT, resolved_at TEXT)""",
+        message TEXT, status TEXT, resolution TEXT, created_at TEXT, resolved_at TEXT,
+        kind TEXT, reason TEXT, resolved_by TEXT)""",   # kind/reason/resolved_by: M6a (migrate ở db.py)
     """CREATE TABLE IF NOT EXISTS notifications (
         id TEXT PRIMARY KEY, user_id INTEGER REFERENCES users(id), violation_id TEXT REFERENCES violations(id),
         kind TEXT, title TEXT, body TEXT, read_at TEXT, created_at TEXT)""",
@@ -75,4 +77,15 @@ TABLES = [
     "CREATE INDEX IF NOT EXISTS ix_cameras_node ON cameras(node_id)",
     "CREATE INDEX IF NOT EXISTS ix_kpi_t ON kpi_samples(t_sim)",
     "CREATE INDEX IF NOT EXISTS ix_notif_user ON notifications(user_id, read_at)",
+    "CREATE INDEX IF NOT EXISTS ix_complaints_violation ON complaints(violation_id)",
+    "CREATE INDEX IF NOT EXISTS ix_complaints_status ON complaints(status, created_at)",
+]
+
+# Cột thêm sau M1: CREATE TABLE IF NOT EXISTS không thêm cột vào bảng đã có (DB dev cũ),
+# nên init_db bổ sung các cột này bằng ALTER TABLE khi thiếu (idempotent).
+MIGRATIONS = [
+    ('plates_seed', 'registration_code', 'TEXT'),
+    ('complaints', 'kind', 'TEXT'),
+    ('complaints', 'reason', 'TEXT'),
+    ('complaints', 'resolved_by', 'TEXT'),
 ]

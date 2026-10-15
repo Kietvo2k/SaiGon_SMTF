@@ -24,9 +24,7 @@ def client():
     conn.close()
     run_seed()
     from app import auth
-    auth.LOGIN_HITS.clear()      # bộ đếm rate-limit là biến module — reset giữa các test
-    auth.LOGIN_LOCKS.clear()
-    auth.STATION_HITS.clear()
+    auth.reset_limits()          # bộ đếm rate-limit là biến module — reset giữa các test
     from app.main import app
     from fastapi.testclient import TestClient
     return TestClient(app)

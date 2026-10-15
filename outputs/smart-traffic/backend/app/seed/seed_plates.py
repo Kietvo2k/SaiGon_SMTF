@@ -5,6 +5,7 @@ Chạy: python seed_plates.py --out plates.json
 Thuật toán phải cho KẾT QUẢ GIỐNG HỆT bản JS (test chéo seed-plates-32.test.mjs).
 """
 import argparse
+import hashlib
 import json
 import os
 
@@ -41,6 +42,16 @@ def mulberry32(a0):
         return (t2 ^ (t2 >> 14)) & 0xFFFFFFFF
 
     return nxt
+
+
+def registration_code_for(plate, slot, gen):
+    """Mã đăng ký xe (8 chữ số) — TẤT ĐỊNH từ seed, dùng để xác minh sở hữu khi gắn biển (M6a).
+
+    Không đổi `plates.json` (file đó được bản JS kiểm chéo); mã được tính khi nạp seed và ghi vào
+    cột `plates_seed.registration_code`.
+    """
+    digest = hashlib.sha256(f'SMTF-REG|{SEED_PLATES}|{slot}|{gen}|{plate}'.encode('utf-8')).hexdigest()
+    return '%08d' % (int(digest[:12], 16) % 100000000)
 
 
 def plate_for(slot, gen, vehicle_class, owners, salt=0):

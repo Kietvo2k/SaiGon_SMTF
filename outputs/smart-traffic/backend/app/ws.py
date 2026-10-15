@@ -55,12 +55,24 @@ async def ws_handler(websocket):
             pass
 
 
-async def broadcast(event: str, data: dict, to_roles=None):
+def _wanted(c, to_roles, to_users) -> bool:
+    """Người nhận = đúng vai trò trong `to_roles` HOẶC đúng tài khoản trong `to_users`.
+
+    Không truyền cả hai → gửi cho mọi client (chỉ dùng cho event công khai, hiện không có).
+    """
+    if to_roles is None and to_users is None:
+        return True
+    if to_roles is not None and c['role'] in to_roles:
+        return True
+    return to_users is not None and c['username'] in to_users
+
+
+async def broadcast(event: str, data: dict, to_roles=None, to_users=None):
     payload = json.dumps({'event': event, 't': datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z'),
                           'seq': _next_seq(), 'data': data}, ensure_ascii=False)
     dead = []
     for c in CLIENTS:
-        if to_roles is not None and c['role'] not in to_roles:
+        if not _wanted(c, to_roles, to_users):
             continue
         try:
             await c['ws'].send_text(payload)

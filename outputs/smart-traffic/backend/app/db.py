@@ -2,7 +2,7 @@ import sqlite3
 from contextlib import contextmanager
 
 from app import config
-from app.models import TABLES
+from app.models import MIGRATIONS, TABLES
 
 
 def get_conn():
@@ -34,4 +34,8 @@ def connect():
 def init_db(conn):
     for ddl in TABLES:
         conn.execute(ddl)
+    for table, column, decl in MIGRATIONS:
+        cols = {r['name'] for r in conn.execute(f'PRAGMA table_info({table})')}
+        if column not in cols:
+            conn.execute(f'ALTER TABLE {table} ADD COLUMN {column} {decl}')
     conn.commit()

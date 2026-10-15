@@ -10,7 +10,7 @@ sys.path.insert(0, str(SEED_DIR.parent.parent))   # outputs/smart-traffic/backen
 def run_seed():
     from app.db import get_conn
     from app.auth import hash_password
-    from app.seed.seed_plates import generate_all
+    from app.seed.seed_plates import generate_all, registration_code_for
     conn = get_conn()
     # Thứ tự ghi TÔN TRỌNG khoá ngoại (PRAGMA foreign_keys=ON): bảng được tham chiếu trước.
     accounts = json.loads((SEED_DIR / 'accounts.json').read_text(encoding='utf-8'))
@@ -24,6 +24,10 @@ def run_seed():
     conn.executemany(
         'INSERT OR IGNORE INTO plates_seed (slot, gen, vehicle_class, plate, color, owner_name, owner_phone, is_scenario) VALUES (:slot,:gen,:vehicle_class,:plate,:color,:owner_name,:owner_phone,:is_scenario)',
         [{**r, 'is_scenario': int(r['is_scenario'])} for r in rows])
+    # Mã đăng ký xe (M6a): tất định từ seed; cập nhật cả DB cũ đã có biển nhưng chưa có mã.
+    conn.executemany(
+        'UPDATE plates_seed SET registration_code=? WHERE plate=? AND registration_code IS NULL',
+        [(registration_code_for(r['plate'], r['slot'], r['gen']), r['plate']) for r in rows])
     # 2) signal_nodes: ghi camera_id = NULL trước (quan hệ vòng cameras.node_id ↔ signal_nodes.camera_id;
     #    FK biên ngay nên phải chèn signal_nodes trước cameras, rồi UPDATE camera_id sau).
     node_map = json.loads((SEED_DIR / 'node_map.json').read_text(encoding='utf-8'))
