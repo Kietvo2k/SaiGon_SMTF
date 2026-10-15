@@ -1,15 +1,18 @@
 import json
+import secrets
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app import audit, heat
+from app.audit import now_iso
 from app.auth import require_role
 from app.db import connect
 from app.errors import err
 from app.lifecycle import (OFFICER_ROLES, announce_violation, create_notifications, load,
                            owners_of, push_notifications, range_clauses, transition)
-from app.schemas import ReviewIn, ResolveIn, SignalOverrideIn
+from app.schemas import ReviewIn, ResolveIn, ScenarioIn, SignalOverrideIn, VmsIn
+from app.vms import STATION_VMS, VMS_IDS
 from app.ws import broadcast
 
 router = APIRouter(prefix='/api/v1/officer', tags=['officer'])
@@ -268,6 +271,74 @@ async def signal_override(body: SignalOverrideIn, claims=Depends(COMMANDER)):
 
 @router.get('/controls/state')
 def controls_state(claims=Depends(OFFICER)):
+    """Trạng thái điều khiển: chế độ đèn, ghi đè đang có, kịch bản đang chạy, pha mới nhất của từng nút đèn."""
     with connect() as conn:
         last = conn.execute('SELECT mode FROM kpi_samples ORDER BY id DESC LIMIT 1').fetchone()
-    return {'mode': last['mode'] if last else 'fixed', 'overrides': list(OVERRIDES.values()), 'scenario': None}
+        run = conn.execute('SELECT id, key, params_json, started_at FROM scenario_runs WHERE finished_at IS NULL '
+                           'ORDER BY started_at DESC LIMIT 1').fetchone()
+        signals = [dict(r) for r in conn.execute(
+            'SELECT n.node_id, n.label, n.cluster_id, s.phase, s.grp, s.t_sim, s.mode, s.override_by, s.reason '
+            'FROM signal_nodes n LEFT JOIN signal_state_log s ON s.id = '
+            '(SELECT MAX(id) FROM signal_state_log WHERE node_id = n.node_id) ORDER BY n.node_id')]
+    for s in signals:
+        s['group'] = s.pop('grp')   # bản ghi pha chưa có → None (nút chưa báo trạng thái)
+    scenario = None
+    if run:
+        scenario = {'scenario_id': run['id'], 'key': run['key'], 'params': json.loads(run['params_json'] or '{}'),
+                    'started_at': run['started_at']}
+    return {'mode': last['mode'] if last else 'fixed', 'overrides': list(OVERRIDES.values()),
+            'scenario': scenario, 'signals': signals}
+
+
+@router.post('/controls/scenario')
+async def start_scenario(body: ScenarioIn, claims=Depends(COMMANDER)):
+    """Chạy một kịch bản (hoặc `none` để dừng). Chỉ một kịch bản chạy tại một thời điểm; phát `cmd.scenario` tới trạm."""
+    now = now_iso()
+    scenario_id = None
+    with connect() as conn:
+        conn.execute('UPDATE scenario_runs SET finished_at=? WHERE finished_at IS NULL', (now,))
+        if body.scenario != 'none':
+            scenario_id = f'SC-{secrets.token_hex(6)}'
+            conn.execute('INSERT INTO scenario_runs (id, key, seed, mode, params_json, result_json, started_at, finished_at) '
+                         'VALUES (?,?,?,?,?,?,?,?)',
+                         (scenario_id, body.scenario, None, None, json.dumps(body.params, ensure_ascii=False), None, now, None))
+        audit.write(conn, actor=claims['sub'], role=claims.get('role'), action='scenario',
+                    target_type='scenario', target_id=scenario_id, to_state=body.scenario,
+                    payload={'scenario': body.scenario, 'params': body.params, 'scenario_id': scenario_id})
+    await broadcast('cmd.scenario', {'key': body.scenario, 'params': body.params, 'scenario_id': scenario_id},
+                    to_roles=['station'])
+    return {'ok': True, 'scenario': body.scenario, 'scenario_id': scenario_id}
+
+
+@router.get('/vms')
+def list_vms(claims=Depends(OFFICER)):
+    """Bốn bảng VMS: nội dung cán bộ đặt gần nhất + nội dung trạm đang hiển thị (nếu trạm đã báo)."""
+    with connect() as conn:
+        rows = conn.execute('SELECT vms_id, text, mode, set_by, set_at FROM vms_messages '
+                            'WHERE id IN (SELECT MAX(id) FROM vms_messages GROUP BY vms_id)').fetchall()
+    latest = {r['vms_id']: dict(r) for r in rows}
+    items = []
+    for vid in VMS_IDS:
+        cur = latest.get(vid) or {'text': '', 'mode': 'auto', 'set_by': None, 'set_at': None}
+        shown = STATION_VMS.get(vid)
+        items.append({'vms_id': vid, 'mode': cur['mode'], 'text': cur['text'], 'set_by': cur['set_by'],
+                      'set_at': cur['set_at'],
+                      'shown': shown['text'] if shown else None,
+                      'shown_mode': shown['mode'] if shown else None,
+                      'reported_at': shown['reported_at'] if shown else None})
+    return {'items': items, 'total': len(items)}
+
+
+@router.put('/vms/{vms_id}')
+async def put_vms(vms_id: str, body: VmsIn, claims=Depends(COMMANDER)):
+    if vms_id not in VMS_IDS:
+        raise HTTPException(status_code=422, detail=err('VALIDATION', f'vms_id không tồn tại: {vms_id}'))
+    lines = [body.text] if body.text else []
+    with connect() as conn:
+        conn.execute('INSERT INTO vms_messages (vms_id, text, mode, set_by, set_at) VALUES (?,?,?,?,?)',
+                     (vms_id, body.text, body.mode, claims['sub'], now_iso()))
+        audit.write(conn, actor=claims['sub'], role=claims.get('role'), action='vms',
+                    target_type='vms', target_id=vms_id, to_state=body.mode, payload={'text': body.text, 'mode': body.mode})
+    await broadcast('cmd.vms', {'vms_id': vms_id, 'mode': body.mode, 'text': body.text, 'lines': lines, 'by': claims['sub']},
+                    to_roles=['station'])
+    return {'ok': True, 'vms_id': vms_id, 'mode': body.mode, 'text': body.text}

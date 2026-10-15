@@ -63,8 +63,8 @@ TABLES = [
         id TEXT PRIMARY KEY, segment_id TEXT, level TEXT, prob REAL, reliability REAL,
         message TEXT, t_sim REAL, created_at TEXT, cleared_at TEXT)""",
     """CREATE TABLE IF NOT EXISTS vms_messages (
-        id TEXT PRIMARY KEY, vms_id TEXT, lines_json TEXT, ttl_s INTEGER, active INTEGER,
-        created_by INTEGER REFERENCES users(id), created_at TEXT)""",
+        id INTEGER PRIMARY KEY AUTOINCREMENT, vms_id TEXT NOT NULL, text TEXT NOT NULL DEFAULT '',
+        mode TEXT NOT NULL DEFAULT 'auto' CHECK (mode IN ('auto','manual')), set_by TEXT, set_at TEXT)""",   # M6c: lịch sử đặt nội dung VMS; bản cũ M1 đổi tên ở init_db
     """CREATE TABLE IF NOT EXISTS station_metrics (
         id INTEGER PRIMARY KEY AUTOINCREMENT, station_id TEXT, t TEXT, payload_json TEXT, created_at TEXT)""",
     """CREATE TABLE IF NOT EXISTS scenario_runs (
@@ -83,6 +83,8 @@ TABLES = [
     "CREATE INDEX IF NOT EXISTS ix_notif_user ON notifications(user_id, read_at)",
     "CREATE INDEX IF NOT EXISTS ix_complaints_violation ON complaints(violation_id)",
     "CREATE INDEX IF NOT EXISTS ix_complaints_status ON complaints(status, created_at)",
+    "CREATE INDEX IF NOT EXISTS ix_signal_state_node ON signal_state_log(node_id, id)",
+    "CREATE INDEX IF NOT EXISTS ix_vms_vms ON vms_messages(vms_id, id)",
 ]
 
 # Cột thêm sau M1: CREATE TABLE IF NOT EXISTS không thêm cột vào bảng đã có (DB dev cũ),

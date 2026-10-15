@@ -2,11 +2,25 @@ import { describe, expect, it } from 'vitest';
 import {
   complaintKindLabel,
   complaintStatusLabel,
+  displayNodeLabel,
   evidenceKindLabel,
   roleLabel,
   violationLabel,
   violationStatusLabel,
 } from './labels';
+
+describe('displayNodeLabel', () => {
+  it('đổi ký hiệu giao "∩" thành "×" và giữ nguyên phần còn lại', () => {
+    expect(displayNodeLabel('Cầu vượt Hàng Xanh ∩ Điện Biên Phủ')).toBe('Cầu vượt Hàng Xanh × Điện Biên Phủ');
+    expect(displayNodeLabel('Bạch Đằng∩Đinh Bộ Lĩnh')).toBe('Bạch Đằng × Đinh Bộ Lĩnh');
+  });
+
+  it('không đụng tên không có "∩" và xử lý giá trị rỗng', () => {
+    expect(displayNodeLabel('HX-01')).toBe('HX-01');
+    expect(displayNodeLabel(null)).toBe('');
+    expect(displayNodeLabel(undefined)).toBe('');
+  });
+});
 
 describe('violationStatusLabel', () => {
   it('có nhãn tiếng Việt cho đủ 7 trạng thái vòng đời', () => {

@@ -1,5 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { formatPenalty, formatVnd } from './format';
+import { formatDateInput, formatPenalty, formatVnd, isoToVi, parseDateVi } from './format';
+
+describe('ô ngày dd/mm/yyyy', () => {
+  it('tự chèn "/" và bỏ ký tự không phải chữ số', () => {
+    expect(formatDateInput('1')).toBe('1');
+    expect(formatDateInput('16')).toBe('16');
+    expect(formatDateInput('161')).toBe('16/1');
+    expect(formatDateInput('16102026')).toBe('16/10/2026');
+    expect(formatDateInput('16/10/2026')).toBe('16/10/2026');
+    expect(formatDateInput('16/10/20261')).toBe('16/10/2026');   // tối đa 8 chữ số
+    expect(formatDateInput('ab')).toBe('');
+  });
+
+  it('đổi dd/mm/yyyy hợp lệ sang yyyy-mm-dd, từ chối ngày không tồn tại và sai mẫu', () => {
+    expect(parseDateVi('16/10/2026')).toBe('2026-10-16');
+    expect(parseDateVi('29/02/2028')).toBe('2028-02-29');
+    expect(parseDateVi('31/02/2026')).toBeNull();
+    expect(parseDateVi('29/02/2027')).toBeNull();
+    expect(parseDateVi('2026/10/16')).toBeNull();
+    expect(parseDateVi('16/10/26')).toBeNull();
+    expect(parseDateVi('16/1')).toBeNull();
+  });
+
+  it('hiển thị ISO theo dd/mm/yyyy', () => {
+    expect(isoToVi('2026-10-16')).toBe('16/10/2026');
+    expect(isoToVi('')).toBe('');
+    expect(isoToVi('không phải ngày')).toBe('');
+  });
+});
 
 describe('formatPenalty', () => {
   it('không lộ số tiền khi mức phạt chưa xác minh', () => {

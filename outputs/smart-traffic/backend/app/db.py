@@ -32,6 +32,10 @@ def connect():
 
 
 def init_db(conn):
+    # M6c: `vms_messages` đổi lược đồ (M1 chỉ khai báo, chưa ghi dòng nào). Bảng cũ được đổi tên, không xóa.
+    legacy = {r['name'] for r in conn.execute('PRAGMA table_info(vms_messages)')}
+    if 'lines_json' in legacy:
+        conn.execute('ALTER TABLE vms_messages RENAME TO vms_messages_m1')
     for ddl in TABLES:
         conn.execute(ddl)
     for table, column, decl in MIGRATIONS:

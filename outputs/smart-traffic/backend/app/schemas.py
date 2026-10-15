@@ -1,6 +1,9 @@
+import json
 from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.vms import TEXT_MAX, clean_text
 
 ViolationStatus = Literal['new', 'needs_review', 'confirmed', 'dismissed']
 # Mẫu biển (đặc tả §4.3): ô tô `51K-123.45`/`51K1-123.45`, xe máy `59-X1 234.56`.
@@ -143,6 +146,37 @@ class SignalOverrideIn(BaseModel):
     duration_s: float = Field(60, gt=0, le=600)
     reason: str = ''
     until_t_sim: Optional[float] = None   # giây sim nếu trạm đã biết (tùy chọn)
+
+
+class ScenarioIn(BaseModel):
+    """Kịch bản (M6c). `none` = dừng kịch bản đang chạy. `params` nhỏ, tối đa ~1 KB JSON."""
+    model_config = ConfigDict(extra='forbid')
+    scenario: Literal['peak-hang-xanh', 'lane-block', 'flood-nhc', 'priority-run', 'none']
+    params: dict = Field(default_factory=dict)
+
+    @field_validator('params')
+    @classmethod
+    def _params_small(cls, v: dict) -> dict:
+        if len(json.dumps(v, ensure_ascii=False)) > 1000:
+            raise ValueError('params quá lớn (tối đa 1000 ký tự JSON)')
+        return v
+
+
+class VmsIn(BaseModel):
+    """Nội dung bảng VMS (M6c). `auto` trả quyền về hệ thống (nội dung bị bỏ); `manual` cần nội dung ≤ 60 ký tự."""
+    model_config = ConfigDict(extra='forbid')
+    text: str = Field(default='', max_length=300)
+    mode: Literal['auto', 'manual']
+
+    @model_validator(mode='after')
+    def _clean(self):
+        text = clean_text(self.text)
+        if len(text) > TEXT_MAX:
+            raise ValueError(f'Nội dung VMS tối đa {TEXT_MAX} ký tự')
+        if self.mode == 'manual' and not text:
+            raise ValueError('Chế độ thủ công cần nội dung hiển thị')
+        self.text = text if self.mode == 'manual' else ''
+        return self
 
 
 class ViolationIn(BaseModel):

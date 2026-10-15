@@ -63,6 +63,11 @@ export function roleLabel(role: string | null | undefined): string {
   return (role && ROLE_LABELS[role]) || 'Không rõ vai trò';
 }
 
+// Tên nút giao trong dữ liệu dùng ký hiệu "∩" (giao nhau); giao diện cán bộ hiển thị "×" cho dễ đọc.
+export function displayNodeLabel(label: string | null | undefined): string {
+  return (label ?? '').replace(/\s*∩\s*/g, ' × ');
+}
+
 export const EVIDENCE_KIND_LABELS: Record<string, string> = {
   before: 'Trước khi vượt vạch',
   after: 'Sau khi vượt vạch',

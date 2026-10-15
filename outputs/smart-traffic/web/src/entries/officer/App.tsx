@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Api, ApiError, errorMessage, login, loadToken, makeApi, saveToken } from '../../lib/api';
-import { OFFICER_TAB_LABELS, OfficerTab, officerTabs } from '../../lib/access';
+import { OFFICER_TAB_LABELS, OfficerTab, canControl, officerTabs } from '../../lib/access';
 import { roleLabel } from '../../lib/labels';
 import { connectSmartWs, WsMessage } from '../../lib/ws';
 import type { Kpi, Me } from '../../lib/types';
@@ -12,6 +12,7 @@ import { StatsTab } from './StatsTab';
 import { AuditTab } from './AuditTab';
 import { StaffTab } from './StaffTab';
 import { HeatMapTab } from './HeatMapTab';
+import { ControlsTab } from './ControlsTab';
 
 const TITLE = 'SaiGon SMTF · Trung tâm điều hành giao thông khu Bắc';
 const EXPIRED = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
@@ -143,6 +144,7 @@ export function App() {
         {current === 'complaints' && <ComplaintsTab api={api} tick={tick} onChanged={bump} />}
         {current === 'stats' && <StatsTab api={api} tick={tick} />}
         {current === 'heat' && <HeatMapTab api={api} tick={tick} live={heatLive} />}
+        {current === 'controls' && <ControlsTab api={api} tick={tick} canControl={canControl(me.role)} />}
         {current === 'audit' && <AuditTab api={api} tick={tick} />}
         {current === 'staff' && <StaffTab api={api} selfId={me.id} />}
       </main>

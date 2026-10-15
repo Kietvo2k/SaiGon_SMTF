@@ -161,3 +161,51 @@ export interface Kpi {
   flow_per_min?: number;
   mode?: string;
 }
+
+// Điều khiển thủ công (M6c, GET /officer/controls/state).
+export interface SignalNodeState {
+  node_id: string;
+  label: string | null;
+  cluster_id: string | null;
+  phase: string | null;          // green | yellow | red; null khi nút chưa báo trạng thái
+  group: number | null;
+  t_sim: number | null;
+  mode: string | null;
+  override_by: string | null;
+  reason: string | null;
+}
+
+export interface SignalOverride {
+  node_id: string;
+  group: number | null;
+  by: string | null;
+  reason: string | null;
+  until_t_sim: number | null;
+  until_at: string;
+}
+
+export interface ScenarioRun {
+  scenario_id: string;
+  key: string;
+  params: Record<string, unknown>;
+  started_at: string;
+}
+
+export interface ControlsState {
+  mode: string;
+  overrides: SignalOverride[];
+  scenario: ScenarioRun | null;
+  signals: SignalNodeState[];
+}
+
+// Bảng VMS (GET /officer/vms): nội dung cán bộ đặt gần nhất + nội dung trạm đang hiển thị.
+export interface VmsItem {
+  vms_id: string;
+  mode: 'auto' | 'manual';
+  text: string;
+  set_by: string | null;
+  set_at: string | null;
+  shown: string | null;
+  shown_mode: string | null;
+  reported_at: string | null;
+}

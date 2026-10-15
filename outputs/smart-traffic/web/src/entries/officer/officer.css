@@ -281,3 +281,40 @@ td.empty { text-align: center; color: var(--muted); padding: 22px; }
 .heat-hour-label { font-size: 11px; color: var(--muted); height: 16px; line-height: 16px; }
 .alert-live { margin-top: 0; }
 @media (max-width: 720px) { .heat-stage { height: 58vh; } }
+
+/* Ô ngày dd/mm/yyyy (thống kê, M6c) */
+.date-field { display: grid; gap: 4px; align-content: start; }
+.date-field input { width: 15ch; }
+.field-error { color: var(--danger); font-size: 12px; }
+
+/* Điều khiển thủ công (M6c) */
+.ctl { display: grid; gap: 10px; }
+.ctl h2 { margin-bottom: 4px; }
+.ctl fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+.ctl fieldset legend { font-size: 13px; color: var(--muted); padding: 0; margin-bottom: 4px; }
+.radio { flex-direction: row; align-items: center; gap: 6px; color: var(--ink); white-space: nowrap; }
+.seg { display: inline-flex; border: 1px solid var(--accent); border-radius: 8px; overflow: hidden; }
+.seg button { background: #fff; color: var(--accent); border-radius: 0; padding: 8px 16px; }
+.seg button[aria-pressed='true'] { background: var(--accent); color: #fff; }
+.seg button[aria-pressed='true']:disabled { opacity: 1; cursor: default; }
+.scenario-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.scenario-btn {
+  width: 100%; text-align: left; display: grid; gap: 4px; background: #fbfcfe; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-weight: 600;
+}
+.scenario-btn small { color: var(--muted); font-weight: normal; font-size: 12px; }
+.scenario-btn.ghost { color: var(--danger); border-color: #f0b4ad; }
+.confirm-box {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
+  border: 1px solid #e8c15a; background: #fff8e6; border-radius: 8px; padding: 10px 12px;
+}
+.vms-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.vms-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfcfe; display: grid; gap: 8px; min-width: 0; }
+.vms-card p { margin: 0; }
+.vms-screen {
+  background: #0d1117; color: #ffb703; font-family: ui-monospace, Consolas, monospace; font-size: 15px;
+  border-radius: 6px; padding: 10px 12px; min-height: 48px; overflow-wrap: anywhere;
+}
+.vms-form { display: grid; gap: 8px; }
+.vms-form input { width: 100%; }
+.vms-form > button { justify-self: start; }

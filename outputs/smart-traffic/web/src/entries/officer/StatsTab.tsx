@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Api, errorMessage } from '../../lib/api';
-import { violationLabel, violationStatusLabel } from '../../lib/labels';
+import { displayNodeLabel, violationLabel, violationStatusLabel } from '../../lib/labels';
+import { DateField } from '../../components/DateField';
 import type { Stats } from '../../lib/types';
 
 interface Props {
@@ -34,12 +35,8 @@ export function StatsTab({ api, tick }: Props) {
   return (
     <section className="panel" aria-label="Thống kê vi phạm">
       <div className="toolbar">
-        <label>Từ ngày
-          <input type="date" value={from} onChange={e => setFrom(e.target.value)} />
-        </label>
-        <label>Đến ngày
-          <input type="date" value={to} onChange={e => setTo(e.target.value)} />
-        </label>
+        <DateField label="Từ ngày" value={from} onChange={setFrom} />
+        <DateField label="Đến ngày" value={to} onChange={setTo} />
         <button type="button" className="ghost" disabled={!from && !to} onClick={() => { setFrom(''); setTo(''); }}>
           Xóa bộ lọc ngày
         </button>
@@ -96,7 +93,7 @@ export function StatsTab({ api, tick }: Props) {
               <tbody>
                 {stats.by_node.map(r => (
                   <tr key={r.node_id}>
-                    <td>{r.node_label || r.node_id}</td>
+                    <td>{displayNodeLabel(r.node_label) || r.node_id}</td>
                     <td className="mono">{r.node_id}</td>
                     <td>{r.count}</td>
                   </tr>

@@ -13,6 +13,7 @@ from app.auth import StationLimiter, require_role
 from app.db import connect
 from app.errors import err
 from app.schemas import HeatIn, ViolationIn
+from app.vms import report_from_station
 from app.ws import broadcast
 
 router = APIRouter(prefix='/api/v1/station', tags=['station'])
@@ -77,6 +78,9 @@ async def metrics(body: dict, claims=Depends(STATION)):
         for nid in list(OVERRIDES):
             if nid not in live:
                 OVERRIDES.pop(nid, None)
+    # M6c: trạm báo nội dung VMS đang hiển thị (tùy chọn) → GET /officer/vms gộp hiển thị.
+    if 'vms' in body:
+        report_from_station(body.get('vms'))
     await broadcast('kpi.update', {'t': body.get('t'), 'wait_avg_s': kpi.get('wait_avg_s', 0),
                                    'queue_max': kpi.get('queue_max', 0), 'flow_per_min': kpi.get('flow_per_min', 0),
                                    'mode': body.get('signal_mode', 'fixed')}, to_roles=['officer', 'commander', 'admin'])
