@@ -1,8 +1,0 @@
-# TIP-GIS18 — raster streaming and render LOD
-
-- **Role:** Builder; **scope:** shared raster Worker/client, versioned GeoTIFF dependency, reproducible existing-scene tile generator and bounded LOD selector. UI and server remain other builders' ownership.
-- **Dependencies:** Surface Builder supplies acquired source COGs in EPSG:4326 with full offline hashes, rights gates, dimensions/coverage and terrain reference height. Server supports HTTP206, Content-Range and a strong ETag bound to source hash. Existing scene.json supplies mapped/modeled footprints and heights.
-- **Acceptance:** COG blocks/windows/overviews decoded only in Worker; no whole-file fallback; response fingerprint/length checked; invalid/nodata distinguished; native resolution/output/cache limits enforced; async generation/cancel/stale/timeout behavior verified. Actual 3D Tiles1.1 JSON plus valid GLB2 content uses stable representation identities, independent render fine/coarse labels, explicit local/ECEF frame and non-survey source metadata. Tile loading bounded by SSE/frustum/bytes.
-- **Constraints:** no invented data or future plans; terrain is model-derived, not LiDAR accuracy. Local rendering frame is approximate; source vertical datum/display-relative offset remains explicit. Neither standalone selector nor sidecar metadata is claimed a full certified 3D Tiles viewer or implemented feature-metadata extension.
-- **Approval:** user's authorized shared-core enhancement and Contractor Batch18 delegation; reversible implementation proceeds without another permission gate.
-- **Verification:** computational fixtures, binary GLB/transform checks, actual COG range evidence, actual scene feature linkage, root browser visual QA.
