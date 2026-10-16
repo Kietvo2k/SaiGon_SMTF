@@ -1,8 +1,0 @@
-{
-  "status": "download_failed_reference_only",
-  "source": "Vietnam environmental consultation portal PDF lead supplied by Contractor",
-  "url": "https://thamvan.mae.gov.vn/Uploads/23012025/LL23.01.%20BC%20DTM%20NMN%20TRANG%20BANG%20-%20TAY%20NINH.pdf",
-  "captured_at": "2026-09-14T09:08:41Z",
-  "error": "curl connection reset by peer before payload was saved",
-  "use_in_s07": "not used for footprint/photo claim; retained as reference-only lead"
-}

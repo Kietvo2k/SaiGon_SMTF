@@ -1,1 +1,0 @@
-{"type":"FeatureCollection","links":[{"rel":"root","type":"application/json","href":"https://api.imagery.hotosm.org/stac/"},{"rel":"self","type":"application/geo+json","href":"https://api.imagery.hotosm.org/stac/search"}],"features":[],"numberReturned":0}

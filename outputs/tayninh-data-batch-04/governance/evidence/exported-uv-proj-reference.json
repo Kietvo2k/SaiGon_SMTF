@@ -1,9 +1,0 @@
-{
-  "status": "PASS",
-  "exported_uv_nodes": 11881,
-  "max_uv_ground_error_m": 2.5961767844060696e-06,
-  "coverage_flags_match": true,
-  "inside_nodes": 11811,
-  "outside_nodes": 70,
-  "visual_data_sha256": "215fc78e410abc7cd664477d0a0b49127d19c60d41dd01a9adb63425b447e682"
-}

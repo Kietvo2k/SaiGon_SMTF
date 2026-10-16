@@ -1,7 +1,0 @@
-# TIP S07-A DATA / PriorityP0
-
-DependenciesS06/C05 immutable; otherBuilders consume yourschemas. Read BLUEPRINT-S07.md. Scan owned inputs, research primary providers and collect assets + evidence. User expects maximal online sources but only usablelocation/rights count.
-
-AC S07-A01–A03: registry20 actual nearby footprinttargets (include0615/0309), searches by coordinates/street/POI/originalsources, photo records have verification/rights/epoch/gps/pointmatch/confidence/pending reasons; no wrongtown imagery applied. Atleast actualusable free PBR assetpack roofs/walls/roads/folliage ifavailable, best1024–2048 outputs with albedo/normal/roughness source+hash/type/dimensions/scales; keeporiginaldownload+license receipts. Rights check provider API/downloadterms, do not scrape unauthorizedwebsite. Actual sample250×250 bounds/IDs/frame, not officialward. Test sourcehash/dimensions/metadata null/state, repeatability, numericROI. Runtime no remotefetch dependency.
-
-Ownership asBlueprint. Don't touch productengine/UI/geometry orS06/C05inputs. Pathsmanifest agreed; sendschemas/minimal provisional manifest early. Report actualavailable/pending counts and assetsizes; Builder Completion perVibecode withREQIDresults/numericchecks/issues/deviations. Internetpermission granted session; use shellnetwork normally, no escalation. Escalate blocker promptly; continue useful independentmaterial/data work. No contacts/login/purchases.

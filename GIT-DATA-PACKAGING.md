@@ -1,8 +1,8 @@
 # Git data packaging — 14 September 2026
 
-The private repository contains the completed HCMC and Gia Lộc applications, shared core, operational cropped rasters/GLBs, retained photographs/material maps, source metadata/receipts, tests and research/runbooks through Batch 18. Keep the `outputs/hcmc-poc/` and `outputs/shared/digital-twin-core/` relative directory layout when serving HCMC.
+The private repository contains the completed HCMC application, shared core, operational cropped rasters/GLBs, retained photographs/material maps, source metadata/receipts, tests and the Gia Lộc source contract. The Gia Lộc/Tây Ninh working datasets (`outputs/tayninh-*`, `outputs/review-gia-loc`) were removed in CLEANUP C; their history remains in `git log`. Keep the `outputs/hcmc-poc/` and `outputs/shared/digital-twin-core/` relative directory layout when serving HCMC.
 
-Run `python3 outputs/hcmc-poc/serve.py` from the repository root, then open `/hcmc-poc/?v=18b&view=overview` or `/tayninh-data-batch-04/`. The server requires port 8768 and HTTP Range for surface18. The historical standalone HTML/ZIP delivery bundles are not the current runtime.
+Run `python3 outputs/hcmc-poc/serve.py` from the repository root, then open `/hcmc-poc/?v=18b&view=overview`. The server requires port 8768 and HTTP Range for surface18. The historical standalone HTML/ZIP delivery bundles are not the current runtime.
 
 ## Provider archives kept outside regular Git
 

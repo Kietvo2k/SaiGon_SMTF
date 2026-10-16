@@ -1,3 +1,0 @@
-Public GET https://vnsdi.monre.gov.vn/server/rest/services?f=pjson on 2026-09-14
-curl exit 60: SSL certificate problem: self signed certificate in certificate chain.
-HTTP status 000; response bytes 0; no response body saved. Certificate verification was not bypassed.

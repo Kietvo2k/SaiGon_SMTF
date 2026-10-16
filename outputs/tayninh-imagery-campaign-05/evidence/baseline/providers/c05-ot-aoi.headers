@@ -1,7 +1,0 @@
-HTTP/1.1 200 200
-Date: Mon, 14 Sep 2026 07:15:46 GMT
-Server: Apache
-Access-Control-Allow-Origin: *
-Transfer-Encoding: chunked
-Content-Type: application/json
-

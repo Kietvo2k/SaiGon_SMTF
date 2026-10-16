@@ -1,5 +1,0 @@
-{
-  "url": "https://overpass.kumi.systems/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A35%5D%3Bnwr%5B%22name%22~%22Gia+L%E1%BB%99c%22%5D%2810.5%2C105.5%2C12%2C107%29%3Bout+center+30%3B",
-  "query": "[out:json][timeout:35];nwr[\"name\"~\"Gia Lộc\"](10.5,105.5,12,107);out center 30;",
-  "note": "Coarse search bounds only for name disambiguation, not the pilot AOI"
-}

@@ -1,7 +1,0 @@
-# TIP S07-B SURFACE / PriorityP0
-
-DependenciesDATA pack optional while building; ENGINE passeschunk/detailopts. Read BLUEPRINT-S07.md, scan/createbaseline ofownfiles then implementS07-B01–B04. SendBpublicAPI plan toCearly, signatureexistingbuildingLayer stayscompatible.
-
-Own solution-layer.js + s07-surface.js + BQA/governance only. Want tangiblequalitygain closecamera overS06: physicaltexturematerials actualdownloadedCC0, UVmeters/colormap/normal/roughness proper; perroof/body finegeometry generic butconstrainedheight/footprint, stylepalette; betterfoliage branching/crowns withcheapLOD andsourceexclusions. No photoappliedwithoutlocationrightsgate. Assetreadiness/fallback/cache/disposefitC integration; imagesnotaltered. Finegeometry must beoptionalbyctxsamplebounds/LOD/chunk, notprebuild fineentireAOI. Don't requireC rewriteyourgeometryinternals. Don'taltergroundcoordinates/totalenvelope/backcompat admission unlessbug rootapproved.
-
-AC test actualvertex/triangleforwinding/nonfinite/footprint/envelope, instancebudget/sourceexclusion/noannotationfalsefact; meaningfulcached materialfallback/disposal, side-by-side geometrycounts. UseexistingfullrayQA onlyifground changed, don'trun8unnecessarily. SendsurfaceintegrationAPI/assetschemaearly thenCompletionREQresults/tests/fingerprints/residualissues. RootownsactualbrowserfinalQA. No app/UI/worker/data/providerfiles edits. Proposedbetterarchitecture→sendrootbeforeadopt.

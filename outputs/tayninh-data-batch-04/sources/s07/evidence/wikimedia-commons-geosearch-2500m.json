@@ -1,8 +1,0 @@
-{
-  "status": "attempt_failed",
-  "source": "Wikimedia Commons geosearch API",
-  "url": "https://commons.wikimedia.org/w/api.php?action=query&list=geosearch&gscoord=11.091048155205%7C106.351129246874&gsradius=2500&gslimit=50&gsnamespace=6&format=json",
-  "captured_at": "2026-09-14T09:08:41Z",
-  "error": "curl DNS resolution failed during bounded S07-A retry; 250m Commons geosearch receipt succeeded and returned an empty geosearch array",
-  "usable_photo_count": 0
-}

@@ -1,8 +1,0 @@
-{
-  "status": "attempt_failed",
-  "source": "KartaView/OpenStreetCam photo API",
-  "url": "https://api.openstreetcam.org/2.0/photo/?lat=11.091048155205&lng=106.351129246874&radius=2000&page=1&itemsPerPage=50",
-  "captured_at": "2026-09-14T09:08:41Z",
-  "error": "curl DNS resolution failed during bounded S07-A retry; 250m API receipt succeeded and returned empty response; 2500m receipt was retained separately as provider max-radius evidence",
-  "usable_photo_count": 0
-}
