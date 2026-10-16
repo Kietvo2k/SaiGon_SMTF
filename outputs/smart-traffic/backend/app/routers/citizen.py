@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from app import heat
 from app.db import connect
 from app.errors import err
+from app.schemas import violation_label_of
 
 router = APIRouter(prefix='/api/v1/public', tags=['public'])
 # M1 chỉ có 4 trạng thái; công dân chỉ thấy vi phạm từ `confirmed` trở lên (ẩn `new`/`needs_review`/`dismissed`).
@@ -26,7 +27,7 @@ def lookup(plate: str, vehicle_class: str = 'car'):
             ev = conn.execute('SELECT kind, media_id FROM evidence WHERE violation_id=?', (r['id'],)).fetchall()
             items.append({
                 'id': r['id'], 'violation_code': r['violation_code'],
-                'violation_label': 'Không chấp hành hiệu lệnh của đèn tín hiệu giao thông',
+                'violation_label': violation_label_of(r['violation_code']),
                 'occurred_at': r['occurred_at'], 'node_label': r['node_label'], 'camera_id': r['camera_id'],
                 'status': r['status'],
                 # Chưa xác minh → KHÔNG lộ số tiền (null); web hiện "Mức phạt đang cập nhật…".

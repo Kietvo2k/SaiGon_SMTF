@@ -24,7 +24,6 @@ ALLOWED = {
     'dismissed': set(),
 }
 OFFICER_ROLES = ['officer', 'commander', 'admin']
-VIOLATION_LABEL = 'Không chấp hành hiệu lệnh của đèn tín hiệu giao thông'
 NOTIFY_TITLE = 'Thông báo vi phạm giao thông'
 LOCAL_TZ_HOURS = 7   # Asia/Ho_Chi_Minh (không có DST) — dùng cho khoảng ngày và giờ trong ngày
 

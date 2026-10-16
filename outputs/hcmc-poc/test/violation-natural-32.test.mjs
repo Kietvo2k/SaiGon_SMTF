@@ -31,7 +31,7 @@ test('5 phút cao điểm: có vượt đỏ tự nhiên ở HX-01 hoặc HX-02,
   const controller = createSignalController32({ net, sim: null, mode: 'fixed' });
   const restricted = restrictedNodeIndices32(G, nodeMap);
   const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: 180, seed: SEED, demand: PEAK_HANG_XANH_DEMAND,
-    behavior: { restrictedNodes: restricted, parkNodes: ['HX-01', 'HX-06'].map(idxOf) } });
+    behavior: { restrictedNodes: restricted } });
   // Camera thử nghiệm trên lối vào HX-02: 30 m trước nút, lệch 7 m, nhìn về nút (như registry).
   const n2 = idxOf('HX-02');
   let inL = 0; for (let l = 0; l < net.NL; l++) if (net.lanes.to[l] === n2) { inL = l; break; }

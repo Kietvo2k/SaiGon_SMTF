@@ -13,7 +13,7 @@
 // Hiệu năng: mô phỏng 1D rẻ cho mọi xe (giữ tất định, không phụ thuộc camera); chỉ xe trên cạnh nằm trong frustum
 // và bán kính quanh camera mới tính pose + ghi ma trận (tự cull, 3 InstancedMesh theo loại xe).
 // M5b-1: `behavior` (tùy chọn, mặc định tắt) bật hành vi xe phạm lỗi: vượt đỏ, làn xe máy, quá tốc độ, đỗ sai, rẽ cấm.
-import { violatorOf32, redViolatorOf32, BEHAVIOR_IDX_32, SPEED_MUL_32, PARK_MIN_M_32, PARK_MAX_M_32, PARK_S_32, RED_WINDOW_S_32, WRONG_TURN_BOOST_32, LEFT_TURN_RAD_32 } from './violation-rules-32.js?v=32a';
+import { violatorOf32, redViolatorOf32, BEHAVIOR_IDX_32, SPEED_MUL_32, PARK_S_32, RED_WINDOW_S_32, WRONG_TURN_BOOST_32, LEFT_TURN_RAD_32 } from './violation-rules-32.js?v=32a';
 export const TRAFFIC_31_VERSION = 'traffic-31D';
 export const SEED = 31031;
 export const STEP = 1 / 10;   // s, bước cố định 10 Hz (vẽ nội suy giữa hai bước)
@@ -369,10 +369,11 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   const beh = behavior ? {
     seed: (behavior.seed ?? seed) >>> 0,
     restricted: (() => { const a = new Uint8Array(net.NN); for (const n of behavior.restrictedNodes || []) if (n >= 0 && n < net.NN) a[n] = 1; return a; })(),
-    // parkNodes: nút có đỗ sai (mặc định mọi nút); app đặt đúng các nút có camera để lỗi nằm trong khung ghi hình.
-    parkNode: (() => { const a = new Uint8Array(net.NN); if (!behavior.parkNodes) return a.fill(1); for (const n of behavior.parkNodes) if (n >= 0 && n < net.NN) a[n] = 1; return a; })(),
+    // parkS0/parkS1 (M5b-1b): đoạn s cấm đỗ theo làn (−1 = không có vùng), dựng từ camera (violation-zones-32.js).
+    parkS0: behavior.parkS0 || null, parkS1: behavior.parkS1 || null,
     sampleNodes: signalPlan && signalPlan.signalNodes ? [...signalPlan.signalNodes] : [],
-    redOn: new Float64Array(net.NN * 2).fill(-1e9), wasRed: new Uint8Array(net.NN * 2)
+    redOn: new Float64Array(net.NN * 2).fill(-1e9), wasRed: new Uint8Array(net.NN * 2),
+    redIv: new Map()   // M5b-1b: khoảng đỏ của từng nhóm (k = nút*2+nhóm) [{on, off}], để perception nội suy lúc vượt vạch
   } : null;
   // M4b1: routeBias(edge, carIndex) → hệ số 0..1 nhân vào trọng số rẽ vào cạnh `edge` (không truyền / trả về ≥ 1 = y nguyên;
   // không rút thêm số ngẫu nhiên nên hash cổ điển giữ nguyên).
@@ -959,13 +960,13 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     // M5a: xe hỏng đứng yên trên làn (laneBlockS = mép sau của xe hỏng): xe phía sau dừng trước nó.
     { const sb = laneBlockS[l]; if (sb < Infinity && sb > si) { const g = sb - (si + Li / 2); if (g < gap) { gap = g; vl = 0; } } }
     { const g = crossGate(i, l, si, Li, vi * vi / (2 * K.b) + 8); if (g < gap) { gap = g; vl = 0; } }
-    // M5b-1 PARK: xe vi phạm đỗ sai dừng hẳn trong vùng cấm dừng gần nút (PARK_MIN–PARK_MAX m tới vạch dừng), khi không có
+    // M5b-1b PARK: xe vi phạm đỗ sai dừng hẳn trong VÙNG CẤM ĐỖ (parkS0..parkS1 của làn, trong FOV camera), khi không có
     // xe trước, chưa giữ khóa/vùng và chưa đỗ ở thế hệ này. Đỗ PARK_S_32 s (perception ghi sau 60 s đứng yên).
-    if (beh && !holding && gap === Infinity && beh.parkGen[i] !== gen[i] && beh.parkNode[node] && codeIdxOf(i) === BEHAVIOR_IDX_32.PARK) {
-      const d = laneLen - Rz[node] - si;   // khoảng cách tới vạch dừng của nút
+    if (beh && beh.parkS0 && !holding && gap > 12 && beh.parkGen[i] !== gen[i] && codeIdxOf(i) === BEHAVIOR_IDX_32.PARK) {
+      const inZone = beh.parkS0[l] >= 0 && si >= beh.parkS0[l] && si <= beh.parkS1[l];
       let free = zTok[i * 2] < 0 && zTok[i * 2 + 1] < 0;
       for (let k = 0; k < LK && free; k++) if (lockNode[i * LK + k] >= 0) free = false;
-      if (free && d >= PARK_MIN_M_32 && d <= PARK_MAX_M_32) { beh.parkGen[i] = gen[i]; beh.parkUntil[i] = counters.t + PARK_S_32; v[i] = 0; return; }
+      if (free && inZone) { beh.parkGen[i] = gen[i]; beh.parkUntil[i] = counters.t + PARK_S_32; v[i] = 0; return; }
     }
     let stopLimit = Infinity;
     if (!holding) { const g = laneLen - Rz[node] - front; if (g < gap) { gap = g; vl = 0; } stopLimit = laneLen - Rz[node] - Li / 2; }
@@ -1023,7 +1024,12 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       for (const n of beh.sampleNodes) {
         for (const p of controller.stateOf(n, counters.t).phases) {
           const k = n * 2 + p.group, red = p.phase === 'red';
-          if (red && !beh.wasRed[k]) beh.redOn[k] = counters.t;
+          if (red && !beh.wasRed[k]) {
+            beh.redOn[k] = counters.t;
+            if (!beh.redIv.has(k)) beh.redIv.set(k, []);
+            beh.redIv.get(k).push({ on: counters.t, off: Infinity });
+          }
+          if (!red && beh.wasRed[k]) { const list = beh.redIv.get(k); if (list && list.length) list[list.length - 1].off = counters.t; }
           beh.wasRed[k] = red ? 1 : 0;
         }
       }
@@ -1192,6 +1198,14 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   const simApi = {
     // M5b-1: bật/tắt hành vi xe phạm lỗi và mã hành vi của xe (LANE|SPEED|PARK|WRONG-TURN hoặc null).
     behaviorOn: !!beh,
+    // M5b-1b: khoảng đỏ của nhóm `group` tại nút `node` chứa thời điểm t (sim s), hoặc null (không đỏ / không có hành vi).
+    redIntervalAt: (node, group, t) => {
+      if (!beh) return null;
+      const list = beh.redIv.get(node * 2 + group);
+      if (!list) return null;
+      for (let j = list.length - 1; j >= 0; j--) if (list[j].on <= t) return t < list[j].off ? list[j] : null;
+      return null;
+    },
     behaviorCodeOf: i => { const c = codeIdxOf(i); return c ? Object.keys(BEHAVIOR_IDX_32).find(k => BEHAVIOR_IDX_32[k] === c) : null; },
     N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters, exportState, importState,
     step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, wantedCount: () => { let n = 0; for (let i = 0; i < N; i++) n += wanted[i]; return n; }, pendingCount: () => { let n = 0; for (let i = 0; i < N; i++) n += pending[i]; return n; }, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,

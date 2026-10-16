@@ -12,9 +12,9 @@ from app import audit
 from app.auth import BindLimiter, RegisterLimiter, hash_password, require_role
 from app.db import connect
 from app.errors import err
-from app.lifecycle import OFFICER_ROLES, VIOLATION_LABEL, announce_violation, owners_of, transition
+from app.lifecycle import OFFICER_ROLES, announce_violation, owners_of, transition
 from app.routers.citizen import CITIZEN_STATUSES
-from app.schemas import ComplaintIn, NotifyReadIn, PayIn, PlateBindIn, RegisterIn
+from app.schemas import ComplaintIn, NotifyReadIn, PayIn, PlateBindIn, RegisterIn, violation_label_of
 from app.ws import broadcast
 
 router = APIRouter(prefix='/api/v1/citizen', tags=['citizen'])
@@ -153,7 +153,7 @@ def my_violations(status: str = '', page: int = Query(1, ge=1), page_size: int =
             f'SELECT v.id, v.violation_code, v.status, v.plate, v.occurred_at, v.node_label, v.penalty_json {base} '
             'ORDER BY v.occurred_at DESC LIMIT ? OFFSET ?',
             [me['id'], *statuses, page_size, (page - 1) * page_size]).fetchall()
-    items = [{'id': r['id'], 'violation_code': r['violation_code'], 'violation_label': VIOLATION_LABEL,
+    items = [{'id': r['id'], 'violation_code': r['violation_code'], 'violation_label': violation_label_of(r['violation_code']),
               'status': r['status'], 'plate': r['plate'], 'occurred_at': r['occurred_at'],
               'node_label': r['node_label'], 'penalty': _penalty(r['penalty_json'])} for r in rows]
     return {'items': items, 'total': total, 'page': page}
@@ -170,7 +170,7 @@ def my_violation(vid: str, claims=Depends(CITIZEN)):
             'SELECT id, kind, status, created_at, resolved_at FROM complaints WHERE violation_id=? AND user_id=? '
             'ORDER BY created_at', (vid, me['id']))]
     notified = row['status'] == 'notified'
-    return {'id': row['id'], 'violation_code': row['violation_code'], 'violation_label': VIOLATION_LABEL,
+    return {'id': row['id'], 'violation_code': row['violation_code'], 'violation_label': violation_label_of(row['violation_code']),
             'status': row['status'], 'plate': row['plate'], 'occurred_at': row['occurred_at'],
             'node_label': row['node_label'], 'camera_id': row['camera_id'],
             'penalty': _penalty(row['penalty_json']), 'evidence': evidence, 'complaints': complaints,

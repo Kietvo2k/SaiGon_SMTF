@@ -4,6 +4,9 @@ import * as THREE from 'three/webgpu';
 import { attribute, mix, vec3 } from 'three/tsl';
 import { TRAFFIC_31_VERSION, TRAFFIC_KINDS, LIGHT_FACTOR, STEP, MAX_STEPS_PER_FRAME, SEED, hashU32, buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
 import { createSignalController32 } from './traffic-controller-32.js?v=32a';
+import { buildZones32 } from './violation-zones-32.js?v=32a';
+import { createWrongWayAgents32 } from './wrong-way-32.js?v=32a';
+import { violatorOf32 } from './violation-rules-32.js?v=32a';
 
 // ---------------------------------------------------------------- hình xe: khối đa diện có vát + bánh lăng trụ, màu đỉnh + mặt nạ sơn + phát sáng
 // Mỗi khối là tập mặt lồi; pháp tuyến hướng ra ngoài theo tâm khối nên không phụ thuộc thứ tự đỉnh. Bỏ mặt đáy và mặt khuất.
@@ -61,6 +64,26 @@ function createModel() {
   return { frustum, box, wheel, cylinder, geometry };
 }
 const FRONT = ['front'], BACK = ['back'], SIDES = ['left', 'right'], ALL4 = ['front', 'back', 'left', 'right'], NOBOTTOM = ['front', 'back', 'left', 'right', 'top'];
+// Người lái / người ngồi thêm (xe máy): chân, thân, hai tay. dx = lệch dọc theo xe (m, + là phía trước).
+const SKIN = [.86, .66, .52], HAIR = [.07, .05, .04];
+const riderBody = (S, dx = 0) => {
+  for (const z of [.14, -.14]) {
+    S.box({ x: -.1 + dx, y: .95, z, l: .5, h: .14, w: .13, c: PANTS });                                                    // đùi
+    S.frustum({ x: .3 + dx, y0: .38, z: z * 1.15, l0: .12, w0: .12, h: .55, sx: -.14, c: PANTS, faces: ALL4 });           // cẳng chân
+  }
+  S.frustum({ x: -.28 + dx, y0: .98, l0: .26, w0: .36, l1: .22, w1: .42, h: .5, sx: .05, c: SHIRT, m: .4 });              // thân
+  for (const z of [.25, -.25]) S.frustum({ x: .44 + dx, y0: 1.02, z, l0: .09, w0: .09, l1: .1, w1: .1, h: .38, sx: -.6, c: SHIRT, m: .4 });   // tay
+};
+// Đầu luôn có (da + tóc). Khi đội mũ, vỏ mũ (helmetPart) bọc kín đầu; xe phạm NO-HELMET thì lộ đầu trần.
+const headPart = (S, dx = 0) => {
+  S.cylinder({ x: -.26 + dx, y0: 1.36, r0: .095, h: .15, sides: 8, c: SKIN });
+  S.cylinder({ x: -.26 + dx, y0: 1.44, r0: .1, r1: .098, h: .09, sides: 8, c: HAIR });
+};
+// Mũ bảo hiểm: vỏ sơn theo xe + kính. Là mesh phụ (một InstancedMesh riêng), vẽ cho xe đội mũ.
+const helmetPart = (S, dx = 0) => {
+  S.cylinder({ x: -.26 + dx, y0: 1.42, r0: .125, r1: .112, h: .18, c: PAINT, m: 1 });
+  S.box({ x: -.1 + dx, y: 1.5, l: .03, h: .08, w: .17, c: GLASS, faces: FRONT });
+};
 const MODELS = [
   // xe máy tay ga ~1,9 × 0,7 m: 2 bánh có hub, yếm + thân sau + yên, tay lái, đèn; người lái (chân, thân, hai tay, mũ sơn có kính)
   S => {
@@ -74,14 +97,7 @@ const MODELS = [
     S.box({ x: .45, y: 1.0, l: .07, h: .05, w: .64, c: TRIM });                                                             // tay lái
     S.box({ x: .62, y: .9, l: .06, h: .12, w: .2, c: HEADC, e: HEAD, faces: FRONT.concat(SIDES, ['top']) });                // đèn pha
     S.box({ x: -.9, y: .72, l: .05, h: .07, w: .22, c: TAILC, e: TAIL, faces: BACK.concat(SIDES, ['top']) });               // đèn hậu
-    for (const z of [.14, -.14]) {
-      S.box({ x: -.1, y: .95, z, l: .5, h: .14, w: .13, c: PANTS });                                                        // đùi
-      S.frustum({ x: .3, y0: .38, z: z * 1.15, l0: .12, w0: .12, h: .55, sx: -.14, c: PANTS, faces: ALL4 });               // cẳng chân
-    }
-    S.frustum({ x: -.28, y0: .98, l0: .26, w0: .36, l1: .22, w1: .42, h: .5, sx: .05, c: SHIRT, m: .4 });                  // thân
-    for (const z of [.25, -.25]) S.frustum({ x: .44, y0: 1.02, z, l0: .09, w0: .09, l1: .1, w1: .1, h: .38, sx: -.6, c: SHIRT, m: .4 });   // tay
-    S.cylinder({ x: -.2, y0: 1.47, r0: .135, r1: .115, h: .17, c: PAINT, m: 1 });                                          // mũ bảo hiểm
-    S.box({ x: -.08, y: 1.56, l: .02, h: .07, w: .16, c: GLASS, faces: FRONT });                                            // kính mũ
+    riderBody(S, 0); headPart(S, 0);   // người lái; mũ là mesh phụ (helmetPart)
   },
   // ô tô ~4,5 × 1,8 m: thân dưới sơn, cabin kính vát (kính trước/sau dốc), nóc sơn, cột B/C, cản, đèn, 4 bánh
   S => {
@@ -134,6 +150,15 @@ const MODELS = [
   }
 ];
 function vehicleGeometry(kind) { const S = createModel(); MODELS[kind](S); return S.geometry(); }
+// M5b-1b: mesh phụ nhỏ (vẫn một InstancedMesh cho mỗi loại xe): mũ bảo hiểm, người ngồi thêm (quá tải), xe ngược chiều.
+const AUX_32 = {
+  helmet: S => helmetPart(S, 0),
+  pax: S => { riderBody(S, 0); headPart(S, 0); helmetPart(S, 0); },
+  ghost: S => { MODELS[0](S); helmetPart(S, 0); }
+};
+function auxGeometry(name) { const S = createModel(); AUX_32[name](S); return S.geometry(); }
+// Người ngồi thêm trên xe quá tải: lệch dọc theo xe (phía sau người lái, rồi phía trước kẹp giữa).
+const PAX_OFFS_32 = [-.5, .12];
 
 // Màu sơn chọn theo hash(id, SEED): xác định, đa dạng (xe máy nhiều màu; ô tô thiên trắng/bạc/đen; buýt xanh lá; tải xanh/trắng/đỏ).
 const PALETTES = [
@@ -149,7 +174,10 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
   const t0 = performance.now();
   const net = buildTrafficNetwork31({ graph, roads, widthOf, drawn, signalPlan });
   // M5a: demand (tùy chọn) = nhu cầu khu cao điểm/khu Bắc, đặt lúc dựng pool; không truyền = hành vi cũ.
-  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS, seed, routeBias, demand, behavior });
+  // M5b-1b: vùng quan sát (điểm đo tốc độ, vùng cấm đỗ, tuyến ngược chiều) dựng từ camera registry khi có behavior.cameras.
+  const zones = behavior && behavior.cameras ? buildZones32({ net, cameras: behavior.cameras, spec: behavior.zoneSpec }) : null;
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS, seed, routeBias, demand,
+    behavior: behavior ? { ...behavior, parkS0: zones ? zones.parkS0 : null, parkS1: zones ? zones.parkS1 : null } : null });
   const { lanes } = net;
   // ---- Nâng y theo mặt đường vẽ: mặt cao nhất trong 0,5 m trên profile làn (dốc/mảnh đoạn chồng nhau, như baseline 30B).
   // Tính tại đúng vị trí xe (không bảng nội suy) nên không tụt dưới đỉnh giữa hai mẫu.
@@ -169,6 +197,16 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
   for (let l = 0; l < liftLane.length; l++) if (liftNode[lanes.from[l]] || liftNode[lanes.to[l]]) liftLane[l] = 1;
   const liftY = (l, sl, x, z, y) => liftLane[l] ? rawLift(x, z, y) : y;
   const { poseAt, lanePoint, laneY } = createTrafficGeometry31(net, sim, liftY);
+  const ghosts = zones && zones.wrongWay ? createWrongWayAgents32({ zone: zones.wrongWay, geo: { lanePoint, laneY }, liftY }) : null;
+  // Hiển thị theo lỗi chỉ khi có behavior (app smart): NO-HELMET không đội mũ, OVERLOAD thêm người ngồi.
+  const visualViolations = !!behavior;
+  const traitGen = new Int32Array(sim.N).fill(-1), traitCode = new Uint8Array(sim.N);
+  const traitOf = i => {
+    if (!visualViolations || sim.kind[i] !== 0) return 0;
+    const g = sim.gen[i];
+    if (traitGen[i] !== g) { const c = violatorOf32(i + 1, g, 'motorbike', SEED); traitCode[i] = c === 'NO-HELMET' ? 1 : c === 'OVERLOAD' ? 2 : 0; traitGen[i] = g; }
+    return traitCode[i];
+  };
   // ---- Trạng thái hiển thị: vẽ nội suy giữa hai bước đã chốt D0 → D1 trong khi bước kế đang được tính dần theo lát
   // (trễ một bước 0,1 s), để CPU một bước trải qua nhiều khung thay vì dồn vào một khung.
   const N = sim.N;
@@ -207,11 +245,34 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
     k.triangles = geometry.attributes.position.count / 3;
     return mesh;
   });
+  // M5b-1b: mesh phụ (mũ, người ngồi thêm, xe ngược chiều): vật liệu như xe máy, số lượng theo xe đang vẽ.
+  const auxMesh = (name, cap) => {
+    const geometry = auxGeometry(name);
+    const paint = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3).fill(1), 3); paint.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute('paint', paint);
+    const material = new THREE.MeshStandardNodeMaterial({ vertexColors: true, roughness: .5, metalness: .2 });
+    material.colorNode = mix(vec3(1), attribute('paint', 'vec3'), attribute('pm', 'float'));
+    material.emissiveNode = attribute('emit', 'vec3').mul(emitScale);
+    const mesh = new THREE.InstancedMesh(geometry, material, cap);
+    mesh.name = `Traffic 31D · motorbike ${name} (phụ)`; mesh.frustumCulled = false; mesh.castShadow = false; mesh.receiveShadow = false; mesh.count = 0;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    group.add(mesh);
+    return mesh;
+  };
+  const capMoto = Math.max(1, capacity[0]);
+  const aux = { helmet: auxMesh('helmet', capMoto), pax: auxMesh('pax', 2 * capMoto), ghost: auxMesh('ghost', 4) };
+  const helmetColor = new Float32Array(sim.N * 3);
+  { const c = new THREE.Color(); for (let i = 0; i < sim.N; i++) { c.set(paintOf(0, i * 13 + 5)); helmetColor[i * 3] = c.r; helmetColor[i * 3 + 1] = c.g; helmetColor[i * 3 + 2] = c.b; } }
+  const GHOST_RGB = (() => { const c = new THREE.Color('#2f6b3f'); return [c.r, c.g, c.b]; })();
   // Màu gắn theo xe (không theo vị trí instance trong frame): chép lại màu theo id khi ghi ma trận.
   const carColor = new Float32Array(sim.N * 3);
   { const c = new THREE.Color(); for (let i = 0; i < sim.N; i++) { c.set(paintOf(sim.kind[i], i)); carColor[i * 3] = c.r; carColor[i * 3 + 1] = c.g; carColor[i * 3 + 2] = c.b; } }
   const drawnIds = meshes.map(m => new Int32Array(m.instanceMatrix.count));
   const drawnCount = TRAFFIC_KINDS.map(() => 0);
+  const auxCount = { helmet: 0, pax: 0, ghost: 0 }, PX = {};
+  const setRgb = (mesh, h, rgb, i) => { const col = mesh.geometry.attributes.paint.array; col[h * 3] = rgb[i * 3]; col[h * 3 + 1] = rgb[i * 3 + 1]; col[h * 3 + 2] = rgb[i * 3 + 2]; };
+  // Tư thế lệch dọc theo xe: cùng trục tới (X) như writeMatrix.
+  const offsetPose = (p, dx, out) => { const pitch = Math.atan(p.grade || 0), cp = Math.cos(pitch), sp = Math.sin(pitch); out.x = p.x + dx * p.tx * cp; out.y = p.y + dx * sp; out.z = p.z + dx * p.tz * cp; out.tx = p.tx; out.tz = p.tz; out.grade = p.grade; return out; };
   const frustum = new THREE.Frustum(), projScreen = new THREE.Matrix4(), sphereTmp = new THREE.Sphere(), camPos = new THREE.Vector3();
   const edgeStamp = new Int32Array(net.NE).fill(-1), edgeVis = new Uint8Array(net.NE), edgeNear = new Float32Array(net.NE);
   // LOD theo kích thước trên màn hình: xe dài < MIN_PX điểm ảnh (ở điểm gần nhất của cạnh) không vẽ — vô hình, chỉ gây nhấp nháy.
@@ -252,7 +313,7 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
     frame++;
     cam.updateMatrixWorld(); projScreen.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); frustum.setFromProjectionMatrix(projScreen); camPos.setFromMatrixPosition(cam.matrixWorld);
     drawRadius = Math.max(1800, Math.min(9000, cameraDistance * 1.6));
-    drawnCount.fill(0);
+    drawnCount.fill(0); auxCount.helmet = 0; auxCount.pax = 0; auxCount.ghost = 0;
     const arrays = meshes.map(m => m.instanceMatrix.array), colors = meshes.map(m => m.geometry.attributes.paint.array);
     pxPerM = (globalThis.innerHeight || 900) / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov || 45) / 2));
     for (let i = 0; i < N; i++) {
@@ -262,8 +323,20 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
       const c = drawnCount[k]++;
       interpPose(i, alpha, P); writeMatrix(arrays[k], c * 16, P);
       drawnIds[k][c] = i; colors[k][c * 3] = carColor[i * 3]; colors[k][c * 3 + 1] = carColor[i * 3 + 1]; colors[k][c * 3 + 2] = carColor[i * 3 + 2];
+      if (k === 0) {
+        const tr = traitOf(i);
+        if (tr !== 1) { const h = auxCount.helmet++; writeMatrix(aux.helmet.instanceMatrix.array, h * 16, P); setRgb(aux.helmet, h, helmetColor, i); }
+        if (tr === 2) for (const dx of PAX_OFFS_32) { const h = auxCount.pax++; writeMatrix(aux.pax.instanceMatrix.array, h * 16, offsetPose(P, dx, PX)); setRgb(aux.pax, h, helmetColor, i); }
+      }
+    }
+    if (ghosts) for (const g of ghosts.activeAt(sim.counters.t)) {
+      if (auxCount.ghost >= aux.ghost.instanceMatrix.count) break;
+      const h = auxCount.ghost++;
+      writeMatrix(aux.ghost.instanceMatrix.array, h * 16, { x: g.x, y: g.y, z: g.z, tx: g.hx, tz: g.hz, grade: 0 });
+      const col = aux.ghost.geometry.attributes.paint.array; col[h * 3] = GHOST_RGB[0]; col[h * 3 + 1] = GHOST_RGB[1]; col[h * 3 + 2] = GHOST_RGB[2];
     }
     meshes.forEach((m, k) => { m.count = drawnCount[k]; if (drawnCount[k]) { m.instanceMatrix.needsUpdate = true; m.geometry.attributes.paint.needsUpdate = true; } });
+    for (const [key, m] of Object.entries(aux)) { m.count = auxCount[key]; if (auxCount[key]) { m.instanceMatrix.needsUpdate = true; m.geometry.attributes.paint.needsUpdate = true; } }
   }
   // ---- CPU (đo bởi app quanh toàn bộ advanceUrbanMotion, cùng cách đo baseline 30B).
   const cpu = []; const recordCpu = ms => { cpu.push(ms); if (cpu.length > 6000) cpu.shift(); };
@@ -323,6 +396,7 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
   const counts = () => { const c = TRAFFIC_KINDS.map(() => 0); for (let i = 0; i < sim.N; i++) if (sim.active[i]) c[sim.kind[i]]++; return c; };
   const api = {
     // M5b-1: ghi lại ma trận xe theo camera chụp bằng chứng (trước khi render góc đó); không đổi trạng thái mô phỏng.
+    zones, ghosts, auxMeshes: aux,
     drawFor(cam) { const was = group.visible; group.visible = true; draw(1, 1800, cam); group.visible = was; },
     version: TRAFFIC_31_VERSION, group, meshes, kinds: TRAFFIC_KINDS, total: sim.N, sim, net,
     update, recordCpu, lightLevel,

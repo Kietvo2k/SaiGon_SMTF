@@ -6,6 +6,30 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from app.vms import TEXT_MAX, clean_text
 
 ViolationStatus = Literal['new', 'needs_review', 'confirmed', 'dismissed']
+# Nhãn tiếng Việt theo mã lỗi (đặc tả §4.4, mục 4.2 "Mã lỗi"). Web hiển thị nhãn từ đây (không hardcode rải rác);
+# mã ngoài bảng → nhãn chung, không bao giờ gán nhãn của mã khác.
+VIOLATION_LABELS = {
+    'RED-LIGHT': 'Không chấp hành hiệu lệnh của đèn tín hiệu giao thông',
+    'STOP-LINE': 'Không chấp hành vạch kẻ đường (dừng quá vạch)',
+    'LANE': 'Đi không đúng phần đường, làn đường',
+    'WRONG-WAY': 'Đi ngược chiều đường một chiều',
+    'SPEED': 'Chạy quá tốc độ quy định',
+    'PARK': 'Dừng, đỗ xe trái quy định',
+    'NO-HELMET': 'Không đội mũ bảo hiểm khi điều khiển xe máy',
+    'NO-PRIORITY': 'Không nhường đường cho xe ưu tiên',
+    'OVERLOAD': 'Chở quá số người quy định',
+    'WRONG-TURN': 'Rẽ, quay đầu nơi có biển cấm',
+    'PHONE': 'Sử dụng điện thoại khi đang lái xe',
+    'NO-SEATBELT': 'Không thắt dây đai an toàn khi lái xe',
+}
+VIOLATION_LABEL_FALLBACK = 'Vi phạm giao thông khác'
+
+
+def violation_label_of(code) -> str:
+    """Nhãn tiếng Việt của mã lỗi; mã không có trong bảng → nhãn chung."""
+    return VIOLATION_LABELS.get(str(code or ''), VIOLATION_LABEL_FALLBACK)
+
+
 # Mẫu biển (đặc tả §4.3): ô tô `51K-123.45`/`51K1-123.45`, xe máy `59-X1 234.56`.
 PLATE_PATTERN = r'^(?:[0-9]{2}[A-Z][0-9]?-[0-9]{3}\.[0-9]{2}|[0-9]{2}-[A-Z][0-9] [0-9]{3}\.[0-9]{2})$'
 USERNAME_PATTERN = r'^[A-Za-z0-9_.\-]{3,32}$'

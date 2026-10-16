@@ -79,13 +79,14 @@ test('luật tất định: cùng (xe, thế hệ, seed) → cùng mã; tỉ l�
     assert.ok(c1 === null || ALL_CODES_32.includes(c1));
     assert.ok(m === null || ['SPEED', 'PARK', 'WRONG-TURN', 'NO-HELMET', 'OVERLOAD', 'PHONE'].includes(m));
   }
-  assert.ok(Math.abs(counts.motorbike['NO-HELMET'] / N - 0.04) < 0.008, JSON.stringify(counts.motorbike));
+  assert.ok(Math.abs(counts.motorbike['NO-HELMET'] / N - 0.02) < 0.005, JSON.stringify(counts.motorbike));
   assert.ok(Math.abs(counts.car['SPEED'] / N - 0.03) < 0.006, JSON.stringify(counts.car));
+  assert.ok(Math.abs(counts.car['LANE'] / N - 0.3) < 0.02, 'LANE là lỗi xe con nhiều nhất trong bảng');
   assert.equal(counts.car['NO-HELMET'], undefined, 'ô tô không có lỗi mũ bảo hiểm');
   assert.equal(counts.motorbike['NO-SEATBELT'], undefined, 'xe máy không có lỗi dây an toàn');
   // Vượt đỏ theo chu kỳ: tỉ lệ ≈ RED_RATE_32
   let red = 0; for (let slot = 1; slot <= N; slot++) if (redViolatorOf32(slot, 7, SEED)) red++;
-  assert.ok(Math.abs(red / N - RED_RATE_32) < 0.006, `red=${red}`);
+  assert.ok(Math.abs(red / N - RED_RATE_32) < 0.01, `red=${red}`);
 });
 
 test('phạt theo bảng NĐ 168/2024: số tiền, điểm và cờ verified', () => {
@@ -98,6 +99,9 @@ test('phạt theo bảng NĐ 168/2024: số tiền, điểm và cờ verified', 
   assert.equal(penaltyOf32('SPEED', 'car', 7).vnd_min, 8e5, 'vượt 5–10 km/h');
   assert.equal(penaltyOf32('NO-HELMET', 'motorbike').vnd_max, 6e5);
   assert.equal(penaltyOf32('OVERLOAD', 'car').verified, false);
+  assert.equal(penaltyOf32('WRONG-WAY', 'motorbike').vnd_min, 4e6, 'xe máy ngược chiều: 4–6 triệu, 2 điểm');
+  assert.equal(penaltyOf32('WRONG-WAY', 'motorbike').license_deduction_points, 2);
+  assert.equal(penaltyOf32('WRONG-WAY', 'car').vnd_max, 2e7);
   assert.equal(penaltyOf32('PHONE', 'motorbike').vnd_min, 8e5);
   for (const c of ALL_CODES_32) assert.ok(CODE_LABEL_32[c], `thiếu nhãn ${c}`);
 });
@@ -126,20 +130,24 @@ test('RED-LIGHT: ân hạn chỉ tính từ lúc chuyển ĐỎ (pha vàng khôn
   assert.equal(late.length, 0, 'vượt vạch khi vàng, đỏ sau đó không được ghi');
 });
 
-test('SPEED: vượt giới hạn + 5 km/h liên tục ≥ 2 s mới ghi; xe chậm không ghi', () => {
+test('SPEED: đo tại ĐIỂM ĐO tốc độ (đoạn đo trong FOV): vượt giới hạn + 5 km/h thì ghi; xe chậm hoặc ngoài đoạn đo thì không', () => {
   const slot = slotWith('SPEED', 'car');
-  const run = v => {
+  const run = (v, s) => {
     const w = fakeWorld();
-    const sim = fakeSim({ cars: Array.from({ length: slot }, (_, k) => (k === slot - 1 ? { lane: 0, s: 30, v, kind: 1, code: 'SPEED' } : { lane: 0, s: 0, v: 0, kind: 1 })) });
+    const sim = fakeSim({ cars: Array.from({ length: slot }, (_, k) => (k === slot - 1 ? { lane: 0, s, v, kind: 1, code: 'SPEED' } : { lane: 0, s: 0, v: 0, kind: 1 })) });
     sim.active.fill(0); sim.active[slot - 1] = 1;
-    const per = createPerception32({ net: w.net, sim, controller: w.controller, nodeMap: w.nodeMapT, cameras: [camAt(-20)], codes: ['RED-LIGHT', 'SPEED'] });
+    const zones = { NL: 2, parkS0: Float32Array.from([-1, -1]), parkS1: Float32Array.from([-1, -1]),
+      speedS0: Float32Array.from([20, -1]), speedS1: Float32Array.from([45, -1]), wrongWay: null };
+    const per = createPerception32({ net: w.net, sim, controller: w.controller, nodeMap: w.nodeMapT, cameras: [camAt(0)], codes: ['RED-LIGHT', 'SPEED'], zones });
     return runScans(per, sim, 0, 3).filter(x => x.violation_code === 'SPEED');
   };
-  const fast = run(20);   // 72 km/h > 50 + 5
+  const fast = run(20, 30);   // 72 km/h > 50 + 5, trong đoạn đo [20, 45]
   assert.equal(fast.length, 1);
   assert.equal(fast[0].penalty.verified, true);
+  assert.equal(fast[0].detection.measured_at, 'điểm đo tốc độ');
   assert.ok(fast[0].signal.speed_kmh > fast[0].signal.speed_limit_kmh + 5);
-  assert.equal(run(10).length, 0, '36 km/h không vi phạm');
+  assert.equal(run(10, 30).length, 0, '36 km/h không vi phạm');
+  assert.equal(run(20, 52).length, 0, 'ngoài đoạn đo (sau 45 m) không ghi');
 });
 
 test('LANE: ô tô đi làn 0 của trục ≥ 2 làn bị ghi; cùng xe ở làn 1 thì không', () => {
@@ -162,7 +170,7 @@ test('LANE: ô tô đi làn 0 của trục ≥ 2 làn bị ghi; cùng xe ở là
   assert.equal(runScans(per2, b.sim, 0, 1).filter(x => x.violation_code === 'LANE').length, 0);
 });
 
-test('PARK: đứng yên ≥ 60 s ở vùng cấm dừng gần nút, không có xe đứng trước → ghi; có xe đứng trước (đầu hàng) → không ghi', () => {
+test('PARK: đứng yên ≥ 60 s trong VÙNG CẤM ĐỖ (trong FOV), không có xe đứng ngay trước → ghi đúng 1 lần; đầu hàng → không ghi', () => {
   const slot = slotWith('PARK', 'car');
   const run = withLeader => {
     const w = fakeWorld();
@@ -170,7 +178,9 @@ test('PARK: đứng yên ≥ 60 s ở vùng cấm dừng gần nút, không có 
     if (withLeader) cars.push({ lane: 0, s: 76, v: 0, kind: 1 });
     const sim = fakeSim({ cars });
     sim.active.fill(0); sim.active[slot - 1] = 1; if (withLeader) sim.active[cars.length - 1] = 1;
-    const per = createPerception32({ net: w.net, sim, controller: w.controller, nodeMap: w.nodeMapT, cameras: [camAt(20)], codes: ['RED-LIGHT', 'PARK'] });
+    const zones = { NL: 2, parkS0: Float32Array.from([60, -1]), parkS1: Float32Array.from([75, -1]),
+      speedS0: Float32Array.from([-1, -1]), speedS1: Float32Array.from([-1, -1]), wrongWay: null };
+    const per = createPerception32({ net: w.net, sim, controller: w.controller, nodeMap: w.nodeMapT, cameras: [camAt(20)], codes: ['RED-LIGHT', 'PARK'], zones });
     return runScans(per, sim, 0, 66).filter(x => x.violation_code === 'PARK');
   };
   const got = run(false);

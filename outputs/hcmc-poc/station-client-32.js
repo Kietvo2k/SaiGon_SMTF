@@ -480,7 +480,11 @@ export function startStationLoop32(app, { perception, capture, transport, camera
   const handleViolation = async (rec, tSim) => {
     const cam = cameras.find(c => c.camera_id === rec.camera_id);
     const before = capture.latestFrame(rec.camera_id);
-    const pose = vehiclePose32(app.traffic, rec) || (cam ? { x: cam.x, z: cam.z } : { x: 0, z: 0 });
+    // Tác nhân WRONG-WAY (rec._pose, không gửi lên backend): vẽ và chụp theo tư thế HIỆN TẠI của nó (đã đi tiếp từ lúc phát hiện).
+    // Xe trong mô phỏng tra theo vehicle_id.
+    const ghosts = app.traffic && app.traffic.ghosts;
+    const live = rec._pose && ghosts ? ghosts.activeAt(app.traffic.sim.counters.t).find(g => g.slot === rec._pose.slot) : null;
+    const pose = live || rec._pose || vehiclePose32(app.traffic, rec) || (cam ? { x: cam.x, z: cam.z } : { x: 0, z: 0 });
     const ev = await capture.captureEvidence(rec.camera_id, pose, tSim, before, evidenceMetaOf32(rec, pose));
     const items = [ev && ev.before, ev && ev.after, ev && ev.plate_crop]
       .filter(p => p && p.jpeg)

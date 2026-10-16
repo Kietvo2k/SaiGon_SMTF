@@ -1,10 +1,11 @@
-// Perception M1/M5b-1 — mô phỏng có quy luật (không train model). Thuần JS, chạy được trong Node.
-// RED-LIGHT: máy trạng thái watch → grace → violation (spec §7.2). M5b-1 thêm: LANE, SPEED, PARK, WRONG-TURN (hành vi do
-// sim tác động) và NO-HELMET, OVERLOAD, PHONE, NO-SEATBELT (thuộc tính xe/người). Chỉ bật các mã trong `codes`;
+// Perception M1/M5b-1/M5b-1b — mô phỏng có quy luật (không train model). Thuần JS, chạy được trong Node.
+// RED-LIGHT: máy trạng thái watch → grace → violation (spec §7.2). M5b-1: LANE, SPEED, PARK, WRONG-TURN (hành vi do sim
+// tác động) và NO-HELMET, OVERLOAD, PHONE, NO-SEATBELT (thuộc tính xe/người). M5b-1b: SPEED đo tại điểm đo (zones.speed*),
+// PARK trong vùng cấm đỗ (zones.park*), WRONG-WAY từ tác nhân ngược chiều (ghosts). Chỉ bật các mã trong `codes`;
 // mặc định ['RED-LIGHT'] như trước M5b-1. Mã hành vi chỉ được ghi khi sim có `behavior` (sim.behaviorOn).
 import { hashU32, TRAFFIC_KINDS, SEED, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
-import { violatorOf32, penaltyOf32, CODE_LABEL_32, PARK_STILL_S_32, PARK_MIN_M_32, PARK_MAX_M_32,
-  SPEED_OVER_KMH_32, SPEED_OVER_S_32, LEFT_TURN_RAD_32, BEHAVIOR_CODES_32, TRAIT_CODES_32 } from './violation-rules-32.js?v=32a';
+import { violatorOf32, penaltyOf32, CODE_LABEL_32, PARK_STILL_S_32, SPEED_OVER_KMH_32,
+  LEFT_TURN_RAD_32, BEHAVIOR_CODES_32, TRAIT_CODES_32 } from './violation-rules-32.js?v=32a';
 import { projectToPixel32, EVIDENCE_W, EVIDENCE_H, VEHICLE_Y_32 } from './camera-capture-32.js?v=32a';
 
 // Xe có nằm trong khung hình bằng chứng của camera không (cùng phép chiếu với ảnh chụp): phía trước camera và trong khung.
@@ -18,15 +19,17 @@ export function inFrame32(x, z, cam) {
   return px >= 0.08 * EVIDENCE_W && px <= 0.92 * EVIDENCE_W && py >= 0.08 * EVIDENCE_H && py <= 0.92 * EVIDENCE_H;
 }
 
-export const PERCEPTION_32_VERSION = 'perception-32b';
+export const PERCEPTION_32_VERSION = 'perception-32c';
 export const GRACE_S = 0.8;
 export const VIOLATION_RATE = 0.03;
-
-const SERIES = 'ABCDEFGHKLMNPRSTUVWXYZ';   // bỏ I, J, O, Q theo lệ đặt biển (cần xác minh tập ký tự thực tế)
-const COLORS = ['trắng', 'đen', 'xám', 'bạc', 'đỏ', 'xanh dương', 'xanh lá', 'vàng', 'nâu', 'cam', 'hồng', 'tím'];
-const OWNERS = [];   // điền từ backend/app/seed/owners.json khi chạy trên Node; mặc định 200 tên trong seed.
-// Độ tin cậy nhân theo loại lỗi: thuộc tính khó nhìn (điện thoại, dây an toàn) thấp hơn → thường `needs_review`.
-const CONF_FACTOR = { PHONE: 0.8, 'NO-SEATBELT': 0.8, OVERLOAD: 0.9 };
+// Biển đọc (OCR) phải đúng định dạng đặc tả §4.3 (cùng regex backend PLATE_PATTERN). Không khớp (mất ký tự,…) → needs_review.
+const PLATE_RE_32 = {
+  car: /^[0-9]{2}[A-Z][0-9]?-[0-9]{3}\.[0-9]{2}$/,
+  motorbike: /^[0-9]{2}-[A-Z][0-9] [0-9]{3}\.[0-9]{2}$/
+};
+// Độ tin cậy trần khi biển đọc sai định dạng: dưới ngưỡng 0,85 của trạm/backend → backend ghi `needs_review`.
+export const PLATE_MISREAD_CONF_CAP_32 = 0.84;
+export const plateFormatOk32 = (plate, plateFormat) => !!(PLATE_RE_32[plateFormat] && PLATE_RE_32[plateFormat].test(String(plate || '')));
 
 export function mulberry32(a) {
   return function () {
@@ -37,6 +40,12 @@ export function mulberry32(a) {
   };
 }
 export const hashWord = rnd => Math.floor(rnd() * 4294967296) >>> 0;
+
+const SERIES = 'ABCDEFGHKLMNPRSTUVWXYZ';   // bỏ I, J, O, Q theo lệ đặt biển (cần xác minh tập ký tự thực tế)
+const COLORS = ['trắng', 'đen', 'xám', 'bạc', 'đỏ', 'xanh dương', 'xanh lá', 'vàng', 'nâu', 'cam', 'hồng', 'tím'];
+const OWNERS = [];   // điền từ backend/app/seed/owners.json khi chạy trên Node; mặc định 200 tên trong seed.
+// Độ tin cậy nhân theo loại lỗi: thuộc tính khó nhìn (điện thoại, dây an toàn) thấp hơn → thường `needs_review`.
+const CONF_FACTOR = { PHONE: 0.8, 'NO-SEATBELT': 0.8, OVERLOAD: 0.9 };
 
 export const SCENARIO_PLATES_32 = [
   { slot: 1, gen: 0, plate: '51K-888.88', vehicle_class: 'car' },
@@ -102,7 +111,10 @@ export function ocrNoise32(plateTrue, distanceM, rangeM, tSim, slot, gen) {
 }
 
 // codes: mã được bật (mặc định chỉ RED-LIGHT). restrictedNodes: chỉ số nút có biển cấm rẽ trái (WRONG-TURN).
-export function createPerception32({ net, sim, controller, nodeMap, cameras, seed = SEED, codes = ['RED-LIGHT'], restrictedNodes = [] }) {
+// zones (M5b-1b, tùy chọn): { NL, parkS0, parkS1, speedS0, speedS1 } theo làn (−1 = không có vùng) — xem zones-32.js.
+// ghosts (tùy chọn): { activeAt(t) } — tác nhân WRONG-WAY đang trên tuyến (wrong-way-32.js).
+export function createPerception32({ net, sim, controller, nodeMap, cameras, seed = SEED, codes = ['RED-LIGHT'], restrictedNodes = [],
+  zones = null, ghosts = null }) {
   const { lanes, Rz, arriveGroup, G, E } = net;
   const enabled = new Set(codes);
   const restricted = new Set(restrictedNodes);
@@ -119,7 +131,7 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
   // Máy trạng thái theo (xe, camera): watch → grace → violation/idle.
   const states = new Map();     // key `${i}|${gen}|${camera_id}` → {phase, tRed, inFovS, distanceM, lastT, overS, stillS, emitted}
   const seen = new Set();       // `${vehicle_id}|${node_id}|${cycle_id}` đã sinh (RED-LIGHT)
-  const seenB = new Set();      // `${slot}|${gen}|${node_id}|${code}` đã sinh (hành vi và thuộc tính)
+  const seenB = new Set();      // `${slot}|${gen}|${node_id}|${code}` đã sinh (hành vi, thuộc tính, tác nhân)
   const out = [];
   const detections = new Map();
   // Biển/chủ xe theo (xe, thế hệ): nhớ lại để không băm lại mỗi lần quét (xe trong FOV được quét 2 lần/s).
@@ -160,29 +172,32 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
     const c = net.nextSt[lanes.st[l]]?.find(x => x.st === lanes.st[nextLane]);
     return !!c && c.turn < -LEFT_TURN_RAD_32;
   };
+  // Điểm đo tốc độ / vùng cấm đỗ theo làn (zones, −1 = không có).
+  const inSpeedTrap = (l, s) => !!zones && zones.speedS0 && zones.speedS0[l] >= 0 && s >= zones.speedS0[l] && s <= zones.speedS1[l];
+  const inParkZone = (l, s) => !!zones && zones.parkS0 && zones.parkS0[l] >= 0 && s >= zones.parkS0[l] && s <= zones.parkS1[l];
 
-  // Ghi một bản ghi hành vi/thuộc tính (dùng chung cho mọi mã trừ RED-LIGHT).
-  // Nút ghi trong bản ghi: nút của camera (nơi xe được quan sát) cho lỗi quan sát tại camera; PARK/WRONG-TURN ghi theo nút xe đang tới.
+  // Ghi một bản ghi (dùng chung cho mọi mã trừ RED-LIGHT, vốn có nhánh riêng vì ân hạn và pha đèn).
+  // veh = { slot, gen, kindName, rec0, speedKmh, speedLimit? }; pose (tùy chọn) = tư thế thật của tác nhân ghi bằng chứng.
   const camNodeIdx = new Map();
   for (const m of nodeMap) if (m.node_id && idxByOsm.has(m.osm_id)) camNodeIdx.set(m.node_id, idxByOsm.get(m.osm_id));
-  const pushRecord = ({ code, i, cam, node: node0, l, tSim, distance, st, excessKmh = 0, extra = {} }) => {
+  const pushRecord = ({ code, veh, cam, node: node0, l, tSim, distance, st, excessKmh = 0, extra = {}, pose = null }) => {
     const node = (code === 'PARK' || code === 'WRONG-TURN') ? node0 : (camNodeIdx.get(cam.node_id) ?? node0);
-    const kindName = TRAFFIC_KINDS[sim.kind[i]].name;
-    const rec0 = rec0Of(i);
-    const slot = i + 1, gen = sim.gen[i];
+    const { slot, gen, kindName, rec0 } = veh;
     const ocr = ocrNoise32(rec0.plate, distance, cam.range_m, tSim, slot, gen);
     const cycle_id = cycleOf(node, tSim);
     const key = `${slot}|${gen}|${node}|${code}`;
     if (seenB.has(key)) return;
     seenB.add(key);
     const factor = CONF_FACTOR[code] ?? 1;
-    const confidence = Math.max(0, Math.min(1, factor * (0.5 * ocr.ocr_confidence + 0.3 * (1 - distance / cam.range_m) + 0.2 * (st.inFovS >= 1 ? 1 : 0))));
+    const plateOk = plateFormatOk32(ocr.plate_read, rec0.plate_format);
+    let confidence = Math.max(0, Math.min(1, factor * (0.5 * ocr.ocr_confidence + 0.3 * (1 - distance / cam.range_m) + 0.2 * (st.inFovS >= 1 ? 1 : 0))));
+    if (!plateOk) confidence = Math.min(confidence, PLATE_MISREAD_CONF_CAP_32);
     const stat = controller && controller.stateOf ? controller.stateOf(node, tSim) : null;
     const metaN = metaByNode.get(node);
     out.push({
       violation_code: code,
       violation_label: CODE_LABEL_32[code],
-      status: confidence >= 0.85 && ocr.ocr_confidence >= 0.75 ? 'new' : 'needs_review',
+      status: confidence >= 0.85 && ocr.ocr_confidence >= 0.75 && plateOk ? 'new' : 'needs_review',
       priority_flag: false, priority_reason: null,
       plate: ocr.plate_read, plate_format: rec0.plate_format, vehicle_class: kindName,
       vehicle_color: rec0.color, vehicle_id: `V-${String(slot).padStart(6, '0')}`,
@@ -194,7 +209,7 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
         mode: controller ? controller.getMode() : 'fixed', cluster_id: stat ? stat.cluster_id : null,
         cycle_id, phase_for_vehicle: null, group: arriveGroup[lanes.st[l]],
         elapsed_in_phase_s: null, cycle_s: stat ? stat.cycle_s : null,
-        speed_kmh: +(sim.v[i] * 3.6).toFixed(1), speed_limit_kmh: speedLimitOf(l)
+        speed_kmh: +veh.speedKmh.toFixed(1), speed_limit_kmh: veh.speedLimit ?? speedLimitOf(l)
       },
       confidence: +confidence.toFixed(3), ocr_confidence: +ocr.ocr_confidence.toFixed(3),
       detection: { in_fov_s: +st.inFovS.toFixed(1), distance_m: +distance.toFixed(1), grace_s: null, crossed_stop_line_at_s: null, observed_at_s: +tSim.toFixed(1),
@@ -202,7 +217,8 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
       evidence: [],
       penalty: penaltyOf32(code, kindName, excessKmh),
       sim: { t_sim: +tSim.toFixed(1), seed, scenario: 'peak-hang-xanh', station_id: 'STATION-3D-01', station_time: new Date().toISOString() },
-      review: { by: null, at: null, note: null }, complaint_ids: []
+      review: { by: null, at: null, note: null }, complaint_ids: [],
+      _pose: pose   // không gửi lên backend (không thuộc VIOLATION_FIELDS_32): tư thế dùng cho bằng chứng tác nhân
     });
   };
 
@@ -215,6 +231,52 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
     return phaseMemo.get(key);
   };
 
+  // Bản ghi RED-LIGHT (dùng cho cả đường quan sát thường và đường nội suy khi quét thưa).
+  const emitRed = ({ i, slot, gen, kindName, cam, node: node0, l, group, tc, tr, distance, st, interpolated }) => {
+    const node = node0;   // nút mà làn đi tới (vạch dừng), như trước M5b-1b
+    const meta = metaByNode.get(node);
+    const cycle_id = controller.cycleIdOf(node, tc);
+    const dedupe = `${slot}|${meta?.node_id ?? node}|${cycle_id}`;
+    if (seen.has(dedupe)) return;
+    seen.add(dedupe);
+    const ocr = ocrNoise32(rec0Of(i).plate, distance, cam.range_m, tc, slot, gen);
+    const rec0 = rec0Of(i);
+    const plateOk = plateFormatOk32(ocr.plate_read, rec0.plate_format);
+    let confidence = Math.max(0, Math.min(1, 0.5 * ocr.ocr_confidence + 0.3 * (1 - distance / cam.range_m) + 0.2 * (st.inFovS >= 1 ? 1 : 0)));
+    if (!plateOk) confidence = Math.min(confidence, PLATE_MISREAD_CONF_CAP_32);
+    const stNow = controller.stateOf(node, tc);
+    const carLike = kindName !== 'motorbike';
+    out.push({
+      violation_code: 'RED-LIGHT',
+      violation_label: CODE_LABEL_32['RED-LIGHT'],
+      status: confidence >= 0.85 && ocr.ocr_confidence >= 0.75 && plateOk ? 'new' : 'needs_review',
+      priority_flag: false, priority_reason: null,
+      plate: ocr.plate_read, plate_format: rec0.plate_format, vehicle_class: kindName,
+      vehicle_color: rec0.color, vehicle_id: `V-${String(slot).padStart(6, '0')}`,
+      owner_name: rec0.owner_name, owner_phone: rec0.owner_phone, is_scenario_plate: rec0.is_scenario,
+      occurred_at: null, node_id: meta?.node_id ?? String(G.nodes[node].id),
+      node_osm_id: G.nodes[node].id, node_label: meta?.label ?? '',
+      camera_id: cam.camera_id, road_index: lanes.edge[l], lane_index: l,
+      signal: {
+        mode: controller.getMode(), cluster_id: stNow.cluster_id,
+        cycle_id, phase_for_vehicle: 'red', group,
+        elapsed_in_phase_s: +(tc - tr).toFixed(1), cycle_s: stNow.cycle_s,
+        speed_kmh: +(sim.v[i] * 3.6).toFixed(1), speed_limit_kmh: speedLimitOf(l)
+      },
+      confidence: +confidence.toFixed(3), ocr_confidence: +ocr.ocr_confidence.toFixed(3),
+      detection: { in_fov_s: +st.inFovS.toFixed(1), distance_m: +distance.toFixed(1), grace_s: GRACE_S, crossed_stop_line_at_s: +tc.toFixed(1),
+        ...(interpolated ? { crossing: 'nội suy giữa hai lần quét' } : {}) },
+      evidence: [],
+      penalty: carLike
+        ? { vnd_min: 18000000, vnd_max: 20000000, license_deduction_points: 4, source: 'NĐ 168/2024 · Điều 6 · khoản 9 · điểm b', verified: true }
+        : { vnd_min: 4000000, vnd_max: 6000000, license_deduction_points: 4, source: 'NĐ 168/2024 · Điều 7 · khoản 7 · điểm c', verified: true },
+      sim: { t_sim: +tc.toFixed(1), seed, scenario: 'peak-hang-xanh', station_id: 'STATION-3D-01', station_time: new Date().toISOString() },
+      review: { by: null, at: null, note: null }, complaint_ids: [],
+      _pose: null
+    });
+  };
+
+  const lastGhostScan = new Map();   // camera_id → thời điểm sim của lần quét trước (tác nhân WRONG-WAY)
   const scan = tSim => {
     for (const cam of cameras) {
       const frameDetections = [];
@@ -232,65 +294,48 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
         const key = `${i}|${sim.gen[i]}|${cam.camera_id}`;
         let st = states.get(key);
         if (!st) { st = { phase: 'idle', tRed: 0, inFovS: 0, distanceM: distance, lastT: tSim, overS: 0, stillS: 0, emitted: new Set() }; states.set(key, st); }
-        const dt = Math.min(1, Math.max(0, tSim - st.lastT)); st.lastT = tSim;
-        if (inFov) st.inFovS += 0.5; else { st.phase = 'idle'; st.overS = 0; st.stillS = 0; continue; }
+        // Quét có thể thưa (app ×10 quét mỗi ~5 s sim): dt là thời gian thật giữa hai lần quét (kẹp 10 s); nhớ lần quét trước.
+        const prevT = st.lastT, prevS = st.lastS, prevL = st.lastL, prevInFov = st.lastInFov;
+        const dt = Math.min(10, Math.max(0, tSim - st.lastT)); st.lastT = tSim;
+        st.lastS = sim.s[i]; st.lastL = l;
+        if (inFov) st.inFovS += Math.max(0.5, dt); else { st.phase = 'idle'; st.overS = 0; st.stillS = 0; st.lastInFov = false; continue; }
+        st.lastInFov = true;
         const kindName = TRAFFIC_KINDS[sim.kind[i]].name;
         const slot = i + 1, gen = sim.gen[i];
-        // ---- RED-LIGHT (luật cũ, không đổi).
+        const veh = () => ({ slot, gen, kindName, rec0: rec0Of(i), speedKmh: sim.v[i] * 3.6 });
+        // ---- RED-LIGHT (spec §7.2): ân hạn tính từ lúc nhóm CHUYỂN ĐỎ; ghi khi vượt vạch lúc đèn đỏ, sau ân hạn.
         if (enabled.has('RED-LIGHT')) {
           const group = arriveGroup[lanes.st[l]];
           const green = controller.isGreen(node, lanes.st[l], tSim);
           const crossed = sim.s[i] > stopPos;
           // Ân hạn tính từ lúc nhóm xe CHUYỂN ĐỎ (spec §7.2), không tính pha vàng: xe đã vào nút khi xanh thì đi tiếp.
           const isRed = phaseOfGroup(node, group, tSim) === 'red';
+          let redDone = false;
           if (isRed && !crossed) {
             if (st.phase === 'idle') { st.phase = 'grace'; st.tRed = tSim; }
           } else if (green) st.phase = 'idle';
-          // Spec §7.2: đèn đỏ ∧ xe vượt vạch sau t_red + grace. Chốt tại lần quét xe vượt vạch: nhóm xe còn đỏ (không ghi khi pha vàng).
-          if (st.phase === 'grace' && crossed && !isRed) st.phase = 'idle';   // vượt vạch lúc không đỏ: bỏ theo dõi, không ghi lại sau này
+          // Chốt tại lần quét xe vượt vạch: nhóm xe còn đỏ (không ghi khi pha vàng).
+          if (st.phase === 'grace' && crossed && !isRed) { st.phase = 'idle'; redDone = true; }
           if (st.phase === 'grace' && crossed && isRed && tSim - st.tRed > GRACE_S) {
-            st.phase = 'idle';
-            const meta = metaByNode.get(node);
-            const ocr = ocrNoise32(rec0Of(i).plate, distance, cam.range_m, tSim, slot, gen);
-            const cycle_id = controller.cycleIdOf(node, tSim);
-            const dedupe = `${slot}|${meta?.node_id ?? node}|${cycle_id}`;
-            if (!seen.has(dedupe)) {
-              seen.add(dedupe);
-              const confidence = Math.max(0, Math.min(1,
-                0.5 * ocr.ocr_confidence + 0.3 * (1 - distance / cam.range_m) + 0.2 * (st.inFovS >= 1 ? 1 : 0)));
-              const rec0 = rec0Of(i);
-              const phaseFor = controller.stateOf(node, tSim).phases.find(p => p.group === group);
-              const carLike = kindName !== 'motorbike';
-              out.push({
-                violation_code: 'RED-LIGHT',
-                violation_label: CODE_LABEL_32['RED-LIGHT'],
-                status: confidence >= 0.85 && ocr.ocr_confidence >= 0.75 ? 'new' : 'needs_review',
-                priority_flag: false, priority_reason: null,
-                plate: ocr.plate_read, plate_format: rec0.plate_format, vehicle_class: kindName,
-                vehicle_color: rec0.color, vehicle_id: `V-${String(slot).padStart(6, '0')}`,
-                owner_name: rec0.owner_name, owner_phone: rec0.owner_phone, is_scenario_plate: rec0.is_scenario,
-                occurred_at: null, node_id: meta?.node_id ?? String(G.nodes[node].id),
-                node_osm_id: G.nodes[node].id, node_label: meta?.label ?? '',
-                camera_id: cam.camera_id, road_index: lanes.edge[l], lane_index: l,
-                signal: {
-                  mode: controller.getMode(), cluster_id: controller.stateOf(node, tSim).cluster_id,
-                  cycle_id, phase_for_vehicle: phaseFor ? phaseFor.phase : 'red', group,
-                  elapsed_in_phase_s: +(tSim - st.tRed).toFixed(1), cycle_s: controller.stateOf(node, tSim).cycle_s,
-                  speed_kmh: +(sim.v[i] * 3.6).toFixed(1), speed_limit_kmh: speedLimitOf(l)
-                },
-                confidence: +confidence.toFixed(3), ocr_confidence: +ocr.ocr_confidence.toFixed(3),
-                detection: { in_fov_s: +st.inFovS.toFixed(1), distance_m: +distance.toFixed(1), grace_s: GRACE_S, crossed_stop_line_at_s: +tSim.toFixed(1) },
-                evidence: [],
-                penalty: carLike
-                  ? { vnd_min: 18000000, vnd_max: 20000000, license_deduction_points: 4, source: 'NĐ 168/2024 · Điều 6 · khoản 9 · điểm b', verified: true }
-                  : { vnd_min: 4000000, vnd_max: 6000000, license_deduction_points: 4, source: 'NĐ 168/2024 · Điều 7 · khoản 7 · điểm c', verified: true },
-                sim: { t_sim: +tSim.toFixed(1), seed, scenario: 'peak-hang-xanh', station_id: 'STATION-3D-01', station_time: new Date().toISOString() },
-                review: { by: null, at: null, note: null }, complaint_ids: []
-              });
+            st.phase = 'idle'; redDone = true; st.emitted.add('RED-LIGHT');
+            emitRed({ i, slot, gen, kindName, cam, node, l, group, tc: tSim, tr: st.tRed, distance, st, interpolated: false });
+          }
+          // M5b-1b: quét thưa (app ×10 quét mỗi ~5 s sim) thường không thấy xe hai lần quanh vạch. Khi xe đã qua vạch
+          // mà chưa ghi: nội suy thời điểm vượt (giữa hai lần quét nếu thấy cả hai, không thì từ vị trí và tốc độ lúc quét),
+          // rồi tra khoảng đỏ của nhóm tại thời điểm đó. Mỗi xe tối đa một lần cho RED-LIGHT trong một camera.
+          if (!redDone && crossed && !st.emitted.has('RED-LIGHT')) {
+            let tc;
+            if (prevInFov && prevL === l && prevS !== undefined && prevS <= stopPos) {
+              const v = Math.max(0.1, (sim.s[i] - prevS) / Math.max(1e-6, tSim - prevT));
+              tc = prevT + (stopPos - prevS) / v;
+            } else {
+              tc = tSim - (sim.s[i] - stopPos) / Math.max(1, sim.v[i]);
             }
+            const iv = sim.redIntervalAt ? sim.redIntervalAt(node, group, tc) : null;
+            if (iv && tc - iv.on > GRACE_S) { st.emitted.add('RED-LIGHT'); emitRed({ i, slot, gen, kindName, cam, node, l, group, tc, tr: iv.on, distance, st, interpolated: true }); }
           }
         }
-        // ---- M5b-1: lỗi hành vi (sim tác động) và thuộc tính xe/người (theo seed).
+        // ---- M5b-1/1b: lỗi hành vi (sim tác động) và thuộc tính xe/người (theo seed).
         const code = violatorOf32(slot, gen, kindName, seed);
         if (code && !st.emitted.has(code)) {
           const isBehavior = BEHAVIOR_CODES_32.includes(code);
@@ -301,34 +346,66 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
               // Ô tô đi làn 0 của trục ≥ 2 làn (làn xe máy).
               if (kindName === 'car' && lanes.n[l] >= 2 && lanes.k[l] === 0) {
                 st.emitted.add(code);
-                pushRecord({ code, i, cam, node, l, tSim, distance, st, extra: { lane_k: lanes.k[l], lanes_in_state: lanes.n[l] } });
+                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, extra: { lane_k: lanes.k[l], lanes_in_state: lanes.n[l] } });
               }
             } else if (code === 'SPEED') {
-              st.overS = speedKmh > limit + SPEED_OVER_KMH_32 ? st.overS + dt : 0;
-              if (st.overS >= SPEED_OVER_S_32) {
+              // M5b-1b: đo tại ĐIỂM ĐO TỐC ĐỘ (zones.speed*): xe trên đoạn đo mà vượt giới hạn đoạn + 5 km/h thì ghi.
+              const passedTrap = prevInFov !== undefined && prevL === l && prevS !== undefined && !!zones && zones.speedS0 && zones.speedS0[l] >= 0
+                && prevS < zones.speedS1[l] && sim.s[i] > zones.speedS0[l];
+              if ((inSpeedTrap(l, sim.s[i]) || passedTrap) && speedKmh > limit + SPEED_OVER_KMH_32) {
                 st.emitted.add(code);
-                pushRecord({ code, i, cam, node, l, tSim, distance, st, excessKmh: +(speedKmh - limit).toFixed(1), extra: { speed_limit_kmh: limit, over_s: +st.overS.toFixed(1) } });
+                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, excessKmh: +(speedKmh - limit).toFixed(1),
+                  extra: { speed_limit_kmh: limit, measured_at: 'điểm đo tốc độ' } });
               }
             } else if (code === 'PARK') {
+              // M5b-1b: vùng cấm đỗ trong FOV camera (zones.park*): đứng yên ≥ 60 s trong vùng, không có xe đứng ngay trước.
               st.stillS = sim.v[i] < 0.15 ? st.stillS + dt : 0;
-              const toStop = lanes.length[l] - Rz[node] - sim.s[i];
-              if (st.stillS >= PARK_STILL_S_32 && toStop >= PARK_MIN_M_32 && toStop <= PARK_MAX_M_32 && !hasStoppedLeader(i, l)) {
+              if (st.stillS >= PARK_STILL_S_32 && inParkZone(l, sim.s[i]) && !hasStoppedLeader(i, l)) {
                 st.emitted.add(code);
-                pushRecord({ code, i, cam, node, l, tSim, distance, st, extra: { still_s: +st.stillS.toFixed(1), stop_line_m: +toStop.toFixed(1) } });
+                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, extra: { still_s: +st.stillS.toFixed(1), zone: 'vùng cấm đỗ' } });
               }
             } else if (code === 'WRONG-TURN') {
               const laneLen = lanes.length[l];
               if (restricted.has(node) && laneLen - sim.s[i] <= 30 && leftTurnAt(l, sim.next[i])) {
                 st.emitted.add(code);
-                pushRecord({ code, i, cam, node, l, tSim, distance, st, extra: { maneuver: 'rẽ trái' } });
+                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, extra: { maneuver: 'rẽ trái' } });
               }
             } else if (TRAIT_CODES_32.includes(code) && enabled.has(code)) {
               st.emitted.add(code);
-              pushRecord({ code, i, cam, node, l, tSim, distance, st });
+              pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st });
             }
           }
         }
         frameDetections.push({ vehicle_id: `V-${String(slot).padStart(6, '0')}`, kind: rec0Of(i).vehicle_class, color: rec0Of(i).color, distance_m: +distance.toFixed(1), in_fov_s: +st.inFovS.toFixed(1) });
+      }
+      // ---- M5b-1b: tác nhân WRONG-WAY (xe máy ngược chiều đường một chiều, ngoài mô hình làn). Quét thưa (×10): xét mọi
+      // mốc 0,5 s từ lần quét trước tới nay, nên tác nhân đi qua khung giữa hai lần quét vẫn được ghi (đúng một lần).
+      if (ghosts && enabled.has('WRONG-WAY')) {
+        const from = lastGhostScan.has(cam.camera_id) ? lastGhostScan.get(cam.camera_id) : tSim;
+        lastGhostScan.set(cam.camera_id, tSim);
+        const times = [];
+        for (let t = from; t < tSim - 1e-9; t += 0.5) times.push(t);
+        times.push(tSim);
+        const hit = new Map();   // slot → {g, distance, t} tại lần đầu tác nhân nằm trong khung
+        for (const t of times) {
+          for (const g of ghosts.activeAt(t)) {
+            if (g.camera_id !== cam.camera_id || hit.has(g.slot)) continue;
+            const distance = Math.hypot(cam.x - g.x, cam.z - g.z);
+            if (distance <= cam.range_m && inFrame32(g.x, g.z, cam)) hit.set(g.slot, { g, distance, t });
+          }
+        }
+        for (const [slot, h] of hit) {
+          const key = `G${slot}|${cam.camera_id}`;
+          let st = states.get(key);
+          if (!st) { st = { phase: 'idle', tRed: 0, inFovS: 0, distanceM: h.distance, lastT: tSim, overS: 0, stillS: 0, emitted: new Set() }; states.set(key, st); }
+          if (st.emitted.has('WRONG-WAY')) continue;
+          st.emitted.add('WRONG-WAY');
+          st.inFovS += Math.max(0.5, tSim - h.t);
+          const g = h.g, rec0 = plateFor32(g.slot, g.gen, 'motorbike');
+          pushRecord({ code: 'WRONG-WAY', veh: { slot: g.slot, gen: g.gen, kindName: 'motorbike', rec0, speedKmh: g.v * 3.6 },
+            cam, node: camNodeIdx.get(cam.node_id) ?? lanes.to[g.lane], l: g.lane, tSim, distance: h.distance, st, pose: g,
+            extra: { maneuver: 'đi ngược chiều', heading_deg: +(Math.atan2(g.hz, g.hx) * 180 / Math.PI).toFixed(1) } });
+        }
       }
       detections.set(cam.camera_id, frameDetections);
     }

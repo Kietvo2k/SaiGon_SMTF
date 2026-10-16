@@ -60,6 +60,25 @@ export function projectToPixel32(x, z, cam, w, h) {
   return { px: p.px, py: p.py, distance_m };
 }
 
+// M5b-1b — cận cảnh đầu người lái (bằng chứng NO-HELMET): đầu nằm 0,26 m phía sau tâm xe (local x = −0,26, xem city-traffic-31.js),
+// cao 1,44 m trên mặt đường. Camera cận cảnh đặt cách đầu CLOSE_DIST_32 m, hướng về phía camera chụp, nhìn vào đầu.
+// Cạnh ảnh đọc pixel phải chia hết 64 (WebGPU: hàng 256 byte): 384 px; 360 px làm lệch hàng (vằn ngang).
+export const CLOSE_PX_32 = 384, CLOSE_FOV_32 = 32, CLOSE_DIST_32 = 3.2, HEAD_BACK_M_32 = -0.26, HEAD_H_M_32 = 1.44, BODY_H_M_32 = 0.9;
+export function headWorldOf32(vehicle) {
+  const hx = vehicle.hx ?? 0, hz = vehicle.hz ?? 1, L = Math.hypot(hx, hz) || 1;
+  return { x: vehicle.x + (hx / L) * HEAD_BACK_M_32, y: GROUND_Y_32 + HEAD_H_M_32, z: vehicle.z + (hz / L) * HEAD_BACK_M_32 };
+}
+// Tâm thân xe (cho bằng chứng WRONG-WAY): giữa xe, cao 0,9 m trên mặt đường.
+export function bodyWorldOf32(vehicle) {
+  return { x: vehicle.x, y: GROUND_Y_32 + BODY_H_M_32, z: vehicle.z };
+}
+export function closeCamPoseOf32(head, cam) {
+  let dx = cam.x - head.x, dz = cam.z - head.z;
+  const L = Math.hypot(dx, dz) || 1; dx /= L; dz /= L;
+  const pos = [head.x + dx * CLOSE_DIST_32, head.y + 0.5, head.z + dz * CLOSE_DIST_32];
+  return { pos, target: [head.x, head.y, head.z] };
+}
+
 // Hàng đầu của buffer đọc từ render target: WebGPU trả hàng TRÊN-XUỐNG (không lật);
 // WebGL readPixels trả hàng DƯỚI-LÊN (phải lật để trời ở trên). Chọn theo backend THỰC TẾ của renderer:
 // WebGPURenderer vẫn có readRenderTargetPixelsAsync khi chạy backend WebGL2, nên không suy từ hàm.
@@ -122,7 +141,7 @@ function chip32(g, text, x, y, { bg = 'rgba(12,16,22,0.82)', fg = '#ffffff', siz
   return { w: tw + padX * 2, h: hh };
 }
 // Ảnh toàn cảnh có chú thích: khung xe + nhãn lỗi trên khung, góc trên (lỗi, camera), góc dưới (giờ, đèn, tốc độ).
-function annotateFrame32(srcCanvas, w, h, meta, box) {
+function annotateFrame32(srcCanvas, w, h, meta, box, inset = null) {
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const g = c.getContext('2d');
   g.drawImage(srcCanvas, 0, 0, w, h);
@@ -138,6 +157,13 @@ function annotateFrame32(srcCanvas, w, h, meta, box) {
     if (meta.code === 'OVERLOAD') chip32(g, 'CHỞ ' + (meta.persons || 3) + ' NGƯỜI', box.x + box.w + 8, box.y + 4, { bg: RED_32 });
     if (meta.code === 'PHONE') chip32(g, 'DÙNG ĐIỆN THOẠI', box.x + box.w + 8, box.y + 4, { bg: RED_32 });
     if (meta.code === 'NO-SEATBELT') chip32(g, 'KHÔNG THẮT DÂY', box.x + box.w + 8, box.y + 4, { bg: RED_32 });
+    if (meta.code === 'WRONG-WAY') chip32(g, 'NGƯỢC CHIỀU', box.x + box.w + 8, box.y + 4, { bg: RED_32 });
+  }
+  if (inset) {   // cận cảnh đầu người lái (không mũ), góc phải phía trên, dưới nhãn camera
+    const S = Math.round(Math.min(w, h) * 0.42), ix = w - S - 16, iy = 100;
+    g.drawImage(inset, ix, iy, S, S);
+    g.lineWidth = 4; g.strokeStyle = RED_32; g.strokeRect(ix, iy, S, S);
+    chip32(g, inset.label || 'CẬN CẢNH', ix, iy - 36, { bg: RED_32 });
   }
   if (meta.label) chip32(g, meta.label, 16, 16, { bg: 'rgba(160,20,28,0.9)', size: 22 });
   if (meta.cameraText) chip32(g, meta.cameraText, w - 16, 16, { align: 'right', size: 20 });
@@ -213,6 +239,40 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras, beforeR
     return { all, saved };
   };
   const restoreAfterCapture = ({ all, saved }) => all.forEach((o, i) => { o.visible = saved[i]; });
+  // Đọc pixel của render target thành canvas (cùng quy ước lật hàng với renderTo).
+  const readCanvas = (target, w, h) => {
+    const flip = readbackFlip32(renderer);
+    const read = renderer.readRenderTargetPixelsAsync
+      ? renderer.readRenderTargetPixelsAsync(target, 0, 0, w, h, 0, 0)
+      : Promise.resolve().then(() => { const px = new Uint8Array(w * h * 4); renderer.readRenderTargetPixels(target, 0, 0, w, h, px); return px; });
+    return read.then(buf => {
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d'); const img = ctx.createImageData(w, h);
+      for (let y = 0; y < h; y++) { const s = (flip ? (h - 1 - y) : y) * w * 4; img.data.set(buf.subarray(s, s + w * 4), y * w * 4); }
+      ctx.putImageData(img, 0, 0);
+      return canvas;
+    });
+  };
+  let closeRig = null;   // camera cận cảnh dùng chung (dựng lần đầu khi cần)
+  const renderCloseUp = (rig, vehicle, focus) => {
+    if (!closeRig) {
+      closeRig = { camera: new THREE.PerspectiveCamera(CLOSE_FOV_32, 1, 0.2, 200),
+        target: new THREE.WebGLRenderTarget(CLOSE_PX_32, CLOSE_PX_32, THREE.SRGBColorSpace ? { colorSpace: THREE.SRGBColorSpace } : {}) };
+    }
+    const head = focus === 'body' ? bodyWorldOf32(vehicle) : headWorldOf32(vehicle), pose = closeCamPoseOf32(head, rig.cam), cam = closeRig.camera;
+    cam.position.set(pose.pos[0], pose.pos[1], pose.pos[2]);
+    cam.lookAt(pose.target[0], pose.target[1], pose.target[2]);
+    cam.updateMatrixWorld();
+    if (cam.layers) { cam.layers.set(0); cam.layers.mask |= 1; }
+    if (beforeRender) beforeRender(cam);
+    const hidden = hideForCapture(rig);
+    renderer.setRenderTarget(closeRig.target);
+    renderer.render(scene, cam);
+    renderer.setRenderTarget(null);
+    restoreAfterCapture(hidden);
+    const label = focus === 'body' ? 'CẬN CẢNH · NGƯỢC CHIỀU' : 'CẬN CẢNH · ĐẦU KHÔNG MŨ';
+    return readCanvas(closeRig.target, CLOSE_PX_32, CLOSE_PX_32).then(c => { c.label = label; return c; });
+  };
   const renderTo = rig => {
     if (beforeRender) beforeRender(rig.camera);
     const hidden = hideForCapture(rig);
@@ -268,10 +328,13 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras, beforeR
         const { px, py } = projectToPixel32(vehicle.x, vehicle.z, rig.cam, after.w, after.h);
         const sx = Math.max(0, Math.min(after.w - PLATE_CROP_W, Math.round(px) - PLATE_CROP_W / 2));
         const sy = Math.max(0, Math.min(after.h - PLATE_CROP_H, Math.round(py) - PLATE_CROP_H / 2));
+        const closeFocus = meta && meta.code === 'NO-HELMET' ? 'head' : meta && meta.code === 'WRONG-WAY' ? 'body' : null;
+        const closeP = closeFocus ? renderCloseUp(rig, vehicle, closeFocus).catch(() => null) : Promise.resolve(null);
+        return closeP.then(inset => {
         let afterJpeg = after.jpeg, plateJpeg;
         if (meta) {
           const box = vehicleBoxPx32(vehicle, rig.cam, after.w, after.h);
-          afterJpeg = annotateFrame32(after.canvas, after.w, after.h, meta, box).toDataURL('image/jpeg', 0.85);
+          afterJpeg = annotateFrame32(after.canvas, after.w, after.h, meta, box, inset).toDataURL('image/jpeg', 0.85);
           plateJpeg = plateCrop32(after.canvas, sx, sy, meta).toDataURL('image/jpeg', 0.9);
         } else {
           const crop = document.createElement('canvas');
@@ -287,6 +350,7 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras, beforeR
           px: Math.round(px),
           t_sim: +Number(tSim).toFixed(1)
         };
+        });
       });
     },
     // Đèn sẽ hiện trong khung chụp của camera (không render): [{ node_id, group, lit: [tên đèn sáng] }] hoặc [].
@@ -308,6 +372,7 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras, beforeR
       else if (!on && rig.timer) { clearInterval(rig.timer); rig.timer = null; }
     },
     dispose() {
+      if (closeRig && closeRig.target) closeRig.target.dispose();
       for (const rig of rigs.values()) {
         if (rig.timer) clearInterval(rig.timer);
         rig.timer = null;

@@ -2,16 +2,16 @@
 // (violation-perception-32.js) dùng chung các hàm ở đây nên hai bên luôn khớp: cùng (seed, xe, thế hệ) → cùng mã lỗi.
 //   - Lỗi HÀNH VI (sim tác động): LANE, SPEED, PARK, WRONG-TURN. Sim chỉ tác động khi được truyền `behavior`.
 //   - Lỗi TRẠNG THÁI (thuộc tính xe/người, không đổi chuyển động): NO-HELMET, OVERLOAD, PHONE, NO-SEATBELT.
+//   - Lỗi TÁC NHÂN (M5b-1b): WRONG-WAY — xe máy riêng chạy ngược chiều đường một chiều theo hình học cạnh
+//     (wrong-way-32.js), không thuộc mô hình làn; perception ghi khi nó nằm trong khung camera.
 //   - RED-LIGHT: xe "chủ động vượt" theo chu kỳ đèn (spec §7.2), sim cho đi tiếp khi đèn vừa đỏ (0–3 s).
-// Tỉ lệ là đề xuất trong seed; "hiếm" nghĩa là tổng các lỗi của một xe ≈ 10 % (ô tô) / 12 % (xe máy).
-export const VIOLATION_RULES_32_VERSION = 'violation-rules-32a';
+// Tỉ lệ (M5b-1b): đo trên 8 phút sim cao điểm ×10 để RED-LIGHT và LANE nổi bật; NO-HELMET/OVERLOAD/PHONE ít hơn.
+export const VIOLATION_RULES_32_VERSION = 'violation-rules-32b';
 
-export const RED_RATE_32 = 0.03;            // xác suất chủ động vượt đỏ trong một chu kỳ (spec §7.2)
+export const RED_RATE_32 = 0.8;             // xác suất chủ động vượt đỏ trong một chu kỳ (spec §7.2)
 export const RED_WINDOW_S_32 = 3;           // s: chỉ vượt trong 0–3 s đầu của đỏ
 export const SPEED_MUL_32 = 1.5;            // hệ số tốc độ mong muốn của xe chạy quá tốc độ
-export const SPEED_OVER_KMH_32 = 5;         // ngưỡng vượt (km/h) so với giới hạn đoạn
-export const SPEED_OVER_S_32 = 2;           // s liên tục trên ngưỡng mới ghi lỗi
-export const PARK_MIN_M_32 = 14, PARK_MAX_M_32 = 30;   // m: khoảng cách tới VẠCH DỪNG của nút (vùng cấm dừng gần nút)
+export const SPEED_OVER_KMH_32 = 5;         // ngưỡng vượt (km/h) so với giới hạn đoạn (điểm đo tốc độ ghi khi vượt)
 export const PARK_S_32 = 70;                // s xe đỗ sai trong sim (> 60 s để perception ghi)
 export const PARK_STILL_S_32 = 60;          // s đứng yên tối thiểu để ghi PARK
 export const LEFT_TURN_RAD_32 = 0.6;        // rad: góc rẽ tối thiểu để tính là rẽ trái (sim: turn < 0 = trái)
@@ -22,12 +22,14 @@ export const RESTRICTED_NODE_IDS_32 = Object.freeze(['HX-04']);
 
 export const BEHAVIOR_CODES_32 = Object.freeze(['LANE', 'SPEED', 'PARK', 'WRONG-TURN']);
 export const TRAIT_CODES_32 = Object.freeze(['NO-HELMET', 'OVERLOAD', 'PHONE', 'NO-SEATBELT']);
-export const ALL_CODES_32 = Object.freeze(['RED-LIGHT', ...BEHAVIOR_CODES_32, ...TRAIT_CODES_32]);
+export const AGENT_CODES_32 = Object.freeze(['WRONG-WAY']);
+export const ALL_CODES_32 = Object.freeze(['RED-LIGHT', ...AGENT_CODES_32, ...BEHAVIOR_CODES_32, ...TRAIT_CODES_32]);
 // Chỉ số mã hành vi trong mảng sim (0 = không vi phạm).
 export const BEHAVIOR_IDX_32 = Object.freeze({ LANE: 1, SPEED: 2, PARK: 3, 'WRONG-TURN': 4 });
 
 export const CODE_LABEL_32 = Object.freeze({
   'RED-LIGHT': 'Không chấp hành hiệu lệnh của đèn tín hiệu giao thông',
+  'WRONG-WAY': 'Đi ngược chiều đường một chiều',
   LANE: 'Đi không đúng phần đường, làn đường',
   SPEED: 'Chạy quá tốc độ quy định',
   PARK: 'Dừng, đỗ xe trái quy định',
@@ -49,8 +51,10 @@ const unitOf = (seed, slot, gen, salt) =>
   hash32_32((seed ^ Math.imul(slot, 0x9e3779b1) ^ Math.imul(gen + 1, 0x85ebca77) ^ salt) >>> 0) / 4294967296;
 
 // Bảng lỗi theo loại xe: [mã, xác suất] — cộng dồn, một xe tối đa một lỗi trạng thái/hành vi trong một thế hệ.
-const TABLE_CAR = [['LANE', 0.015], ['SPEED', 0.03], ['PARK', 0.008], ['WRONG-TURN', 0.015], ['PHONE', 0.015], ['NO-SEATBELT', 0.015]];
-const TABLE_MOTO = [['SPEED', 0.03], ['PARK', 0.008], ['WRONG-TURN', 0.015], ['NO-HELMET', 0.04], ['OVERLOAD', 0.02], ['PHONE', 0.01]];
+// M5b-1b so với M5b-1: LANE ô tô 1,5 % → 30 %; RED_RATE 3 % → 80 %; NO-HELMET xe máy 4 % → 2 %; OVERLOAD 2 % → 1,2 %;
+// PHONE ô tô 1,5 % → 1,2 %, xe máy 1 % → 0,6 %; OVERLOAD xe máy 2 % → 1,8 %; SPEED/PARK xe máy 3 %/0,8 % → 12 %/12 % (đoạn đo và vùng cấm đỗ nằm trên làn xe máy).
+const TABLE_CAR = [['LANE', 0.3], ['SPEED', 0.03], ['PARK', 0.008], ['WRONG-TURN', 0.015], ['PHONE', 0.012], ['NO-SEATBELT', 0.05]];
+const TABLE_MOTO = [['SPEED', 0.12], ['PARK', 0.12], ['WRONG-TURN', 0.015], ['NO-HELMET', 0.02], ['OVERLOAD', 0.018], ['PHONE', 0.006]];
 const TABLE_HEAVY = [['SPEED', 0.02]];
 
 // Mã lỗi (hành vi hoặc trạng thái) gắn với xe (slot = chỉ số xe + 1, gen = thế hệ sau respawn), hoặc null.
@@ -79,6 +83,9 @@ export function penaltyOf32(code, vehicleClass, excessKmh = 0) {
     case 'RED-LIGHT':
       return car ? P(18e6, 20e6, 4, 'NĐ 168/2024 · Điều 6 · khoản 9 · điểm b')
         : P(4e6, 6e6, 4, 'NĐ 168/2024 · Điều 7 · khoản 7 · điểm c');
+    case 'WRONG-WAY':
+      return car ? P(18e6, 20e6, 4, 'NĐ 168/2024 · Điều 6 · khoản 9 · điểm d')
+        : P(4e6, 6e6, 2, 'NĐ 168/2024 · Điều 7 · khoản 7 · điểm a; khoản 13 · điểm a');
     case 'LANE':
       return car ? P(null, null, null, UNVERIFIED, false) : P(6e5, 8e5, 0, 'NĐ 168/2024 · Điều 7 · khoản 3 · điểm d');
     case 'SPEED':
