@@ -1,13 +1,12 @@
 # RtR Twin · lõi nguồn dữ liệu dùng chung, phiên bản 1
 
-Lõi này tách **nguồn dữ liệu, hình học địa lý, mô hình hiển thị và kết quả phân tích**. TP.HCM và Gia Lộc dùng cùng hợp đồng; cấu hình vùng và nguồn nằm riêng trong `projects/`. Đợt 17 tích hợp trải nghiệm phân tích vào City Lab TP.HCM. Manifest Gia Lộc kiểm chứng khả năng tái sử dụng lõi; không tự thay ứng dụng Gia Lộc hiện có.
+Lõi này tách **nguồn dữ liệu, hình học địa lý, mô hình hiển thị và kết quả phân tích**. TP.HCM dùng hợp đồng này; cấu hình vùng và nguồn nằm riêng trong `projects/`. Đợt 17 tích hợp trải nghiệm phân tích vào City Lab TP.HCM. Hợp đồng và dữ liệu Gia Lộc đã gỡ khỏi repo trong CLEANUP C, tra cứu bằng `git log`; lõi giữ lại phần dùng chung mà app HCMC nạp.
 
 ## Đã thực hiện
 
 - `source-core.js`: browser `window.RTRTwin.SourceCore` và CommonJS cùng API; không phụ thuộc dịch vụ mạng.
 - `schema.json`: hợp đồng JSON Schema 2020-12 cho cấu hình dự án và nguồn. Bộ kiểm chạy trong ứng dụng kiểm các điều kiện nguồn, hình học và mục đích sử dụng. Đây là hợp đồng riêng RtR, không tự nhận chứng nhận STAC hoặc OGC.
 - `projects/hcmc.json`: nguồn OSM, Overture, chiều cao Google mô hình, ảnh EOX lịch sử, mẫu Terrarium chưa đủ quyền/terrain; đầu mối dữ liệu mở, GIS quy hoạch, LiDAR lịch sử và hồ sơ quy hoạch chính thức. Đầu mối chưa có dữ liệu thô luôn bị chặn nhập.
-- `projects/gia-loc.json`: Microsoft footprint, Google height model, Sentinel epoch B, ETH canopy/uncertainty, COPDEM DSM và GEDTM thử nghiệm. Nguồn raster được fingerprint ở đợt này; chức năng raster/Gia Lộc trước đó tiếp tục thuộc ứng dụng riêng.
 - CLI xác minh byte, chuẩn hóa bản đồ hiện có, nhập GeoJSON vào khu cách ly kèm báo cáo QC. CLI không tải mạng, xuất bản hoặc sửa scene cũ.
 
 ## Hợp đồng không được đánh đồng
@@ -44,15 +43,15 @@ const permission = RTRTwin.SourceCore.inspectSource(sourceRecord, 'ingestion');
 
 CLI chấp nhận mọi slug dự án an toàn khi có manifest tương ứng trong `projects/`; không giới hạn cứng địa danh. `verify` tách `byteIntegrityValid` khỏi `admissionReady`, và `prepare` không tạo artifact nếu không có nguồn/hình học building được nhập hợp lệ.
 
-`normalizeScene` hỗ trợ scene HCMC (`buildings[].r`), scene solution Gia Lộc (`raw_polygon_wgs84`) và GeoJSON FeatureCollection. Trong mỗi trường hợp nguồn phải vượt điều kiện nhập; geometry invalid bị loại và ghi lý do trong `normalization.excluded`. Hình học GeoJSON đã là WGS84: dữ liệu CRS chiếu phải được xử lý bằng pipeline phù hợp trước khi nhập.
+`normalizeScene` hỗ trợ scene HCMC (`buildings[].r`), scene solution dạng `raw_polygon_wgs84` (adapter còn trong mã, hợp đồng Gia Lộc đã gỡ) và GeoJSON FeatureCollection. Trong mỗi trường hợp nguồn phải vượt điều kiện nhập; geometry invalid bị loại và ghi lý do trong `normalization.excluded`. Hình học GeoJSON đã là WGS84: dữ liệu CRS chiếu phải được xử lý bằng pipeline phù hợp trước khi nhập.
 
 `properties.id` là ID biểu diễn độc lập với `sourceId`. Overture dùng GERS; OSM dùng ID đang giữ trong scene. Trùng ID nguồn được nhóm theo nguồn, nhưng các way ID khác nhau của một công trình chưa được hòa giải danh tính vật lý. Không gọi số khối, số nhóm nguồn hay building part là số nhà đã kiểm kê. 10 khối minh họa Landmark được phân lớp `illustrative`, không dùng trong inventory GIS.
 
 Chiều cao giữ `{value, kind, surveyed, sourceKey, modelEpoch}` cùng `rawHeight`, `levels`, `partIndex`, `parentSourceId` và `sourceRecords`. Dữ liệu nguồn Overture nguyên bản vẫn giữ tại asset được fingerprint; scene legacy chỉ có bản source record rút gọn, lõi không sáng tác các trường đã mất trong scene.
 
-Khung render HCMC là x Đông/z Nam; Gia Lộc canonical x Đông/z Bắc. Hai adapter đảo đúng hệ số của scene đang có, không phải chuyển sang CRS đo đạc. GIS dùng GeoJSON geographic qua thuật toán riêng; muốn nghiệm thu XY/Z phải bổ sung khống chế, CRS/hệ cao độ chính thức và kiểm tra độc lập.
+Khung render HCMC là x Đông/z Nam; adapter Gia Lộc (đã gỡ khỏi repo) từng dùng canonical x Đông/z Bắc. Adapter đảo đúng hệ số của scene đang có, không phải chuyển sang CRS đo đạc. GIS dùng GeoJSON geographic qua thuật toán riêng; muốn nghiệm thu XY/Z phải bổ sung khống chế, CRS/hệ cao độ chính thức và kiểm tra độc lập.
 
-`inspectSource` trả `{allowed, errors, warnings}` cho `ingestion`, `citation`, `survey`, `planning`, `hydrology`, `volume`, `clearance`. `capabilityGate` chỉ mở những mục đích có nguồn phù hợp. Đo đạc khảo sát, mô phỏng thủy văn đầy đủ, quy hoạch được phê duyệt và ảnh dựng chân thực từ capture đều đang chặn ở hai dự án. Thủy văn đầy đủ cần terrain đã QC cùng mạng thoát nước, mưa, triều/điều kiện biên và hiệu chuẩn; có terrain đơn lẻ không mở chức năng này.
+`inspectSource` trả `{allowed, errors, warnings}` cho `ingestion`, `citation`, `survey`, `planning`, `hydrology`, `volume`, `clearance`. `capabilityGate` chỉ mở những mục đích có nguồn phù hợp. Đo đạc khảo sát, mô phỏng thủy văn đầy đủ, quy hoạch được phê duyệt và ảnh dựng chân thực từ capture đều đang chặn ở dự án HCMC. Thủy văn đầy đủ cần terrain đã QC cùng mạng thoát nước, mưa, triều/điều kiện biên và hiệu chuẩn; có terrain đơn lẻ không mở chức năng này.
 
 ## Chạy offline
 
@@ -63,12 +62,11 @@ Các lệnh giả sử đang ở thư mục dự án và Node/Python có trong P
 python3 outputs/shared/digital-twin-core/scripts/prepare-project.py
 python3 outputs/shared/digital-twin-core/scripts/prepare-project.py --check
 
-# Kiểm toàn bộ fingerprint hiện có, có thể đổi hcmc thành gia-loc.
+# Kiểm toàn bộ fingerprint hiện có của dự án HCMC.
 node outputs/shared/digital-twin-core/scripts/project-data.cjs verify hcmc
 
 # Chuẩn hóa toàn scene vào thư mục mới; chưa xuất bản.
 node outputs/shared/digital-twin-core/scripts/project-data.cjs prepare hcmc outputs/shared/digital-twin-core/prepared/hcmc-17a
-node outputs/shared/digital-twin-core/scripts/project-data.cjs prepare gia-loc outputs/shared/digital-twin-core/prepared/gia-loc-17a
 
 # Nhập một nguồn GeoJSON WGS84 + hợp đồng nguồn vào thư mục cách ly MỚI.
 node outputs/shared/digital-twin-core/scripts/project-data.cjs import-geojson hcmc /absolute/input.geojson /absolute/source.json outputs/shared/digital-twin-core/quarantine/new-batch

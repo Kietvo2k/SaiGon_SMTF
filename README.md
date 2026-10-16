@@ -71,7 +71,7 @@ outputs/smart-traffic/backend/.venv/Scripts/python.exe -m pytest outputs/smart-t
 
 Các batch PoC 02–26 và tài liệu demo cũ đã gỡ khỏi cây làm việc (CLEANUP A, C). Shell cũ `?legacy=1` đã gỡ khỏi điều hướng (CLEANUP B); vài tệp của nó còn lại vì validator cũ vẫn đọc. Tra cứu bằng `git log` hoặc `git show <commit>:<đường dẫn>`.
 
-Dự án Gia Lộc (Tây Ninh) đã gỡ khỏi repo, chỉ giữ hợp đồng nguồn `outputs/shared/digital-twin-core/projects/gia-loc.json` và các tệp nó tham chiếu. Tra cứu phần còn lại bằng `git log`.
+Dự án Gia Lộc (Tây Ninh) đã gỡ khỏi repo, gồm cả hợp đồng nguồn `outputs/shared/digital-twin-core/projects/gia-loc.json`; lõi dùng chung chỉ còn hợp đồng HCMC. Tra cứu phần còn lại bằng `git log`.
 
 ## Dữ liệu, giấy phép và phạm vi
 

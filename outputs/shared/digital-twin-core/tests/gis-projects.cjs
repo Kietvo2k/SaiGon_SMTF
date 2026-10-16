@@ -16,10 +16,6 @@ test('HCMC actual sample normalizes 70726 representations and excludes 10 illust
  const mapped=engine.query({mode:'corridor',geometry:{type:'LineString',coordinates:sourceRoad.c.map(p=>Source.inverseLocal(p,normalized.frame))},distances:[25,50,100]});
  assert.deepEqual(mapped.scenarios.map(s=>s.summary.identityCount),[46,92,224]);
 });
-test('Gia Loc actual source adapter shares kernel while retaining north-positive frame and null source heights',()=>{
- const {config,normalized,engine}=load('gia-loc');assert.equal(config.frame.zAxis,'north');assert.equal(normalized.features.length,657);
- const [x0,y0,x1,y1]=config.bbox,r=engine.query({mode:'area',geometry:{type:'Polygon',coordinates:[[[x0,y0],[x1,y0],[x1,y1],[x0,y1],[x0,y0]]]}}).scenarios[0];
- assert.equal(r.summary.identityCount,657);assert.equal(r.summary.sourceCounts.microsoft,657);
- assert.equal(r.summary.heightKinds.model_derived,482);assert.equal(r.summary.heightKinds.area_proxy,175);
- assert.ok(r.features.features.every(f=>f.properties.height.surveyed===false));
+test('Gia Loc project was removed with the Tây Ninh datasets; the shared kernel keeps only the HCMC contract',()=>{
+ assert.equal(fs.existsSync(path.resolve(__dirname,'../projects/gia-loc.json')),false);
 });

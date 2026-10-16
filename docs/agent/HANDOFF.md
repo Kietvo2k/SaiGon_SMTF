@@ -14,7 +14,7 @@ Nhánh `Kietvo2k/smart-traffic-bac`. Mọi mô tả ở đây là **mô phỏng*
 | M6a/b/c | Web công an và web người dân (React + Vite, 2 entry, vitest) | |
 | STATION-a | Hạn mức trạm tách theo nhóm, có `Retry-After`; frames không chặn hàng đợi vi phạm | |
 | STATION-b | Độ tin cậy perception theo khoảng cách, góc, che khuất; 58 % bản ghi `new` | |
-| CLEANUP | Gỡ 1166 file: PoC 02–26, nhánh legacy `?legacy=1`, Gia Lộc/Tây Ninh | Tra cứu qua `git log`. Còn giữ: các manifest băm (`outputs/delivery-manifest.json`, `capture-manifest.json`, `release-fingerprints.json`) và khoảng 200 file mà chúng dẫn tới; `outputs/shared/digital-twin-core/projects/gia-loc.json` (test shared core nạp nó) |
+| CLEANUP | Gỡ 1166 file: PoC 02–26, nhánh legacy `?legacy=1`, Gia Lộc/Tây Ninh | Tra cứu qua `git log`. Còn giữ: các manifest băm (`outputs/delivery-manifest.json`, `capture-manifest.json`, `release-fingerprints.json`) và khoảng 200 file mà chúng dẫn tới. Hợp đồng Gia Lộc `projects/gia-loc.json` đã xóa trong CLEANUP C (test shared core viết lại chỉ còn HCMC); còn `outputs/shared/digital-twin-core/prepared/gia-loc-17a/` và dữ liệu `outputs/tayninh-*` chưa quyết |
 
 **Số test cuối phase:**
 - Node: 209/209 pass.
@@ -74,7 +74,7 @@ Nhánh `Kietvo2k/smart-traffic-bac`. Mọi mô tả ở đây là **mô phỏng*
    - Đặc tả §4.6 còn liệt `violation.detected` qua WebSocket; cần sửa thành đi qua REST.
    - `plates.json` chỉ có gen 0–2; cần kiểm biển của xe gen cao.
    - `validate_demo_ready.py` và `qa-app-integrity-30b.cjs` còn gọi `?legacy=1` (đã gỡ) → báo lỗi; nên xóa hai script này cùng các manifest băm cũ.
-   - `outputs/shared/digital-twin-core/tests/source-core.cjs`: 33/35, 2 test lệch hash do CRLF (`core.autocrlf`); viết lại test rồi mới xóa `gia-loc.json`.
+   - `outputs/shared/digital-twin-core/tests/source-core.cjs`: 33/35 do 2 test lệch hash CRLF (`core.autocrlf`), đã có từ trước; test Gia Lộc đã bỏ và `gia-loc.json` đã xóa (CLEANUP C).
    - App chưa đọc tham số `region=bac` từ URL (`app=smart` tự cố định khu Bắc).
 
 ## 4. Bản đồ mã nhanh
