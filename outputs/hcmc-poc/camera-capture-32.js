@@ -23,18 +23,41 @@ export function projectToCamera32(x, z, cam) {
 // Chiếu xe (x, z) xuống pixel khung (dùng cho `plate_crop` theo xe) bằng đúng phép chiếu phối cảnh
 // của camera chụp: vị trí và pitch/yaw từ cam, FOV là góc ĐỨNG (như PerspectiveCamera của three.js),
 // tỉ lệ khung w/h. Tâm xe ở VEHICLE_Y_32. Trả về { px, py, distance_m }; py đo từ đỉnh khung xuống.
-export function projectToPixel32(x, z, cam, w, h) {
-  const { distance_m } = projectToCamera32(x, z, cam);
+export function projectXyz32(x, y, z, cam, w, h) {
   const yaw = cam.yaw_deg * Math.PI / 180, pitch = (cam.pitch_deg || 0) * Math.PI / 180;
   const f = [Math.cos(pitch) * Math.cos(yaw), Math.sin(pitch), Math.cos(pitch) * Math.sin(yaw)];   // hướng nhìn
   const r = [-Math.sin(yaw), 0, Math.cos(yaw)];                                                    // sang phải
   const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];     // hướng lên = r × f
-  const d = [x - cam.x, VEHICLE_Y_32 - cam.height_m, z - cam.z];
+  const d = [x - cam.x, y - cam.height_m, z - cam.z];
   const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
   const xc = dot(d, r), yc = dot(d, u), zc = dot(d, f);
   const th = Math.tan((cam.fov_deg * Math.PI / 180) / 2), tw = th * (w / h);
   const nx = xc / (zc * tw), ny = yc / (zc * th);   // -1..1 trong khung khi |nx|,|ny| ≤ 1 và zc > 0
-  return { px: (nx * 0.5 + 0.5) * w, py: (0.5 - ny * 0.5) * h, distance_m };
+  return { px: (nx * 0.5 + 0.5) * w, py: (0.5 - ny * 0.5) * h, zc };
+}
+// M5b-1: khung bao quanh xe (px) theo hướng đi (hx, hz), kích thước (len, wid, h) và đáy đường Y0 (groundY của cảnh).
+// Trả về null khi cả hộp nằm sau camera; hộp được cắt theo khung hình.
+export const GROUND_Y_32 = 1.0;
+export function vehicleBoxPx32(vehicle, cam, w, h) {
+  const len = vehicle.len ?? 4.5, wid = vehicle.wid ?? 1.8, H = vehicle.h ?? 1.5;
+  const L = Math.hypot(vehicle.hx ?? 0, vehicle.hz ?? 1) || 1, hx = (vehicle.hx ?? 0) / L, hz = (vehicle.hz ?? 1) / L;
+  const lx = -hz, lz = hx;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, n = 0;
+  for (const a of [-len / 2, len / 2]) for (const b of [-wid / 2, wid / 2]) for (const y of [GROUND_Y_32, GROUND_Y_32 + H]) {
+    const p = projectXyz32(vehicle.x + hx * a + lx * b, y, vehicle.z + hz * a + lz * b, cam, w, h);
+    if (p.zc <= 0) continue;
+    n++; x0 = Math.min(x0, p.px); x1 = Math.max(x1, p.px); y0 = Math.min(y0, p.py); y1 = Math.max(y1, p.py);
+  }
+  if (!n) return null;
+  const cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const bx = cl(x0, 0, w), by = cl(y0, 0, h), bw = cl(x1, 0, w) - bx, bh = cl(y1, 0, h) - by;
+  return { x: Math.round(bx), y: Math.round(by), w: Math.round(bw), h: Math.round(bh) };
+}
+
+export function projectToPixel32(x, z, cam, w, h) {
+  const { distance_m } = projectToCamera32(x, z, cam);
+  const p = projectXyz32(x, VEHICLE_Y_32, z, cam, w, h);
+  return { px: p.px, py: p.py, distance_m };
 }
 
 // Hàng đầu của buffer đọc từ render target: WebGPU trả hàng TRÊN-XUỐNG (không lật);
@@ -87,7 +110,63 @@ export function skyAboveRoad32(stats) {
   return stats.top.lum > stats.bottom.lum + 2 && stats.top.blue > stats.bottom.blue;
 }
 
-export function createCameraCapture32({ renderer, scene, THREE, cameras }) {
+// M5b-1 — chú thích ảnh bằng chứng (chỉ trình duyệt): khung xe, nhãn lỗi, thời gian, mã camera; ảnh cắt có biển vẽ lại từ OCR.
+const FONT_32 = '"Segoe UI", Arial, "Helvetica Neue", sans-serif';
+const AMBER_32 = '#ffb000', RED_32 = '#e5484d';
+function chip32(g, text, x, y, { bg = 'rgba(12,16,22,0.82)', fg = '#ffffff', size = 20, align = 'left' } = {}) {
+  g.font = 'bold ' + size + 'px ' + FONT_32;
+  const tw = g.measureText(text).width, padX = 10, hh = size + 12;
+  const left = align === 'right' ? x - tw - padX * 2 : x;
+  g.fillStyle = bg; g.fillRect(left, y, tw + padX * 2, hh);
+  g.fillStyle = fg; g.textBaseline = 'middle'; g.fillText(text, left + padX, y + hh / 2);
+  return { w: tw + padX * 2, h: hh };
+}
+// Ảnh toàn cảnh có chú thích: khung xe + nhãn lỗi trên khung, góc trên (lỗi, camera), góc dưới (giờ, đèn, tốc độ).
+function annotateFrame32(srcCanvas, w, h, meta, box) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  g.drawImage(srcCanvas, 0, 0, w, h);
+  if (box && box.w > 0 && box.h > 0) {
+    g.lineWidth = 4; g.strokeStyle = AMBER_32; g.strokeRect(box.x, box.y, box.w, box.h);
+    const plate = meta.plate ? String(meta.plate) : '';
+    chip32(g, (meta.code || '') + (plate ? ' · ' + plate : ''), box.x, Math.max(0, box.y - 34), { bg: AMBER_32, fg: '#111111' });
+    if (meta.code === 'NO-HELMET') {   // khoanh vùng đầu người lái (xe máy)
+      const cx = box.x + box.w * 0.5, cy = box.y + box.h * 0.16, rr = Math.max(10, box.w * 0.14);
+      g.beginPath(); g.ellipse(cx, cy, rr, rr * 1.1, 0, 0, Math.PI * 2); g.lineWidth = 3; g.strokeStyle = RED_32; g.stroke();
+      chip32(g, 'KHÔNG MŨ', box.x + box.w + 8, cy - 14, { bg: RED_32 });
+    }
+    if (meta.code === 'OVERLOAD') chip32(g, 'CHỞ ' + (meta.persons || 3) + ' NGƯỜI', box.x + box.w + 8, box.y + 4, { bg: RED_32 });
+    if (meta.code === 'PHONE') chip32(g, 'DÙNG ĐIỆN THOẠI', box.x + box.w + 8, box.y + 4, { bg: RED_32 });
+    if (meta.code === 'NO-SEATBELT') chip32(g, 'KHÔNG THẮT DÂY', box.x + box.w + 8, box.y + 4, { bg: RED_32 });
+  }
+  if (meta.label) chip32(g, meta.label, 16, 16, { bg: 'rgba(160,20,28,0.9)', size: 22 });
+  if (meta.cameraText) chip32(g, meta.cameraText, w - 16, 16, { align: 'right', size: 20 });
+  const info = [meta.timeText, meta.phaseText, meta.speedText].filter(Boolean).join('   ·   ');
+  if (info) chip32(g, info, 16, h - 44, { size: 20 });
+  return c;
+}
+// Ảnh cắt biển số: vùng xe quanh điểm chiếu, khung nhận diện vàng, biển vẽ lại (nền trắng, chữ đen, kiểu biển VN).
+function plateCrop32(srcCanvas, sx, sy, meta) {
+  const c = document.createElement('canvas'); c.width = PLATE_CROP_W; c.height = PLATE_CROP_H;
+  const g = c.getContext('2d');
+  g.drawImage(srcCanvas, sx, sy, PLATE_CROP_W, PLATE_CROP_H, 0, 0, PLATE_CROP_W, PLATE_CROP_H);
+  const plate = String(meta.plate || '').trim();
+  const twoLines = meta.plate_format === 'motorbike' && plate.includes(' ');
+  const lines = twoLines ? plate.split(' ') : [plate];
+  const pw = 206, ph = twoLines ? 92 : 56, px0 = Math.round((PLATE_CROP_W - pw) / 2), py0 = PLATE_CROP_H - ph - 10;
+  g.fillStyle = '#ffffff'; g.fillRect(px0, py0, pw, ph);
+  g.lineWidth = 3; g.strokeStyle = '#111111'; g.strokeRect(px0 + 1.5, py0 + 1.5, pw - 3, ph - 3);
+  g.fillStyle = '#111111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = 'bold ' + (twoLines ? 40 : 38) + 'px ' + FONT_32;
+  lines.forEach((t, k) => g.fillText(t, px0 + pw / 2, py0 + (twoLines ? 28 + k * 38 : ph / 2 + 2)));
+  g.textAlign = 'left';
+  g.lineWidth = 3; g.strokeStyle = AMBER_32; g.strokeRect(px0 - 5, py0 - 5, pw + 10, ph + 10);
+  chip32(g, (meta.code || '') + ' · ' + Math.round((meta.confidence || 0) * 100) + '%', 4, 4, { size: 16 });
+  return c;
+}
+
+// beforeRender(camera) (tùy chọn): gọi trước mỗi lần render góc chụp, để giao thông vẽ đúng xe trong góc đó.
+export function createCameraCapture32({ renderer, scene, THREE, cameras, beforeRender = null }) {
   if (!THREE) throw new TypeError('createCameraCapture32 cần THREE (truyền từ app, không import tĩnh)');
   const rigs = new Map();   // camera_id → {camera, target, latest, buffer}
   for (const cam of cameras || []) {
@@ -135,6 +214,7 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras }) {
   };
   const restoreAfterCapture = ({ all, saved }) => all.forEach((o, i) => { o.visible = saved[i]; });
   const renderTo = rig => {
+    if (beforeRender) beforeRender(rig.camera);
     const hidden = hideForCapture(rig);
     renderer.setRenderTarget(rig.target);
     renderer.render(scene, rig.camera);
@@ -177,7 +257,9 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras }) {
         return rig.latest;
       });
     },
-    captureEvidence(cameraId, vehicle, tSim, beforeFrame = null) {
+    // meta (tùy chọn, M5b-1): { code, label, plate, plate_format, confidence, persons, timeText, phaseText, speedText,
+    //   cameraText } + kích thước/hướng xe { len, wid, h, hx, hz }. Không truyền meta → ảnh không chú thích (như trước).
+    captureEvidence(cameraId, vehicle, tSim, beforeFrame = null, meta = null) {
       const rig = rigs.get(cameraId);
       if (!rig) return Promise.resolve({ before: null, after: null, plate_crop: null });
       const before = beforeFrame || rig.buffer;   // khung TRƯỚC vạch (vòng trạm giữ)
@@ -186,15 +268,22 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras }) {
         const { px, py } = projectToPixel32(vehicle.x, vehicle.z, rig.cam, after.w, after.h);
         const sx = Math.max(0, Math.min(after.w - PLATE_CROP_W, Math.round(px) - PLATE_CROP_W / 2));
         const sy = Math.max(0, Math.min(after.h - PLATE_CROP_H, Math.round(py) - PLATE_CROP_H / 2));
-        const crop = document.createElement('canvas');
-        crop.width = PLATE_CROP_W; crop.height = PLATE_CROP_H;
-        const ctx = crop.getContext('2d');
-        ctx.drawImage(after.canvas, sx, sy, PLATE_CROP_W, PLATE_CROP_H, 0, 0, PLATE_CROP_W, PLATE_CROP_H);
+        let afterJpeg = after.jpeg, plateJpeg;
+        if (meta) {
+          const box = vehicleBoxPx32(vehicle, rig.cam, after.w, after.h);
+          afterJpeg = annotateFrame32(after.canvas, after.w, after.h, meta, box).toDataURL('image/jpeg', 0.85);
+          plateJpeg = plateCrop32(after.canvas, sx, sy, meta).toDataURL('image/jpeg', 0.9);
+        } else {
+          const crop = document.createElement('canvas');
+          crop.width = PLATE_CROP_W; crop.height = PLATE_CROP_H;
+          crop.getContext('2d').drawImage(after.canvas, sx, sy, PLATE_CROP_W, PLATE_CROP_H, 0, 0, PLATE_CROP_W, PLATE_CROP_H);
+          plateJpeg = crop.toDataURL('image/jpeg', 0.9);
+        }
         const b = before || after;
         return {
           before: { jpeg: b.jpeg, w: b.w || after.w, h: b.h || after.h, kind: 'before' },
-          after: { jpeg: after.jpeg, w: after.w, h: after.h, kind: 'after' },
-          plate_crop: { jpeg: crop.toDataURL('image/jpeg', 0.9), w: PLATE_CROP_W, h: PLATE_CROP_H, kind: 'plate_crop' },
+          after: { jpeg: afterJpeg, w: after.w, h: after.h, kind: 'after' },
+          plate_crop: { jpeg: plateJpeg, w: PLATE_CROP_W, h: PLATE_CROP_H, kind: 'plate_crop' },
           px: Math.round(px),
           t_sim: +Number(tSim).toFixed(1)
         };
@@ -230,7 +319,8 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras }) {
 
 // T10 — cài capture vào app smart (app = initSmartApp32 của T8). Chỉ gọi trong trình duyệt (cần renderer + THREE).
 export function installCameraCapture32(app, { cameras = [], THREE = null } = {}) {
-  const capture = createCameraCapture32({ renderer: app.renderer, scene: app.scene, THREE, cameras });
+  const capture = createCameraCapture32({ renderer: app.renderer, scene: app.scene, THREE, cameras,
+    beforeRender: cam => { const t = app.traffic; if (t && typeof t.drawFor === 'function') t.drawFor(cam); } });
   app.registerSmartModule32('capture', capture);
   if (typeof window !== 'undefined') window.__smartCapture = capture;
   return capture;

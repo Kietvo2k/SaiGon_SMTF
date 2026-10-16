@@ -145,11 +145,11 @@ const PALETTES = [
 const paintOf = (kind, i) => { const p = PALETTES[kind]; return p[hashU32((i * 31 + 7) ^ SEED) % p.length]; };
 
 // ---------------------------------------------------------------- pose (hình học) + vẽ
-export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null, signalPlan = null, controller = null, breakerS = undefined, seed = undefined, routeBias = null, demand = null }) {
+export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwork, nightLevel, camera, getLight = () => 'day', status = {}, motionStatus = null, signalPlan = null, controller = null, breakerS = undefined, seed = undefined, routeBias = null, demand = null, behavior = null }) {
   const t0 = performance.now();
   const net = buildTrafficNetwork31({ graph, roads, widthOf, drawn, signalPlan });
   // M5a: demand (tùy chọn) = nhu cầu khu cao điểm/khu Bắc, đặt lúc dựng pool; không truyền = hành vi cũ.
-  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS, seed, routeBias, demand });
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS, seed, routeBias, demand, behavior });
   const { lanes } = net;
   // ---- Nâng y theo mặt đường vẽ: mặt cao nhất trong 0,5 m trên profile làn (dốc/mảnh đoạn chồng nhau, như baseline 30B).
   // Tính tại đúng vị trí xe (không bảng nội suy) nên không tụt dưới đỉnh giữa hai mẫu.
@@ -247,13 +247,14 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
     m[o] = X0; m[o + 1] = X1; m[o + 2] = X2; m[o + 3] = 0; m[o + 4] = Y0; m[o + 5] = Y1; m[o + 6] = Y2; m[o + 7] = 0;
     m[o + 8] = Z0; m[o + 9] = Z1; m[o + 10] = Z2; m[o + 11] = 0; m[o + 12] = p.x; m[o + 13] = p.y; m[o + 14] = p.z; m[o + 15] = 1;
   }
-  function draw(alpha, cameraDistance) {
+  // cam: camera vẽ (mặc định camera chính). M5b-1: camera chụp bằng chứng cũng cần xe của nó (cull theo chính camera đó).
+  function draw(alpha, cameraDistance, cam = camera) {
     frame++;
-    camera.updateMatrixWorld(); projScreen.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse); frustum.setFromProjectionMatrix(projScreen); camPos.setFromMatrixPosition(camera.matrixWorld);
+    cam.updateMatrixWorld(); projScreen.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); frustum.setFromProjectionMatrix(projScreen); camPos.setFromMatrixPosition(cam.matrixWorld);
     drawRadius = Math.max(1800, Math.min(9000, cameraDistance * 1.6));
     drawnCount.fill(0);
     const arrays = meshes.map(m => m.instanceMatrix.array), colors = meshes.map(m => m.geometry.attributes.paint.array);
-    pxPerM = (globalThis.innerHeight || 900) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov || 45) / 2));
+    pxPerM = (globalThis.innerHeight || 900) / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov || 45) / 2));
     for (let i = 0; i < N; i++) {
       if (!D1.active[i]) continue;
       const e = lanes.edge[D1.lane[i]], k = sim.kind[i];
@@ -321,6 +322,8 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
   }
   const counts = () => { const c = TRAFFIC_KINDS.map(() => 0); for (let i = 0; i < sim.N; i++) if (sim.active[i]) c[sim.kind[i]]++; return c; };
   const api = {
+    // M5b-1: ghi lại ma trận xe theo camera chụp bằng chứng (trước khi render góc đó); không đổi trạng thái mô phỏng.
+    drawFor(cam) { const was = group.visible; group.visible = true; draw(1, 1800, cam); group.visible = was; },
     version: TRAFFIC_31_VERSION, group, meshes, kinds: TRAFFIC_KINDS, total: sim.N, sim, net,
     update, recordCpu, lightLevel,
     cpuSamples: () => cpu.slice(),

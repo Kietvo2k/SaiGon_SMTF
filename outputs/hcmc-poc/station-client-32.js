@@ -5,6 +5,7 @@
 //   - bằng chứng POST multipart /station/violations/{id}/evidence (trùng kind → 409);
 //   - WS: tin nhắn đầu {"type":"auth","token"} trong 5 s; lệnh cmd.* đến từ backend qua WS.
 // Không dùng `process`; chạy được trong Node (test) và trình duyệt.
+import { TRAFFIC_KINDS, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
 export const TRANSPORT_32_VERSION = 'transport-32a';
 export const STATION_ID_32 = 'STATION-3D-01';
 export const HEARTBEAT_S = 15;
@@ -366,13 +367,47 @@ export function buildSignalStates32(controller, net, tSim) {
 }
 
 // Vị trí xe (x, z) theo polyline cạnh và tiến độ s của xe trong sim (đủ cho cắt biển theo camera).
+// M5b-1: kèm hướng đi (hx, hz) theo đoạn đầu–cuối của cạnh và kích thước (len, wid, h) để vẽ khung bằng chứng.
+const poseGeoCache32 = new WeakMap();   // sim → createTrafficGeometry31 (một lần cho mỗi sim)
 export function vehiclePose32(traffic, rec) {
   const sim = traffic.sim, net = traffic.net;
   const i = Number(String(rec.vehicle_id).replace(/\D/g, '')) - 1;
   if (!(i >= 0) || !sim.active[i]) return null;
-  const l = sim.lane[i], e = net.lanes.edge[l], c = net.E[e].c, n = c.length / 2;
+  const l = sim.lane[i];
+  const K = TRAFFIC_KINDS[sim.kind ? sim.kind[i] : 1] || TRAFFIC_KINDS[1];
+  const size = { len: K.length, wid: K.width, h: K.height };
+  if (net.geo && sim.jit) {   // đúng vị trí 3D (có lệch làn và độ cong), cùng hình học với perception
+    let geo = poseGeoCache32.get(sim);
+    if (!geo) { geo = createTrafficGeometry31(net, sim); poseGeoCache32.set(sim, geo); }
+    const P = {};
+    geo.poseAt(i, l, sim.s[i], sim.next[i], sim.prevLane ? sim.prevLane[i] : -1, P);
+    return { x: P.x, z: P.z, hx: P.tx, hz: P.tz, ...size };
+  }
+  const e = net.lanes.edge[l], c = net.E[e].c, n = c.length / 2;
   const k = sim.s[i] / Math.max(0.01, net.lanes.length[l]);
-  return { x: c[0] + (c[n * 2 - 2] - c[0]) * k, z: c[1] + (c[n * 2 - 1] - c[1]) * k };
+  return {
+    x: c[0] + (c[n * 2 - 2] - c[0]) * k, z: c[1] + (c[n * 2 - 1] - c[1]) * k,
+    hx: c[n * 2 - 2] - c[0], hz: c[n * 2 - 1] - c[1], ...size
+  };
+}
+const pad2_32 = n => String(n).padStart(2, '0');
+// Giờ ghi nhận trên ảnh bằng chứng: dd/mm/yyyy hh:mm:ss theo giờ máy trạm.
+export function stampOf32(d = new Date()) {
+  return `${pad2_32(d.getDate())}/${pad2_32(d.getMonth() + 1)}/${d.getFullYear()} ${pad2_32(d.getHours())}:${pad2_32(d.getMinutes())}:${pad2_32(d.getSeconds())}`;
+}
+// Chú thích bằng chứng từ bản ghi vi phạm (chỉ phần hiển thị; dữ liệu gửi backend không đổi).
+export function evidenceMetaOf32(rec, pose, now = new Date()) {
+  const phase = rec.signal && rec.signal.phase_for_vehicle;
+  const PHASE_TXT = { red: 'Đèn: ĐỎ', yellow: 'Đèn: VÀNG', green: 'Đèn: XANH' };
+  return {
+    code: rec.violation_code, label: rec.violation_label, plate: rec.plate, plate_format: rec.plate_format,
+    confidence: rec.confidence, persons: rec.detection && rec.detection.persons,
+    timeText: stampOf32(now),
+    phaseText: rec.violation_code === 'RED-LIGHT' ? (PHASE_TXT[phase] || '') : '',
+    speedText: rec.signal ? `${rec.signal.speed_kmh} km/h` : '',
+    cameraText: `${rec.camera_id} · ${rec.node_label || rec.node_id || ''}`.trim(),
+    len: pose && pose.len, wid: pose && pose.wid, h: pose && pose.h, hx: pose && pose.hx, hz: pose && pose.hz
+  };
 }
 
 // M5a — lệnh từ backend (WS cmd.*, cùng dạng {event, data}). Giá trị sai bị bỏ qua, không làm dừng vòng chạy.
@@ -446,7 +481,7 @@ export function startStationLoop32(app, { perception, capture, transport, camera
     const cam = cameras.find(c => c.camera_id === rec.camera_id);
     const before = capture.latestFrame(rec.camera_id);
     const pose = vehiclePose32(app.traffic, rec) || (cam ? { x: cam.x, z: cam.z } : { x: 0, z: 0 });
-    const ev = await capture.captureEvidence(rec.camera_id, pose, tSim, before);
+    const ev = await capture.captureEvidence(rec.camera_id, pose, tSim, before, evidenceMetaOf32(rec, pose));
     const items = [ev && ev.before, ev && ev.after, ev && ev.plate_crop]
       .filter(p => p && p.jpeg)
       .map(p => ({ kind: p.kind, dataUrl: p.jpeg }));

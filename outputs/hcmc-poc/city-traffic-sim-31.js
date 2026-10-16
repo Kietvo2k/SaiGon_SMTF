@@ -12,6 +12,8 @@
 //  - Ra nút biên → tái sinh ở làn xuất phát từ nút biên khác (chọn theo rng của xe), có cờ gen.
 // Hiệu năng: mô phỏng 1D rẻ cho mọi xe (giữ tất định, không phụ thuộc camera); chỉ xe trên cạnh nằm trong frustum
 // và bán kính quanh camera mới tính pose + ghi ma trận (tự cull, 3 InstancedMesh theo loại xe).
+// M5b-1: `behavior` (tùy chọn, mặc định tắt) bật hành vi xe phạm lỗi: vượt đỏ, làn xe máy, quá tốc độ, đỗ sai, rẽ cấm.
+import { violatorOf32, redViolatorOf32, BEHAVIOR_IDX_32, SPEED_MUL_32, PARK_MIN_M_32, PARK_MAX_M_32, PARK_S_32, RED_WINDOW_S_32, WRONG_TURN_BOOST_32, LEFT_TURN_RAD_32 } from './violation-rules-32.js?v=32a';
 export const TRAFFIC_31_VERSION = 'traffic-31D';
 export const SEED = 31031;
 export const STEP = 1 / 10;   // s, bước cố định 10 Hz (vẽ nội suy giữa hai bước)
@@ -359,8 +361,19 @@ function buildCrossZones31(net) {
 }
 
 // ---------------------------------------------------------------- mô phỏng (thuần JS, tất định)
-export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TARGET, signalPlan = null, controller: controller0 = null, breakerS = BREAKER_S, seed = SEED, demand = null, routeBias = null } = {}) {
+export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TARGET, signalPlan = null, controller: controller0 = null, breakerS = BREAKER_S, seed = SEED, demand = null, routeBias = null, behavior = null } = {}) {
   let controller = controller0;
+  // ---- M5b-1: hành vi xe phạm lỗi (null = tắt: mọi nhánh bên dưới bị bỏ qua, hash cổ điển giữ).
+  // behavior = { seed?, restrictedNodes?: [chỉ số nút cấm rẽ trái] }. sampleNodes: các nút có đèn quản bởi kế hoạch
+  // (để biết lúc đèn nhóm chuyển đỏ). Mảng theo xe (parkUntil, parkGen, vc) cấp sau khi biết N.
+  const beh = behavior ? {
+    seed: (behavior.seed ?? seed) >>> 0,
+    restricted: (() => { const a = new Uint8Array(net.NN); for (const n of behavior.restrictedNodes || []) if (n >= 0 && n < net.NN) a[n] = 1; return a; })(),
+    // parkNodes: nút có đỗ sai (mặc định mọi nút); app đặt đúng các nút có camera để lỗi nằm trong khung ghi hình.
+    parkNode: (() => { const a = new Uint8Array(net.NN); if (!behavior.parkNodes) return a.fill(1); for (const n of behavior.parkNodes) if (n >= 0 && n < net.NN) a[n] = 1; return a; })(),
+    sampleNodes: signalPlan && signalPlan.signalNodes ? [...signalPlan.signalNodes] : [],
+    redOn: new Float64Array(net.NN * 2).fill(-1e9), wasRed: new Uint8Array(net.NN * 2)
+  } : null;
   // M4b1: routeBias(edge, carIndex) → hệ số 0..1 nhân vào trọng số rẽ vào cạnh `edge` (không truyền / trả về ≥ 1 = y nguyên;
   // không rút thêm số ngẫu nhiên nên hash cổ điển giữ nguyên).
   const routeBiasFn = typeof routeBias === 'function' ? routeBias : null;
@@ -397,6 +410,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   for (let l = 0; l < NL; l++) {
     carry += expect[l] * scale; let n = Math.floor(carry); if (!n) continue;
     const kinds = []; for (let k = 0; k < n; k++) { const r = nextRng(); kinds.push(lanes.rank[l] >= 3 && r < .05 ? 2 : lanes.rank[l] >= 2 && r < .085 ? 3 : r < .23 ? 1 : 0); }
+    // M5b-1: làn 0 của trục có ≥ 2 làn là làn xe máy (beh): lúc đặt pool chỉ xe máy vào đó.
+    if (beh && lanes.k[l] === 0 && lanes.n[l] >= 2) for (let k = 0; k < kinds.length; k++) kinds[k] = 0;
     const a = zoneStart(l, MAX_LEN), b = zoneEnd(l, MAX_LEN), span = b - a;
     if (span <= 0) continue;
     const step = span / n; if (step < MAX_LEN + 1.5) { n = Math.max(0, Math.floor(span / (MAX_LEN + 1.5))); }
@@ -405,6 +420,24 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     for (let k = 0; k < n; k++) spawnPlan.push([l, a + (k + .5) * span / n, kinds[k], hashU32(spawnPlan.length * 7919 + seed)]);
   }
   const N = spawnPlan.length;
+  if (beh) { beh.parkUntil = new Float64Array(N); beh.parkGen = new Int32Array(N).fill(-1); beh.vcGen = new Int32Array(N).fill(-1); beh.vc = new Uint8Array(N); }
+  // Mã hành vi của xe theo thế hệ hiện tại (0 = không có). Tính lại khi gen đổi (respawn), không cần đồng bộ khi reset/import.
+  const codeIdxOf = i => {
+    if (!beh) return 0;
+    if (beh.vcGen[i] !== gen[i]) { beh.vc[i] = BEHAVIOR_IDX_32[violatorOf32(i + 1, gen[i], TRAFFIC_KINDS[kind[i]].name, beh.seed)] || 0; beh.vcGen[i] = gen[i]; }
+    return beh.vc[i];
+  };
+  // Làn xe máy (làn 0 của trục ≥ 2 làn): ô tô/bus/tải không vào, trừ ô tô đang vi phạm LANE.
+  const motoLaneBan = (i, l) => !!beh && lanes.k[l] === 0 && lanes.n[l] >= 2 && kind[i] !== 0 && !(kind[i] === 1 && codeIdxOf(i) === BEHAVIOR_IDX_32.LANE);
+  // Vượt đỏ chủ động (M5b-1): xe vi phạm RED-LIGHT của chu kỳ này được đi tiếp khi nhóm của nó vừa chuyển đỏ (0–3 s).
+  const redRunOk = (i, node, st) => {
+    if (!beh || !controller || !controller.cycleIdOf) return false;
+    const k = node * 2 + arriveGroup[st];
+    if (!beh.wasRed[k]) return false;
+    const dt = counters.t - beh.redOn[k];
+    if (!(dt >= 0 && dt < RED_WINDOW_S_32)) return false;
+    return redViolatorOf32(i + 1, controller.cycleIdOf(node, counters.t), beh.seed);
+  };
   // ---- Trạng thái xe.
   const lane = new Int32Array(N), s = new Float64Array(N), v = new Float32Array(N), lat = new Float32Array(N), jit = new Float32Array(N);
   const gen = new Uint32Array(N), active = new Uint8Array(N), wanted = new Uint8Array(N), selRank = new Float32Array(N), pending = new Uint8Array(N), kind = new Uint8Array(N), len = new Float32Array(N), wid = new Float32Array(N);
@@ -500,6 +533,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       if (busAvoid && c.rank < 2) x = 0;
       // Xe buýt không rẽ cắt ngang làn bên cạnh (rẽ phải từ làn trong / rẽ trái từ làn ngoài): thân 10,5 m quét qua xe chờ ở vạch.
       if (kind[i] >= HEAVY && a >= .6 && (c.turn > 0 ? lanes.k[l] > 0 : lanes.k[l] < lanes.n[l] - 1)) x *= 1e-4;
+      // M5b-1: nút có biển cấm rẽ trái (beh.restricted): xe thường không rẽ trái; xe vi phạm WRONG-TURN rẽ trái nhiều hơn.
+      if (beh && beh.restricted[lanes.to[l]] && c.turn < -LEFT_TURN_RAD_32) x = codeIdxOf(i) === BEHAVIOR_IDX_32['WRONG-TURN'] ? x * WRONG_TURN_BOOST_32 : 0;
       // Kịch bản nhu cầu: thiên hướng chọn lối rẽ VỀ tâm (không đổi số lần rút rand → tất định).
       if (demandCfg && demandCfg.turnBias && x > 0) {
         const cur = G.nodes[lanes.to[l]], dst = G.nodes[lanes.to[lanesOfSt[c.st]]];
@@ -515,8 +550,15 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       w.push(x); total += x;
     }
     let r = rand(i) * total, pick = 0; for (; pick < w.length - 1; pick++) { r -= w[pick]; if (r < 0) break; }
+    // M5b-1: mọi lối đều bị cấm (ngõ cụt rẽ trái) → lấy lối thẳng nhất, không để xe đi lối cấm.
+    if (beh && !(total > 0)) { pick = 0; for (let q = 1; q < cands.length; q++) if (Math.abs(cands[q].turn) < Math.abs(cands[pick].turn)) pick = q; }
     const c = cands[pick], n2 = laneCountOfSt[c.st], base = lanesOfSt[c.st];
     let k2 = Math.abs(c.turn) < .6 ? Math.min(lanes.k[l], n2 - 1) : c.turn > 0 ? 0 : n2 - 1;
+    // M5b-1: trục ≥ 2 làn — xe không phải xe máy không vào làn 0 (làn xe máy), trừ ô tô vi phạm LANE đi làn 0.
+    if (beh && n2 >= 2) {
+      if (kind[i] === 1 && codeIdxOf(i) === BEHAVIOR_IDX_32.LANE) k2 = 0;
+      else if (k2 === 0 && kind[i] !== 0) k2 = 1;
+    }
     // M5a: làn đích đang bị chắn (xe hỏng) → xe đổi sang làn kề còn thông NGAY TẠI NÚT (không đổi làn giữa đoạn).
     if (laneBlockS[base + k2] < Infinity) { for (const dk of [1, -1, 2, -2]) { const kk = k2 + dk; if (kk >= 0 && kk < n2 && laneBlockS[base + kk] === Infinity) { k2 = kk; break; } } }
     return base + k2;
@@ -567,7 +609,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const st = lanes.st[inL];
     // Đèn chỉ chặn ở nút có đèn đầu tiên trên chuỗi khóa: chuỗi nút kề nhau (liên kết ngắn) có đèn lệch nhóm (xanh nhóm 0 / nhóm 1 không bao giờ trùng)
     // sẽ không bao giờ có đủ xanh cùng lúc → xe đứng vĩnh viễn; xe đã giữ/đang xin một nút có đèn coi cả cụm là một giao lộ.
-    if (!ignorePriority && !green(node, st) && !sigHeld(i, plan) && !(controller && controller.runsRed(i, node, st, counters.t))) return false;
+    if (!ignorePriority && !green(node, st) && !sigHeld(i, plan) && !(controller && controller.runsRed(i, node, st, counters.t)) && !redRunOk(i, node, st)) return false;
     const hs = holders.get(node) || [];
     for (const h of hs) if (h.car !== i && !compatible(inL, outL, h, i)) return false;
     for (const p of plan) if (p.node === node && !(p.inL === inL) && !compatible(inL, outL, { car: i, inL: p.inL, outL: p.outL, straight: straightMove(p.inL, p.outL) }, i)) return false;
@@ -673,6 +715,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     for (let tries = 0; tries < maxTries && spawnList.length; tries++) {
       const l = spawnList[Math.floor(rand(i) * spawnList.length)];
       if (kind[i] >= HEAVY && lanes.rank[l] < 2) continue;
+      if (motoLaneBan(i, l)) continue;
       const si = Math.min(lanes.length[l] * .5, len[i] / 2 + .8 + (needsLock[lanes.from[l]] ? Rz[lanes.from[l]] : 0));
       if (si + len[i] / 2 > zoneEnd(l, 0) + .6) continue;
       jit[i] = kind[i] === 0 ? (rand(i) - .5) * 1.5 : 0;
@@ -686,7 +729,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const l0 = lane[i], s0 = s[i], st = lanes.st[l0], base = lanesOfSt[st], n = laneCountOfSt[st], vel = Math.min(v[i], lanes.speed[l0] * .6);
     for (let q = 0; q < n; q++) {
       const l = q === 0 ? l0 : base + (l0 - base + q) % n;
-      if ((region && !insideLane[l]) || (kind[i] >= HEAVY && lanes.rank[l] < 2)) continue;
+      if ((region && !insideLane[l]) || (kind[i] >= HEAVY && lanes.rank[l] < 2) || motoLaneBan(i, l)) continue;
       const a = zoneStart(l, len[i]), b = zoneEnd(l, len[i]); if (b <= a) continue;
       const c = Math.max(a, Math.min(b, s0));
       for (let d = 0; d <= RELOCATE_M; d += RELOCATE_STEP) for (let sg = d ? -1 : 1; sg <= 1; sg += 2) {
@@ -851,6 +894,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     holders.clear(); inHold.fill(0); reqPrev.clear(); reqCur.clear(); zoneHold.clear(); zTok.fill(-1);
     Object.assign(counters, { t: 0, step: 0, edgeTransitions: 0, teleports: 0, onewayViolations: 0, gapViolations: 0, respawns: 0, breakerRespawns: 0, waitsTotal: 0, maxStopS: 0, lastSecond: 0, pendingFails: 0 });
     counters.perSecond.fill(0);
+    if (beh) { beh.parkUntil.fill(0); beh.parkGen.fill(-1); beh.vcGen.fill(-1); beh.redOn.fill(-1e9); beh.wasRed.fill(0); }
     lockNode.fill(-1); lockRemain.fill(Infinity); lastStep.fill(-1);
     for (let i = 0; i < N; i++) {
       const [l, si, k, seed] = spawnPlan[i];
@@ -873,6 +917,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   function updateCar(i, l, idx) {
     const K = TRAFFIC_KINDS[kind[i]], Li = len[i], list = laneCars[l];
     let laneLen = lanes.length[l], si = s[i], vi = v[i];
+    // M5b-1: xe đang đỗ sai (beh.parkUntil): đứng yên tại chỗ, không tính breaker (đỗ có chủ đích, xem bước PARK bên dưới).
+    if (beh && beh.parkUntil[i] > counters.t) { v[i] = 0; return; }
     // Đường tắt cho xe đang đứng sát sau xe cũng đang đứng (đuôi hàng chờ): IDM chắc chắn cho v = 0, chỉ cộng thời gian dừng.
     if (vi === 0 && idx + 1 < list.length) {
       const o = list[idx + 1];
@@ -913,10 +959,19 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     // M5a: xe hỏng đứng yên trên làn (laneBlockS = mép sau của xe hỏng): xe phía sau dừng trước nó.
     { const sb = laneBlockS[l]; if (sb < Infinity && sb > si) { const g = sb - (si + Li / 2); if (g < gap) { gap = g; vl = 0; } } }
     { const g = crossGate(i, l, si, Li, vi * vi / (2 * K.b) + 8); if (g < gap) { gap = g; vl = 0; } }
+    // M5b-1 PARK: xe vi phạm đỗ sai dừng hẳn trong vùng cấm dừng gần nút (PARK_MIN–PARK_MAX m tới vạch dừng), khi không có
+    // xe trước, chưa giữ khóa/vùng và chưa đỗ ở thế hệ này. Đỗ PARK_S_32 s (perception ghi sau 60 s đứng yên).
+    if (beh && !holding && gap === Infinity && beh.parkGen[i] !== gen[i] && beh.parkNode[node] && codeIdxOf(i) === BEHAVIOR_IDX_32.PARK) {
+      const d = laneLen - Rz[node] - si;   // khoảng cách tới vạch dừng của nút
+      let free = zTok[i * 2] < 0 && zTok[i * 2 + 1] < 0;
+      for (let k = 0; k < LK && free; k++) if (lockNode[i * LK + k] >= 0) free = false;
+      if (free && d >= PARK_MIN_M_32 && d <= PARK_MAX_M_32) { beh.parkGen[i] = gen[i]; beh.parkUntil[i] = counters.t + PARK_S_32; v[i] = 0; return; }
+    }
     let stopLimit = Infinity;
     if (!holding) { const g = laneLen - Rz[node] - front; if (g < gap) { gap = g; vl = 0; } stopLimit = laneLen - Rz[node] - Li / 2; }
     // IDM rút gọn.
-    const v0 = lanes.speed[l] * laneVmul[l] * vf[i] * (kind[i] >= HEAVY ? .85 : 1);
+    // M5b-1 SPEED: xe vi phạm chạy nhanh hơn tốc độ mong muốn của làn (perception ghi khi vượt giới hạn đoạn + 5 km/h).
+    const v0 = lanes.speed[l] * laneVmul[l] * vf[i] * (kind[i] >= HEAVY ? .85 : 1) * (beh && codeIdxOf(i) === BEHAVIOR_IDX_32.SPEED ? SPEED_MUL_32 : 1);
     const dv = vi - vl, sStar = K.s0 + Math.max(0, vi * K.T + vi * dv / (2 * Math.sqrt(K.a * K.b)));
     const r = vi / v0, r2 = r * r, q = gap < Infinity ? sStar / Math.max(.1, gap) : 0;
     let acc = K.a * (1 - r2 * r2 - q * q);
@@ -963,6 +1018,16 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     if (inStep) finishStep();
     counters.step++; counters.t = counters.step * STEP;
     if (controller) controller.update(counters.t, buildQueues());
+    // M5b-1: ghi lúc mỗi nhóm đèn chuyển sang đỏ (để vượt đỏ đúng 0–3 s đầu của đỏ).
+    if (beh && controller && beh.sampleNodes.length) {
+      for (const n of beh.sampleNodes) {
+        for (const p of controller.stateOf(n, counters.t).phases) {
+          const k = n * 2 + p.group, red = p.phase === 'red';
+          if (red && !beh.wasRed[k]) beh.redOn[k] = counters.t;
+          beh.wasRed[k] = red ? 1 : 0;
+        }
+      }
+    }
     const sec = Math.floor(counters.t); if (sec !== counters.lastSecond) { counters.lastSecond = sec; counters.perSecond[sec & 31] = 0; }
     pLane.set(lane); pS.set(s); pGen.set(gen);
     swapReq();
@@ -1125,6 +1190,9 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   reset();
   const simApi = {
+    // M5b-1: bật/tắt hành vi xe phạm lỗi và mã hành vi của xe (LANE|SPEED|PARK|WRONG-TURN hoặc null).
+    behaviorOn: !!beh,
+    behaviorCodeOf: i => { const c = codeIdxOf(i); return c ? Object.keys(BEHAVIOR_IDX_32).find(k => BEHAVIOR_IDX_32[k] === c) : null; },
     N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters, exportState, importState,
     step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, wantedCount: () => { let n = 0; for (let i = 0; i < N; i++) n += wanted[i]; return n; }, pendingCount: () => { let n = 0; for (let i = 0; i < N; i++) n += pending[i]; return n; }, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,
     setRestrictions, clearRestrictions: () => setRestrictions({}), restrictionCounts: () => ({ closed: closedCount, blocked: laneBlockS.reduce((a, b) => a + (b < Infinity ? 1 : 0), 0), slowed: laneVmul.reduce((a, k) => a + (k < 1 ? 1 : 0), 0) }),

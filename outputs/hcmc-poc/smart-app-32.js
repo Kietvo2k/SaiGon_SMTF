@@ -11,6 +11,7 @@ export { createTrafficSignals32, installSignals32 } from './traffic-signals-32.j
 export { createCameraCapture32, installCameraCapture32, projectToCamera32, projectToPixel32 } from './camera-capture-32.js?v=32a';
 // T11 — client trạm: hàng đợi IndexedDB, REST/WS tới backend, HUD A/B/KPI (xem installStation32 cuối file).
 import { createPerception32 } from './violation-perception-32.js?v=32a';
+import { ALL_CODES_32, restrictedNodeIndices32 } from './violation-rules-32.js?v=32a';
 import { createQueue32, createIndexedDbStore32, createMemoryStore32 } from './station-queue-32.js?v=32a';
 import { createTransport32, startStationLoop32, resolveApiBase32, readStoredToken32, loginStation32 } from './station-client-32.js?v=32a';
 import { installHud32 } from './kpi-panel-32.js?v=32a';
@@ -127,6 +128,13 @@ export function sanitizeSmartDom32(root) {
   const start = root.documentElement || root.body || root;
   if (start) walk(start);
   return true;
+}
+
+// M5b-1 — hành vi xe phạm lỗi của app smart (truyền vào createTraffic31 → sim): nút cấm rẽ trái theo dữ liệu, và các nút
+// đỗ sai = nút có camera (lỗi nằm trong khung ghi hình). Chỉ số nút theo graph.nodes; không có nút thì mảng rỗng.
+export function smartBehavior32({ graph, nodeMap }) {
+  const camNodes = nodeMap.filter(m => m.camera_id).map(m => graph.nodes.findIndex(n => n.id === m.osm_id)).filter(i => i >= 0);
+  return { restrictedNodes: restrictedNodeIndices32(graph, nodeMap), parkNodes: camNodes };
 }
 
 export async function prepareSmart32({ graph }) {
@@ -259,7 +267,9 @@ export function installStation32(app, { cameras = [], nodeMap = [], search = (ty
   const { baseUrl, wsUrl } = resolveApiBase32(search);
   const store = typeof indexedDB !== 'undefined' ? createIndexedDbStore32() : createMemoryStore32();
   const queue = createQueue32({ store });
-  const perception = createPerception32({ net: app.traffic.net, sim: app.traffic.sim, controller: app.controller, nodeMap, cameras });
+  // M5b-1: mọi mã vi phạm; mã hành vi chỉ ghi khi sim bật behavior (sim.behaviorOn).
+  const perception = createPerception32({ net: app.traffic.net, sim: app.traffic.sim, controller: app.controller, nodeMap, cameras,
+    codes: ALL_CODES_32, restrictedNodes: restrictedNodeIndices32(app.traffic.net.G, nodeMap) });
   let hud = null;
   const transport = createTransport32({
     baseUrl, wsUrl, token: readStoredToken32(storage),
