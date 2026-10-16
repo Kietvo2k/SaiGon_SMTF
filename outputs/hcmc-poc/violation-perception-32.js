@@ -19,7 +19,7 @@ export function inFrame32(x, z, cam) {
   return px >= 0.08 * EVIDENCE_W && px <= 0.92 * EVIDENCE_W && py >= 0.08 * EVIDENCE_H && py <= 0.92 * EVIDENCE_H;
 }
 
-export const PERCEPTION_32_VERSION = 'perception-32c';
+export const PERCEPTION_32_VERSION = 'perception-32d';
 export const GRACE_S = 0.8;
 export const VIOLATION_RATE = 0.03;
 // Biển đọc (OCR) phải đúng định dạng đặc tả §4.3 (cùng regex backend PLATE_PATTERN). Không khớp (mất ký tự,…) → needs_review.
@@ -46,6 +46,41 @@ const COLORS = ['trắng', 'đen', 'xám', 'bạc', 'đỏ', 'xanh dương', 'xa
 const OWNERS = [];   // điền từ backend/app/seed/owners.json khi chạy trên Node; mặc định 200 tên trong seed.
 // Độ tin cậy nhân theo loại lỗi: thuộc tính khó nhìn (điện thoại, dây an toàn) thấp hơn → thường `needs_review`.
 const CONF_FACTOR = { PHONE: 0.8, 'NO-SEATBELT': 0.8, OVERLOAD: 0.9 };
+const KIND_HEIGHT_32 = new Map(TRAFFIC_KINDS.map(k => [k.name, k.height]));
+
+// STATION-b — độ tin cậy tổng hợp phản ánh 4 yếu tố hình học quan sát được (ngoài OCR):
+// (1) khoảng cách xe–camera: gần cao hơn; (2) góc nhìn: gần giữa khung cao hơn;
+// (3) xe bị che bởi xe khác đứng giữa camera và xe: thấp hơn; (4) kích thước xe trong khung (pixel): lớn = rõ hơn.
+// Ngưỡng trạng thái (spec §4.4): confidence ≥ 0,85 VÀ OCR ≥ 0,75 → `new`; ngược lại (hoặc biển sai định dạng) → `needs_review`.
+export const CONF_STATUS_MIN_32 = 0.85;
+export const OCR_STATUS_MIN_32 = 0.75;
+export const SIZE_IDEAL_PX_32 = 18;       // chiều cao xe trong khung coi là đủ rõ (px, khung 1280×720)
+export const DIST_FALLOFF_POW_32 = 2.2;   // độ dốc hạ tin cậy theo khoảng cách (so với tầm camera)
+export const OCCL_PENALTY_32 = 0.3;       // mức hạ tin cậy mỗi xe khác che giữa camera và xe
+export const CONF_WEIGHTS_32 = { ocr: 0.42, distance: 0.08, angle: 0.10, size: 0.32, visibility: 0.08 };
+
+const clamp01_32 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+// Góc nhìn: cos góc giữa trục quang camera (chiếu xuống mặt phẳng XZ) và hướng camera→xe; 1 = chính giữa khung.
+export function viewCosAngle32(x, z, cam) {
+  const dx = x - cam.x, dz = z - cam.z, d = Math.hypot(dx, dz) || 1;
+  const yaw = cam.yaw_deg * Math.PI / 180;
+  return clamp01_32((dx * Math.cos(yaw) + dz * Math.sin(yaw)) / d);
+}
+// Chiều cao xe trong khung (px) theo phép chiếu camera (FOV dọc, cùng khung bằng chứng 1280×720).
+export function vehicleHeightPx32(kindHeightM, distanceM, cam, frameH = EVIDENCE_H) {
+  const th = Math.tan((cam.fov_deg || 60) * Math.PI / 360);
+  return kindHeightM * frameH / (2 * Math.max(0.5, distanceM) * th);
+}
+// Độ tin cậy tổng hợp của một bản ghi; `occluders` = số xe khác nằm giữa camera và xe này.
+export function confidenceOf32({ ocr, distance, cam, vehPx, viewCos, occluders = 0, code = null }) {
+  const w = CONF_WEIGHTS_32;
+  const dScore = clamp01_32(1 - Math.pow(Math.min(1, distance / cam.range_m), DIST_FALLOFF_POW_32));
+  const aScore = clamp01_32(viewCos);
+  const sScore = clamp01_32(vehPx / SIZE_IDEAL_PX_32);
+  const vScore = clamp01_32(1 - OCCL_PENALTY_32 * occluders);
+  const raw = w.ocr * ocr + w.distance * dScore + w.angle * aScore + w.size * sScore + w.visibility * vScore;
+  return clamp01_32(raw * (CONF_FACTOR[code] ?? 1));
+}
 
 export const SCENARIO_PLATES_32 = [
   { slot: 1, gen: 0, plate: '51K-888.88', vehicle_class: 'car' },
@@ -172,6 +207,22 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
     const c = net.nextSt[lanes.st[l]]?.find(x => x.st === lanes.st[nextLane]);
     return !!c && c.turn < -LEFT_TURN_RAD_32;
   };
+  // Số xe khác đang che giữa camera và xe i: hình chiếu xuống mặt phẳng XZ, xe j nằm trên tia camera→xe
+  // (0,8 m < t < L−0,8 m) và lệch ngang < 1,4 m thì coi là che khuất.
+  const occludersOf = (i, x, z, cam) => {
+    const ux = x - cam.x, uz = z - cam.z, L = Math.hypot(ux, uz) || 1;
+    const ax = ux / L, az = uz / L;
+    let n = 0;
+    for (let j = 0; j < sim.N; j++) {
+      if (j === i || !sim.active[j]) continue;
+      const p = poseOf(j, sim.lane[j]);
+      const vx = p.x - cam.x, vz = p.z - cam.z;
+      const t = vx * ax + vz * az;
+      if (t <= 0.8 || t >= L - 0.8) continue;
+      if (Math.abs(-az * vx + ax * vz) < 1.4) { n++; if (n >= 3) break; }
+    }
+    return n;
+  };
   // Điểm đo tốc độ / vùng cấm đỗ theo làn (zones, −1 = không có).
   const inSpeedTrap = (l, s) => !!zones && zones.speedS0 && zones.speedS0[l] >= 0 && s >= zones.speedS0[l] && s <= zones.speedS1[l];
   const inParkZone = (l, s) => !!zones && zones.parkS0 && zones.parkS0[l] >= 0 && s >= zones.parkS0[l] && s <= zones.parkS1[l];
@@ -180,7 +231,7 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
   // veh = { slot, gen, kindName, rec0, speedKmh, speedLimit? }; pose (tùy chọn) = tư thế thật của tác nhân ghi bằng chứng.
   const camNodeIdx = new Map();
   for (const m of nodeMap) if (m.node_id && idxByOsm.has(m.osm_id)) camNodeIdx.set(m.node_id, idxByOsm.get(m.osm_id));
-  const pushRecord = ({ code, veh, cam, node: node0, l, tSim, distance, st, excessKmh = 0, extra = {}, pose = null }) => {
+  const pushRecord = ({ code, veh, cam, node: node0, l, tSim, distance, st, excessKmh = 0, extra = {}, pose = null, vi = -1 }) => {
     const node = (code === 'PARK' || code === 'WRONG-TURN') ? node0 : (camNodeIdx.get(cam.node_id) ?? node0);
     const { slot, gen, kindName, rec0 } = veh;
     const ocr = ocrNoise32(rec0.plate, distance, cam.range_m, tSim, slot, gen);
@@ -188,16 +239,19 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
     const key = `${slot}|${gen}|${node}|${code}`;
     if (seenB.has(key)) return;
     seenB.add(key);
-    const factor = CONF_FACTOR[code] ?? 1;
     const plateOk = plateFormatOk32(ocr.plate_read, rec0.plate_format);
-    let confidence = Math.max(0, Math.min(1, factor * (0.5 * ocr.ocr_confidence + 0.3 * (1 - distance / cam.range_m) + 0.2 * (st.inFovS >= 1 ? 1 : 0))));
+    // Độ tin cậy: OCR + khoảng cách + góc nhìn + kích thước xe trong khung + che khuất (confidenceOf32).
+    const vehPx = vehicleHeightPx32(KIND_HEIGHT_32.get(kindName) ?? 1.5, distance, cam);
+    const viewCos = pose ? viewCosAngle32(pose.x, pose.z, cam) : 1;
+    const occluders = pose ? occludersOf(vi, pose.x, pose.z, cam) : 0;
+    let confidence = confidenceOf32({ ocr: ocr.ocr_confidence, distance, cam, vehPx, viewCos, occluders, code });
     if (!plateOk) confidence = Math.min(confidence, PLATE_MISREAD_CONF_CAP_32);
     const stat = controller && controller.stateOf ? controller.stateOf(node, tSim) : null;
     const metaN = metaByNode.get(node);
     out.push({
       violation_code: code,
       violation_label: CODE_LABEL_32[code],
-      status: confidence >= 0.85 && ocr.ocr_confidence >= 0.75 && plateOk ? 'new' : 'needs_review',
+      status: confidence >= CONF_STATUS_MIN_32 && ocr.ocr_confidence >= OCR_STATUS_MIN_32 && plateOk ? 'new' : 'needs_review',
       priority_flag: false, priority_reason: null,
       plate: ocr.plate_read, plate_format: rec0.plate_format, vehicle_class: kindName,
       vehicle_color: rec0.color, vehicle_id: `V-${String(slot).padStart(6, '0')}`,
@@ -242,14 +296,18 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
     const ocr = ocrNoise32(rec0Of(i).plate, distance, cam.range_m, tc, slot, gen);
     const rec0 = rec0Of(i);
     const plateOk = plateFormatOk32(ocr.plate_read, rec0.plate_format);
-    let confidence = Math.max(0, Math.min(1, 0.5 * ocr.ocr_confidence + 0.3 * (1 - distance / cam.range_m) + 0.2 * (st.inFovS >= 1 ? 1 : 0)));
+    // STATION-b: tin cậy theo OCR + khoảng cách + góc nhìn + kích thước xe (px) + bị che (như pushRecord).
+    const p = poseOf(i, l);
+    const vehPx = vehicleHeightPx32(KIND_HEIGHT_32.get(kindName) ?? 1.5, distance, cam);
+    let confidence = confidenceOf32({ ocr: ocr.ocr_confidence, distance, cam, vehPx,
+      viewCos: viewCosAngle32(p.x, p.z, cam), occluders: occludersOf(i, p.x, p.z, cam), code: 'RED-LIGHT' });
     if (!plateOk) confidence = Math.min(confidence, PLATE_MISREAD_CONF_CAP_32);
     const stNow = controller.stateOf(node, tc);
     const carLike = kindName !== 'motorbike';
     out.push({
       violation_code: 'RED-LIGHT',
       violation_label: CODE_LABEL_32['RED-LIGHT'],
-      status: confidence >= 0.85 && ocr.ocr_confidence >= 0.75 && plateOk ? 'new' : 'needs_review',
+      status: confidence >= CONF_STATUS_MIN_32 && ocr.ocr_confidence >= OCR_STATUS_MIN_32 && plateOk ? 'new' : 'needs_review',
       priority_flag: false, priority_reason: null,
       plate: ocr.plate_read, plate_format: rec0.plate_format, vehicle_class: kindName,
       vehicle_color: rec0.color, vehicle_id: `V-${String(slot).padStart(6, '0')}`,
@@ -346,7 +404,7 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
               // Ô tô đi làn 0 của trục ≥ 2 làn (làn xe máy).
               if (kindName === 'car' && lanes.n[l] >= 2 && lanes.k[l] === 0) {
                 st.emitted.add(code);
-                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, extra: { lane_k: lanes.k[l], lanes_in_state: lanes.n[l] } });
+                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, pose: { x, z }, vi: i, extra: { lane_k: lanes.k[l], lanes_in_state: lanes.n[l] } });
               }
             } else if (code === 'SPEED') {
               // M5b-1b: đo tại ĐIỂM ĐO TỐC ĐỘ (zones.speed*): xe trên đoạn đo mà vượt giới hạn đoạn + 5 km/h thì ghi.
@@ -354,7 +412,7 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
                 && prevS < zones.speedS1[l] && sim.s[i] > zones.speedS0[l];
               if ((inSpeedTrap(l, sim.s[i]) || passedTrap) && speedKmh > limit + SPEED_OVER_KMH_32) {
                 st.emitted.add(code);
-                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, excessKmh: +(speedKmh - limit).toFixed(1),
+                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, pose: { x, z }, vi: i, excessKmh: +(speedKmh - limit).toFixed(1),
                   extra: { speed_limit_kmh: limit, measured_at: 'điểm đo tốc độ' } });
               }
             } else if (code === 'PARK') {
@@ -362,17 +420,17 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
               st.stillS = sim.v[i] < 0.15 ? st.stillS + dt : 0;
               if (st.stillS >= PARK_STILL_S_32 && inParkZone(l, sim.s[i]) && !hasStoppedLeader(i, l)) {
                 st.emitted.add(code);
-                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, extra: { still_s: +st.stillS.toFixed(1), zone: 'vùng cấm đỗ' } });
+                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, pose: { x, z }, vi: i, extra: { still_s: +st.stillS.toFixed(1), zone: 'vùng cấm đỗ' } });
               }
             } else if (code === 'WRONG-TURN') {
               const laneLen = lanes.length[l];
               if (restricted.has(node) && laneLen - sim.s[i] <= 30 && leftTurnAt(l, sim.next[i])) {
                 st.emitted.add(code);
-                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, extra: { maneuver: 'rẽ trái' } });
+                pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, pose: { x, z }, vi: i, extra: { maneuver: 'rẽ trái' } });
               }
             } else if (TRAIT_CODES_32.includes(code) && enabled.has(code)) {
               st.emitted.add(code);
-              pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st });
+              pushRecord({ code, veh: veh(), cam, node, l, tSim, distance, st, pose: { x, z }, vi: i });
             }
           }
         }

@@ -4,12 +4,15 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
-import { buildTrafficNetwork31, createTrafficSim31, SEED, TRAFFIC_KINDS } from '../city-traffic-sim-31.js?v=32a';
-import { createPerception32, inFrame32 } from '../violation-perception-32.js?v=32a';
+import { buildTrafficNetwork31, createTrafficSim31, SEED, TRAFFIC_KINDS, createTrafficGeometry31 } from '../city-traffic-sim-31.js?v=32a';
+import { createPerception32, inFrame32, confidenceOf32, plateFormatOk32 } from '../violation-perception-32.js?v=32a';
 import { violatorOf32, redViolatorOf32, penaltyOf32, ALL_CODES_32, BEHAVIOR_CODES_32, TRAIT_CODES_32,
   RED_RATE_32, CODE_LABEL_32, restrictedNodeIndices32, RESTRICTED_NODE_IDS_32 } from '../violation-rules-32.js?v=32a';
 import { buildSignalPlan32 } from '../signal-plan-32.js?v=32a';
 import { createSignalController32 } from '../traffic-controller-32.js?v=32a';
+import { buildZones32 } from '../violation-zones-32.js?v=32a';
+import { createWrongWayAgents32 } from '../wrong-way-32.js?v=32a';
+import { PEAK_HANG_XANH_DEMAND } from '../../../scripts/a1-metric-32.mjs';
 
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
@@ -282,4 +285,37 @@ test('rẽ trái ở nút cấm: xe không vi phạm chỉ rẽ trái khi không
 test('mô phỏng có behavior tất định: hai lần cùng seed → cùng hash trạng thái', () => {
   const run = () => { const { sim } = simWith({ restrictedNodes: restrictedSim }); for (let k = 0; k < 400; k++) sim.step(); return sim.stateHash(); };
   assert.equal(run(), run());
+});
+
+// ---------- STATION-b: độ tin cậy theo khoảng cách/góc nhìn/che khuất/kích thước + tỉ lệ `new`.
+test('confidenceOf32: gần > xa, giữa khung > lệch góc, không bị che > bị che, xe to > xe nhỏ', () => {
+  const cam = camAt(0);
+  const base = { ocr: 0.88, cam, vehPx: 30, viewCos: 1, occluders: 0, code: 'RED-LIGHT', distance: 30 };
+  const at = extra => confidenceOf32({ ...base, ...extra });
+  assert.ok(at({ distance: 10 }) > at({ distance: 50 }), 'khoảng cách: gần phải tin cậy hơn xa');
+  assert.ok(at({ viewCos: 1 }) > at({ viewCos: 0.5 }), 'góc nhìn: giữa khung hơn lệch góc');
+  assert.ok(at({ occluders: 0 }) > at({ occluders: 1 }), 'che khuất: không bị che hơn bị che');
+  assert.ok(at({ vehPx: 45 }) > at({ vehPx: 12 }), 'kích thước: xe to trong khung hơn xe nhỏ');
+  assert.ok(confidenceOf32({ ...base, code: 'PHONE' }) < confidenceOf32(base), 'thuộc tính khó nhìn (điện thoại) phải hạ tin cậy');
+  assert.ok(at({}) >= 0 && at({}) <= 1);
+});
+
+test('8 phút cao điểm camera HX: 50–80 % bản ghi `new`; biển sai định dạng luôn `needs_review`', () => {
+  const cameras = JSON.parse(fs.readFileSync(path.resolve('outputs/smart-traffic/backend/app/seed/cameras.json'), 'utf8'))
+    .filter(c => String(c.camera_id).startsWith('CAM-HX'));
+  const controller = createSignalController32({ net, sim: null, mode: 'fixed' });
+  const zones = buildZones32({ net, cameras });
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: 180, seed: SEED, demand: PEAK_HANG_XANH_DEMAND,
+    behavior: { restrictedNodes: restrictedSim, parkS0: zones.parkS0, parkS1: zones.parkS1 } });
+  const ghosts = zones.wrongWay ? createWrongWayAgents32({ zone: zones.wrongWay, geo: createTrafficGeometry31(net, sim) }) : null;
+  const per = createPerception32({ net, sim, controller, nodeMap, cameras, zones, ghosts, codes: ALL_CODES_32, restrictedNodes: restrictedSim });
+  const found = [];
+  for (let k = 0; k < 4800; k++) { sim.step(); if (k % 5 === 0) { per.scan(sim.counters.t); found.push(...per.drainViolations()); } }
+  assert.ok(found.length >= 20, `phải đủ bản ghi để đo, có ${found.length}`);
+  const nw = found.filter(v => v.status === 'new').length, rate = nw / found.length;
+  const byCode = {};
+  for (const v of found) { const r = byCode[v.violation_code] || (byCode[v.violation_code] = { n: 0, nw: 0 }); r.n++; if (v.status === 'new') r.nw++; }
+  console.log('STATION-b tỉ lệ new theo mã: ' + JSON.stringify(byCode));
+  for (const v of found) if (!plateFormatOk32(v.plate, v.plate_format)) assert.equal(v.status, 'needs_review', `biển sai định dạng: ${v.plate}`);
+  assert.ok(rate >= 0.5 && rate <= 0.8, `tỉ lệ new phải trong 50–80 %, có ${(100 * rate).toFixed(1)} % (${nw}/${found.length})`);
 });
