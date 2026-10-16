@@ -6,7 +6,7 @@ Mở [Hero Corridor Lam Sơn–Đồng Khởi](http://127.0.0.1:8768/hcmc-poc/we
 
 Ba proxy thô của Nhà hát Thành phố, Continental và Caravelle được loại khỏi mesh hợp nhất và thay bằng vỏ hero có ảnh đúng địa điểm, chi tiết kiến trúc nổi cùng metadata tác giả/giấy phép. Lớp nhận dạng WebGPU bổ sung 11 mặt ảnh đã qua kiểm tra bề mặt; 5 mặt cần tách bề mặt và 1 vỏ lấy mẫu tiếp tục bị giữ lại, không tự động phủ sai. Đường Lam Sơn–Đồng Khởi bám sáu centerline OSM đã lưu và nhận atlas PBR 1K CC0 cho asphalt/vỉa hè, gồm diffuse, normal OpenGL, roughness và AO; bề rộng, đèn và vạch qua đường vẫn là proxy trình diễn. Biên nhận URL và SHA-256 nằm trong `assets/pbr30/SOURCES.json`. Cảnh này là lát cắt chứng minh kiến trúc mở rộng: toàn thành phố giữ LOD vĩ mô, hành lang quan trọng nhận chất lượng cận cảnh, sau này có thể thay bằng BIM/photogrammetry/3DGS mà không đổi renderer.
 
-Xem [kiến trúc và nghiệm thu Runtime 30B](VISUAL-RUNTIME-30B.md). Khởi động lạnh cấu hình trình diễn phải biên dịch nhiều graph GPU và cascade; cấu hình hiệu năng là đường lui tức thời cho máy demo yếu.
+Khởi động lạnh cấu hình trình diễn phải biên dịch nhiều graph GPU và cascade; cấu hình hiệu năng là đường lui tức thời cho máy demo yếu.
 
 ## Bản 31A — mạng đường, cầu, giao thông, mật độ, khu mô phỏng và chế độ
 
@@ -41,11 +41,11 @@ Cách tạo texture lite: `data/sentinel-2016-lite.jpg` (1024²), `assets/facade
 
 Mở [WebGPU Material Engine](http://127.0.0.1:8768/hcmc-poc/webgpu-materials-24.html?v=28b&view=materials). Bản này dùng Three.js r186, `WebGPURenderer`, TSL/NodeMaterial và WebGL 2 fallback để phủ 8 họ vật liệu lên toàn bộ 70.726 công trình trong vùng 38,57 km². Bản 24E khôi phục kết cấu dây văng cầu Ba Son, Marina Central Tower 55 tầng / 240 m, sửa bốn footprint Grand Marina thành cụm tháp 45–47 tầng, hạ tương phản ô kính ban ngày và tách hiệu chỉnh khỏi dữ liệu cảnh gốc.
 
-PoC 28B dùng City Visual Runtime trên Three.js r186 WebGPU/TSL làm giao diện City Lab mặc định. Runtime bổ sung hậu kỳ HDR có depth micro-contact, bóng thích nghi theo camera, semantic facade kit, nước đa tần số có Fresnel, Kelvin wake động, cây HLOD và camera có quán tính. Lớp Detail Runtime 28 tạo parapet, gờ mặt đứng, cornice khối đế, mái che, lightbox tầng trệt, rooftop plant và đèn đường bằng instancing rồi chuyển LOD theo camera. Wake chỉ còn ba cặp V fade độc lập, không dùng rectangular prop wash gây vệt ngang. Toàn bộ phần nâng cấp được viết độc lập theo phương pháp clean-room; không sử dụng mã hay asset từ SpiderBench. Kiến trúc và giới hạn được ghi trong [Visual Runtime 28](VISUAL-RUNTIME-28.md); tài liệu 27A được giữ như lịch sử. Shell WebGL cũ vẫn có thể mở bằng `?legacy=1` cho mục đích đối chiếu kỹ thuật. Chạy `for file in scripts/qa-*.cjs; do node "$file"; done` để kiểm tra toàn bộ cổng phát hành hiện hành.
+PoC 28B dùng City Visual Runtime trên Three.js r186 WebGPU/TSL làm giao diện City Lab mặc định. Runtime bổ sung hậu kỳ HDR có depth micro-contact, bóng thích nghi theo camera, semantic facade kit, nước đa tần số có Fresnel, Kelvin wake động, cây HLOD và camera có quán tính. Lớp Detail Runtime 28 tạo parapet, gờ mặt đứng, cornice khối đế, mái che, lightbox tầng trệt, rooftop plant và đèn đường bằng instancing rồi chuyển LOD theo camera. Wake chỉ còn ba cặp V fade độc lập, không dùng rectangular prop wash gây vệt ngang. Toàn bộ phần nâng cấp được viết độc lập theo phương pháp clean-room; không sử dụng mã hay asset từ SpiderBench. Kiến trúc và giới hạn của Visual Runtime 28 đã gỡ khỏi repo cùng nhánh shell WebGL cũ (`?legacy=1`); tra cứu bằng `git log` khi cần đối chiếu kỹ thuật. Chạy `for file in scripts/qa-*.cjs; do node "$file"; done` để kiểm tra toàn bộ cổng phát hành hiện hành.
 
 Từ thư mục gốc, chạy `python3 scripts/clean_workspace.py` để xem trước rác có thể tái tạo và thêm `--apply` để xóa. Lệnh chỉ xử lý allow-list, bảo vệ mọi file đang được Git theo dõi và giữ nguyên dữ liệu nguồn cùng receipt/provenance.
 
-Urban Motion 26B khôi phục giao thông động trực tiếp trong scene WebGPU: 3.200 phương tiện ưu tiên xe máy và ô tô chạy trên các đoạn tim đường OSM đã loại đoạn cắt footprint/công viên; 22 tàu, phà và sà lan chạy hai chiều trên tuyến minh họa giữa lòng sông Sài Gòn. Wake dùng ba dải chữ V đồng phẳng, mở rộng và mờ dần trên mặt nước thay cho khối trắng cứng. Đây là chuyển động procedural phục vụ cảm nhận đô thị, không phải dữ liệu giao thông thời gian thực hoặc AIS. Xem [Motion QA 26B](MOTION-QA-26B.md).
+Urban Motion 26B khôi phục giao thông động trực tiếp trong scene WebGPU: 3.200 phương tiện ưu tiên xe máy và ô tô chạy trên các đoạn tim đường OSM đã loại đoạn cắt footprint/công viên; 22 tàu, phà và sà lan chạy hai chiều trên tuyến minh họa giữa lòng sông Sài Gòn. Wake dùng ba dải chữ V đồng phẳng, mở rộng và mờ dần trên mặt nước thay cho khối trắng cứng. Đây là chuyển động procedural phục vụ cảm nhận đô thị, không phải dữ liệu giao thông thời gian thực hoặc AIS.
 
 Batch 25A đã dựng registry mưa–ngập–triều theo Refinery: 9 nguồn gốc chính thức, 64 claim có evidence span, raw snapshot và SHA-256. Catalog kịch bản khóa mọi điều khiển vô hạn và fail-closed khi thiếu hyetograph, hydrograph triều, hệ cao độ, DTM hoặc mạng thoát nước. [IOC Flood 25G](http://127.0.0.1:8768/hcmc-poc/webgpu-materials-24.html?v=25g&view=flood25) đưa camera đến Thảo Điền, thêm mưa–gió động 0–200 mm, triều tham chiếu 1,40–1,80 m, lớp nước proxy và cảnh báo 3D. Nút **Kịch bản xấu nhất** chuyển sang toàn cảnh, bật cảnh báo đỏ và các beacon tuyến đường; mọi giá trị vẫn được gắn nhãn stress test, không phải dự báo. Chạy `node scripts/qa-flood-25a.cjs` để kiểm tra hash, provenance, giới hạn mưa–triều và fail-closed solver UI.
 
@@ -55,7 +55,7 @@ Batch 25A đã dựng registry mưa–ngập–triều theo Refinery: 9 nguồn 
 
 Mở [Construction Change Lens](http://127.0.0.1:8768/hcmc-poc/?legacy=1&v=23a&view=changes23). Chế độ này trình bày 7 footprint mới đã áp dụng, 87 chiều cao đã đối chiếu và 127 hình học đang chờ con người kiểm chứng. Nút **Trước snapshot / Sau đối chiếu** thay đổi hình học thật trong bộ nhớ; ba lớp màu, bộ lọc ưu tiên/thời gian và hành trình bốn điểm giúp trình bày nhanh cho lãnh đạo.
 
-127 hình học màu đỏ chỉ là tín hiệu rà soát và không được nhập vào scene chính. Bộ dữ liệu máy đọc được, bảng CSV 127 đối tượng, phương pháp tái lập, cơ chế kiểm tra bản Overture và dự thảo công văn xin xác nhận GITC nằm trong [hồ sơ PoC 23](../../research/vibecode-23-change-lens/README.md).
+127 hình học màu đỏ chỉ là tín hiệu rà soát và không được nhập vào scene chính. Bộ dữ liệu máy đọc được, bảng CSV 127 đối tượng, phương pháp tái lập, cơ chế kiểm tra bản Overture và dự thảo công văn xin xác nhận GITC nằm trong hồ sơ PoC 23 (đã gỡ khỏi repo, tra cứu bằng `git log`).
 
 ```sh
 python3 scripts/build_change_lens_23.py
@@ -71,7 +71,7 @@ Mở [cụm Nhà hát–Lam Sơn](http://127.0.0.1:8768/hcmc-poc/?v=20b&view=dis
 
 Caravelle tách rõ hai mức bằng chứng: cánh thấp bám bao hình 30 m đã lưu, tháp dùng thông tin **24 tầng** từ lịch sử chính thức và quy tắc hiển thị 3,2 m/tầng; chiều cao và vị trí tháp chưa khảo sát. Góc Continental và Đồng Khởi dùng camera theo hành lang phố để không xuyên khối công trình. Mọi cảnh 20B đều giữ `planningGeometryEnabled: false`.
 
-Xem [hướng dẫn demo 20B](../DEMO-20B-HUONG-DAN.md), [TIP](../../research/vibecode-20b/TIP.md) và [báo cáo nghiệm thu](../../research/vibecode-20b/COMPLETION-REPORT.md).
+Xem hướng dẫn demo 20B và báo cáo nghiệm thu (đã gỡ khỏi repo, tra cứu bằng `git log`).
 
 ## Lịch sử — Architectural Hero Zone 20A
 
@@ -79,7 +79,7 @@ Xem [hướng dẫn demo 20B](../DEMO-20B-HUONG-DAN.md), [TIP](../../research/vi
 
 Mở [Hero Zone Nhà hát](http://127.0.0.1:8768/hcmc-poc/?v=20a&view=hero20) hoặc [trailer lãnh đạo 53 giây](http://127.0.0.1:8768/hcmc-poc/?v=20a&view=executive19). Cảnh cận thay tấm ảnh phủ toàn khối bằng vỏ kiến trúc nổi: mái, mansard, vòm, cột, cửa, phào, lan can, ô cửa và bậc. Ảnh đúng địa điểm được giới hạn trong vùng nhận dạng ở vòm giữa; bản gốc Commons 3.920×2.208 px được hiệu chỉnh thành texture 1.600×1.600 px mà không sinh thêm chi tiết. Public realm có người, cây, đèn và vật thể tỷ lệ với LOD cự ly gần.
 
-Ba trạng thái **Ngày / Giờ vàng / Chạng vạng** giữ chung camera. Footprint và trục mặt đứng bám dữ liệu mở; hình học kiến trúc là `photo_derived_approximation`; sân và hoạt động là `illustrative_proxy`. Không có hình học quy hoạch tương lai. Xem [hướng dẫn demo](../DEMO-20A-HUONG-DAN.md) và [báo cáo nghiệm thu](../../research/vibecode-20a/COMPLETION-REPORT.md).
+Ba trạng thái **Ngày / Giờ vàng / Chạng vạng** giữ chung camera. Footprint và trục mặt đứng bám dữ liệu mở; hình học kiến trúc là `photo_derived_approximation`; sân và hoạt động là `illustrative_proxy`. Không có hình học quy hoạch tương lai. Hướng dẫn demo 20A và báo cáo nghiệm thu đã gỡ khỏi repo, tra cứu bằng `git log`.
 
 # Lịch sử — Executive Visual Story 19
 
@@ -87,7 +87,7 @@ Ba trạng thái **Ngày / Giờ vàng / Chạng vạng** giữ chung camera. Fo
 
 Mở [trailer 53 giây](http://127.0.0.1:8768/hcmc-poc/?v=19a&view=executive19) hoặc [toàn cảnh ban ngày](http://127.0.0.1:8768/hcmc-poc/?v=19a&view=overview) rồi bấm **Trình diễn thành phố**. Năm cảnh đi từ bối cảnh vùng đến Bạch Đằng, Nguyễn Huệ, ảnh Nhà hát Thành phố và kết bằng blue-hour minh họa. Có thể tiến/lùi, tạm dừng, chọn cảnh trực tiếp hoặc thoát về khám phá tự do.
 
-Ảnh Nhà hát đi cùng tác giả và giấy phép; hình học vẫn được ghi là gần đúng. Cảnh đêm chỉ là lớp trình diễn, không mô tả chiếu sáng tại một thời điểm thực. Batch 19 không mở hình học quy hoạch tương lai. Xem [hướng dẫn trình diễn](../DEMO-19-HUONG-DAN.md) và [Verify 19](../../research/vibecode-19/COMPLETION-REPORT.md).
+Ảnh Nhà hát đi cùng tác giả và giấy phép; hình học vẫn được ghi là gần đúng. Cảnh đêm chỉ là lớp trình diễn, không mô tả chiếu sáng tại một thời điểm thực. Batch 19 không mở hình học quy hoạch tương lai. Hướng dẫn trình diễn và Verify 19 đã gỡ khỏi repo, tra cứu bằng `git log`.
 
 ## Bản hiện hành 18 — ảnh, địa hình và LOD theo vùng
 
