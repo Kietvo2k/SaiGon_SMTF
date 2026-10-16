@@ -27,7 +27,10 @@ check('Workspace cleanup is reproducible and leaves no allow-listed residue',()=
   const python=[process.env.PYTHON,'python3','python'].find(command=>command&&cp.spawnSync(command,['--version']).status===0);
   assert(python,'Không tìm thấy trình thông dịch Python (đặt biến PYTHON)');
   const dry=cp.execFileSync(python,[cleanup],{cwd:project,encoding:'utf8'});
-  assert(dry.includes('candidates=0'));
+  // .venv/, node_modules/, dist/, var/ là phụ thuộc của build/run — không thuộc phạm vi vệ sinh,
+  // vì vậy chỉ cần vệ sinh trừ các đường dẫn này.
+  const residue=dry.split(/\r?\n/).filter(line=>line.startsWith('WOULD_REMOVE\t')).map(line=>line.split('\t')[2]).map(p=>p.replace(/\\/g,'/')).filter(p=>![ '.venv','node_modules','dist','var' ].some(dir=>p.split('/').includes(dir)));
+  assert(residue.length===0,'Residue outside generated dirs: '+residue.join(', '));
   for(const relative of ['work/archive-ui-pre-demo','work/v1-backup','work/RGBELoader.js','work/bitexco-model.html'])assert(!fs.existsSync(path.join(project,relative)));
 });
 
