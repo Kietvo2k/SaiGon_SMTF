@@ -55,7 +55,7 @@ check('Unified map-first shell keeps one canonical UI and aligned collapsible pa
   for(const id of ['cityNav','collapseNav','collapseStory','collapse','collapseSelection','collapseFloodLab'])assert(html.includes(`id="${id}"`));
   assert(html.includes('aria-controls="floodContent"'));
   assert(index.includes("location.replace(`webgpu-materials-24.html?v=31a"));
-  assert(index.includes("q.get('legacy')==='1'"));
+  assert(!index.includes("legacy"));
   assert(css.includes('Unified map shell · 30B'));
   assert(css.includes('--rail:44px'));
   assert(css.includes('.collapsed>.panel-body'));
