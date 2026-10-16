@@ -21,13 +21,17 @@ MEDIA_NAME = re.compile(r'^(CAM-[A-Z]{2,3}-[0-9]{3})\.(mp4|jpg|png)$')
 FRAMES = {}   # camera_id → frame mới nhất
 
 
-def _station_guard(claims=Depends(require_role('station'))):
-    # §11: ≤ 200 request/phút/station → 429 (mọi endpoint của trạm).
-    StationLimiter.check(claims['sub'])
-    return claims
+def _station_guard(group):
+    # §11 (STATION-a): hạn mức theo NHÓM — mỗi nhóm một cửa sổ riêng, 429 kèm Retry-After.
+    def dep(claims=Depends(require_role('station'))):
+        StationLimiter.check(claims['sub'], group)
+        return claims
+    return dep
 
 
-STATION = _station_guard
+STATION = _station_guard('violation')             # vi phạm, bằng chứng, media, nhịp sống
+STATION_TELEMETRY = _station_guard('telemetry')   # metrics, heat
+STATION_FRAME = _station_guard('frame')           # khung stream
 
 
 def _now():
@@ -51,7 +55,7 @@ async def heartbeat(body: dict, claims=Depends(STATION)):
 
 
 @router.post('/metrics')
-async def metrics(body: dict, claims=Depends(STATION)):
+async def metrics(body: dict, claims=Depends(STATION_TELEMETRY)):
     kpi = body.get('kpi', {})
     with connect() as conn:
         conn.execute('INSERT INTO kpi_samples (t_sim, window_s, wait_avg_s, wait_p95_s, queue_max, queue_avg, flow_per_min, mode, scenario_key) VALUES (?,?,?,?,?,?,?,?,?)',
@@ -176,14 +180,14 @@ async def upload_media(file: UploadFile = File(...), claims=Depends(STATION)):
 
 
 @router.post('/heat')
-async def post_heat(body: HeatIn, claims=Depends(STATION)):
+async def post_heat(body: HeatIn, claims=Depends(STATION_TELEMETRY)):
     """Bản đồ nhiệt + cảnh báo kẹt từ trạm (M4c). Lỗi hình dạng/giới hạn → 422 thống nhất."""
     result = await heat.ingest(body)
     return {'ok': True, **result}
 
 
 @router.post('/frames')
-async def post_frame(body: dict, claims=Depends(STATION)):
+async def post_frame(body: dict, claims=Depends(STATION_FRAME)):
     cam = body.get('camera_id', '')
     if not MEDIA_NAME.fullmatch(f'{cam}.jpg'):
         raise HTTPException(status_code=422, detail=err('VALIDATION', 'camera_id không hợp lệ'))

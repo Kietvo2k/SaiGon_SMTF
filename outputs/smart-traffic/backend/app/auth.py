@@ -1,4 +1,5 @@
 import base64
+import math
 import os
 import time
 
@@ -14,7 +15,7 @@ REGISTER_HITS = {}   # ip -> [epoch, count] (đăng ký công dân, M6a)
 REGISTER_LOCKS = {}
 BIND_FAILS = {}      # user -> [epoch, count] số lần NHẬP SAI mã đăng ký xe (M6a)
 BIND_LOCKS = {}
-STATION_HITS = {}    # station_id -> [epoch, count]
+STATION_HITS = {}    # nhóm -> {station_id -> [epoch, count]} (STATION-a: mỗi nhóm một cửa sổ riêng)
 # Hash bcrypt hợp lệ của một mật khẩu không tồn tại — dùng để chạy `bcrypt.checkpw` khi
 # user không có, giữ thời gian phản hồi tương đương (không lộ user tồn tại — §11).
 DUMMY_HASH = '$2b$12$QEkSPfjieoHD0TZDORzeWODSQRqRs1y2Sz1Mj2PuHoSzz/nCYcCgm'
@@ -134,8 +135,10 @@ _BIND = _Window(BIND_FAILS, BIND_LOCKS, config.LOGIN_RATE_LIMIT, config.LOGIN_LO
 
 def reset_limits():
     """Xóa toàn bộ bộ đếm giới hạn (chỉ dùng trong test: mỗi test một bộ đếm riêng)."""
-    for d in (LOGIN_HITS, LOGIN_LOCKS, REGISTER_HITS, REGISTER_LOCKS, BIND_FAILS, BIND_LOCKS, STATION_HITS):
+    for d in (LOGIN_HITS, LOGIN_LOCKS, REGISTER_HITS, REGISTER_LOCKS, BIND_FAILS, BIND_LOCKS):
         d.clear()
+    for group in STATION_HITS.values():   # STATION-a: lồng theo nhóm
+        group.clear()
 
 
 class LoginLimiter:
@@ -167,16 +170,27 @@ class BindLimiter:
 
 
 class StationLimiter:
-    """§11: ≤ 200 request/phút/station → 429."""
+    """§11: hạn mức request/phút/trạm THEO NHÓM (STATION-a).
+
+    Mỗi nhóm (violation/telemetry/frame) có bộ đếm và cửa sổ 60 s riêng — khung hình
+    không chiếm hạn mức của vi phạm. Vượt ngưỡng → 429 kèm `Retry-After` (giây còn lại).
+    """
+
+    WINDOW_S = 60
 
     @staticmethod
-    def check(station_id: str):
+    def check(station_id: str, group: str):
+        limit = config.STATION_RATE_LIMITS[group]
+        hits = STATION_HITS.setdefault(group, {})
         now = time.time()
-        window, count = STATION_HITS.get(station_id, (now, 0))
-        if now - window >= 60:
+        window, count = hits.get(station_id, (now, 0))
+        if now - window >= StationLimiter.WINDOW_S:
             window, count = now, 0
         count += 1
-        STATION_HITS[station_id] = (window, count)
-        _purge_stale(STATION_HITS, now, 120)
-        if count > config.STATION_RATE_LIMIT:
-            raise HTTPException(status_code=429, detail={'error': {'code': 'RATE_LIMITED', 'message': 'Trạm gửi quá nhiều yêu cầu', 'detail': None}})
+        hits[station_id] = (window, count)
+        _purge_stale(hits, now, 120)
+        if count > limit:
+            # Retry-After = giây còn lại của cửa sổ (làm tròn lên), tối thiểu 1.
+            retry_after = max(1, math.ceil(StationLimiter.WINDOW_S - (now - window)))
+            raise HTTPException(status_code=429, headers={'Retry-After': str(retry_after)},
+                                detail={'error': {'code': 'RATE_LIMITED', 'message': 'Trạm gửi quá nhiều yêu cầu', 'detail': None}})

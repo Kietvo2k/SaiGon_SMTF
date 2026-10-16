@@ -89,6 +89,15 @@ export function violationKey32(rec) {
 const retriable32 = status => status === 401 || status === 429 || status >= 500;
 const defaultLog32 = msg => { try { console.warn(msg); } catch (e) { /* bỏ qua */ } };
 
+// STATION-a: đọc `Retry-After` (giây) khi 429 — trạm chờ ĐÚNG số giây này rồi gửi lại (thay cho backoff mù).
+const retryAfterOf32 = res => {
+  try {
+    const raw = res && res.headers && typeof res.headers.get === 'function' ? res.headers.get('retry-after') : null;
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch (e) { return null; }
+};
+
 export function createTransport32({
   baseUrl, wsUrl = '', token = null, login = null, stationId = STATION_ID_32, queue,
   fetchImpl = globalThis.fetch, wsImpl = null, uptimeS = () => 0, fpsOf = () => 0, log = defaultLog32
@@ -97,6 +106,7 @@ export function createTransport32({
   let curToken = token || null;
   let stopped = false, started = false;
   let backoffS = BACKOFF_MIN_S, wsBackoffS = BACKOFF_MIN_S;
+  let retryAfterS = null;   // STATION-a: chờ đúng `Retry-After` khi 429 (một lần, rồi xoá)
   let online = false, wsOpen = false;
   let hbTimer = null, retryTimer = null, wsTimer = null, ws = null;
   let flushing = null, rerun = false;
@@ -133,6 +143,8 @@ export function createTransport32({
     if (res && res.status === 401 && login) { curToken = null; res = await send(); }
     return res;
   };
+  // Ghi nhớ `Retry-After` của lần 429 gần nhất (chỉ nhóm vi phạm/bằng chứng dùng tới).
+  const noteRetryS = res => { if (res && res.status === 429) retryAfterS = retryAfterOf32(res); };
 
   const postEvidence = (violationId, item) => {
     const form = new FormData();
@@ -151,7 +163,7 @@ export function createTransport32({
         let res;
         try { res = await postEvidence(entry.violationId, item); } catch (e) { return false; }
         if (res.ok || res.status === 409) { entry.items.shift(); continue; }   // 409: đã có bằng chứng cùng kind
-        if (retriable32(res.status)) return false;
+        if (retriable32(res.status)) { noteRetryS(res); return false; }
         deadLetter.push({ record: { violation_id: entry.violationId, kind: item.kind }, status: res.status });
         entry.items.shift();
       }
@@ -179,7 +191,7 @@ export function createTransport32({
         continue;
       }
       if (res.status === 409) { online = true; await queue.shift(); evidenceByKey.delete(key); continue; }   // đã gửi trước đó
-      if (retriable32(res.status)) { online = false; return false; }
+      if (retriable32(res.status)) { online = false; noteRetryS(res); return false; }
       deadLetter.push({ record: rec, status: res.status });
       await queue.shift();
       evidenceByKey.delete(key);
@@ -188,10 +200,12 @@ export function createTransport32({
 
   const scheduleRetry = () => {
     if (stopped) return;
-    const waitS = backoffS;
+    // STATION-a: 429 kèm `Retry-After` → chờ đúng số giây đó; thiếu header thì dùng backoff 1 → 2 → … → 30 s.
+    const waitS = retryAfterS != null ? retryAfterS : backoffS;
+    retryAfterS = null;
     backoffS = Math.min(BACKOFF_MAX_S, backoffS * 2);
     clearTimeout(retryTimer);
-    retryTimer = setTimeout(() => { retryTimer = null; flush(); }, waitS * 1000);   // 1 → 2 → … → 30 s
+    retryTimer = setTimeout(() => { retryTimer = null; flush(); }, waitS * 1000);
   };
   const runFlush = async () => {
     let ok = false;
@@ -225,8 +239,9 @@ export function createTransport32({
     }
     if (res && res.status === 409) { online = true; return { id: null, duplicate: true }; }
     if (res && !retriable32(res.status)) { deadLetter.push({ record: body, status: res.status }); return null; }
-    // Mất mạng / 401 / 429 / 5xx: xếp hàng, giữ bằng chứng trong bộ nhớ, thử lại có backoff.
+    // Mất mạng / 401 / 429 / 5xx: xếp hàng, giữ bằng chứng trong bộ nhớ, thử lại (429 → đúng Retry-After).
     online = false;
+    noteRetryS(res);
     if (evidence.length) evidenceByKey.set(key, evidence.slice());
     try {
       const dropped = await queue.push(body);
@@ -253,6 +268,7 @@ export function createTransport32({
     try { const res = await request('/api/v1/station/heat', { body: payload }); return !!(res && res.ok); } catch (e) { return false; }
   };
 
+  // STATION-a: khung hình KHÔNG đi qua hàng đợi vi phạm; 429 → bỏ khung ngay (không thử lại, không dead-letter).
   const sendFrame = async (cameraId, seq, jpegBase64, w, h) => {
     try {
       const res = await request('/api/v1/station/frames', {

@@ -11,6 +11,10 @@ import {
 
 const BASE = 'http://127.0.0.1:8900';
 const json = (status, body = {}) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
+const jsonH = (status, body = {}, headers = {}) => ({
+  ok: status >= 200 && status < 300, status, json: async () => body,
+  headers: { get: k => headers[String(k).toLowerCase()] ?? null }
+});
 const tick = () => new Promise(r => setImmediate(r));
 
 // fetch giả ghi lại mọi lời gọi; handler(url, opts, n) trả Response giả.
@@ -355,6 +359,40 @@ test('startStationLoop32: bật stream 2 fps cho camera đang mở; vi phạm g�
   assert.deepEqual(sets.slice(1), [{ id: 'CAM-HX-001', on: false, fps: 2 }, { id: 'CAM-HX-002', on: true, fps: 2 }]);
   loop.stop();
   assert.equal(sets.at(-1).on, false);
+});
+
+test('STATION-a: khung 429 bị bỏ ngay, KHÔNG chặn hàng đợi vi phạm (không xếp hàng, không dead-letter)', async () => {
+  const fetchImpl = fakeFetch(async url => (url.endsWith('/station/frames')
+    ? json(429, { error: { code: 'RATE_LIMITED' } }) : json(201, { id: 'VP-A' })));
+  const q = mkQueue();
+  await q.push(toViolationBody32(violationRec('V-A')));
+  const t = createTransport32({ baseUrl: BASE, token: 'x', queue: q, fetchImpl, log: () => {} });
+  assert.equal(await t.sendFrame('CAM-HX-001', 1, 'QUJD', 1, 1), false);   // 429 → bỏ khung, không thử lại
+  assert.equal(await q.size(), 1);                                        // khung KHÔNG vào hàng đợi vi phạm
+  await t.flush();                                                        // hàng đợi vi phạm vẫn gửi được
+  assert.equal(await q.size(), 0);
+  assert.equal(t.deadLetterCount(), 0);
+  assert.ok(fetchImpl.calls.some(c => c.url.endsWith('/station/violations')));
+  t.stop();
+});
+
+test('STATION-a: vi phạm gặp 429 chờ đúng Retry-After rồi gửi lại (không dùng backoff)', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const fetchImpl = fakeFetch(async () => jsonH(429, { error: { code: 'RATE_LIMITED' } }, { 'retry-after': '7' }));
+  const q = mkQueue();
+  await q.push(toViolationBody32(violationRec('V-R')));
+  const tr = createTransport32({ baseUrl: BASE, token: 'x', queue: q, fetchImpl, log: () => {} });
+  const calls = () => fetchImpl.calls.filter(c => c.url.endsWith('/station/violations')).length;
+  await tr.flush();
+  assert.equal(calls(), 1);
+  t.mock.timers.tick(6999);
+  await tick();
+  assert.equal(calls(), 1);   // chưa đủ 7 s (backoff mặc định 1 s sẽ sai)
+  t.mock.timers.tick(1);
+  await tick();
+  assert.equal(calls(), 2);
+  assert.equal(await q.size(), 1);   // vẫn giữ bản ghi
+  tr.stop();
 });
 
 test('mã nguồn client không dùng process và không có chữ cấm trên UI của HUD', async () => {

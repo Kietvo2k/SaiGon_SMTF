@@ -173,11 +173,13 @@ def test_signal_state_log_written_from_station(client):
 # ---------- Item 7: rate-limit trạm / login ----------
 
 def test_station_rate_limit_429(client):
+    # STATION-a: hạn mức trạm tách theo nhóm; nhóm vi phạm (heartbeat thuộc đây) = 300/phút.
     h = station_headers(client)
     last = None
-    for _ in range(201):
+    for _ in range(301):
         last = client.post('/api/v1/station/heartbeat', headers=h, json={'station_id': 'STATION-3D-01'})
     assert last.status_code == 429, last.text
+    assert last.headers.get('retry-after') is not None
 
 
 def test_login_lock_persists(client):

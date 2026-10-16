@@ -13,7 +13,9 @@ JWT_TTL_S = 8 * 3600
 LOGIN_RATE_LIMIT = 5          # lần/phút/IP
 LOGIN_LOCK_S = 300            # khóa tạm 5 phút
 UPLOAD_MAX_BYTES = 50 * 1024 * 1024
-STATION_RATE_LIMIT = 200      # request/phút/station
+# §11 (tua ×10): hạn mức request/phút/trạm THEO NHÓM, mỗi nhóm một cửa sổ riêng — khung hình không chiếm
+# hạn mức của vi phạm. violation: vi phạm, bằng chứng, media, nhịp sống; telemetry: metrics, heat; frame: khung stream.
+STATION_RATE_LIMITS = {'violation': 300, 'telemetry': 60, 'frame': 150}
 # §3.3/§11: cổng do lệnh chạy (uvicorn --port) quyết định; agent song song đổi cổng
 # bằng `SMART_ALLOWED_ORIGINS`, KHÔNG suy CORS từ `PORT`.
 ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(

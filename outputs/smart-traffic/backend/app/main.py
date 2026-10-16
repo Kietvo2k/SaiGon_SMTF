@@ -29,10 +29,12 @@ _CODE_BY_STATUS = {400: 'BAD_REQUEST', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN', 40
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     # §4.5: lỗi thống nhất {"error": {code, message, detail}} — không bọc trong "detail".
+    # STATION-a: giữ nguyên header của exception (ví dụ `Retry-After` khi 429).
+    headers = getattr(exc, 'headers', None) or None
     if isinstance(exc.detail, dict) and 'error' in exc.detail:
-        return JSONResponse(status_code=exc.status_code, content=exc.detail)
+        return JSONResponse(status_code=exc.status_code, content=exc.detail, headers=headers)
     code = _CODE_BY_STATUS.get(exc.status_code, 'ERROR')
-    return JSONResponse(status_code=exc.status_code, content=err(code, str(exc.detail)))
+    return JSONResponse(status_code=exc.status_code, content=err(code, str(exc.detail)), headers=headers)
 
 
 @app.exception_handler(RequestValidationError)
