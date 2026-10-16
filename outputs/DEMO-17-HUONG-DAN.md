@@ -24,6 +24,6 @@ Hành lang A/B/C là giả thiết người dùng thử, không phải phương 
 
 Lõi dùng chung có hai cấu hình TP.HCM/Gia Lộc; cùng bộ kiểm quyền, CRS, đơn vị, epoch, hash và gate năng lực. Gia Lộc đã tạo artifact chuẩn hóa 657 footprint bằng CLI. Plugin Phân tích đã áp dụng vào TP.HCM; chưa thay UI Gia Lộc.
 
-CLI hiện tiếp nhận một tệp footprint GeoJSON WGS84 kèm hợp đồng nguồn vào quarantine, giữ bản gốc và QC, không tự xuất bản. Các adapter COG/COPC/3D Tiles/CityGML/BIM và cận cảnh SfM/3DGS là phần tiếp theo, chưa có decoder/service mới trong bản này. [Hợp đồng lõi](shared/digital-twin-core/README.md) có lệnh và API; [kiến trúc và nguồn sơ cấp](../research/vibecode-17/ARCHITECTURE-AND-SOURCES.md) phân rõ phần đã xây và lộ trình.
+CLI hiện tiếp nhận một tệp footprint GeoJSON WGS84 kèm hợp đồng nguồn vào quarantine, giữ bản gốc và QC, không tự xuất bản. Các adapter COG/COPC/3D Tiles/CityGML/BIM và cận cảnh SfM/3DGS là phần tiếp theo, chưa có decoder/service mới trong bản này. [Hợp đồng lõi](shared/digital-twin-core/README.md) có lệnh và API.
 
 Nếu nguồn sai hash, dữ liệu vẽ sai hình học, Worker lỗi hoặc phạm vi vượt giới hạn xử lý, công cụ báo lỗi và không trả một bộ số liệu bị cắt ngầm. Sửa nguyên nhân rồi thử lại; không dùng số liệu của nguồn khác để thay tệp đã bị chặn.

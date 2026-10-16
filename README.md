@@ -65,7 +65,7 @@ PORT=8879 node outputs/hcmc-poc/scripts/qa-north-32.cjs   # cần server tĩnh �
 outputs/smart-traffic/backend/.venv/Scripts/python.exe -m pytest outputs/smart-traffic/backend/tests -q -p no:cacheprovider
 ```
 
-Đã biết: `validate_demo_ready.py` và `qa-app-integrity-30b.cjs` vẫn kiểm nhánh shell cũ `?legacy=1`, đã gỡ khỏi điều hướng, nên hai kiểm tra này báo lỗi cho đến khi được cập nhật.
+Đã biết: `validate_demo_ready.py`, `validate_ba_son_bridge.py`, `qa-app-integrity-30b.cjs` và `qa-construction-change-23.cjs` vẫn kiểm nhánh shell cũ `?legacy=1`/dữ liệu legacy đã gỡ, nên bốn kiểm tra này báo lỗi cho đến khi được cập nhật hoặc xóa.
 
 ## Lịch sử PoC
 

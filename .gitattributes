@@ -6,5 +6,3 @@ outputs/hcmc-poc/research/facades-15/snapshots/** -text
 outputs/hcmc-poc/research/visual-14/snapshots/** -text
 outputs/hcmc-poc/research/vibecode-16/source-snapshots/** -text
 research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/** -text
-# validate_reality_patch.py ghi manifestSha256 theo byte của file này.
-outputs/hcmc-poc/data/reality-patch-manifest.json -text

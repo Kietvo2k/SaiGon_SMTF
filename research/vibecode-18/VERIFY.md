@@ -25,14 +25,16 @@ Ngày 14/09/2026. Chủ thầu kiểm kết quả theo 16 tiêu chí Blueprint, 
 
 ## Các phép kiểm đã chạy
 
+Lưu ý CLEANUP A: các tệp bằng chứng trong `qa/` được ghi ở mục này đã gỡ khỏi cây làm việc; tra cứu lại bằng `git show <commit trước CLEANUP A>:research/vibecode-18/qa/<tệp>`.
+
 - **12/12 source compiler tests** và bốn asset QC PASS; ba SourceCore contracts được tiếp nhận, quyền chưa kiểm/acquisition lead bị từ chối. Root chạy lại `--self-test --verify` trên bản cuối.
 - **18/18 Core18 tests**, root chạy trên bản cuối: `node --test outputs/shared/digital-twin-core/tests/streaming-18.cjs outputs/shared/digital-twin-core/tests/cog-18.cjs outputs/shared/digital-twin-core/tests/tiles-18.cjs`.
 - **8/8 server tests**, root và UI Builder đã chạy trên máy chủ HTTP thực: `python3 outputs/hcmc-poc/scripts/test_server_18.py`.
-- **Actual browser COG reads** có 206/ETag/Content-Range, cache và overview. Sáu giá trị buffer/mask SHA khớp independent Rasterio/GDAL; không chỉ kiểm API mock. [Browser results](qa/cog-browser-results.json), [oracle](qa/ground-alignment-oracle.json).
-- **Oracle sản phẩm của Chủ thầu**:378 GLBs/189 chunks/70709 IDs,3.038.830 vertices,1.540.550 triangles; roof area chênh lớn nhất0,032314 m² so với polygon nguồn. [Report](qa/produced-tiles-oracle.json), [script](qa/check-produced-tiles.py).
+- **Actual browser COG reads** có 206/ETag/Content-Range, cache và overview. Sáu giá trị buffer/mask SHA khớp independent Rasterio/GDAL; không chỉ kiểm API mock. Kết quả: `qa/cog-browser-results.json`, `qa/ground-alignment-oracle.json`.
+- **Oracle sản phẩm của Chủ thầu**:378 GLBs/189 chunks/70709 IDs,3.038.830 vertices,1.540.550 triangles; roof area chênh lớn nhất0,032314 m² so với polygon nguồn. Báo cáo `qa/produced-tiles-oracle.json`, script `qa/check-produced-tiles.py`.
 - **Khronos glTF validator**2.0.0-dev.3.10:378/378 files,0 errors/0 warnings; QA tool cài chỉ trong tmp, không thêm runtime dependency. [Report](qa/khronos-glb-validation.json), [validator primary source](https://github.com/KhronosGroup/glTF-Validator).
-- **20/20 ảnh retained** hash/dimensions PASS qua Pillow. [Report](qa/real-photo-audit.json), [script](qa/check-real-photos.py).
-- **24/24 UI checks trên Chromium PASS**, 0 JavaScript errors: [ui-results.json](qa/ui-results.json). Bao gồm separate overview/detail, actual tile ID picking, keyboard, mobile, badge không đè nav, legacy analysis và exact night restore. **4/4 adversarial browser checks PASS**: catalog ground mismatch, corrupted GLB bị chặn, retry và restore. [Integrity report](qa/ui-integrity-results.json).
+- **20/20 ảnh retained** hash/dimensions PASS qua Pillow. Báo cáo `qa/real-photo-audit.json`, script `qa/check-real-photos.py`.
+- **24/24 UI checks trên Chromium PASS**, 0 JavaScript errors: `qa/ui-results.json`. Bao gồm separate overview/detail, actual tile ID picking, keyboard, mobile, badge không đè nav, legacy analysis và exact night restore. **4/4 adversarial browser checks PASS**: catalog ground mismatch, corrupted GLB bị chặn, retry và restore. Báo cáo integrity: `qa/ui-integrity-results.json`.
 
 Oracle cao độ có chênh **0 m về tính toán** ở tolerance1e−9m; điều này không chứng minh nguồn có sai số0m hay chính xác nanometre. Oracle trục/hình học cũng không chứng minh vị trí và chiều cao công trình đúng ngoài thực địa.
 
@@ -50,6 +52,6 @@ UI ghi rõ nguồn và giới hạn. Khối LOD neutral có bóng để dễ đ�
 
 ## Bàn giao và các phần giữ điều kiện
 
-[Runbook18](../../outputs/DEMO-18-HUONG-DAN.md), [kiến trúc/nguồn](ARCHITECTURE-AND-SOURCES.md), [Completion tổng](COMPLETION.md). [Fingerprint snapshot](qa/release-fingerprints.json) ràng buộc file bản bàn giao, bao gồm GLB/sidecar/COG hiện hành. Kiểm lại bằng `python3 research/vibecode-18/qa/verify-release.py`; không tạo lại snapshot để che file đã thay đổi.
+[Runbook18](../../outputs/DEMO-18-HUONG-DAN.md), [kiến trúc/nguồn](ARCHITECTURE-AND-SOURCES.md), Completion tổng (tệp `COMPLETION.md` đã gỡ trong CLEANUP A). [Fingerprint snapshot](qa/release-fingerprints.json) ràng buộc file bản bàn giao, bao gồm GLB/sidecar/COG hiện hành. Kiểm lại bằng `python3 research/vibecode-18/qa/verify-release.py`; không tạo lại snapshot để che file đã thay đổi.
 
 Chưa có COPC decoder/pointcloud, SfM/3DGS reconstruction, orthophoto1cm, checkpoint đo đạc, CityGML LoD2/3, hydrology, hay geometry quy hoạch tương lai được tiếp nhận. Gia Lộc viewer chưa chuyển sang surface18. Scene cũ và animation hooks vẫn tồn tại; chưa công bố giảm startup/RAM/FPS toàn ứng dụng. Không commit/push/publish trong đợt này.

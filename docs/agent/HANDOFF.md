@@ -14,7 +14,7 @@ Nhánh `Kietvo2k/smart-traffic-bac`. Mọi mô tả ở đây là **mô phỏng*
 | M6a/b/c | Web công an và web người dân (React + Vite, 2 entry, vitest) | |
 | STATION-a | Hạn mức trạm tách theo nhóm, có `Retry-After`; frames không chặn hàng đợi vi phạm | |
 | STATION-b | Độ tin cậy perception theo khoảng cách, góc, che khuất; 58 % bản ghi `new` | |
-| CLEANUP | Gỡ 1166 file: PoC 02–26, nhánh legacy `?legacy=1`, Gia Lộc/Tây Ninh | Tra cứu qua `git log`. Còn giữ: các manifest băm (`outputs/delivery-manifest.json`, `capture-manifest.json`, `release-fingerprints.json`) và khoảng 200 file mà chúng dẫn tới. Hợp đồng Gia Lộc `projects/gia-loc.json` đã xóa trong CLEANUP C (test shared core viết lại chỉ còn HCMC); còn `outputs/shared/digital-twin-core/prepared/gia-loc-17a/` và dữ liệu `outputs/tayninh-*` chưa quyết |
+| CLEANUP | Gỡ 1382 file (2966 → 1584): PoC 02–26, nhánh legacy `?legacy=1`, tài liệu/ảnh baseline cũ, Gia Lộc/Tây Ninh | Tra cứu qua `git log`. Danh sách xóa chỉ giữ lại đúng 8 tệp còn có tham chiếu: `outputs/hcmc-poc/index.html` (nay chỉ redirect), 4 tệp batch 18 (`data/overture-region.geojson.state`, quarantine report, DCAT XML, schema PDF), 2 tệp Tây Ninh mà test shared core trỏ tới, và `research/vibecode-18/VERIFY.md`. Hợp đồng Gia Lộc `projects/gia-loc.json` đã xóa trong CLEANUP C (test shared core viết lại chỉ còn HCMC); còn `outputs/shared/digital-twin-core/prepared/gia-loc-17a/` và dữ liệu `outputs/tayninh-*` chưa quyết |
 
 **Số test cuối phase:**
 - Node: 209/209 pass.
@@ -73,7 +73,7 @@ Nhánh `Kietvo2k/smart-traffic-bac`. Mọi mô tả ở đây là **mô phỏng*
    - Video thật (thả file đúng mã camera) và khe ONNX chưa làm.
    - Đặc tả §4.6 còn liệt `violation.detected` qua WebSocket; cần sửa thành đi qua REST.
    - `plates.json` chỉ có gen 0–2; cần kiểm biển của xe gen cao.
-   - `validate_demo_ready.py` và `qa-app-integrity-30b.cjs` còn gọi `?legacy=1` (đã gỡ) → báo lỗi; nên xóa hai script này cùng các manifest băm cũ.
+   - `validate_demo_ready.py` và `qa-app-integrity-30b.cjs` (kèm `qa-construction-change-23.cjs`, `validate_ba_son_bridge.py`) còn gọi `?legacy=1`/dữ liệu legacy đã gỡ → báo lỗi; nên xóa các script cũ cùng các manifest băm cũ.
    - `outputs/shared/digital-twin-core/tests/source-core.cjs`: 33/35 do 2 test lệch hash CRLF (`core.autocrlf`), đã có từ trước; test Gia Lộc đã bỏ và `gia-loc.json` đã xóa (CLEANUP C).
    - App chưa đọc tham số `region=bac` từ URL (`app=smart` tự cố định khu Bắc).
 

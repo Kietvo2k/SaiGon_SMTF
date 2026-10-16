@@ -56,7 +56,7 @@ PORT=8879 node outputs/hcmc-poc/scripts/qa-north-32.cjs          # cần serve.p
 PORT=8879 node outputs/hcmc-poc/scripts/qa-mode-31.cjs
 ```
 
-Các QA khác: `qa-traffic-31.cjs`, `qa-region-31.cjs`, `qa-density-31.cjs`, `qa-road-traffic-31.cjs`, `qa-street-furniture-31.cjs`, `qa-capture-32.cjs`, `qa-webgpu-materials-24.cjs`, `qa-visual-runtime-30b.cjs`, `qa-flood-25a.cjs`, `qa-construction-change-23.cjs`. Hai kiểm tra `qa-app-integrity-30b.cjs` và `validate_demo_ready.py` vẫn đọc nhánh `?legacy=1` đã gỡ, nên sẽ báo lỗi cho đến khi được cập nhật.
+Các QA khác: `qa-traffic-31.cjs`, `qa-region-31.cjs`, `qa-density-31.cjs`, `qa-road-traffic-31.cjs`, `qa-street-furniture-31.cjs`, `qa-capture-32.cjs`, `qa-webgpu-materials-24.cjs`, `qa-visual-runtime-30b.cjs`, `qa-flood-25a.cjs`. Bốn script cũ `qa-app-integrity-30b.cjs`, `qa-construction-change-23.cjs`, `validate_demo_ready.py`, `validate_ba_son_bridge.py` còn đọc nhánh `?legacy=1`/dữ liệu legacy đã gỡ trong CLEANUP, nên sẽ báo lỗi cho đến khi được cập nhật.
 
 Nghiệm thu hiện hành: [VISUAL-RUNTIME-31.md](VISUAL-RUNTIME-31.md) và [RELEASE-QA-31A.md](RELEASE-QA-31A.md).
 
