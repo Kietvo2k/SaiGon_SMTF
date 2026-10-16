@@ -408,3 +408,100 @@ test('max-pressure-150: áp lực 150 m theo nhóm đổi pha; khác actuated-ga
   }
   assert.ok(switchedAt >= 8 && switchedAt <= 20, `đổi pha tại t=${switchedAt}`);
 });
+
+// ---- F max-pressure-gated (CTRL): làn ra đầy → áp lực 0; xanh tối thiểu động; không đổi sang nhóm trống; chống đói.
+const fSetup = (params) => {
+  const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
+  const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
+  const controller = createSignalController32({ net, sim: null, mode: 'smart',
+    params: { algorithm: 'max-pressure-gated', minGreenS: 8, maxGreenS: 45, maxRedS: 50, switchAbs: 3, satPerS: 0.5, exitCapS: 4, ...params } });
+  const node = signalPlan.signalNodes[1];
+  const pick = g => { for (let l = 0; l < net.lanes.to.length; l++) if (net.lanes.to[l] === node && net.arriveGroup[net.lanes.st[l]] === g) return net.lanes.st[l]; return -1; };
+  return { net, controller, node, pick };
+};
+// Chạy theo bước 1 s tới tEnd; trả về thời điểm đầu tiên nhóm 0 không còn xanh (-1 nếu không đổi).
+const fFirstSwitch = (controller, node, rowsAt, tEnd = 60) => {
+  for (let t = 0; t <= tEnd; t += 1) {
+    controller.update(t, rowsAt(t));
+    if (controller.stateOf(node, t).phases.find(p => p.group === 0).phase !== 'green') return t;
+  }
+  return -1;
+};
+
+test('F max-pressure-gated: nhóm có làn ra đầy (q_out ≥ exitCapS) có áp lực 0 → không đổi sang nhóm đó', () => {
+  const { controller, node, pick } = fSetup({ maxRedS: 1000 });
+  const blocked = new Map([[node, [
+    { st: pick(1), group: 1, count: 5, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 0 },
+    { st: -1, group: 1, count: 0, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 6 }
+  ]]]);
+  assert.equal(fFirstSwitch(controller, node, () => blocked, 30), -1, 'làn ra nhóm 1 đầy → không đổi pha trước maxGreen');
+});
+
+test('F max-pressure-gated: làn ra thông → nhóm hiện tại không có xe, nhóm kia có xe → đổi đúng tại minGreenS = 8', () => {
+  const { controller, node, pick } = fSetup({ maxRedS: 1000 });
+  const free = new Map([[node, [
+    { st: pick(1), group: 1, count: 5, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 0 }
+  ]]]);
+  assert.equal(fFirstSwitch(controller, node, () => free), 8);
+});
+
+test('F max-pressure-gated: xanh tối thiểu động = xe chờ hiện tại / satPerS (12 xe / 0,5 = 24 s), đổi khi chênh ≥ switchAbs', () => {
+  const { controller, node, pick } = fSetup({ maxRedS: 1000 });
+  const rows = new Map([[node, [
+    { st: pick(0), group: 0, count: 12, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 0 },
+    { st: pick(1), group: 1, count: 30, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 0 }
+  ]]]);
+  assert.equal(fFirstSwitch(controller, node, () => rows), 24);
+});
+
+test('F max-pressure-gated: không đổi sang nhóm không có xe chờ (cả hai nhóm trống → giữ xanh tới maxGreen)', () => {
+  const { controller, node, pick } = fSetup({ maxRedS: 1000 });
+  const empty = new Map([[node, [
+    { st: pick(0), group: 0, count: 0, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0, q_out: 0 },
+    { st: pick(1), group: 1, count: 0, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0, q_out: 0 }
+  ]]]);
+  assert.equal(fFirstSwitch(controller, node, () => empty, 40), -1, 'không xe chờ → không đổi trước 40 s');
+});
+
+test('F max-pressure-gated: chống đói — nhóm kia đói ≥ maxRedS (40) được phục vụ dù chênh áp lực nhỏ hơn switchAbs', () => {
+  const { controller, node, pick } = fSetup({ maxRedS: 40 });
+  const rows = new Map([[node, [
+    { st: pick(0), group: 0, count: 5, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 0 },
+    { st: pick(1), group: 1, count: 1, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 0 }
+  ]]]);
+  assert.equal(fFirstSwitch(controller, node, () => rows), 40, 'đổi tại t = maxRedS (nhóm 1 chưa xanh lần nào)');
+});
+
+test('F max-pressure-gated: lastServeEnd được ghi khi nhóm kết thúc xanh, và đi theo exportPhases/importPhases', () => {
+  const { net, controller, node, pick } = fSetup({ maxRedS: 1000 });
+  const rows = new Map([[node, [
+    { st: pick(0), group: 0, count: 0, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0, q_out: 0 },
+    { st: pick(1), group: 1, count: 4, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 0 }
+  ]]]);
+  for (let t = 0; t <= 9; t += 1) controller.update(t, rows);   // đổi sang nhóm 1 tại t = 8 (vàng bắt đầu)
+  const st = controller.exportPhases();
+  const cl = st.clusters.find(c => c.nodeIds.includes(node));
+  assert.equal(cl.lastServeEnd[0], 8, 'nhóm 0 kết thúc xanh tại t = 8');
+  const other = createSignalController32({ net, sim: null, mode: 'smart', params: { algorithm: 'max-pressure-gated' } });
+  other.importPhases(st);
+  assert.equal(other.stateHash(), controller.stateHash());
+  assert.deepEqual(other.exportPhases().clusters.find(c => c.nodeIds.includes(node)).lastServeEnd, cl.lastServeEnd);
+});
+
+test('F max-pressure-gated: tới maxGreen mà nhóm kia trống thì giữ xanh (isGreen vẫn bật); có xe chờ thì đổi ngay', () => {
+  const { controller, node, pick } = fSetup({ maxRedS: 1000 });
+  const empty = new Map([[node, [
+    { st: pick(0), group: 0, count: 0, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0, q_out: 0 }
+  ]]]);
+  let tEnd = 0;
+  for (let k = 0; k <= 600; k++) { tEnd = k * 0.1; controller.update(tEnd, empty); }
+  assert.equal(controller.stateOf(node, tEnd).phases.find(p => p.group === 0).phase, 'green', 'giữ xanh quá 45 s khi không có xe chờ');
+  assert.equal(controller.isGreen(node, pick(0), tEnd), true, 'đèn vẫn xanh cho nhóm 0');
+  const withWait = new Map([[node, [
+    { st: pick(0), group: 0, count: 0, wait_sum_s: 0, wait_max_s: 0, speed_mean: 5, crossed: 0, q_out: 0 },
+    { st: pick(1), group: 1, count: 2, wait_sum_s: 0, wait_max_s: 0, speed_mean: 0, crossed: 0, q_out: 0 }
+  ]]]);
+  let switchedAt = -1;
+  for (let t = 60.1; t <= 70; t += 0.1) { controller.update(t, withWait); if (controller.stateOf(node, t).phases.find(p => p.group === 0).phase !== 'green') { switchedAt = t; break; } }
+  assert.ok(switchedAt > 60 && switchedAt <= 60.5, `đổi ngay sau khi nhóm 1 có xe chờ (nhận ${switchedAt})`);
+});
