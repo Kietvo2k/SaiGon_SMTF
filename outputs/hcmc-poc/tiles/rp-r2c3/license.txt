@@ -1,1 +1,0 @@
-Procedural derivative. Preserve the attributions declared in ../../research/source-catalog.json.
