@@ -1,47 +1,78 @@
-# Saigon Open City Lab
+# Saigon Open City Lab · Smart Traffic khu Bắc
 
-PoC thành phố 3D tương tác cho khu trung tâm Thành phố Hồ Chí Minh, phục vụ nghiên cứu bản đồ số, digital twin đô thị và kinh tế tầm thấp. Mô hình kết hợp dữ liệu mở, hình học thủ tục, các landmark minh họa, lớp kiểm định độ tin cậy và chế độ trình diễn cinematic.
+Repo gồm hai hệ chạy trên cùng một nền 3D:
 
-![PoC 13 Reality Enrichment](outputs/poc-thirteen-reality-enrichment.jpg)
+1. **City Lab TP.HCM** (`outputs/hcmc-poc/`): thành phố 3D tương tác khu trung tâm, bản hiện hành là `webgpu-materials-24.html`.
+2. **Smart Traffic khu Bắc** (`outputs/smart-traffic/`): mô phỏng giao thông, đèn tín hiệu, camera, vi phạm và hai web (cán bộ, người dân). Lõi dùng chung nằm ở `outputs/shared/digital-twin-core/`.
 
-## Chạy tại máy
+Mô hình là **gần đúng**: chiều cao, vật liệu và phối cảnh chưa được khảo sát đo đạc, không dùng để điều hướng UAV hay làm căn cứ kỹ thuật công trình. Dữ liệu giao thông và perception trong Smart Traffic là **mô phỏng** (sinh từ mô hình đèn/xe và độ tin cậy perception giả định), không phải dữ liệu camera thật.
 
-```sh
-python3 outputs/hcmc-poc/serve.py
-```
-
-Mở http://127.0.0.1:8768/hcmc-poc/?v=15a . Điểm vào demo sử dụng góc **Toàn khu vực** và ánh sáng ban ngày.
-
-## Điều khiển
-
-- Mũi tên hoặc `WASD`: di chuyển.
-- `Q` / `E`: xoay; `+` / `-`: zoom.
-- `H`: ẩn giao diện; `F`: toàn màn hình; `0`: đặt lại góc; `Esc`: đóng bảng.
-
-## Kiểm tra và đóng gói
+## Chạy City Lab
 
 ```sh
-python3 outputs/hcmc-poc/scripts/validate_demo_ready.py
-python3 outputs/hcmc-poc/scripts/package_single.py
-python3 work/finalize.py
+python3 outputs/hcmc-poc/serve.py        # cổng mặc định 8768, đặt PORT để đổi
 ```
 
-Xem [batch Reality Enrichment](outputs/POC-13-REALITY-ENRICHMENT.md), [kịch bản demo](outputs/DEMO-RUNBOOK-POC-12.md), [báo cáo tổng](outputs/BAO-CAO-POC.md) và [ghi chú kiến trúc](outputs/CODEBASE-CLEANUP-POC-12.md).
+Mở `http://127.0.0.1:8768/hcmc-poc/`. Trang này chuyển sang `webgpu-materials-24.html?v=31a`. Tham số chi tiết xem [outputs/hcmc-poc/README.md](outputs/hcmc-poc/README.md).
 
-## Phạm vi sử dụng
+## Smart Traffic khu Bắc
 
-Đây là mô hình gần đúng, chưa phải digital twin đã khảo sát và không dùng để điều hướng UAV. Nhiều chiều cao, vật liệu, texture, thiết bị mái và hiệu ứng trình diễn vẫn là dữ liệu suy ra hoặc minh họa có khai báo.
+Chạy cả hệ (static 3D, backend API, web) bằng một lệnh:
 
-Dữ liệu và thư viện trong dự án có giấy phép riêng, gồm OpenStreetMap/ODbL, các nguồn Overture, EOX/Copernicus, Google Open Buildings, Three.js, Earcut và Poly Haven. Xem attribution và registry nguồn trong `outputs/hcmc-poc/research/` trước khi phân phối sản phẩm dẫn xuất.
+```sh
+bash outputs/smart-traffic/run-smart.sh            # Linux/macOS/Git Bash
+bash outputs/smart-traffic/run-smart.sh --stop     # tắt cả cây tiến trình đã bật
+powershell -NoProfile -ExecutionPolicy Bypass -File outputs/smart-traffic/run-smart.ps1          # Windows
+powershell -NoProfile -ExecutionPolicy Bypass -File outputs/smart-traffic/run-smart.ps1 -Stop
+```
 
-## PoC 13 · Reality Enrichment
+Script tạo `.venv` và cài gói backend nếu thiếu, khởi tạo DB, nạp seed, rồi chạy:
 
-Góc nhìn 19 bổ sung chi tiết hình học LOD gần cho mặt đứng, đường, cây, tàu và mặt nước. Xem `outputs/POC-13-REALITY-ENRICHMENT.md`.
+| Thành phần | Cổng | Địa chỉ |
+|---|---|---|
+| Trang 3D khu Bắc | 8821 | `http://127.0.0.1:8821/hcmc-poc/?app=smart&api=http://127.0.0.1:8900` |
+| Backend API | 8900 | `http://127.0.0.1:8900` |
+| Web cán bộ (điều hành) | 5173 | `http://127.0.0.1:5173/index-officer.html` |
+| Web người dân (tra cứu) | 5173 | `http://127.0.0.1:5173/index-citizen.html` |
 
-## PoC 14 · Surface Realism
+Tài khoản seed nằm trong `outputs/smart-traffic/backend/app/seed/accounts.json`. README không chép mật khẩu; đổi mật khẩu trước khi dùng ngoài máy phát triển.
 
-Góc nhìn 20: năm bộ PBR ambientCG CC0, 15 texture và 1.200 tán cây cutout ở vùng gần. Nút PBR cho phép so sánh bật/tắt. Vật liệu thư viện chưa phải ảnh chụp bề mặt tại TP.HCM. Danh mục 27 giải pháp nằm tại `research/visual-14/index.html` trong ứng dụng; báo cáo tại `outputs/POC-14-VISUAL-RESEARCH.md`.
+### Trạng thái (theo lịch sử commit, chưa có báo cáo nghiệm thu M7)
 
-## PoC 15 · Photo Facade Lab
+- **M1 Hàng Xanh** (vi phạm vượt đèn đỏ, bằng chứng, tra cứu): có commit T1–T14. Mục A1 (đèn thích ứng giảm thời gian chờ so với cố định) **chưa đạt** theo commit `d8dd16b`; giữ kịch bản mặc định.
+- **M2 khu Bắc gọn** (nền khóa, nhà/cây/xe ngoài khu ẩn, signature ngoài khu ẩn): đã có M2a, M2b, M2c.
+- **M3 mạng nút + camera + VMS**: chưa thấy commit.
+- **M4 bản đồ nhiệt, dự báo, điều hướng, tua giờ**: có M4a và M4c; phần còn lại chưa hoàn tất.
+- **M5 đủ lỗi, xe ưu tiên, bốn kịch bản**: có M5a và M5b-1.
+- **M6 web đầy đủ** (vòng đời vi phạm, khiếu nại, nộp phạt, phân quyền): có M6a, M6b, M6c.
+- **M7 nghiệm thu tổng**: chưa làm.
 
-Góc 21 bổ sung 20 mặt đứng từ 20 ảnh đúng công trình, với lựa chọn công trình, đối chiếu ảnh nguồn và A/B. Xem `outputs/POC-15-PHOTO-FACADES.md` và gallery `research/facades-15/index.html` trong ứng dụng. Phần khuất, vị trí UV và độ sâu vẫn gần đúng; ảnh nguồn có thời điểm 2006–2025.
+### Việc còn mở
+
+- Đo A3 (FPS app smart so với chế độ cổ điển) trên máy có GPU, chạy có hiển thị.
+- Thiếu trụ cầu Sài Gòn 2 (306073179) và Thủ Thiêm (165919725), ghi trong `work/m1-notes.md`.
+- Chưa có đo tài nguyên dài hạn; xem [docs/PERFORMANCE-24-7.md](docs/PERFORMANCE-24-7.md).
+- Kế hoạch phase tiếp theo: [docs/NEXT-PHASE-PROMPTS.md](docs/NEXT-PHASE-PROMPTS.md).
+- Đặc tả và kế hoạch: [docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md](docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md), [docs/superpowers/plans/2026-10-14-m1-hang-xanh.md](docs/superpowers/plans/2026-10-14-m1-hang-xanh.md).
+
+## Kiểm tra
+
+```sh
+node --test "outputs/hcmc-poc/test/*.test.mjs"           # logic sim, đèn, luật vi phạm
+node outputs/hcmc-poc/scripts/qa-project-hygiene.cjs      # vệ sinh repo
+node outputs/hcmc-poc/scripts/validate_signature_registry_31.cjs
+PORT=8879 node outputs/hcmc-poc/scripts/qa-north-32.cjs   # cần server tĩnh đang chạy
+outputs/smart-traffic/backend/.venv/Scripts/python.exe -m pytest outputs/smart-traffic/backend/tests -q -p no:cacheprovider
+```
+
+Đã biết: `validate_demo_ready.py` và `qa-app-integrity-30b.cjs` vẫn kiểm nhánh shell cũ `?legacy=1`, đã gỡ khỏi điều hướng, nên hai kiểm tra này báo lỗi cho đến khi được cập nhật.
+
+## Lịch sử PoC
+
+Các batch PoC 02–26 và tài liệu demo cũ đã gỡ khỏi cây làm việc (CLEANUP A, C). Shell cũ `?legacy=1` đã gỡ khỏi điều hướng (CLEANUP B); vài tệp của nó còn lại vì validator cũ vẫn đọc. Tra cứu bằng `git log` hoặc `git show <commit>:<đường dẫn>`.
+
+Dự án Gia Lộc (Tây Ninh) đã gỡ khỏi repo, chỉ giữ hợp đồng nguồn `outputs/shared/digital-twin-core/projects/gia-loc.json` và các tệp nó tham chiếu. Tra cứu phần còn lại bằng `git log`.
+
+## Dữ liệu, giấy phép và phạm vi
+
+Dữ liệu và thư viện có giấy phép riêng: OpenStreetMap (ODbL), Overture, EOX và Copernicus, Google Open Buildings, Three.js, Earcut, Poly Haven. Xem [GIT-DATA-PACKAGING.md](GIT-DATA-PACKAGING.md) về nguồn, quyền và chính sách lưu trữ ảnh vệ tinh/vật liệu.
