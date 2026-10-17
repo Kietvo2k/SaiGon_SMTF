@@ -1,7 +1,20 @@
 // Nhãn tiếng Việt cho trạng thái, loại khiếu nại, vai trò và bằng chứng.
 
+// Chép đúng chữ từ bảng nhãn của backend (schemas.py VIOLATION_LABELS) và CODE_LABEL_32 của 3D.
+// Có test đọc thẳng schemas.py để hai bộ nhãn không lệch chữ.
 export const VIOLATION_CODE_LABELS: Record<string, string> = {
   'RED-LIGHT': 'Không chấp hành hiệu lệnh của đèn tín hiệu giao thông',
+  'STOP-LINE': 'Không chấp hành vạch kẻ đường (dừng quá vạch)',
+  LANE: 'Đi không đúng phần đường, làn đường',
+  'WRONG-WAY': 'Đi ngược chiều đường một chiều',
+  SPEED: 'Chạy quá tốc độ quy định',
+  PARK: 'Dừng, đỗ xe trái quy định',
+  'NO-HELMET': 'Không đội mũ bảo hiểm khi điều khiển xe máy',
+  'NO-PRIORITY': 'Không nhường đường cho xe ưu tiên',
+  OVERLOAD: 'Chở quá số người quy định',
+  'WRONG-TURN': 'Rẽ, quay đầu nơi có biển cấm',
+  PHONE: 'Sử dụng điện thoại khi đang lái xe',
+  'NO-SEATBELT': 'Không thắt dây đai an toàn khi lái xe',
 };
 
 export function violationLabel(code: string): string {

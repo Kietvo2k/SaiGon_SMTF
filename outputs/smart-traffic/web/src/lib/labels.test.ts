@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   complaintKindLabel,
@@ -8,6 +9,44 @@ import {
   violationLabel,
   violationStatusLabel,
 } from './labels';
+
+// Bảng nhãn chuẩn nằm ở backend (schemas.py). Test đọc thẳng file để nhãn web không lệch chữ với backend.
+function backendViolationLabels(): Record<string, string> {
+  const src = readFileSync(new URL('../../../backend/app/schemas.py', import.meta.url), 'utf8');
+  const block = src.match(/VIOLATION_LABELS\s*=\s*\{([\s\S]*?)\n\}/);
+  if (!block) throw new Error('Không đọc được VIOLATION_LABELS trong schemas.py');
+  const map: Record<string, string> = {};
+  for (const line of block[1].split('\n')) {
+    const m = line.match(/^\s*'([^']+)':\s*'([^']*)',?\s*$/);
+    if (m) map[m[1]] = m[2];
+  }
+  return map;
+}
+
+describe('violationLabel theo bảng nhãn backend', () => {
+  const backend = backendViolationLabels();
+  const codes = Object.keys(backend);
+
+  it('đọc được đủ 12 mã của đặc tả từ backend', () => {
+    expect(codes.length).toBe(12);
+    expect(codes).toContain('STOP-LINE');
+    expect(codes).toContain('NO-PRIORITY');
+  });
+
+  it('mọi mã backend đều có nhãn tiếng Việt, không hiện mã thô', () => {
+    for (const code of codes) {
+      const label = violationLabel(code);
+      expect(label, code).toBe(backend[code]);
+      expect(label, code).not.toBe(code);
+      expect(label.length, code).toBeGreaterThan(0);
+    }
+  });
+
+  it('hai mã khác nhau không dùng cùng nhãn', () => {
+    const labels = codes.map((c) => violationLabel(c));
+    expect(new Set(labels).size).toBe(codes.length);
+  });
+});
 
 describe('displayNodeLabel', () => {
   it('đổi ký hiệu giao "∩" thành "×" và giữ nguyên phần còn lại', () => {
