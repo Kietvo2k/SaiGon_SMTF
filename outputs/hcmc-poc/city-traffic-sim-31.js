@@ -709,12 +709,40 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     lane[i] = l; s[i] = si; v[i] = vel; lat[i] = lanes.offset[l] + jit[i]; prevLane[i] = -1; stopT[i] = 0; waiting[i] = 0; elig[i] = 1;
     insertSorted(l, i); fillPath(i); active[i] = 1; pending[i] = 0;
   }
+  // Tỉ lệ độ dài còn trống của một làn (≥ .05) — trọng số tái sinh (phần "còn chỗ") của DEMAND-2.
+  const laneFree = l => {
+    const a = laneCars[l];
+    if (!a || !a.length) return 1;
+    let used = 0;
+    for (const j of a) used += len[j] + HARD_GAP;
+    return Math.max(.05, 1 - used / lanes.length[l]);
+  };
+  // Trọng số tái sinh trên spawnList = tỉ lệ chỗ trống còn lại (chỉ khi có kịch bản nhu cầu),
+  // tính một lần mỗi lần tái sinh (100 làn, rẻ).
+  const spawnWeights = () => {
+    const w = new Float64Array(spawnList.length); let tot = 0;
+    for (let k = 0; k < spawnList.length; k++) { const v = laneFree(spawnList[k]); w[k] = v; tot += v; }
+    return { w, tot };
+  };
+  // DEMAND-2 (G3): respawn chọn làn CÒN CHỖ TRỐNG thay vì chọn đều.
+  // Nền: respawn chọn đều trên 100 làn spawnList → 60 % xe tái sinh ở 60 làn NGOÀI bán kính nhu cầu
+  // (DEMAND-1 G2: spawnList 100 làn = 40 trong + 60 ngoài) và phần còn lại dồn vào làn đang kẹt
+  // (DEMAND-1 G3: 8/10 làn kẹt nặng nằm ngoài bán kính nhu cầu, 2/10 là điểm tái sinh cầu Sài Gòn).
+  // Không truyền demand thì giữ nhánh chọn đều cũ (hash cổ điển c05ce91e giữ nguyên).
   function respawn(i, breaker, maxTries = 8) {
     if (active[i]) { removeFrom(lane[i], i); releaseAll(i); }
     gen[i]++; counters.respawns++; if (breaker) counters.breakerRespawns++;
     active[i] = 0;
+    const sw = demandCfg ? spawnWeights() : null;
     for (let tries = 0; tries < maxTries && spawnList.length; tries++) {
-      const l = spawnList[Math.floor(rand(i) * spawnList.length)];
+      let l;
+      if (sw) {
+        let r = rand(i) * sw.tot, pick = 0;
+        for (; pick < spawnList.length - 1; pick++) { r -= sw.w[pick]; if (r < 0) break; }
+        l = spawnList[pick];
+      } else {
+        l = spawnList[Math.floor(rand(i) * spawnList.length)];
+      }
       if (kind[i] >= HEAVY && lanes.rank[l] < 2) continue;
       if (motoLaneBan(i, l)) continue;
       const si = Math.min(lanes.length[l] * .5, len[i] / 2 + .8 + (needsLock[lanes.from[l]] ? Rz[lanes.from[l]] : 0));
