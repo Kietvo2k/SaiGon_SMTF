@@ -52,7 +52,7 @@ Tài khoản seed nằm trong `outputs/smart-traffic/backend/app/seed/accounts.j
 - Đo A3 (FPS app smart so với chế độ cổ điển) trên máy có GPU, chạy có hiển thị.
 - Thiếu trụ cầu Sài Gòn 2 (306073179) và Thủ Thiêm (165919725), ghi trong `work/m1-notes.md`.
 - Chưa có đo tài nguyên dài hạn; xem [docs/PERFORMANCE-24-7.md](docs/PERFORMANCE-24-7.md).
-- Kế hoạch phase tiếp theo: [docs/NEXT-PHASE-PROMPTS.md](docs/NEXT-PHASE-PROMPTS.md).
+- Kế hoạch phase tiếp theo: [docs/prompts/README.md](docs/prompts/README.md).
 - Đặc tả và kế hoạch: [docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md](docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md), [docs/superpowers/plans/2026-10-14-m1-hang-xanh.md](docs/superpowers/plans/2026-10-14-m1-hang-xanh.md).
 
 ## Kiểm tra

@@ -1,6 +1,6 @@
 # Quy tắc chung cho agent (bắt buộc đọc trước mọi task)
 
-Áp dụng cho mọi prompt trong `docs/NEXT-PHASE-PROMPTS.md`. Thay cho `work/oc-task.md` cũ, vì thư mục `work/` không có trong repo.
+Áp dụng cho mọi prompt trong `docs/prompts/`. Thay cho `work/oc-task.md` cũ, vì thư mục `work/` không có trong repo.
 
 1. **Đọc trước:**
    - Bắt buộc: `docs/agent/DECISIONS.md` (quyết định người dùng đã chốt) và `docs/agent/HANDOFF.md` (hiện trạng, hợp đồng backend, việc còn mở).
@@ -43,8 +43,24 @@
 12. **Bí mật:** tài khoản seed dev chỉ nằm trong `outputs/smart-traffic/backend/app/seed/accounts.json`. Không in mật khẩu ra báo cáo, UI hay README.
 13. **Kết thúc:**
     - Chạy lại toàn bộ lệnh kiểm mà prompt ghi.
-    - Ghi báo cáo ≤ 20 dòng vào `work/<TÊN-TASK>.report.md`, gồm: hash commit, file đã đổi, lệnh kiểm kèm số pass/fail, số đo, chỗ lệch khỏi prompt kèm lý do, việc còn dở.
-    - In báo cáo ra cuối phiên.
+    - Ghi báo cáo ≤ 25 dòng vào `work/<TÊN-TASK>.report.md` theo đúng mẫu dưới đây, rồi in ra cuối phiên.
+
+```markdown
+# <TÊN-TASK>: ĐẠT | KHÔNG ĐẠT | DỪNG SỚM
+Commit: <hash> — <message>
+File đã đổi: <danh sách>
+## Số đo
+| Chỉ số | Trước | Sau | Ngưỡng | Đạt? |
+|---|---|---|---|---|
+## Kiểm
+- <lệnh>: <pass>/<tổng>
+## Lệch khỏi prompt
+- <điều gì, vì sao> (không có thì ghi "Không")
+## Ngưỡng đề xuất cho bước sau (chỉ prompt đo)
+- <chỉ số>: <giá trị> — lý do
+## Việc còn dở / phát hiện ngoài phạm vi
+- ...
+```
 
 ## Lệnh kiểm chung
 
