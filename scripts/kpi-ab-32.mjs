@@ -22,6 +22,13 @@ const SCENARIO = args.scenario ?? 'peak-hang-xanh';
 const ALGORITHM = args.algorithm ?? 'max-pressure';
 const EXTRA_PARAMS = {};
 for (const k of ['decisionIntervalS', 'switchMargin', 'minGreenS', 'maxGreenS', 'switchAbs', 'maxRedS', 'exitCapS', 'satPerS']) if (args[k] !== undefined) EXTRA_PARAMS[k] = Number(args[k]);
+// DEMAND-1: --demand '<json>' ghi đè từng khóa của demand trong kịch bản (không sửa mã sim).
+const DEMAND_OVERRIDE = (() => {
+  if (args.demand === undefined || args.demand === 'true') return null;
+  let o; try { o = JSON.parse(args.demand); } catch { throw new Error(`--demand phải là JSON đối tượng, nhận: ${args.demand}`); }
+  if (!o || typeof o !== 'object' || Array.isArray(o)) throw new Error('--demand phải là JSON đối tượng (khóa/giá trị)');
+  return o;
+})();
 const OUT = args.out ?? `work/kpi-${MODE}-${SEED_ARG}.json`;
 const SEEDS = args.seeds
   ? args.seeds.split(',').flatMap(s => { const m = /^(\d+)-(\d+)$/.exec(s.trim()); return m ? Array.from({ length: Number(m[2]) - Number(m[1]) + 1 }, (_, k) => Number(m[1]) + k) : [Number(s)]; })
@@ -32,6 +39,7 @@ require(path.resolve('outputs/hcmc-poc/data/road-graph-31.js'));
 require(path.resolve('outputs/hcmc-poc/data/scene.js'));
 const G = globalThis.ROAD_GRAPH_31, D = globalThis.CITY_DATA;
 const nodeMap = JSON.parse(fs.readFileSync(path.resolve('outputs/smart-traffic/backend/app/seed/node_map.json'), 'utf8'));
+const nodeIdByOsm = new Map(nodeMap.map(m => [m.osm_id, m.node_id]));
 const { buildTrafficNetwork31, createTrafficSim31, STEP, LIGHT_FACTOR } = await import(new URL('../outputs/hcmc-poc/city-traffic-sim-31.js?v=32a', import.meta.url).href);
 const { buildSignalPlan32 } = await import(new URL('../outputs/hcmc-poc/signal-plan-32.js?v=32a', import.meta.url).href);
 const { createSignalController32 } = await import(new URL('../outputs/hcmc-poc/traffic-controller-32.js?v=32a', import.meta.url).href);
@@ -45,11 +53,85 @@ const WIDTHS = { motorway: 16, trunk: 15, primary: 14, secondary: 11, tertiary: 
 const widthOf = i => D.roads[i].lanes ? Math.max(WIDTHS[D.roads[i].type] || 4, D.roads[i].lanes * 3.1) : WIDTHS[D.roads[i].type] || 4;
 const drawn = i => !D.roads[i].tunnel && G.roads[i].skipRender !== 'hide';
 
+// DEMAND-1 — đo chẩn đoán nhu cầu (chỉ đọc trạng thái sim, không sửa sim):
+//  - stopped_hx_by_group: số xe v < 1 m/s (lấy mẫu 1 s/lần trong cửa sổ A1) trung bình trên các làn VÀO nút HX, tách nhóm pha 0/1.
+//  - top_stuck_lanes: 10 làn có tổng thời gian xe đứng lớn nhất (mỗi mẫu 1 s cộng 1 s cho mỗi xe đứng trên làn), kèm tên đường/nút.
+//  - spawn_dest_hx: phân bố hướng VÀO HX của xe qua vạch (ghép bản ghi của tracker với làn vào tại bước ghi, theo nút/nhóm).
+//  - active_hx_by_group: số xe ĐANG CHẠY trên làn vào nút HX theo nhóm pha (cùng mẫu 1 s) — tách "không có xe" khỏi "xe bị chặn".
+const HX_SLOW_V = 1.0;
+function createDemandProbe32({ net, tracker, hxNodes, nodeIdOf, window }) {
+  const { lanes, NL, arriveGroup, E, G } = net;
+  const hx = new Set(hxNodes);
+  const isHxLane = new Uint8Array(NL);
+  for (let l = 0; l < NL; l++) isHxLane[l] = hx.has(lanes.to[l]) ? 1 : 0;
+  const [w0, w1] = window;
+  const stoppedByGroup = [0, 0];
+  const activeByGroup = [0, 0];
+  const stuckByLane = new Float64Array(NL);
+  const destByGroup = [0, 0];
+  const destByNode = {}, destByNodeGroup = {};
+  let samples = 0, lastSampleInt = -1, recSeen = 0;
+  const tick = sim => {
+    // Phân bố hướng vào HX: xử lý ngay bước ghi. Vạch HX là vạch ẢO trên đường tiếp cận (tracker dò nút HX
+    // phía trước tới 150 m theo lộ trình), nên hướng vào = nhóm pha của làn ĐẦU TIÊN trên lộ trình có `to` = nút HX.
+    if (tracker) {
+      const recs = tracker.records, PN = Math.round((sim.path?.length || 0) / sim.N);
+      for (; recSeen < recs.length; recSeen++) {
+        const rec = recs[recSeen], i = rec.i, cur = sim.lane[i];
+        let g = -1;
+        const groupOf = l => (arriveGroup[lanes.st[l]] === 0 ? 0 : 1);
+        if (lanes.to[cur] === rec.node) g = groupOf(cur);
+        else if (lanes.from[cur] === rec.node) g = groupOf(cur);
+        else for (let p = 0; p < PN; p++) {           // dò nút HX dọc lộ trình còn lại
+          const nl = sim.path[i * PN + p];
+          if (nl === undefined || nl < 0) break;
+          if (lanes.to[nl] === rec.node) { g = groupOf(nl); break; }
+        }
+        if (g < 0) g = groupOf(cur);                  // không khớp được (hiếm): lấy nhóm của làn đang chạy
+        const id = nodeIdOf(rec.node) || `node-${rec.node}`;
+        destByGroup[g]++; destByNode[id] = (destByNode[id] || 0) + 1; destByNodeGroup[`${id}|${g}`] = (destByNodeGroup[`${id}|${g}`] || 0) + 1;
+      }
+    }
+    const t = sim.counters.t;
+    if (t < w0 || t > w1) return;
+    const tInt = Math.floor(t + 1e-6);
+    if (tInt === lastSampleInt) return;
+    lastSampleInt = tInt; samples++;
+    const N = sim.N, va = sim.v, act = sim.active, la = sim.lane;
+    for (let i = 0; i < N; i++) {
+      if (!act[i]) continue;
+      const l = la[i];
+      if (isHxLane[l]) activeByGroup[arriveGroup[lanes.st[l]] === 0 ? 0 : 1]++;
+      if (va[i] >= HX_SLOW_V) continue;
+      stuckByLane[l] += 1;
+      if (isHxLane[l]) stoppedByGroup[arriveGroup[lanes.st[l]] === 0 ? 0 : 1]++;
+    }
+  };
+  const result = () => {
+    const idx = []; for (let l = 0; l < NL; l++) if (stuckByLane[l] > 0) idx.push(l);
+    idx.sort((a, b) => stuckByLane[b] - stuckByLane[a]);
+    const top = idx.slice(0, 10).map(l => ({
+      lane: l, road: G.roads[E[lanes.edge[l]].road]?.name || null,
+      node: nodeIdOf(lanes.to[l]) || null, group: arriveGroup[lanes.st[l]], stuck_s: +stuckByLane[l].toFixed(1)
+    }));
+    const s = Math.max(1, samples);
+    return {
+      stopped_hx_by_group: [+(stoppedByGroup[0] / s).toFixed(3), +(stoppedByGroup[1] / s).toFixed(3)],
+      active_hx_by_group: [+(activeByGroup[0] / s).toFixed(3), +(activeByGroup[1] / s).toFixed(3)],
+      stopped_hx_samples: samples,
+      top_stuck_lanes: top,
+      spawn_dest_hx: { by_group: [destByGroup[0], destByGroup[1]], by_node: destByNode, by_node_group: destByNodeGroup }
+    };
+  };
+  return { tick, result };
+}
+
 function runOnce(mode, seed, duration) {
   const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
   const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
   const controller = createSignalController32({ net, sim: null, mode, params: { algorithm: ALGORITHM, ...EXTRA_PARAMS } });
-  const demand = SCENARIO === 'peak-hang-xanh' ? PEAK_HANG_XANH_DEMAND : APP_1730 ? NORTH_DEMAND_32 : null;
+  const baseDemand = SCENARIO === 'peak-hang-xanh' ? PEAK_HANG_XANH_DEMAND : APP_1730 ? NORTH_DEMAND_32 : null;
+  const demand = baseDemand && DEMAND_OVERRIDE ? { ...baseDemand, ...DEMAND_OVERRIDE } : baseDemand;
   // Kịch bản cao điểm cần dòng xe chảy (không kẹt cứng) để đo A1 → dùng breaker mặc định 50;
   // app-1730 dùng đúng breaker của app (SMART_BREAKER_S = 180); các kịch bản khác giữ Infinity.
   const breakerS = SCENARIO === 'peak-hang-xanh' ? 50 : APP_1730 ? SMART_BREAKER_S : Infinity;
@@ -67,8 +149,10 @@ function runOnce(mode, seed, duration) {
     sim.setFraction(1);
   }
   const tracker = createDelayTracker32({ net, hxNodes: hxNodeIndices(net, nodeMap), window: A1_WINDOW });
+  const nodeIdOf = i => nodeIdByOsm.get(net.G.nodes[i]?.id) || null;
+  const probe = createDemandProbe32({ net, tracker, hxNodes: hxNodeIndices(net, nodeMap), nodeIdOf, window: A1_WINDOW });
   const steps = Math.round(duration / STEP);
-  for (let k = 0; k < steps; k++) { sim.step(); tracker.tick(sim.counters.t, sim); }
+  for (let k = 0; k < steps; k++) { sim.step(); tracker.tick(sim.counters.t, sim); probe.tick(sim); }
   const m = controller.metrics(sim.counters.t);
   const a1 = tracker.result();
   const hxIds = nodeMap.map(n => n.node_id);
@@ -77,6 +161,12 @@ function runOnce(mode, seed, duration) {
   const measure_s = Math.max(0, Math.min(duration, A1_WINDOW[1]) - A1_WINDOW[0]);
   return {
     mode, seed, scenario: SCENARIO, duration_s: duration,
+    breaker_s: Number.isFinite(breakerS) ? breakerS : null,
+    breaker_respawns: sim.counters.breakerRespawns,
+    respawns: sim.counters.respawns,
+    max_stop_s: +sim.counters.maxStopS.toFixed(2),
+    demand: demand ? { ...demand } : null,
+    ...probe.result(),
     wait_avg_s: m.wait_avg_s,
     wait_avg_s_hx: +avg(by_node_hx).toFixed(3),
     by_node: m.by_node, by_node_hx,
