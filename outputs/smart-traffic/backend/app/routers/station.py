@@ -58,8 +58,8 @@ async def heartbeat(body: dict, claims=Depends(STATION)):
 async def metrics(body: dict, claims=Depends(STATION_TELEMETRY)):
     kpi = body.get('kpi', {})
     with connect() as conn:
-        conn.execute('INSERT INTO kpi_samples (t_sim, window_s, wait_avg_s, wait_p95_s, queue_max, queue_avg, flow_per_min, mode, scenario_key) VALUES (?,?,?,?,?,?,?,?,?)',
-                     (body.get('t_sim', body.get('t')), 60, kpi.get('wait_avg_s', 0), 0, kpi.get('queue_max', 0), 0, kpi.get('flow_per_min', 0), body.get('signal_mode', 'fixed'), None))
+        conn.execute('INSERT INTO kpi_samples (t_sim, window_s, wait_avg_s, wait_p95_s, queue_max, queue_avg, flow_per_min, mode, scenario_key, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)',
+                     (body.get('t_sim', body.get('t')), 60, kpi.get('wait_avg_s', 0), 0, kpi.get('queue_max', 0), 0, kpi.get('flow_per_min', 0), body.get('signal_mode', 'fixed'), None, _now()))
         conn.execute('INSERT INTO station_metrics (station_id, t, payload_json, created_at) VALUES (?,?,?,?)',
                      (body.get('station_id'), body.get('t'), json.dumps(body, ensure_ascii=False), _now()))
         # Nhật ký trạng thái đèn bền vững: trạm báo trạng thái pha thật → ghi `signal_state_log`.

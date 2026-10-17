@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -5,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app import config
+from app import cleanup, config
 from app.auth import DUMMY_HASH, LoginLimiter, make_token, require_role, verify_password
 from app.db import connect
 from app.errors import err
@@ -21,6 +23,29 @@ from app.ws import ws_handler
 app = FastAPI(title='SaiGon SMTF · Trung tâm điều hành giao thông khu Bắc', version='32a')
 app.add_middleware(CORSMiddleware, allow_origins=config.ALLOWED_ORIGINS, allow_credentials=True,
                    allow_methods=['*'], allow_headers=['*'])
+
+_cleanup_task = None
+
+
+@app.on_event('startup')
+def _start_cleanup():
+    """PERF-4: tác vụ dọn nền chạy mỗi CLEANUP_INTERVAL_S; VACUUM mỗi ngày. SMART_CLEANUP=0 để tắt."""
+    global _cleanup_task
+    if not config.CLEANUP_ENABLED:
+        return
+    try:
+        loop = asyncio.get_event_loop()
+        _cleanup_task = loop.create_task(cleanup._cleanup_loop())
+    except Exception:
+        _cleanup_task = None
+
+
+@app.on_event('shutdown')
+def _stop_cleanup():
+    global _cleanup_task
+    if _cleanup_task is not None:
+        _cleanup_task.cancel()
+        _cleanup_task = None
 
 _CODE_BY_STATUS = {400: 'BAD_REQUEST', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN', 404: 'NOT_FOUND',
                    409: 'CONFLICT', 413: 'TOO_LARGE', 422: 'VALIDATION', 429: 'RATE_LIMITED'}

@@ -94,4 +94,7 @@ MIGRATIONS = [
     ('complaints', 'kind', 'TEXT'),
     ('complaints', 'reason', 'TEXT'),
     ('complaints', 'resolved_by', 'TEXT'),
+    # PERF-4: kpi_samples trước đây chỉ có t_sim (đồng hồ sim, tua ×10 là không dùng được)
+    # nên không dọn được theo hạn giữ → thêm mốc thời gian thực. Cột cũ NULL vẫn giữ nguyên.
+    ('kpi_samples', 'created_at', 'TEXT'),
 ]

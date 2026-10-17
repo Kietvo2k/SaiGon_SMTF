@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app import audit
 from app.auth import hash_password, require_role
+from app.cleanup import storage_stats
 from app.db import connect
 from app.errors import err
 from app.schemas import StaffActiveIn, StaffCreateIn, StaffRoleIn
@@ -82,3 +83,9 @@ def set_role(uid: int, body: StaffRoleIn, claims=Depends(ADMIN)):
         audit.write(conn, actor=claims['sub'], role=claims.get('role'), action='staff-role', target_type='user',
                     target_id=str(uid), from_state=t['role'], to_state=body.role, payload={'username': t['username']})
     return {'ok': True, 'id': uid, 'role': body.role}
+
+
+@router.get('/storage')
+def storage(claims=Depends(ADMIN)):
+    """PERF-4: thống kê lưu trữ cho quản trị — kích thước DB, frames, số dòng mỗi bảng, lần dọn gần nhất."""
+    return storage_stats()

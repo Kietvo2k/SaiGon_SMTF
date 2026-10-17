@@ -14,6 +14,8 @@ def client():
     tmp = Path(tempfile.mkdtemp(prefix='smart-traffic-test-'))
     os.environ['SMART_DB_PATH'] = str(tmp / 'test.db')
     os.environ['SMART_VAR_DIR'] = str(tmp)
+    # PERF-4: tắt tác vụ dọn nền trong test (mỗi test gọi run_once() rõ ràng khi cần).
+    os.environ['SMART_CLEANUP'] = '0'
     # config đọc env lúc import → PHẢI reload để mỗi test dùng DB/VAR_DIR riêng (cách ly test).
     from app import config
     importlib.reload(config)
