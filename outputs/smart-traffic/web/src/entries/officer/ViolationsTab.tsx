@@ -19,11 +19,12 @@ const FILTERS: [Filter, string][] = [
 ];
 const PAGE_SIZE = 50;
 const PENDING_LIMIT = 100;   // "Chờ xử lý" gộp hai trạng thái, mỗi trạng thái lấy tối đa 100 mục
-const CAMERA_ID = 'CAM-HX-001';
+export const CAMERA_ID = 'CAM-HX-001';
 
 interface Props {
   api: Api;
   tick: number;
+  streamTick: number;   // đổi src ảnh stream theo stream.updated (tối đa 1 lần/2 s)
   onChanged: () => void;
 }
 
@@ -39,7 +40,7 @@ const SUCCESS_TEXT: Record<Action, (status?: string) => string> = {
   notify: () => 'Đã gửi thông báo cho chủ xe.',
 };
 
-export function ViolationsTab({ api, tick, onChanged }: Props) {
+export function ViolationsTab({ api, tick, streamTick, onChanged }: Props) {
   const [camOk, setCamOk] = useState(true);
   const [filter, setFilter] = useState<Filter>('pending');
   const [page, setPage] = useState(1);
@@ -98,7 +99,7 @@ export function ViolationsTab({ api, tick, onChanged }: Props) {
         <figure className="cam">
           {camOk ? (
             <img
-              src={`${streamUrl(CAMERA_ID)}?v=${tick}`}
+              src={`${streamUrl(CAMERA_ID)}?v=${streamTick}`}
               alt="Hình ảnh camera Hàng Xanh"
               onLoad={() => setCamOk(true)}
               onError={() => setCamOk(false)}

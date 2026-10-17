@@ -1,12 +1,13 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Api, ApiError, errorMessage, login, loadToken, makeApi, saveToken } from '../../lib/api';
 import { OFFICER_TAB_LABELS, OfficerTab, canControl, officerTabs } from '../../lib/access';
 import { roleLabel } from '../../lib/labels';
 import { connectSmartWs, WsMessage } from '../../lib/ws';
+import { createReloadScheduler, createStreamThrottle, StreamThrottle } from '../../lib/refresh';
 import type { Kpi, Me } from '../../lib/types';
 import type { HeatView } from '../../lib/heat';
 import { alertDetail } from '../../lib/alerts';
-import { ViolationsTab } from './ViolationsTab';
+import { ViolationsTab, CAMERA_ID } from './ViolationsTab';
 import { ComplaintsTab } from './ComplaintsTab';
 import { StatsTab } from './StatsTab';
 import { AuditTab } from './AuditTab';
@@ -27,6 +28,7 @@ export function App() {
   const [notice, setNotice] = useState('');
   const [heatLive, setHeatLive] = useState<HeatView | null>(null);
   const [alertNotice, setAlertNotice] = useState('');
+  const [streamTick, setStreamTick] = useState(0);   // đổi src ảnh stream theo stream.updated
 
   const signOut = useCallback((message: string) => {
     saveToken('officer', null);
@@ -40,6 +42,11 @@ export function App() {
 
   const api: Api = useMemo(() => makeApi(token, () => signOut(EXPIRED)), [token, signOut]);
   const bump = useCallback(() => setTick(t => t + 1), []);
+  // Tab ẩn: document.visibilityState có thể ném trong worker; kẹp an toàn.
+  const isVisible = useCallback(() => {
+    try { return typeof document !== 'undefined' && document.visibilityState === 'visible'; }
+    catch { return true; }
+  }, []);
 
   // Vai trò lấy từ /auth/me; không có tab nào (công dân, trạm) thì không cho vào.
   useEffect(() => {
@@ -63,21 +70,40 @@ export function App() {
     return () => { alive = false; };
   }, [token, signOut]);
 
-  // Thời gian thực: sự kiện vi phạm/khiếu nại làm tải lại; KPI cập nhật trực tiếp; dự phòng làm mới 15 s.
+  // Thời gian thực: sự kiện vi phạm/khiếu nại gộp lại rồi mới tải lại (PERF-5).
+  // KPI cập nhật trực tiếp; stream.updated chỉ đổi ảnh camera tối đa 1 lần/2 s; dự phòng làm mới 15 s.
+  // Tab ẩn thì không tải lại gì; hiện lại thì tải lại đúng một lần.
+  const streamThrottle = useRef<StreamThrottle | null>(null);
   useEffect(() => {
     if (!token || !me) return;
+    const scheduler = createReloadScheduler(bump, { isVisible });
     const stop = connectSmartWs(token, (msg: WsMessage) => {
       if (msg.event === 'kpi.update') setKpi(msg.data ?? {});
       else if (msg.event === 'heat.update') setHeatLive(msg.data ?? null);
       else if (msg.event === 'alert.congestion' && msg.data) setAlertNotice(`Cảnh báo kẹt mới trên ${msg.data.name}: ${alertDetail(msg.data)}.`);
-      else if (['violation.created', 'violation.updated', 'complaint.updated'].includes(msg.event)) bump();
+      else if (['violation.created', 'violation.updated', 'complaint.updated'].includes(msg.event)) scheduler.schedule();
+      else if (msg.event === 'stream.updated') streamThrottle.current?.onStreamUpdated(msg.data);
     });
-    const timer = setInterval(bump, 15000);
+    const timer = setInterval(() => scheduler.schedule(), 15000);
+    const onVisibility = () => { if (isVisible()) scheduler.onVisible(); };
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       stop();
       clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+      scheduler.dispose();
     };
-  }, [token, me, bump]);
+  }, [token, me, bump, isVisible]);
+
+  // Bộ giới hạn ảnh stream: chỉ đổi src khi sự kiện đúng camera và đã qua 2 s.
+  useEffect(() => {
+    const t = createStreamThrottle(() => setStreamTick(v => v + 1), { cameraId: CAMERA_ID, isVisible });
+    streamThrottle.current = t;
+    return () => {
+      t.dispose();
+      streamThrottle.current = null;
+    };
+  }, [isVisible]);
 
   // Thông báo cảnh báo kẹt mới tự ẩn sau 15 giây.
   useEffect(() => {
@@ -140,7 +166,7 @@ export function App() {
       </nav>
 
       <main role="tabpanel">
-        {current === 'violations' && <ViolationsTab api={api} tick={tick} onChanged={bump} />}
+        {current === 'violations' && <ViolationsTab api={api} tick={tick} streamTick={streamTick} onChanged={bump} />}
         {current === 'complaints' && <ComplaintsTab api={api} tick={tick} onChanged={bump} />}
         {current === 'stats' && <StatsTab api={api} tick={tick} />}
         {current === 'heat' && <HeatMapTab api={api} tick={tick} live={heatLive} />}
