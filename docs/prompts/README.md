@@ -10,6 +10,39 @@ Mỗi file là **một chuỗi việc**. Mỗi prompt trong chuỗi là một b�
 | [A1.md](A1.md) | Đèn thích ứng đạt chỉ tiêu A1 | 3 | Sau DEMAND |
 | [SMALL.md](SMALL.md) | Việc nhỏ độc lập | 10 | Lúc nào cũng được |
 
+## Thứ tự chạy
+
+Agent dùng danh sách này để tự tìm việc kế tiếp: lấy task đầu tiên chưa có `work/<TÊN>.report.md`.
+
+1. PERF-1 (PERF.md)
+2. PERF-2 (PERF.md), cần model mạnh
+3. PERF-3 (PERF.md)
+4. PERF-4 (PERF.md)
+5. PERF-5 (PERF.md)
+6. DEMAND-1 (DEMAND.md)
+7. DEMAND-2 (DEMAND.md), cần model mạnh
+8. DEMAND-3 (DEMAND.md)
+9. PRIORITY-1 (PRIORITY.md), cần model mạnh
+10. PRIORITY-2 (PRIORITY.md), cần model mạnh
+11. PRIORITY-3 (PRIORITY.md)
+12. PRIORITY-4 (PRIORITY.md)
+13. PRIORITY-5 (PRIORITY.md)
+14. PRIORITY-6 (PRIORITY.md)
+15. A1-1 (A1.md)
+16. A1-2 (A1.md), cần model mạnh
+17. A1-3 (A1.md)
+18. FIX-LABELS (SMALL.md)
+19. FIX-STATION-LOGIN (SMALL.md)
+20. FIX-SPEED (SMALL.md)
+21. FIX-TURN (SMALL.md)
+22. FIX-WRONGWAY (SMALL.md)
+23. FIX-BRIDGE (SMALL.md)
+24. FIX-PLATES (SMALL.md)
+25. FIX-SPEC46 (SMALL.md)
+26. CLEAN-2 (SMALL.md)
+
+Không có trong danh sách (chỉ chạy khi người dùng yêu cầu): PERF-6, VIDEO-ONNX.
+
 ## Cách chạy một prompt
 
 1. Ở thư mục gốc repo, chuyển sang nhánh làm việc:
