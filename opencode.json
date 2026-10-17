@@ -1,0 +1,20 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "worker-strong": {
+      "description": "Sub agent mạnh (kimi-k3, VietCode). Làm DUY NHẤT một task có dấu * trong docs/prompts/AUTO-RUN.md.",
+      "mode": "subagent",
+      "model": "vietapi/kimi-k3"
+    },
+    "worker-cheap": {
+      "description": "Sub agent rẻ (deepseek-v4.1-flash-free). Làm DUY NHẤT một task không có dấu * trong docs/prompts/AUTO-RUN.md.",
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4.1-flash-free"
+    },
+    "worker-alt": {
+      "description": "Sub agent dự phòng (glm-5.3-flash-free). Dùng thay worker-cheap khi deepseek bị 429 hoặc lỗi kết nối.",
+      "mode": "subagent",
+      "model": "opencode/glm-5.3-flash-free"
+    }
+  }
+}
