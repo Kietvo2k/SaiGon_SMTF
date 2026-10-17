@@ -3,7 +3,7 @@
 | Trường | Giá trị |
 |---|---|
 | Ngày | 2026-10-14 |
-| Nhánh | `Kietvo2k/smart-traffic-bac` (worktree `smart-bac`) |
+| Nhánh | `main` (đã gộp từ `Kietvo2k/smart-traffic-bac` ngày 17/10/2026) |
 | Nguồn quyết định | `work/smart-decisions.md` (phỏng vấn 13–14/10/2026) — tài liệu này KHÔNG đổi quyết định |
 | Mã tham chiếu | `outputs/hcmc-poc/` nhánh 31A (Three.js r186 WebGPU + WebGL2 fallback) |
 | Loại tài liệu | Đặc tả thiết kế để nhiều agent làm song song; không chứa mã sản phẩm |
@@ -128,7 +128,7 @@ Mất kết nối: trạm xếp hàng `IndexedDB` và gửi lại (mục 8).
 ### 3.2 Cây thư mục dự kiến
 
 ```text
-smart-bac/
+SaiGon_SMTF/
 ├── outputs/
 │   ├── hcmc-poc/                      # app 3D (31A giữ nguyên + module 32)
 │   │   ├── index.html                 # SỬA: redirect thêm &app=smart&v=32a

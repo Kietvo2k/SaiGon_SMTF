@@ -1,6 +1,6 @@
 # Bàn giao: hiện trạng Smart Traffic khu Bắc (16/10/2026)
 
-Nhánh `Kietvo2k/smart-traffic-bac`. Mọi mô tả ở đây là **mô phỏng**: sim giao thông tất định theo seed, perception mô phỏng (không train model), biển số sinh theo seed. Không dùng các chữ đó trên UI.
+Nhánh `main`, thư mục `F:\File\FileLapTrinhF\SaiGon_SMTF` (đã gộp nhánh `Kietvo2k/smart-traffic-bac` ngày 17/10/2026). Mọi mô tả ở đây là **mô phỏng**: sim giao thông tất định theo seed, perception mô phỏng (không train model), biển số sinh theo seed. Không dùng các chữ đó trên UI.
 
 ## 1. Đã xong
 

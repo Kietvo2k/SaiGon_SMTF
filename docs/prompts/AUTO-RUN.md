@@ -16,7 +16,7 @@ VAI TRÒ: Bạn là ĐIỀU PHỐI VIÊN. Bạn KHÔNG tự viết mã. Bạn gi
 
 === BƯỚC 0 (5 phút) ===
 1. Đọc docs/agent/RULES.md và docs/prompts/README.md. Đọc lướt docs/agent/HANDOFF.md. KHÔNG đọc mã nguồn: sub agent sẽ đọc, bạn đọc là tốn token.
-2. Chạy `git status`, `git log --oneline -3`. Phải đang ở nhánh Kietvo2k/smart-traffic-bac; sai nhánh thì DỪNG, hỏi người dùng.
+2. Chạy `git status`, `git log --oneline -3`. Phải đang ở nhánh main; sai nhánh thì DỪNG, hỏi người dùng.
 3. Tạo work/AUTO-RUN.log, ghi giờ bắt đầu. Sau mỗi task, thêm 1 dòng: giờ | task | ĐẠT/KHÔNG ĐẠT/DỪNG SỚM/BỎ QUA | commit.
 
 === DANH SÁCH VIỆC: 3 LUỒNG, mỗi luồng chạy tuần tự ===
@@ -56,7 +56,7 @@ Nếu worker-cheap báo lỗi kết nối, 429 hoặc hết hạn mức thì gia
    - outputs/smart-traffic/backend/.venv/Scripts/python.exe -m pytest outputs/smart-traffic/backend/tests -q -p no:cacheprovider
    - cd outputs/smart-traffic/web && npm run test && npm run build
    Fail thì giao worker-strong sửa ĐÚNG lỗi đó (tự giới hạn 30 phút). Vẫn fail thì revert task gây lỗi.
-5. Ổn thì: git push origin Kietvo2k/smart-traffic-bac
+5. Ổn thì: git push origin main
 
 === KHÔNG SA LẦY ===
 - Task KHÔNG ĐẠT hoặc DỪNG SỚM: ghi log, sang task kế của luồng, KHÔNG giao làm lại.

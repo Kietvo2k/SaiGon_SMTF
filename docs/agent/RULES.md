@@ -26,7 +26,7 @@
    - Chỉ cài trong dự án: npm trong `outputs/smart-traffic/web`, pip trong `outputs/smart-traffic/backend/.venv`.
    - Không cài global.
 8. **Git:**
-   - Chỉ `git add <từng file>`. Không `git add -A` hoặc `.`, không stash, reset, đổi nhánh hay push. Riêng điều phối viên của `docs/prompts/AUTO-RUN.md` được push nhánh `Kietvo2k/smart-traffic-bac` và được `git revert` commit của sub agent.
+   - Chỉ `git add <từng file>`. Không `git add -A` hoặc `.`, không stash, reset, đổi nhánh hay push. Riêng điều phối viên của `docs/prompts/AUTO-RUN.md` được push nhánh `main` và được `git revert` commit của sub agent.
    - Không commit `work/`, `var/`, `node_modules/`, `.venv/`, `dist/`, media hay model.
    - Message commit bằng tiếng Việt, theo mẫu prompt ghi.
 9. **UI:**

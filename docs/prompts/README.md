@@ -47,14 +47,14 @@ Không có trong danh sách (chỉ chạy khi người dùng yêu cầu): PERF-6
 
 1. Ở thư mục gốc repo, chuyển sang nhánh làm việc:
    ```bash
-   git checkout Kietvo2k/smart-traffic-bac
+   git checkout main
    ```
 2. Mở **phiên agent mới** (opencode, VietCode hoặc Codex) ở thư mục gốc repo.
 3. Chép **nguyên khối** ` ```text … ``` ` của prompt rồi dán vào. Không cần thêm gì.
 4. Agent xong thì đọc `work/<TÊN>.report.md`. Mục **Duyệt** cuối mỗi prompt ghi bạn cần xem gì trước khi chạy prompt kế.
 5. Ổn thì push:
    ```bash
-   git push origin Kietvo2k/smart-traffic-bac
+   git push origin main
    ```
 
 **Nếu agent báo không đạt:** đừng bắt nó sửa tiếp trong cùng phiên. Ghi số đo vào `docs/agent/HANDOFF.md` mục 3, rồi quyết định chạy lại bước đó (phiên mới) hoặc bỏ qua.
