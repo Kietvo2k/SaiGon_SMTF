@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Api, errorMessage, streamUrl } from '../../lib/api';
 import { formatDateTime, formatPenalty } from '../../lib/format';
 import { violationLabel, violationStatusLabel } from '../../lib/labels';
 import { Pager, pageCount } from '../../components/Pager';
+import { cameraDefault, cameraOptions } from '../../lib/cameras';
 import type { OfficerViolation, Page } from '../../lib/types';
 
 type Filter = 'pending' | 'confirmed' | 'notified' | 'disputed' | 'paid' | 'dismissed' | 'all';
@@ -26,6 +27,7 @@ interface Props {
   tick: number;
   streamTick: number;   // đổi src ảnh stream theo stream.updated (tối đa 1 lần/2 s)
   onChanged: () => void;
+  onCameraChange: (id: string) => void;   // đồng bộ camera đang xem lên App để throttle stream đúng hướng
 }
 
 interface Flash {
@@ -40,8 +42,11 @@ const SUCCESS_TEXT: Record<Action, (status?: string) => string> = {
   notify: () => 'Đã gửi thông báo cho chủ xe.',
 };
 
-export function ViolationsTab({ api, tick, streamTick, onChanged }: Props) {
+export function ViolationsTab({ api, tick, streamTick, onChanged, onCameraChange }: Props) {
   const [camOk, setCamOk] = useState(true);
+  const [cams, setCams] = useState<string[]>([]);
+  const [cameraId, setCameraId] = useState<string>(CAMERA_ID);
+  const camBox = useRef<HTMLElement | null>(null);
   const [filter, setFilter] = useState<Filter>('pending');
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<OfficerViolation[]>([]);
@@ -49,6 +54,26 @@ export function ViolationsTab({ api, tick, streamTick, onChanged }: Props) {
   const [loadError, setLoadError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [flash, setFlash] = useState<Flash | null>(null);
+
+  // Danh sách camera giao lộ để chọn (10 camera, mỗi nút 1–2 hướng).
+  useEffect(() => {
+    let alive = true;
+    api.get<{ streams: { camera_id: string; label?: string }[] }>('/officer/streams')
+      .then(r => {
+        if (!alive) return;
+        const opts = cameraOptions(r.streams);
+        setCams(opts.map(o => o.value));
+        const first = cameraDefault(r.streams);
+        if (first) { setCameraId(first); onCameraChange(first); }
+      })
+      .catch(() => { if (alive) setCams([CAMERA_ID]); });
+    return () => { alive = false; };
+  }, [api]);
+
+  const fullscreen = () => {
+    const el = camBox.current;
+    if (el && typeof el.requestFullscreen === 'function') el.requestFullscreen().catch(() => {});
+  };
 
   useEffect(() => {
     let alive = true;
@@ -96,20 +121,28 @@ export function ViolationsTab({ api, tick, streamTick, onChanged }: Props) {
   return (
     <section className="panel" aria-label="Danh sách vi phạm">
       <div className="cam-row">
-        <figure className="cam">
+        <figure className="cam" ref={camBox}>
           {camOk ? (
             <img
-              src={`${streamUrl(CAMERA_ID)}?v=${streamTick}`}
-              alt="Hình ảnh camera Hàng Xanh"
+              src={`${streamUrl(cameraId)}?v=${streamTick}`}
+              alt={`Hình ảnh camera ${cameraId}`}
               onLoad={() => setCamOk(true)}
               onError={() => setCamOk(false)}
             />
           ) : (
             <div className="cam-off">Chưa có hình ảnh từ camera này</div>
           )}
-          <figcaption>Camera {CAMERA_ID}</figcaption>
+          <figcaption>
+            Camera {cameraId}
+            <button type="button" className="ghost" onClick={fullscreen} title="Xem toàn màn hình">⛶ Toàn màn hình</button>
+          </figcaption>
         </figure>
         <div className="toolbar">
+          <label>Camera giao lộ
+            <select value={cameraId} onChange={e => { setCameraId(e.target.value); onCameraChange(e.target.value); setCamOk(true); }}>
+              {cams.map(id => <option key={id} value={id}>{id}</option>)}
+            </select>
+          </label>
           <label>Lọc theo trạng thái
             <select value={filter} onChange={e => { setFilter(e.target.value as Filter); setPage(1); }}>
               {FILTERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}

@@ -212,8 +212,8 @@ def heat_view(claims=Depends(OFFICER)):
 @router.get('/streams')
 def streams(claims=Depends(OFFICER)):
     with connect() as conn:
-        cams = [dict(r) for r in conn.execute('SELECT camera_id FROM cameras')]
-    return {'streams': [{'camera_id': c['camera_id'], 'fps': 2,
+        cams = [dict(r) for r in conn.execute('SELECT camera_id, label FROM cameras')]
+    return {'streams': [{'camera_id': c['camera_id'], 'fps': 2, 'label': c['label'],
                          'url': f"/api/v1/media/stream/{c['camera_id']}", 'active': True} for c in cams]}
 
 

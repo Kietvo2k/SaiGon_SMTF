@@ -95,15 +95,16 @@ export function App() {
     };
   }, [token, me, bump, isVisible]);
 
-  // Bộ giới hạn ảnh stream: chỉ đổi src khi sự kiện đúng camera và đã qua 2 s.
+  // Bộ giới hạn ảnh stream: chỉ đổi src khi sự kiện đúng camera đang chọn và đã qua 2 s.
+  const [cameraId, setCameraId] = useState(CAMERA_ID);
   useEffect(() => {
-    const t = createStreamThrottle(() => setStreamTick(v => v + 1), { cameraId: CAMERA_ID, isVisible });
+    const t = createStreamThrottle(() => setStreamTick(v => v + 1), { cameraId, isVisible });
     streamThrottle.current = t;
     return () => {
       t.dispose();
       streamThrottle.current = null;
     };
-  }, [isVisible]);
+  }, [cameraId, isVisible]);
 
   // Thông báo cảnh báo kẹt mới tự ẩn sau 15 giây.
   useEffect(() => {
@@ -166,7 +167,7 @@ export function App() {
       </nav>
 
       <main role="tabpanel">
-        {current === 'violations' && <ViolationsTab api={api} tick={tick} streamTick={streamTick} onChanged={bump} />}
+        {current === 'violations' && <ViolationsTab api={api} tick={tick} streamTick={streamTick} onChanged={bump} onCameraChange={setCameraId} />}
         {current === 'complaints' && <ComplaintsTab api={api} tick={tick} onChanged={bump} />}
         {current === 'stats' && <StatsTab api={api} tick={tick} />}
         {current === 'heat' && <HeatMapTab api={api} tick={tick} live={heatLive} />}
