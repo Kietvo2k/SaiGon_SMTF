@@ -498,7 +498,68 @@ export function installResourceSaver32(app, { root = (typeof document !== 'undef
   return { enabled: () => on, set: apply, dispose() { input.removeEventListener('change', onChange); if (section && section.remove) section.remove(); } };
 }
 
-// Áp "Tiết kiệm tài nguyên": trần FPS 15 (smartFrame.setSave), pixelRatio ≤ 1, mode lite.
+import { createResourceWatch32, resourceSample32, RESOURCE_LIMITS_32 } from './resource-monitor-32.js?v=32a';
+export { createResourceWatch32, resourceSample32, resourceOver32, resourceUnder32, RESOURCE_LIMITS_32 } from './resource-monitor-32.js?v=32a';
+
+// Giám sát tài nguyên: mỗi 1 s đo CPU (mật độ long-task), GPU proxy (thời gian khung so ngân sách
+// của FPS trần), RAM (performance.memory). Vượt ngưỡng 3 s liên tiếp → TỰ bật "Tiết kiệm tài nguyên";
+// về dưới ngưỡng − 5 điểm trong 5 s → tự tắt (chỉ tắt nếu chính monitor bật, không cưỡng công tắc thủ công).
+// CHỈ chạy khi app=smart (webgpu-materials-24.js gọi trong nhánh isSmart32).
+export function installResourceMonitor32(app, { root = (typeof document !== 'undefined' ? document : null),
+  saver = null, capFpsOf = () => 30, storage = (typeof localStorage !== 'undefined' ? localStorage : null),
+  intervalMs = 1000, log = (m => console.info(m)) } = {}) {
+  const watch = createResourceWatch32({
+    autoPersist: storage,
+    onSave: () => { autoSet = true; if (saver && typeof saver.set === 'function' && !saver.enabled()) saver.set(true); },
+    onNormal: () => { if (autoSet) { autoSet = false; if (saver && typeof saver.set === 'function' && saver.enabled()) saver.set(false); } }
+  });
+  let autoSet = false;
+  let longTasks = 0, frames = 0, frameMs = 0, lastFrame = null;
+  const host = root && root.querySelector ? root.querySelector('#smartHud32') : null;
+  const banner = host && root.createElement ? root.createElement('p') : null;
+  if (banner) {
+    banner.className = 'save-note';
+    banner.setAttribute('role', 'status');
+    banner.textContent = 'Tài nguyên máy đang cao, đã tự bật tiết kiệm tài nguyên (FPS 15, chế độ Lite).';
+    banner.style.cssText = 'margin:.4em 0;padding:.4em .6em;border-radius:6px;background:#5a4a12;color:#ffe9a8;font:12px system-ui;';
+    banner.hidden = true;
+    host.append(banner);
+  }
+  // Long-task: > 50 ms liên tục — đại lượng JS đo được gần nhất của tải luồng chính.
+  let observer = null;
+  if (typeof PerformanceObserver === 'function') {
+    try { observer = new PerformanceObserver(list => { longTasks += list.getEntries().length; }); observer.observe({ entryTypes: ['longtask'] }); } catch { observer = null; }
+  }
+  // Thời gian khung trung bình (đại lượng thay cho GPU vì JS không đọc được mức dùng GPU).
+  const onFrame = now => {
+    if (lastFrame !== null) { frames++; frameMs += now - lastFrame; }
+    lastFrame = now;
+    rafId = typeof requestAnimationFrame === 'function' ? requestAnimationFrame(onFrame) : 0;
+  };
+  let rafId = typeof requestAnimationFrame === 'function' ? requestAnimationFrame(onFrame) : 0;
+  const timer = typeof setInterval === 'function' ? setInterval(() => {
+    const sample = resourceSample32({
+      heapUsed: typeof performance !== 'undefined' && performance.memory ? performance.memory.usedJSHeapSize : 0,
+      heapLimit: typeof performance !== 'undefined' && performance.memory ? performance.memory.jsHeapSizeLimit : 0,
+      longTasksPerSec: longTasks,
+      frameMs: frames > 0 ? frameMs / frames : 0,
+      capFps: capFpsOf()
+    });
+    longTasks = 0; frames = 0; frameMs = 0;
+    const mode = watch.tick(sample);
+    if (banner) banner.hidden = mode !== 'save';
+    return mode;
+  }, intervalMs) : 0;
+  return {
+    watch, mode: () => watch.mode(), limits: RESOURCE_LIMITS_32,
+    dispose() {
+      if (timer) clearInterval(timer);
+      if (rafId && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(rafId);
+      if (observer) observer.disconnect();
+      if (banner && banner.remove) banner.remove();
+    }
+  };
+}
 // Trả về {dispose}. onApply được bọc try/catch ở installResourceSaver32 nên không cần bắt thêm.
 export function applyResourceSaver32({ renderer = null, modeController = null, setSave = null, innerWidth: iw = 0, innerHeight: ih = 0 } = {}) {
   const out = { on: true, mode: null };
