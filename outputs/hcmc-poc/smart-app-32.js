@@ -318,7 +318,11 @@ export function installHeat32(app, { THREE, routing = null, nodeMap = [], root =
   const host = root && (root.querySelector ? root.querySelector('#smartHud32') : null);
   const panel = host ? mountHeatPanel32(host, { onToggle: on => { scene.setHeatVisible(on); } }) : null;
   let shown = '';
-  const timer = setInterval(() => {
+  // PERF-2: khi tab ẩn, chậm nhịp heat (250 ms → 1 s) để bớt CPU; khi hiện lại quay về nhịp cũ.
+  // Dùng chuỗi setTimeout tự lập lại (thay vì setInterval cố định) để nhịp đổi theo trạng thái tab.
+  const heatInterval = () => (tabHidden32.hidden ? SMART_SLOW_TICK_MS_32 : HEAT_TICK_MS_32);
+  let timer = 0;
+  const heatTick = () => {
     live.tick();
     scene.update(sim.counters.t, live);
     if (panel) {
@@ -326,10 +330,12 @@ export function installHeat32(app, { THREE, routing = null, nodeMap = [], root =
       const key = alerts.map(a => `${a.edge}:${a.horizonMin}`).join(',');
       if (key !== shown) { shown = key; panel.setAlerts(alerts); }
     }
-  }, HEAT_TICK_MS_32);
+    timer = typeof setTimeout === 'function' ? setTimeout(heatTick, heatInterval()) : 0;
+  };
+  if (typeof setTimeout === 'function') timer = setTimeout(heatTick, heatInterval());
   const mod = {
     live, scene, boards, panel,
-    dispose() { clearInterval(timer); scene.dispose(); if (panel) panel.dispose(); }
+    dispose() { if (timer) clearTimeout(timer); scene.dispose(); if (panel) panel.dispose(); }
   };
   return app.registerSmartModule32('heat', mod);
 }
@@ -355,10 +361,15 @@ export function installScenarios32(app, { THREE = null, nodeMap = [], routing = 
     if (st.key === 'lane-block' && st.remainingS !== null) return `Đang chạy: ${st.label} · còn ${Math.ceil(st.remainingS / 60)} phút sim`;
     return `Đang chạy: ${st.label} · ${Math.floor(st.simElapsedS / 60)} phút sim`;
   };
-  const timer = setInterval(() => {
+  // PERF-2: khi tab ẩn chậm nhịp kịch bản (1 s → 5 s) để bớt CPU; khi hiện lại quay về nhịp cũ.
+  const scnInterval = () => (tabHidden32.hidden ? SMART_SLOW_TICK_MS_32 * 5 : 1000);
+  let timer = 0;
+  const scnTick = () => {
     scn.tick();
     if (panel) { const st = scn.status(); panel.setActive(st.key, describe32(st)); }
-  }, 1000);
+    timer = typeof setTimeout === 'function' ? setTimeout(scnTick, scnInterval()) : 0;
+  };
+  if (typeof setTimeout === 'function') timer = setTimeout(scnTick, 1000);
   const off = transport && typeof transport.onCommand === 'function' ? transport.onCommand(createCommandRouter32({ scenarios: scn, vms, log })) : null;
   app.metricsExtra32 = () => ({
     vms: vms.snapshot(boards, heat && heat.live ? heat.live.alerts() : []),
@@ -367,7 +378,141 @@ export function installScenarios32(app, { THREE = null, nodeMap = [], routing = 
   });
   const mod = {
     scenarios: scn, panel, props, boards,
-    dispose() { clearInterval(timer); if (off) off(); scn.dispose(); if (props) props.remove(); if (panel) panel.dispose(); }
+    dispose() { if (timer) clearTimeout(timer); if (off) off(); scn.dispose(); if (props) props.remove(); if (panel) panel.dispose(); }
   };
   return app.registerSmartModule32('scenarios', mod);
 }
+
+// ---- PERF-2: trần FPS, chạy sim khi tab ẩn, công tắc tiết kiệm tài nguyên ----
+// Các hàm thuần ở đây để test Node gọi trực tiếp; vòng vẽ (webgpu-materials-24.js) gọi qua smartMod.
+// CHỈ chạy khi có app=smart (vòng vẽ bọc trong isSmart32); không đổi hành vi 31A cổ điển.
+
+export const SMART_FPS_DEFAULT_32 = 30;   // trần FPS mặc định khi app=smart
+export const SMART_FPS_IDLE_32 = 15;      // trần FPS khi không thao tác 60 s hoặc bật tiết kiệm
+export const SMART_IDLE_MS_32 = 60000;    // không thao tác chuột/phím 60 s → hạ FPS
+export const SMART_DT_CLAMP_32 = 0.25;    // giữ kẹp dt của city-traffic-31.js
+export const SMART_HIDDEN_STEP_MS_32 = 1000; // nhịp chạy sim khi tab ẩn
+export const SMART_SLOW_TICK_MS_32 = 1000;  // nhịp chậm (đồng hồ/heat) khi tab ẩn
+export const SMART_SAVE_KEY_32 = 'citylab.32i.resourceSaver';
+export const SMART_SAVE_LABEL_32 = 'Tiết kiệm tài nguyên';
+
+// Trần FPS: mặc định 30; bật tiết kiệm hoặc không thao tác ≥ 60 s → 15. Trả về {fps, waitMs}.
+export function smartFpsCap32({ savePower = false, idleMs = 0 } = {}) {
+  const cap = (savePower || idleMs >= SMART_IDLE_MS_32) ? SMART_FPS_IDLE_32 : SMART_FPS_DEFAULT_32;
+  return { fps: cap, waitMs: 1000 / cap };
+}
+
+// dt khung: tính dt THỰC từ lần vẽ trước, kẹp 0,25 s (giữ kẹp của city-traffic-31.js) để sim không chậm
+// khi FPS thấp. lastTime = null (khung đầu) → dt = 0. now < lastTime → dt = 0.
+export function smartFrameDt32(now, lastTime, clamp = SMART_DT_CLAMP_32) {
+  const raw = lastTime == null ? 0 : (now - lastTime) / 1000;
+  const dt = Math.min(clamp, Math.max(0, raw));
+  return { dt, lastTime: now };
+}
+
+// Số bước sim (STEP = 0,1 s) tương ứng một khoảng thời gian thực khi tab ẩn, theo tốc độ chạy.
+export function smartHiddenSteps32(realSeconds, timeScale = 1, step = 0.1) {
+  return Math.max(0, Math.round((Math.max(0, realSeconds) * timeScale) / step));
+}
+
+// Số lát thời gian thực cần chia khi chạy sim không vẽ. city-traffic-31.js kẹp dt 0,25 s và tối đa
+// MAX_STEPS_PER_FRAME = 5 bước (0,5 s sim) mỗi lần update → mỗi lát phải ≤ 0,25 s thực và ≤ 0,5 s sim.
+const SIM_STEP_S = 0.1, SIM_MAX_STEPS = 5;
+export function smartHiddenSlices32(realSeconds, timeScale = 1, maxRealSlice = SMART_DT_CLAMP_32) {
+  const span = Math.max(0, Number(realSeconds) || 0);
+  if (span <= 0) return 0;
+  const perSliceSim = SIM_STEP_S * SIM_MAX_STEPS;               // 0,5 s sim tối đa mỗi lần update
+  const budgetReal = perSliceSim / Math.max(1, timeScale);     // s thực tối đa để không vượt 0,5 s sim
+  const slice = Math.min(maxRealSlice, Math.max(0.01, budgetReal));
+  return Math.max(1, Math.ceil(span / slice));
+}
+
+// Tab ẩn: rAF đã dừng nên phải chạy sim bằng setInterval 1 s, mỗi lần chạy số bước theo đồng hồ.
+// KHÔNG vẽ (traffic.update(..., drawFrame = false)). Khi hiện lại quay về vòng vẽ.
+export function installHiddenTab32(app, { traffic = null, doc = (typeof document !== 'undefined' ? document : null),
+  intervalMs = SMART_HIDDEN_STEP_MS_32 } = {}) {
+  const target = traffic || (app && app.traffic) || null;
+  if (!target || typeof target.update !== 'function') return { dispose() {}, isHidden() { return tabHidden32.hidden; } };
+  let timer = 0, lastTick = 0;
+  const advance = () => {
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const elapsed = lastTick ? (now - lastTick) / 1000 : intervalMs / 1000;
+    lastTick = now;
+    const timeScale = typeof target.getTimeScale === 'function' ? target.getTimeScale() : 1;
+    const slices = smartHiddenSlices32(elapsed, timeScale);
+    const dtReal = elapsed / slices;
+    let t = now - elapsed * 1000;
+    for (let i = 0; i < slices; i++) { t += dtReal * 1000; target.update(t, 2000, false); }
+  };
+  const onVisibility = () => {
+    const hidden = !!(doc && doc.hidden);
+    tabHidden32.hidden = hidden;
+    if (hidden) { lastTick = 0; if (!timer && typeof setInterval === 'function') timer = setInterval(advance, intervalMs); }
+    else { if (timer) { clearInterval(timer); timer = 0; } lastTick = 0; }
+  };
+  if (doc && typeof doc.addEventListener === 'function') doc.addEventListener('visibilitychange', onVisibility);
+  if (doc && doc.hidden) onVisibility();
+  return {
+    isHidden() { return tabHidden32.hidden; },
+    dispose() { if (timer) { clearInterval(timer); timer = 0; } if (doc && typeof doc.removeEventListener === 'function') doc.removeEventListener('visibilitychange', onVisibility); tabHidden32.hidden = false; }
+  };
+}
+
+// Trạng thái tab ẩn dùng chung: clock-32.js khai báo (file lá), smart-app-32.js tái xuất để vòng vẽ truy cập qua smartMod.
+export { tabHidden32 } from './clock-32.js?v=32a';
+import { tabHidden32 } from './clock-32.js?v=32a';
+
+// Công tắc "Tiết kiệm tài nguyên" trong #smartHud32: bật thì trần FPS 15, mode lite, pixelRatio ≤ 1.
+// Lưu localStorage, bọc try/catch. Trả về {dispose}. Gọi SAU khi #smartHud32 đã tạo (installStation32).
+export function installResourceSaver32(app, { root = (typeof document !== 'undefined' ? document : null),
+  storage = (typeof localStorage !== 'undefined' ? localStorage : null),
+  onApply = null, log = (m => console.info(m)) } = {}) {
+  const host = root && root.querySelector ? root.querySelector('#smartHud32') : null;
+  if (!host) return { dispose() {}, enabled() { return false; } };
+  const saved = () => { try { return storage && storage.getItem(SMART_SAVE_KEY_32) === 'true'; } catch { return false; } };
+  const persist = on => { try { if (storage) storage.setItem(SMART_SAVE_KEY_32, on ? 'true' : 'false'); } catch { /* bỏ qua */ } };
+  let on = saved();
+  const section = root.createElement ? root.createElement('section') : null;
+  if (!section) return { dispose() {}, enabled() { return false; } };
+  section.className = 'save-sec32';
+  section.setAttribute('aria-label', 'Tiết kiệm tài nguyên');
+  const label = root.createElement('label');
+  label.className = 'hud-switch';
+  const input = root.createElement('input');
+  input.type = 'checkbox';
+  input.id = 'saveToggle32';
+  input.setAttribute('aria-label', SMART_SAVE_LABEL_32);
+  input.checked = on;
+  label.append(input, root.createTextNode(' ' + SMART_SAVE_LABEL_32));
+  section.append(label);
+  host.append(section);
+  const apply = next => {
+    on = !!next;
+    persist(on);
+    if (typeof onApply === 'function') { try { onApply(on); } catch (e) { log('tiết kiệm: ' + (e && e.message)); } }
+    log(on ? 'Đã bật tiết kiệm tài nguyên (FPS 15, chế độ Lite, độ phân giải thấp)' : 'Đã tắt tiết kiệm tài nguyên');
+  };
+  const onChange = () => apply(input.checked);
+  input.addEventListener('change', onChange);
+  apply(on);
+  return { enabled: () => on, set: apply, dispose() { input.removeEventListener('change', onChange); if (section && section.remove) section.remove(); } };
+}
+
+// Áp "Tiết kiệm tài nguyên": trần FPS 15 (smartFrame.setSave), pixelRatio ≤ 1, mode lite.
+// Trả về {dispose}. onApply được bọc try/catch ở installResourceSaver32 nên không cần bắt thêm.
+export function applyResourceSaver32({ renderer = null, modeController = null, setSave = null, innerWidth: iw = 0, innerHeight: ih = 0 } = {}) {
+  const out = { on: true, mode: null };
+  try { if (typeof setSave === 'function') setSave(true); } catch { /* bỏ qua */ }
+  try { if (renderer && typeof renderer.setPixelRatio === 'function') { renderer.setPixelRatio(1); if (iw && ih && typeof renderer.setSize === 'function') renderer.setSize(iw, ih, false); } } catch { /* bỏ qua */ }
+  if (modeController && typeof modeController.choose === 'function') {
+    try { if (modeController.choose('lite')) out.mode = 'lite'; } catch { /* bỏ qua */ }
+  }
+  return out;
+}
+
+export function clearResourceSaver32({ renderer = null, modeController = null, setSave = null, pixelRatio = 1, innerWidth: iw = 0, innerHeight: ih = 0 } = {}) {
+  try { if (typeof setSave === 'function') setSave(false); } catch { /* bỏ qua */ }
+  try { if (renderer && typeof renderer.setPixelRatio === 'function') { renderer.setPixelRatio(pixelRatio); if (iw && ih && typeof renderer.setSize === 'function') renderer.setSize(iw, ih, false); } } catch { /* bỏ qua */ }
+  return { on: false };
+}
+

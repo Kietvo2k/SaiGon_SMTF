@@ -20,6 +20,10 @@ export const DEMAND_BY_HOUR_32 = Object.freeze([
 const WEEKDAYS_32 = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 const pad2 = n => String(n).padStart(2, '0');
 
+// PERF-2: trạng thái tab ẩn dùng chung cho các module app smart (clock/heat chậm nhịp khi ẩn).
+// Vòng vẽ (webgpu-materials-24.js) gán tabHidden32.hidden trong visibilitychange — chỉ khi app=smart.
+export const tabHidden32 = { hidden: false };
+
 // Đồng hồ tại giây sim `simT` (và lệch nhảy `offsetS`). Trả về giờ, phút, nhãn và giây "heat" (06:00 = 0).
 export function clockAt32(simT, offsetS = 0) {
   const total = CLOCK_START_S_32 + Number(simT || 0) + Number(offsetS || 0);
@@ -193,13 +197,19 @@ export function installClock32(app, { traffic, setLight, getLight, forecast = nu
   lastHour = c0.hour;
   applyHour(c0.hour, false);
   traffic.setTimeScale(1);
-  const timer = typeof setInterval === 'function' ? setInterval(tick, tickMs) : 0;
+  // PERF-2: khi tab ẩn chậm nhịp đồng hồ (tickMs → 1 s). Chuỗi setTimeout tự lập lại để nhịp đổi được.
+  const tickInterval = () => (tabHidden32.hidden ? 1000 : tickMs);
+  let timer = 0;
+  if (typeof setTimeout === 'function') {
+    const clockLoop = () => { tick(); timer = setTimeout(clockLoop, tickInterval()); };
+    timer = setTimeout(clockLoop, tickMs);
+  }
   tick();
 
   const api = {
     clock, heatTime: () => clock().heatTime, offsetS: () => offsetS,
     jump, goTo, speed: () => speed, setSpeed, tick,
-    dispose() { alive = false; if (timer) clearInterval(timer); if (el) el.remove(); }
+    dispose() { alive = false; if (timer) clearTimeout(timer); if (el) el.remove(); }
   };
   if (app && typeof app.registerSmartModule32 === 'function') app.registerSmartModule32('clock', api);   // bản đồ nhiệt đọc giờ qua app.modules.clock
   return api;

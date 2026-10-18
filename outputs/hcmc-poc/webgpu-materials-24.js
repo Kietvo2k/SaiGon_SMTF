@@ -1169,6 +1169,9 @@ materialStatus.visualRuntime={
 };
 
 let lastTime=performance.now(),frameCount=0,fpsTime=lastTime,lastLabel=0;
+// PERF-2: trần FPS khi app=smart — 30 FPS; không thao tác 60 s hoặc bật tiết kiệm tài nguyên → 15 FPS.
+// Logic thuần ở smartMod.smartFpsCap32 (Node-testable); vòng vẽ đọc idleMs/savePower qua đối tượng này.
+const smartFrame=(()=>{let lastInteraction=performance.now(),savePower=false,lastDraw=null;const mark=()=>{lastInteraction=performance.now();};if(isSmart32&&typeof window!=='undefined'&&window.addEventListener){window.addEventListener('pointerdown',mark,{passive:true});window.addEventListener('pointermove',mark,{passive:true});window.addEventListener('keydown',mark,{passive:true});window.addEventListener('wheel',mark,{passive:true});}return{lastInteraction:()=>lastInteraction,setSave:v=>{savePower=!!v;},isSave:()=>savePower,lastDraw:()=>lastDraw,setLastDraw:t=>{lastDraw=t;}};})();
 const overlaps=(a,b,padding=6)=>a.left-padding<b.right&&a.right+padding>b.left&&a.top-padding<b.bottom&&a.bottom+padding>b.top;
 // Nhãn địa danh ngoài khu ẩn (trừ nhãn gắn với vùng signature và nhãn cảnh báo ngập có cờ active).
 function labelInRegion(label){
@@ -1199,7 +1202,16 @@ function updateLabels(){
   }
 }
 function render(now){
-  const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;
+  let dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;
+  // PERF-2 (chỉ app=smart): trần FPS. Khung chưa tới hạn thì return sớm, KHÔNG vẽ — nhưng phải dồn thời gian:
+  // smartLastDraw giữ mốc lần vẽ THẬT gần nhất, nên khung sau gộp hết thời gian đã trôi (không mất nhịp).
+  // dt dùng cho phần còn lại của render() lấy từ smartLastDraw thật, kẹp 0,25 s (giữ kẹp của city-traffic-31.js).
+  if(isSmart32&&smartMod){
+    const cap=smartMod.smartFpsCap32({savePower:smartFrame.isSave(),idleMs:performance.now()-smartFrame.lastInteraction()});
+    if(smartFrame.lastDraw()!==null&&now-smartFrame.lastDraw()<cap.waitMs-1)return;   // bỏ khung, không cập nhật smartLastDraw
+    const sdt=smartMod.smartFrameDt32(now,smartFrame.lastDraw());
+    smartFrame.setLastDraw(now);lastTime=now;dt=sdt.dt;
+  }
   if(desired){
     smoothDampVector(target,transitionVelocity,desired.target,.68,dt);
     cameraDistance=smoothDampScalar(transitionState,'distance',desired.distance,.72,dt);
@@ -1242,6 +1254,8 @@ function render(now){
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();adaptiveQuality.resize();});
 setProgress(94,'Đang nạp pipeline GPU lần đầu…');
 renderer.setAnimationLoop(render);
+// PERF-2: khi app=smart, gắn xử lý tab ẩn (sim vẫn chạy) và công tắc "Tiết kiệm tài nguyên".
+if(isSmart32&&smartApp&&smartMod){try{const hiddenTab=smartMod.installHiddenTab32(smartApp,{traffic});window.__perf2_hiddenTab=hiddenTab;}catch(e){console.warn('PERF-2 hidden:',e);}try{const saver=smartMod.installResourceSaver32(smartApp,{root:document,onApply:on=>{smartFrame.setSave(on);if(on){smartMod.applyResourceSaver32({renderer,modeController,setSave:smartFrame.setSave,innerWidth,innerHeight});}else{smartMod.clearResourceSaver32({renderer,modeController,setSave:smartFrame.setSave,pixelRatio:Math.min(devicePixelRatio,visualQuality.maxPixelRatio),innerWidth,innerHeight});}}});window.__perf2_saver=saver;}catch(e){console.warn('PERF-2 saver:',e);}}
 await renderer.compileAsync(scene,camera);
 // Bước H: biên dịch sẵn pipeline cho từng khu (camera Toàn vùng, che sau màn nạp) — đổi khu lần đầu không bị khựng do dựng pipeline.
 {
