@@ -15,11 +15,13 @@ Nhánh `main`, thư mục `F:\File\FileLapTrinhF\SaiGon_SMTF` (đã gộp nhánh
 | STATION-a | Hạn mức trạm tách theo nhóm, có `Retry-After`; frames không chặn hàng đợi vi phạm | |
 | STATION-b | Độ tin cậy perception theo khoảng cách, góc, che khuất; 58 % bản ghi `new` | |
 | CLEANUP | Gỡ 1382 file (2966 → 1584): PoC 02–26, nhánh legacy `?legacy=1`, tài liệu/ảnh baseline cũ, Gia Lộc/Tây Ninh | Tra cứu qua `git log`. Danh sách xóa chỉ giữ lại đúng 8 tệp còn có tham chiếu: `outputs/hcmc-poc/index.html` (nay chỉ redirect), 4 tệp batch 18 (`data/overture-region.geojson.state`, quarantine report, DCAT XML, schema PDF), 2 tệp Tây Ninh mà test shared core trỏ tới, và `research/vibecode-18/VERIFY.md`. Hợp đồng Gia Lộc `projects/gia-loc.json` đã xóa trong CLEANUP C (test shared core viết lại chỉ còn HCMC); còn `outputs/shared/digital-twin-core/prepared/gia-loc-17a/` và dữ liệu `outputs/tayninh-*` chưa quyết |
+| AUTO-RUN 17–18/10 | **FIX-LABELS** (81b4ab6): web hiện nhãn tiếng Việt đủ 12/12 mã lỗi, không còn mã thô. **DEMAND-1** (ea78dfb): probe nhu cầu trong `scripts/kpi-ab-32.mjs` (`--demand`, `stopped/active_hx_by_group`, `top_stuck_lanes`, `spawn_dest_hx`) + test đo; số nền app-1730 1800 s. **PERF-1** (4601e21): `scripts/perf-soak-32.cjs` đo tài nguyên 3 pha; sửa sẵn lỗi `ws is not defined` trong script đo cũ. **PERF-4** (e0562b4): dọn dữ liệu backend theo hạn giữ (`app/cleanup.py`, env `SMART_RETAIN_*`, `SMART_FRAMES_MAX_MB`, VACUUM, `GET /admin/storage`). **PERF-5** (11dc2cd): web gộp tải lại theo lô (debounce 2 s, tab ẩn không tải), ảnh stream theo `stream.updated`. **DEMAND-2** (a2ef95c): G3 respawn chọn làn còn chỗ — thông lượng HX +3,3 %, nhưng breaker không giảm ≥50 % → KHÔNG ĐẠT cả 2 lần thử |
+| AUTO-RUN 18/10 | **PERF-2** (cd9e06e): trần FPS 30/15 khi `app=smart`, dt thực kẹp 0,25 s (sim không chậm khi FPS thấp), tab ẩn chạy sim bằng `setInterval` 1 s không vẽ (`tabHidden32`), đồng hồ/heat chậm 250 ms → 1 s khi ẩn, công tắc "Tiết kiệm tài nguyên" (pixelRatio ≤ 1, mode lite, localStorage) | Hàm thuần ở `smart-app-32.js` (test Node); vòng vẽ gọi qua `smartMod`. QA north-32 PASS, QA traffic-31 RC=0, 219/219 test pass. Chưa đo lại perf-soak |
 
 **Số test cuối phase:**
-- Node: 209/209 pass.
-- pytest backend: 106 pass.
-- vitest web: 43 pass.
+- Node: 219/219 pass (18/10, gồm 7 test PERF-2).
+- pytest backend: 112 pass (18/10).
+- vitest web: 53 pass + build OK (18/10).
 
 ## 2. Hợp đồng backend hiện hành (khác bản kế hoạch M1)
 
@@ -47,25 +49,22 @@ Nhánh `main`, thư mục `F:\File\FileLapTrinhF\SaiGon_SMTF` (đã gộp nhánh
 
 ## 3. Còn mở (theo thứ tự ưu tiên người dùng chọn)
 
-1. **DEMAND: mạng tắc cứng ở mật độ app.**
-   - Cấu hình `app-1730`: `poolScale` 5, `breakerS` 180.
-   - Bộ phá kẹt kích hoạt khoảng 2000 lần.
-   - Nhóm pha 1 ở Hàng Xanh gần như không có xe (fixed trung bình 0,9 xe, nhóm 0 là 39,4).
-   - Nguyên nhân: phân bổ nhu cầu (OD, hướng đổ về), không phải thuật toán đèn.
+1. **DEMAND: mạng tắc cứng ở mật độ app.** DEMAND-1 đo xong, DEMAND-2 **KHÔNG ĐẠT cả 2 lần** (breaker_respawns không giảm được ≥50 %; 4 cơ chế thử đều không cải thiện, kết luận: mạng quá tải toàn cục). Cần hạ ngưỡng breaker (ví dụ ≤1800) hoặc chuyển giải pháp sang controller/signal-plan. **DEMAND-3 (chỉnh NORTH_DEMAND_32) chưa chạy.**
 2. **HIỆU NĂNG 24/7:** tab 3D cộng backend cộng web chạy liên tục làm máy lag hoặc lỗi. Xem `docs/PERFORMANCE-24-7.md`.
-3. **M5b-2: xe ưu tiên chưa có.** Gồm:
+   - PERF-1 đo nền xong (CPU pha A 98 %, WS 708,6 MB/giờ). PERF-2 (trần FPS, tab ẩn, công tắc tiết kiệm) xong, QA north-32 + traffic-31 pass — **cần đo lại `perf-soak-32.cjs --minutes 3` để chốt số**. **PERF-3 chưa làm.**
+3. **M5b-2: xe ưu tiên chưa có.** (PRIORITY-1…6 — **chưa chạy**, AUTO-RUN hết thời gian vì lỗi provider). Gồm:
    - Cứu thương, cứu hỏa, cảnh sát.
    - Làn sóng xanh trên tuyến.
    - Xe khác tạt lề hoặc vượt đỏ để nhường; vi phạm phát sinh lúc đó tự gắn cờ "nghi nhường xe ưu tiên".
    - Công an duyệt gỡ; người dân khiếu nại.
    - Kịch bản thứ 4.
-4. **A1 (đèn thích ứng giảm độ trễ ≥ 15 %): chưa đạt.**
+4. **A1 (đèn thích ứng giảm độ trễ ≥ 15 %): chưa đạt.** (A1-1…3 — **chưa chạy**; cần DEMAND-3 trước).
    - Biến thể F `max-pressure-gated` ở cao điểm, tập kiểm 31046–50: trung bình +20,8 %, nhưng seed thấp nhất chỉ +0,4 % và thông lượng 90 %.
    - Ở mật độ app: +1,6 %.
    - Mặc định vẫn là A `max-pressure`.
    - Lịch sử thử nghiệm ở mục 20–23 "Nhật ký sửa đổi" của đặc tả.
    - Tập seed chưa dùng: 31051–31055 (chỉ chấm một lần).
-5. **Nhỏ:**
+5. **Nhỏ:** (FIX-SPEED, FIX-TURN, FIX-WRONGWAY, FIX-BRIDGE, FIX-STATION-LOGIN, FIX-PLATES, FIX-SPEC46, CLEAN-2 — **chưa chạy**)
    - Lỗi quá tốc độ không phát sinh (bằng 0).
    - Rẽ cấm chưa có camera.
    - Ảnh xe ngược chiều quá nhỏ trong khung.
