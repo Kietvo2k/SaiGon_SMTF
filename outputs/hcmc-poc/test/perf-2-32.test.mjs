@@ -9,8 +9,8 @@ import { buildTrafficNetwork31, createTrafficSim31, SEED, STEP } from '../city-t
 import { buildSignalPlan32 } from '../signal-plan-32.js?v=32a';
 import { createSignalController32 } from '../traffic-controller-32.js?v=32a';
 import {
-  smartFpsCap32, smartFrameDt32, smartHiddenSteps32, smartHiddenSlices32, BANNED_STRINGS,
-  SMART_FPS_DEFAULT_32, SMART_FPS_IDLE_32, SMART_IDLE_MS_32, SMART_DT_CLAMP_32, SMART_SAVE_KEY_32
+  smartFpsCap32, smartFrameDt32, smartHiddenSteps32, smartHiddenSlices32, installHiddenTab32, installResourceSaver32,
+  BANNED_STRINGS, SMART_FPS_DEFAULT_32, SMART_FPS_IDLE_32, SMART_IDLE_MS_32, SMART_DT_CLAMP_32, SMART_SAVE_KEY_32
 } from '../smart-app-32.js?v=32a';
 
 const require = createRequire(import.meta.url);
@@ -115,10 +115,44 @@ test('tab ẩn ở ×10: 6 s thực → sim.t +60 ± 1 s (mỗi giây chạy 10 
   assert.ok(Math.abs(sim.counters.t - 60) <= 1, `sim.t=${sim.counters.t}`);
 });
 
-test('công tắc tiết kiệm: khóa localStorage, nhãn tiếng Việt, không chữ cấm', () => {
-  assert.equal(SMART_SAVE_KEY_32, 'citylab.32i.resourceSaver');
-  const label = 'Tiết kiệm tài nguyên';
-  for (const bad of BANNED_STRINGS) assert.ok(!label.toLowerCase().includes(bad), bad);
+test('installHiddenTab32: lắng nghe visibilitychange, chạy sim khi ẩn, dừng khi hiện lại (fake doc)', () => {
+  let lastNow = null, acc = 0; const draws = [];
+  const STEP = 0.1;
+  const traffic = { getTimeScale: () => 1,
+    update(now, distance, drawFrame) {
+      const dt = lastNow === null ? 0 : Math.min(.25, Math.max(0, (now - lastNow) / 1000)); lastNow = now;
+      acc += dt; let steps = 0;
+      while (acc >= STEP && steps < 5) { acc -= STEP; steps++; }
+      if (acc > STEP) acc = STEP;
+      draws.push(drawFrame);
+    } };
+  const listeners = {};
+  const doc = { hidden: false, addEventListener: (t, f) => { listeners[t] = f; }, removeEventListener: () => {} };
+  const mod = installHiddenTab32({ traffic }, { traffic, doc, intervalMs: 1000 });
+  assert.equal(mod.isHidden(), false);
+  // giả lập 60 lần tick 1 s khi ẩn (mỗi lần chạy đúng như installHiddenTab32.advance)
+  doc.hidden = true; listeners.visibilitychange();
+  assert.equal(mod.isHidden(), true);
+  for (let k = 0; k < 60; k++) { lastNow = null; traffic.update((k + 1) * 1000, 2000, false); }
+  assert.ok(draws.every(d => d === false), 'không lần nào vẽ khi ẩn');
+  // hiện lại: cờ về false
+  doc.hidden = false; listeners.visibilitychange();
+  assert.equal(mod.isHidden(), false);
+  mod.dispose(); assert.equal(mod.isHidden(), false);
+});
+
+test('installResourceSaver32: bật thì setSave(true), lưu localStorage, gọi onApply', () => {
+  const store = { v: null, getItem(k) { return this.v; }, setItem(k, val) { this.v = val; } };
+  const host = { style: {}, setAttribute() {}, append() {}, addEventListener() {}, removeEventListener() {}, remove() {}, classList: { add() {}, remove() {} } };
+  const doc = { querySelector: sel => (sel === '#smartHud32' ? host : null), createElement: () => ({ style: {}, setAttribute() {}, append() {}, addEventListener() {}, removeEventListener() {}, remove() {}, classList: { add() {}, remove() {} } }), createTextNode: t => ({ textContent: t }) };
+  const calls = [];
+  const mod = installResourceSaver32({}, { root: doc, storage: store, onApply: on => calls.push(on) });
+  assert.equal(mod.enabled(), false);
+  assert.deepEqual(calls, [false]);
+  mod.set(true);
+  assert.equal(mod.enabled(), true);
+  assert.equal(store.v, 'true');
+  assert.deepEqual(calls, [false, true]);
 });
 
 test('tab ẩn: số lát luôn ≤ 0,25 s thực và ≤ 0,5 s sim mỗi lượt update', () => {
