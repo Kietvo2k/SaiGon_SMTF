@@ -9,7 +9,7 @@ def test_seed_accounts_and_plates(client):
     sc = conn.execute('SELECT COUNT(*) AS n FROM plates_seed WHERE is_scenario=1').fetchone()['n']
     assert sc == 6
     cams = {r['camera_id'] for r in conn.execute('SELECT camera_id FROM cameras')}
-    assert cams == {'CAM-HX-001', 'CAM-HX-002'}
+    assert cams == {f'CAM-HX-{i:03d}' for i in range(1, 11)}
     nodes = {r['node_id'] for r in conn.execute('SELECT node_id FROM signal_nodes')}
     assert nodes == {'HX-01', 'HX-02', 'HX-03', 'HX-04', 'HX-05', 'HX-06'}
 
