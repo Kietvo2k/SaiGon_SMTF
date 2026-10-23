@@ -44,11 +44,8 @@ def _plates(conn, uid: int) -> list:
 
 def _penalty(raw: str) -> dict:
     # Chưa xác minh (NĐ 168/2024 chưa đủ) → KHÔNG lộ số tiền (§4.5, Phụ lục B).
-    penalty = json.loads(raw or '{}')
-    verified = bool(penalty.get('verified'))
-    return {'vnd_min': penalty.get('vnd_min') if verified else None,
-            'vnd_max': penalty.get('vnd_max') if verified else None,
-            'verified': verified}
+    from app.penalties import public_penalty
+    return public_penalty(json.loads(raw or '{}'))
 
 
 def _owned(conn, uid: int, vid: str, any_status: bool = False):

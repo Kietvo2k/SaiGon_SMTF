@@ -37,7 +37,7 @@ def list_violations(status: str = '', code: str = '', camera_id: str = '', page:
         rclauses, rargs = range_clauses(from_, to)
         where += rclauses; args += rargs
         sql = ('SELECT id, violation_code, status, plate, vehicle_class, occurred_at, node_id, camera_id, confidence, '
-               'penalty_json, priority_flag, priority_reason FROM violations')
+               'penalty_json, priority_flag, priority_reason, review_json FROM violations')
         if where:
             sql += ' WHERE ' + ' AND '.join(where)
         total = conn.execute(f'SELECT COUNT(*) AS n FROM ({sql})', args).fetchone()['n']
@@ -46,6 +46,8 @@ def list_violations(status: str = '', code: str = '', camera_id: str = '', page:
     for r in rows:
         item = dict(r)
         item['penalty'] = json.loads(item.pop('penalty_json') or 'null')   # UI hiển thị mức phạt
+        review = json.loads(item.pop('review_json') or 'null') or {}
+        item['auto'] = review.get('by') == 'system'                         # do chế độ tự động xử lý
         item['priority_flag'] = bool(item['priority_flag'])                 # cờ xe ưu tiên (§4.4)
         items.append(item)
     return {'items': items, 'total': total, 'page': page}

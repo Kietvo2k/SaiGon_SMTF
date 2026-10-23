@@ -3,6 +3,7 @@
 Mọi đổi trạng thái đi qua `transition`: sai cạnh → 409; đúng cạnh → ghi `review` vào bản ghi
 và ghi một dòng `audit_log` cùng transaction với thay đổi nghiệp vụ.
 """
+import hashlib
 import json
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -64,6 +65,74 @@ def owners_of(conn, plate: str) -> list:
     return [dict(r) for r in conn.execute(
         'SELECT u.id, u.username FROM vehicle_ownerships o JOIN users u ON u.id=o.user_id '
         'WHERE o.plate=? AND u.active=1 ORDER BY u.id', (plate,))]
+
+
+# ---------- Tự động xử lý vi phạm (chế độ demo) ----------
+# Tỷ lệ chọn khiếu nại tự động dùng hash tất định của bộ khóa vi phạm, không random theo giờ,
+# để cùng một vi phạm luôn cho cùng kết quả khi chạy lại/kiểm thử.
+def auto_complaint_sample(vid: str, row: dict, pct: float = 1.0) -> bool:
+    try:
+        p = max(0.0, min(100.0, float(pct)))
+    except (TypeError, ValueError):
+        p = 1.0
+    if p <= 0:
+        return False
+    key = f"{vid}|{row.get('vehicle_id', '')}|{row.get('cycle_id', '')}|{row.get('violation_code', '')}"
+    n = int.from_bytes(hashlib.sha256(key.encode('utf-8')).digest()[:8], 'big')
+    return (n % 10000) < int(round(p * 100))
+
+
+def auto_process_violation(conn, vid: str, *, complaint_pct: float = 1.0) -> dict:
+    """Xác nhận + báo về tự động; 1% (mặc định) sinh một khiếu nại mở.
+
+    - `new`/`needs_review` → `confirmed` → `notified`, không cần cán bộ bấm.
+    - Chỉ tạo `notifications` khi biển đã gắn tài khoản công dân; trạng thái `notified`
+      vẫn là mốc "đã ghi nhận báo về" của bản mô phỏng.
+    - Khiếu nại tự động có `user_id` là chủ xe nếu có, ngược lại NULL (khiếu nại hệ thống).
+    """
+    row = as_dict(load(conn, vid))
+    if row['status'] in ('new', 'needs_review'):
+        row = transition(conn, vid, 'confirmed', actor='system', role='system',
+                         note='Tự động xác nhận vi phạm', action='auto-review')
+    notifications = []
+    if row['status'] == 'confirmed':
+        row = transition(conn, vid, 'notified', actor='system', role='system',
+                         note='Tự động ghi nhận và báo vi phạm', action='auto-notify')
+    owners = owners_of(conn, row['plate'])
+    if row['status'] == 'notified':
+        notifications = create_notifications(conn, row, owners)
+
+    complaint = None
+    if row['status'] == 'notified' and auto_complaint_sample(vid, row, complaint_pct):
+        row = transition(conn, vid, 'disputed', actor='system', role='system',
+                         note='Tự động ghi nhận khiếu nại theo tỷ lệ thử nghiệm', action='auto-dispute')
+        now = now_iso()
+        cid = 'CB-' + secrets.token_hex(5).upper()
+        reason = 'Hệ thống tự động ghi nhận khiếu nại theo tỷ lệ thử nghiệm.'
+        message = 'Khiếu nại được tạo tự động để kiểm tra quy trình; không cần cán bộ thao tác.'
+        owner_id = owners[0]['id'] if owners else None
+        conn.execute(
+            'INSERT INTO complaints (id, violation_id, user_id, message, status, resolution, created_at, resolved_at, '
+            'kind, reason, resolved_by) VALUES (?,?,?,?,?,NULL,?,NULL,?,?,NULL)',
+            (cid, vid, owner_id, message, 'open', now, 'auto_1pct', reason))
+        audit.write(conn, actor='system', role='system', action='complaint-create', target_type='complaint',
+                    target_id=cid, to_state='open', reason=reason,
+                    payload={'violation_id': vid, 'kind': 'auto_1pct'})
+        complaint = {'id': cid, 'status': 'open', 'violation_id': vid, 'kind': 'auto_1pct',
+                     'reason': reason, 'message': message, 'created_at': now}
+    return {'row': row, 'notifications': notifications, 'complaint': complaint, 'owners': owners}
+
+
+def auto_process_pending(conn, *, complaint_pct: float = 1.0) -> dict:
+    """Dọn các vi phạm còn `new`/`needs_review` khi bật chế độ tự động (backfill lúc khởi động)."""
+    rows = conn.execute("SELECT id FROM violations WHERE status IN ('new','needs_review') "
+                        "ORDER BY occurred_at, id").fetchall()
+    complaints = 0
+    for r in rows:
+        result = auto_process_violation(conn, r['id'], complaint_pct=complaint_pct)
+        if result['complaint']:
+            complaints += 1
+    return {'processed': len(rows), 'complaints': complaints}
 
 
 def create_notifications(conn, row: dict, owners: list) -> list:

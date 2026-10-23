@@ -27,6 +27,22 @@ def _put_vms(client, vms_id, **body):
 
 # ---------- Kịch bản ----------
 
+def test_emergency_scenario_is_audited_and_relayed_with_kind(client, monkeypatch):
+    messages = []
+    async def capture(event, data, **kwargs):
+        messages.append((event, data, kwargs))
+    monkeypatch.setattr('app.routers.officer.broadcast', capture)
+    ch = hdr(client, 'commander1')
+    result = client.post('/api/v1/officer/controls/scenario', headers=ch,
+                         json={'scenario': 'priority-run', 'params': {'kind': 'police'}})
+    assert result.status_code == 200, result.text
+    assert messages[0][0] == 'cmd.scenario'
+    assert messages[0][1]['params'] == {'kind': 'police'}
+    assert messages[0][2]['to_roles'] == ['station']
+    state = client.get('/api/v1/officer/controls/state', headers=ch).json()
+    assert state['scenario']['key'] == 'priority-run'
+    assert state['scenario']['params']['kind'] == 'police'
+
 def test_scenario_write_requires_commander_or_admin(client):
     oh = hdr(client, 'officer1')
     assert client.post('/api/v1/officer/controls/scenario', headers=oh, json={'scenario': 'lane-block'}).status_code == 403
@@ -57,10 +73,10 @@ def test_scenario_start_state_audit_then_stop(client):
 def test_scenario_only_one_active_run(client):
     ch = hdr(client, 'commander1')
     first = client.post('/api/v1/officer/controls/scenario', headers=ch, json={'scenario': 'flood-nhc'}).json()
-    second = client.post('/api/v1/officer/controls/scenario', headers=ch, json={'scenario': 'priority-run'}).json()
+    second = client.post('/api/v1/officer/controls/scenario', headers=ch, json={'scenario': 'lane-block'}).json()
     assert first['scenario_id'] != second['scenario_id']
     st = client.get('/api/v1/officer/controls/state', headers=hdr(client, 'officer1')).json()
-    assert st['scenario']['key'] == 'priority-run'
+    assert st['scenario']['key'] == 'lane-block'
 
 
 def test_scenario_rejects_unknown_key_extra_fields_and_big_params(client):

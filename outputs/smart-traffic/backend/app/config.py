@@ -37,3 +37,8 @@ CLEANUP_ENABLED = os.environ.get('SMART_CLEANUP', '1').strip() not in ('0', 'fal
 CLEANUP_INTERVAL_S = _num_env('SMART_CLEANUP_INTERVAL_S', 600.0)   # dọn mỗi 10 phút
 VACUUM_INTERVAL_S = _num_env('SMART_VACUUM_INTERVAL_S', 86400.0)  # VACUUM một lần mỗi ngày
 FINAL_VIOLATION_STATUSES = ('dismissed', 'paid')
+# Tự động xử lý vi phạm: xác nhận + báo về ngay, không cần cán bộ bấm.
+# Mặc định TẮT để bộ test cũ giữ đúng luồng duyệt tay; Docker/run-smart bật bằng env.
+AUTO_VIOLATIONS = os.environ.get('SMART_AUTO_VIOLATIONS', '0').strip().lower() not in ('', '0', 'false', 'no', 'off')
+# Tỷ lệ vi phạm tự sinh một khiếu nại mở (để diễn tập quy trình khiếu nại).
+AUTO_COMPLAINT_PCT = _num_env('SMART_AUTO_COMPLAINT_PCT', 1.0)

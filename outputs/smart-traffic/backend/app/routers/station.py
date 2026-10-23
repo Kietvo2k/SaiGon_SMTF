@@ -12,6 +12,8 @@ from app import config, heat
 from app.auth import StationLimiter, require_role
 from app.db import connect
 from app.errors import err
+from app.lifecycle import OFFICER_ROLES, announce_violation, auto_process_violation, push_notifications
+from app.penalties import penalty_for
 from app.schemas import HeatIn, ViolationIn
 from app.vms import report_from_station
 from app.ws import broadcast
@@ -94,6 +96,8 @@ async def metrics(body: dict, claims=Depends(STATION_TELEMETRY)):
 @router.post('/violations')
 async def create_violation(body: ViolationIn, claims=Depends(STATION)):
     data = body.model_dump()
+    data['penalty'] = penalty_for(data['violation_code'], data['vehicle_class'], data['signal'])
+    auto = None
     with connect() as conn:
         cycle_id = data['cycle_id']
         dup = conn.execute('SELECT id FROM violations WHERE vehicle_id=? AND node_id=? AND cycle_id=? AND violation_code=?',
@@ -117,11 +121,26 @@ async def create_violation(body: ViolationIn, claims=Depends(STATION)):
              data['confidence'], data['ocr_confidence'], json.dumps(data['detection'], ensure_ascii=False),
              json.dumps(data['penalty'], ensure_ascii=False), json.dumps(data['sim'], ensure_ascii=False),
              int(bool(data['priority_flag'])), data['priority_reason'], json.dumps({'by': None, 'at': None, 'note': None}), now, now))
-        row = conn.execute('SELECT plate, violation_code, node_id, camera_id, confidence FROM violations WHERE id=?', (vid,)).fetchone()
+        if config.AUTO_VIOLATIONS:
+            # Chế độ demo: không để vi phạm nằm chờ cán bộ bấm; tự xác nhận + báo về.
+            # Tỷ lệ nhỏ tự sinh khiếu nại để diễn tập quy trình xử lý khiếu nại.
+            auto = auto_process_violation(conn, vid, complaint_pct=config.AUTO_COMPLAINT_PCT)
+            row = auto['row']
+            status = row['status']
+        else:
+            row = conn.execute('SELECT plate, violation_code, node_id, camera_id, confidence FROM violations WHERE id=?', (vid,)).fetchone()
     await broadcast('violation.created', {'id': vid, 'status': status, 'plate': row['plate'],
                                           'violation_code': row['violation_code'], 'occurred_at': now,
                                           'node_id': row['node_id'], 'camera_id': row['camera_id'],
-                                          'confidence': row['confidence']}, to_roles=['officer', 'commander', 'admin'])
+                                          'confidence': row['confidence']}, to_roles=OFFICER_ROLES)
+    if auto:
+        owner_names = [o['username'] for o in auto['owners']]
+        await announce_violation(auto['row'], owner_names)
+        await push_notifications(auto['notifications'])
+        if auto['complaint']:
+            await broadcast('complaint.updated',
+                            {'id': auto['complaint']['id'], 'status': 'open', 'violation_id': vid},
+                            to_roles=OFFICER_ROLES, to_users=owner_names or None)
     return {'id': vid, 'status': status}
 
 
@@ -201,6 +220,6 @@ async def post_frame(body: dict, claims=Depends(STATION_FRAME)):
         raise HTTPException(status_code=422, detail=err('VALIDATION', 'jpeg_base64 không hợp lệ'))
     FRAMES[cam] = {'seq': body.get('seq'), 't': body.get('t'), 'w': body.get('w'), 'h': body.get('h'), 'jpeg': raw}
     (config.VAR_DIR / 'frames' / f'{cam}-latest.jpg').write_bytes(raw)
-    await broadcast('stream.frame', {'camera_id': cam, 'seq': body.get('seq'), 'jpeg_base64': body.get('jpeg_base64')},
+    await broadcast('stream.updated', {'camera_id': cam, 'seq': body.get('seq')},
                     to_roles=['officer', 'commander', 'admin'])
     return {'ok': True}

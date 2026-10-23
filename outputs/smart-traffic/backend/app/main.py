@@ -11,6 +11,7 @@ from app import cleanup, config
 from app.auth import DUMMY_HASH, LoginLimiter, make_token, require_role, verify_password
 from app.db import connect
 from app.errors import err
+from app.lifecycle import auto_process_pending
 from app.routers import admin as admin_router
 from app.routers import citizen as citizen_router
 from app.routers import citizen_portal as citizen_portal_router
@@ -27,6 +28,13 @@ app.add_middleware(CORSMiddleware, allow_origins=config.ALLOWED_ORIGINS, allow_c
 _cleanup_task = None
 
 
+@app.get('/api/v1/health')
+def health():
+    with connect() as conn:
+        conn.execute('SELECT 1 FROM users LIMIT 1').fetchone()
+    return {'ok': True}
+
+
 @app.on_event('startup')
 def _start_cleanup():
     """PERF-4: tác vụ dọn nền chạy mỗi CLEANUP_INTERVAL_S; VACUUM mỗi ngày. SMART_CLEANUP=0 để tắt."""
@@ -38,6 +46,23 @@ def _start_cleanup():
         _cleanup_task = loop.create_task(cleanup._cleanup_loop())
     except Exception:
         _cleanup_task = None
+
+
+@app.on_event('startup')
+def _auto_process_pending_violations():
+    """Chế độ tự động: dọn các vi phạm cũ còn new/needs_review khi khởi động.
+
+    Nhờ vậy dữ liệu đang có trong volume cũng chuyển sang trạng thái tự xử lý, không chỉ
+    các vi phạm mới phát sinh sau khi bật cờ.
+    """
+    if not config.AUTO_VIOLATIONS:
+        return
+    try:
+        with connect() as conn:
+            auto_process_pending(conn, complaint_pct=config.AUTO_COMPLAINT_PCT)
+    except Exception:
+        # Không để lỗi backfill chặn API khởi động; vi phạm mới vẫn được xử lý ở route trạm.
+        pass
 
 
 @app.on_event('shutdown')

@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -34,6 +35,17 @@ def violation_label_of(code) -> str:
 PLATE_PATTERN = r'^(?:[0-9]{2}[A-Z][0-9]?-[0-9]{3}\.[0-9]{2}|[0-9]{2}-[A-Z][0-9] [0-9]{3}\.[0-9]{2})$'
 USERNAME_PATTERN = r'^[A-Za-z0-9_.\-]{3,32}$'
 EMAIL_PATTERN = r'^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,20}$'
+
+
+def public_plate_candidates(value: str) -> tuple[str, ...]:
+    """Dạng viết liền có thể trùng seri ô tô/xe máy; tra cả hai dạng chuẩn bằng chỉ mục."""
+    compact = re.sub(r'[.\-\s]', '', value.strip().upper())
+    if re.fullmatch(r'[0-9]{2}[A-Z][0-9]{5}', compact):
+        return (f'{compact[:3]}-{compact[3:6]}.{compact[6:]}',)
+    if re.fullmatch(r'[0-9]{2}[A-Z][0-9]{6}', compact):
+        return (f'{compact[:4]}-{compact[4:7]}.{compact[7:]}',
+                f'{compact[:2]}-{compact[2:4]} {compact[4:7]}.{compact[7:]}')
+    raise ValueError('Biển số không hợp lệ; ví dụ: 51K-123.45 hoặc 59-X1 234.56')
 
 
 def _no_blank(v: str) -> str:
@@ -178,6 +190,12 @@ class ScenarioIn(BaseModel):
     scenario: Literal['peak-hang-xanh', 'lane-block', 'flood-nhc', 'priority-run', 'none']
     params: dict = Field(default_factory=dict)
 
+    @model_validator(mode='after')
+    def _emergency_kind(self):
+        if self.scenario == 'priority-run' and self.params.get('kind', 'ambulance') not in ('ambulance', 'fire', 'police'):
+            raise ValueError('Loại xe khẩn cấp phải là ambulance, fire hoặc police')
+        return self
+
     @field_validator('params')
     @classmethod
     def _params_small(cls, v: dict) -> dict:
@@ -218,7 +236,7 @@ class ViolationIn(BaseModel):
     camera_id: str
     signal: dict
     confidence: float = Field(ge=0, le=1)
-    penalty: dict
+    penalty: dict   # Giữ hợp đồng trạm cũ; backend bỏ qua nội dung và tự tính policy.
     sim: dict
     cycle_id: Optional[int] = None
     occurred_at: Optional[str] = None
