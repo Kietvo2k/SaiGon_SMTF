@@ -1,0 +1,20 @@
+{
+  "t_sim": 693.9,
+  "scenario": {
+    "key": "none",
+    "since": null,
+    "emergency": {
+      "active": false,
+      "slot": 11663,
+      "vehicle_id": "V-011664",
+      "kind": "ambulance",
+      "label": "Đã qua 2 nút; kết thúc chuyến ưu tiên",
+      "distance_m": 479,
+      "passed": 2,
+      "yielded": 0,
+      "yield_lanes": 4,
+      "node_id": "HX-05",
+      "blocked": false
+    }
+  }
+}

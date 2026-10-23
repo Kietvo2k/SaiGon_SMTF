@@ -1,5 +1,7 @@
 # Bàn giao: hiện trạng Smart Traffic khu Bắc (16/10/2026)
 
+> **Cập nhật 22/10/2026:** trạng thái hiện hành ở [báo cáo đóng gói](IMPLEMENTATION-2026-10-22-smart-traffic-package.md), [kế hoạch T1–T6](../superpowers/plans/2026-10-22-smart-traffic-package.md) và README gốc. Đang trên nhánh `codex/smart-traffic-package`, chưa commit/push; các mục 16/10 và QA trước sửa bên dưới là lịch sử.
+
 Nhánh `main`, thư mục `F:\File\FileLapTrinhF\SaiGon_SMTF` (đã gộp nhánh `Kietvo2k/smart-traffic-bac` ngày 17/10/2026). Mọi mô tả ở đây là **mô phỏng**: sim giao thông tất định theo seed, perception mô phỏng (không train model), biển số sinh theo seed. Không dùng các chữ đó trên UI.
 
 ## 1. Đã xong
@@ -93,3 +95,24 @@ Nhánh `main`, thư mục `F:\File\FileLapTrinhF\SaiGon_SMTF` (đã gộp nhánh
   - Seed: `app/seed/{cameras,plates,owners,accounts}.json`, `app/seed/run_seed.py`.
 - **Web:** `outputs/smart-traffic/web/`, 2 entry officer và citizen.
 - **Đo đạc:** `scripts/kpi-ab-32.mjs`, `scripts/a1-metric-32.mjs`.
+
+## 5. Kiểm thử Browser và yêu cầu mới — 22/10/2026
+
+- Đã thao tác thật trên web 3D, cán bộ/chỉ huy/quản trị và người dân bằng plugin Browser, trên Browser tích hợp và Chrome. Báo cáo, bước tái hiện và giới hạn: [QA-BROWSER-2026-10-22.md](QA-BROWSER-2026-10-22.md).
+- Đã xác nhận các lỗi: backend nhận mức phạt giả 1 đồng; tự chuyển Lite làm mất `app=smart`; web báo chạy xe ưu tiên thành công dù trạm không hỗ trợ; React trùng key cảnh báo; hai bảng 3D chồng nhau. Chưa sửa mã ứng dụng trong đợt kiểm thử này.
+- Yêu cầu người dùng mới: citizen lấy nhập biển số/tra vi phạm làm luồng chính; dữ liệu nghiệp vụ SQLite; dọn phần City Lab dư; chỉnh UI; kiểm tra đèn đường/đèn tại từng nút; triển khai xe khẩn cấp thật. Phải thử giao diện qua Browser khi sửa. Chi tiết và trạng thái đã kiểm/chưa kiểm: [BACKLOG-2026-10-22-ux-nghiep-vu.md](BACKLOG-2026-10-22-ux-nghiep-vu.md).
+- Cây đang mở là `main` tại `547679e` cộng 5 tệp sửa sẵn chưa commit. Báo cáo `6d9ccd3` của agent trước nằm ở worktree `porbeagle`, chưa gộp vào đây. Không trộn trạng thái hai cây khi bàn giao.
+- QA dùng DB riêng trong `work/browser-qa-2026-10-22/var/`; SQLite đã lưu được chuỗi xử lý hồ sơ qua UI. Chưa nghiệm thu FPS GPU phần cứng hoặc soak dài hạn.
+
+## 6. Đóng gói và sửa sau QA — 22/10/2026
+
+- Docker đang chạy tại `http://127.0.0.1:8088/`, backend + web healthy. Khởi động `start-smart.cmd` hoặc `sh start-smart.sh`; dừng giữ dữ liệu bằng script stop/Compose down. Volume `saigon-smart-traffic_backend-var` giữ SQLite, JWT và ảnh/log, độc lập DB dev/QA cũ.
+- Đã sửa backend tính tiền, citizen tra biển số mặc định, căn cứ/nhãn camera, cảnh báo trùng key, giữ Smart khi đổi Lite và dọn bảng City Lab dư. Bốn validator legacy được gỡ có bằng chứng, chi tiết [maintenance](../maintenance.md).
+- Người dùng chọn làm xe khẩn cấp ngay: có slot xe thật, model ba loại, ưu tiên cuốn chiếu, nhường qua IDM, đủ vàng/đỏ chung; giữ ghi đè cán bộ và xe đã chiếm khóa được thoát. Không kế thừa hành vi cố ý vượt đỏ/SPEED/PARK, không mất xe khi giảm mật độ. Cờ xem xét theo đúng mã/gen, không tự miễn phạt. Có nút đến vị trí xe.
+- Tài liệu mới: [kiến trúc](../architecture.md), [runbook](../runbook.md), [giữ/gỡ](../maintenance.md), [báo cáo kết quả](IMPLEMENTATION-2026-10-22-smart-traffic-package.md). Local runner dùng `.venv311` riêng; Docker dùng Python 3.11, Node 22 và khóa dependency.
+- Đã kiểm persistence qua recreate, WS/auth, static whitelist. Browser phát hiện script entry bị cache cũ; nginx hiện yêu cầu revalidate JS/CSS/HTML 3D và smoke kiểm header này. Nếu tab đã giữ bản cũ trước lần sửa header, hard reload một lần.
+- Backend 167 pass, web 64 pass; kiểm Node và bằng chứng Browser cuối xem báo cáo. OpenCode Go MiniMax M3.1 Flash Free đã được dùng cho probe/review bổ sung theo yêu cầu tiết kiệm quota.
+- Còn mở: khảo sát hình học đèn từng hướng HX-01…06, lưới camera, A1/FPS/soak đa seed, broadcast và mã ngày. Không xóa cột/đầu đèn chỉ vì thấy nhiều. Giữ các tệp work chưa rõ nguồn và bốn cache Python mà lệnh dọn bị chính sách công cụ chặn; chúng không nằm trong image.
+- **Bổ sung 22/10 (đèn & dự báo):** `junction-layout-32.js` gom 6 mã nút thành 5 giao lộ logic 3/4 hướng; 3D còn 12 đầu đèn đặt tại vạch dừng, bỏ bảng đếm lơ lửng và ẩn cột camera mặc định. Tab “Đèn & dự báo” có thẻ 5 giao lộ, đèn A/B, thời điểm xanh kế tiếp, phân bổ 60 giây và dải pha; tab “Thử & spawn” giữ NPC + kịch bản xe khẩn cấp. Khung bao xe đã sửa lỗi bị camera bằng chứng xóa. Chi tiết và kiểm chứng ở [báo cáo đóng gói](IMPLEMENTATION-2026-10-22-smart-traffic-package.md#chỉnh-đèn-theo-giao-lộ-logic-và-bảng-dự-báo--22102026). Đã rebuild web image; đợt vi phạm tự động sau đó rebuild thêm backend và recreate cả hai container.
+- **Bổ sung 22/10 (vi phạm tự động):** `SMART_AUTO_VIOLATIONS=1` (Compose/run-smart) tự `new/needs_review → confirmed → notified`, backfill vi phạm cũ lúc khởi động. `SMART_AUTO_COMPLAINT_PCT=1` sinh khiếu nại `auto_1pct` (~1%), chuyển vi phạm sang `disputed`. Cổng cán bộ mặc định lọc “Tất cả”, có nhãn “Tự động”. Backfill thực tế: 0 chờ duyệt, 1294 notified, 13 disputed/13 khiếu nại mở. Chi tiết cùng báo cáo trên.
+- **Bổ sung 22/10 (camera & độ tin cậy):** bố trí lại 10 camera theo giao lộ (cao 11 m, FOV 68°, tầm 80 m). Do thấy nhiều xe hơn nhưng phần lớn ở xa hơn, tỉ lệ bản ghi `new` ở cao điểm Hàng Xanh giảm từ ~58 % (78 bản ghi) xuống 28,9 % (190 bản ghi); đặc tả §4.4 giữ nguyên (`confidence` ≥ 0,85 và OCR ≥ 0,75 mới `new`). Ngưỡng kiểm `violation-32.test.mjs` hạ từ 50–80 % xuống 20–45 %; điều kiện bắt buộc “biển sai định dạng luôn `needs_review`” không đổi. Muốn tỉ lệ `new` trở lại trên 50 % thì phải khảo sát lại góc nhìn/tầm của camera.

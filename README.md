@@ -1,78 +1,87 @@
-# Saigon Open City Lab · Smart Traffic khu Bắc
+# SaiGon SMTF · Smart Traffic khu Bắc
 
-Repo gồm hai hệ chạy trên cùng một nền 3D:
+Mô phỏng giao thông khu Bắc TP.HCM: cảnh 3D, đèn tín hiệu, camera, phát hiện vi phạm, web cán bộ và tra cứu cho người dân. Dữ liệu xe/biển số/perception là dữ liệu mô phỏng; nền thành phố được tận dụng từ City Lab TP.HCM.
 
-1. **City Lab TP.HCM** (`outputs/hcmc-poc/`): thành phố 3D tương tác khu trung tâm, bản hiện hành là `webgpu-materials-24.html`.
-2. **Smart Traffic khu Bắc** (`outputs/smart-traffic/`): mô phỏng giao thông, đèn tín hiệu, camera, vi phạm và hai web (cán bộ, người dân). Lõi dùng chung nằm ở `outputs/shared/digital-twin-core/`.
+## Khởi động nhanh bằng Docker
 
-Mô hình là **gần đúng**: chiều cao, vật liệu và phối cảnh chưa được khảo sát đo đạc, không dùng để điều hướng UAV hay làm căn cứ kỹ thuật công trình. Dữ liệu giao thông và perception trong Smart Traffic là **mô phỏng** (sinh từ mô hình đèn/xe và độ tin cậy perception giả định), không phải dữ liệu camera thật.
-
-## Chạy City Lab
+Cần Docker đang chạy và Docker Compose v2. Tại thư mục gốc:
 
 ```sh
-python3 outputs/hcmc-poc/serve.py        # cổng mặc định 8768, đặt PORT để đổi
+docker compose build backend
+docker compose build web
+docker compose up -d --wait
 ```
 
-Mở `http://127.0.0.1:8768/hcmc-poc/`. Trang này chuyển sang `webgpu-materials-24.html?v=31a`. Tham số chi tiết xem [outputs/hcmc-poc/README.md](outputs/hcmc-poc/README.md).
+Hoặc Windows chạy `start-smart.cmd`; Linux/macOS/Git Bash chạy `sh start-smart.sh`.
 
-## Smart Traffic khu Bắc
+| Màn hình | Địa chỉ |
+|---|---|
+| Trang chọn | [127.0.0.1:8088](http://127.0.0.1:8088/) |
+| Mô phỏng 3D | [Mở Smart Traffic](http://127.0.0.1:8088/hcmc-poc/) |
+| Cán bộ | [Trung tâm điều hành](http://127.0.0.1:8088/index-officer.html) |
+| Người dân | [Tra cứu biển số](http://127.0.0.1:8088/index-citizen.html) |
 
-Chạy cả hệ (static 3D, backend API, web) bằng một lệnh:
+**Mở một tab 3D để trạm sinh dữ liệu và ảnh camera.** Docker chạy API và phục vụ web; cảnh 3D dùng GPU của trình duyệt máy người dùng. Cổng công dân tra cứu không cần tài khoản. Cán bộ dùng tài khoản seed `officer1`, mật khẩu `SaiGon@2026`, chỉ dành cho bản mô phỏng cục bộ.
+
+**Chế độ tự động (demo):** vi phạm mới được xác nhận và báo về ngay, không cần bấm duyệt; khoảng **1%** tự sinh khiếu nại mở để thử quy trình xử lý. Tắt bằng `SMART_AUTO_VIOLATIONS=0`, đổi tỷ lệ bằng `SMART_AUTO_COMPLAINT_PCT` (mặc định `1`).
+
+Dừng bằng `docker compose down`, `stop-smart.cmd` hoặc `sh stop-smart.sh`. SQLite, khóa phiên và ảnh được giữ trong volume; không thêm `-v` nếu cần giữ dữ liệu.
+
+## Chạy cục bộ để phát triển
+
+Cần Node 22.12+ và Python 3.11; scripts tạo và dùng môi trường `outputs/smart-traffic/backend/.venv311`, giữ nguyên các môi trường Python khác.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File outputs/smart-traffic/run-smart.ps1
+```
 
 ```sh
-bash outputs/smart-traffic/run-smart.sh            # Linux/macOS/Git Bash
-bash outputs/smart-traffic/run-smart.sh --stop     # tắt cả cây tiến trình đã bật
-powershell -NoProfile -ExecutionPolicy Bypass -File outputs/smart-traffic/run-smart.ps1          # Windows
-powershell -NoProfile -ExecutionPolicy Bypass -File outputs/smart-traffic/run-smart.ps1 -Stop
+bash outputs/smart-traffic/run-smart.sh
 ```
 
-Script tạo `.venv` và cài gói backend nếu thiếu, khởi tạo DB, nạp seed, rồi chạy:
+Bản chạy cục bộ dùng cổng 8821 cho 3D, 8900 cho API, 5173 cho hai web. Cách dừng, điều kiện môi trường và chẩn đoán lỗi: [hướng dẫn vận hành](docs/runbook.md).
 
-| Thành phần | Cổng | Địa chỉ |
-|---|---|---|
-| Trang 3D khu Bắc | 8821 | `http://127.0.0.1:8821/hcmc-poc/?app=smart&api=http://127.0.0.1:8900` |
-| Backend API | 8900 | `http://127.0.0.1:8900` |
-| Web cán bộ (điều hành) | 5173 | `http://127.0.0.1:5173/index-officer.html` |
-| Web người dân (tra cứu) | 5173 | `http://127.0.0.1:5173/index-citizen.html` |
+## Đọc mã và bảo trì
 
-Tài khoản seed nằm trong `outputs/smart-traffic/backend/app/seed/accounts.json`. README không chép mật khẩu; đổi mật khẩu trước khi dùng ngoài máy phát triển.
+1. [Bản đồ kiến trúc và luồng dữ liệu](docs/architecture.md): bắt đầu ở đâu, module nào làm gì, dữ liệu đi qua đâu.
+2. [Vận hành, dữ liệu và sao lưu](docs/runbook.md): Docker/cục bộ, khởi động/dừng, health, backup/restore, lỗi thường gặp.
+3. [Phạm vi giữ/gỡ và quy tắc bảo trì](docs/maintenance.md): mã đang chạy, phần lịch sử, tệp đã gỡ và cách phục hồi.
+4. [Kế hoạch sửa và đóng gói](docs/superpowers/plans/2026-10-22-smart-traffic-package.md), [bàn giao hiện tại](docs/agent/HANDOFF.md).
+5. [Báo cáo kiểm thử Browser trước khi sửa](docs/agent/QA-BROWSER-2026-10-22.md), [yêu cầu UX/nghiệp vụ](docs/agent/BACKLOG-2026-10-22-ux-nghiep-vu.md).
+6. [Kết quả triển khai và kiểm thử sau sửa](docs/agent/IMPLEMENTATION-2026-10-22-smart-traffic-package.md).
 
-### Trạng thái (theo lịch sử commit, chưa có báo cáo nghiệm thu M7)
-
-- **M1 Hàng Xanh** (vi phạm vượt đèn đỏ, bằng chứng, tra cứu): có commit T1–T14. Mục A1 (đèn thích ứng giảm thời gian chờ so với cố định) **chưa đạt** theo commit `d8dd16b`; giữ kịch bản mặc định.
-- **M2 khu Bắc gọn** (nền khóa, nhà/cây/xe ngoài khu ẩn, signature ngoài khu ẩn): đã có M2a, M2b, M2c.
-- **M3 mạng nút + camera + VMS**: chưa thấy commit.
-- **M4 bản đồ nhiệt, dự báo, điều hướng, tua giờ**: có M4a và M4c; phần còn lại chưa hoàn tất.
-- **M5 đủ lỗi, xe ưu tiên, bốn kịch bản**: có M5a và M5b-1.
-- **M6 web đầy đủ** (vòng đời vi phạm, khiếu nại, nộp phạt, phân quyền): có M6a, M6b, M6c.
-- **M7 nghiệm thu tổng**: chưa làm.
-
-### Việc còn mở
-
-- Đo A3 (FPS app smart so với chế độ cổ điển) trên máy có GPU, chạy có hiển thị.
-- Thiếu trụ cầu Sài Gòn 2 (306073179) và Thủ Thiêm (165919725), ghi trong `work/m1-notes.md`.
-- Chưa có đo tài nguyên dài hạn; xem [docs/PERFORMANCE-24-7.md](docs/PERFORMANCE-24-7.md).
-- Kế hoạch phase tiếp theo: [docs/prompts/README.md](docs/prompts/README.md).
-- Đặc tả và kế hoạch: [docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md](docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md), [docs/superpowers/plans/2026-10-14-m1-hang-xanh.md](docs/superpowers/plans/2026-10-14-m1-hang-xanh.md).
-
-## Kiểm tra
+## Kiểm tra khi thay đổi
 
 ```sh
-node --test "outputs/hcmc-poc/test/*.test.mjs"           # logic sim, đèn, luật vi phạm
-node outputs/hcmc-poc/scripts/qa-project-hygiene.cjs      # vệ sinh repo
-node outputs/hcmc-poc/scripts/validate_signature_registry_31.cjs
-PORT=8879 node outputs/hcmc-poc/scripts/qa-north-32.cjs   # cần server tĩnh đang chạy
-outputs/smart-traffic/backend/.venv/Scripts/python.exe -m pytest outputs/smart-traffic/backend/tests -q -p no:cacheprovider
+cd outputs/smart-traffic/web
+npm ci
+npm run typecheck
+npm test
+npm run build
 ```
 
-Đã biết: `validate_demo_ready.py`, `validate_ba_son_bridge.py`, `qa-app-integrity-30b.cjs` và `qa-construction-change-23.cjs` vẫn kiểm nhánh shell cũ `?legacy=1`/dữ liệu legacy đã gỡ, nên bốn kiểm tra này báo lỗi cho đến khi được cập nhật hoặc xóa.
+Backend Windows, tại gốc repo:
 
-## Lịch sử PoC
+```powershell
+py -3.11 -m venv outputs/smart-traffic/backend/.venv311
+outputs/smart-traffic/backend/.venv311/Scripts/python.exe -m pip install -r outputs/smart-traffic/backend/requirements.txt
+outputs/smart-traffic/backend/.venv311/Scripts/python.exe -m pytest outputs/smart-traffic/backend/tests -q -p no:cacheprovider
+```
 
-Các batch PoC 02–26 và tài liệu demo cũ đã gỡ khỏi cây làm việc (CLEANUP A, C). Shell cũ `?legacy=1` đã gỡ khỏi điều hướng (CLEANUP B); vài tệp của nó còn lại vì validator cũ vẫn đọc. Tra cứu bằng `git log` hoặc `git show <commit>:<đường dẫn>`.
+Nếu đã chạy script cục bộ thì bỏ bước tạo môi trường. Script chạy app chỉ cài dependency runtime; bước cài `requirements.txt` bổ sung pytest/httpx cho kiểm thử. Linux/macOS dùng `python3.11 -m venv` và `.venv311/bin/python` tương ứng.
 
-Dự án Gia Lộc (Tây Ninh) đã gỡ khỏi repo, gồm cả hợp đồng nguồn `outputs/shared/digital-twin-core/projects/gia-loc.json`; lõi dùng chung chỉ còn hợp đồng HCMC. Tra cứu phần còn lại bằng `git log`.
+Các test Node và kiểm thử Browser theo phần thay đổi được liệt kê trong [bảo trì](docs/maintenance.md). Thay đổi UI phải được kiểm trên Browser thật; số test pass không thay cho việc xem cảnh vẽ và thao tác.
 
-## Dữ liệu, giấy phép và phạm vi
+## Giới hạn còn mở
 
-Dữ liệu và thư viện có giấy phép riêng: OpenStreetMap (ODbL), Overture, EOX và Copernicus, Google Open Buildings, Three.js, Earcut, Poly Haven. Xem [GIT-DATA-PACKAGING.md](GIT-DATA-PACKAGING.md) về nguồn, quyền và chính sách lưu trữ ảnh vệ tinh/vật liệu.
+Kịch bản xe khẩn cấp có cứu thương, xe chỉ huy cứu hỏa và cảnh sát: xe thật trong pool, ưu tiên tại nút sắp tới, các hướng xung đột dừng nhường; vẫn giữ khoảng cách và vàng/đỏ chung. Chọn loại xe ở 3D hoặc tài khoản chỉ huy `commander1` (cùng mật khẩu seed). Dừng tự động sau hai nút hoặc 240 giây sim. Khi không có slot phù hợp, HUD báo lỗi để thử lại; xe có thể chờ hàng xe hoặc ghi đè của cán bộ. Chưa có điều xe tới địa chỉ/xe thang cứu hỏa lớn/còi âm thanh.
+
+Đèn thích ứng chưa đạt tiêu chí A1 trên mọi seed. FPS GPU thật, tải dài hạn và bố trí từng đầu đèn phải được nghiệm thu riêng; không dùng FPS headless làm kết luận.
+
+Đọc [backlog](docs/agent/BACKLOG-2026-10-22-ux-nghiep-vu.md) để phân biệt lỗi đã kiểm chứng, yêu cầu mới và phần chưa khảo sát. Mô hình công trình là gần đúng, không dùng làm dữ liệu đo đạc hoặc điều hướng kỹ thuật.
+
+## Dữ liệu và giấy phép
+
+Nguồn gồm OpenStreetMap, Overture, EOX/Copernicus, Google Open Buildings, Three.js, Earcut, Poly Haven. Giữ giấy phép và thông tin nguồn khi đóng gói; xem [GIT-DATA-PACKAGING.md](GIT-DATA-PACKAGING.md). Tài liệu/nghiên cứu City Lab cũ được giữ để truy nguyên, không phải hướng dẫn khởi động Smart Traffic hiện tại.
+
+Cập nhật đèn: Smart HUD có **Vận hành / Đèn & dự báo / Thử nghiệm**. Tab đèn cho xem từng giao lộ, trạng thái, hàng chờ, phân bổ xanh/dải pha dự kiến 60 giây và bật khung bao xe. Tab thử nghiệm thêm 1/10/50 NPC hoặc dọn riêng. Hướng dẫn chi tiết ở [runbook](docs/runbook.md#xem-đèn-phân-bổ-pha-và-thử-npc).
