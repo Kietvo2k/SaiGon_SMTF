@@ -1,6 +1,6 @@
 ﻿# T14a: bật cả hệ smart-traffic bằng một lệnh (Windows PowerShell 5.1).
 #   (a) server tĩnh outputs/hcmc-poc/serve.py (cổng 8821) cho trang 3D
-#   (b) backend FastAPI (cổng 8900): tạo .venv + pip install nếu thiếu, init DB, seed, chạy uvicorn
+#   (b) backend FastAPI (cổng 8900): tạo .venv311 Python 3.11 + pip install nếu thiếu, init DB, seed, chạy uvicorn
 #   (c) web build (cổng 5173): npm ci nếu thiếu node_modules, npm run build, vite preview
 # Dùng: powershell -NoProfile -ExecutionPolicy Bypass -File outputs/smart-traffic/run-smart.ps1 [-Stop]
 # PID file var/run-smart.pids: mỗi dòng "<PID>\t<tên>". -Stop diệt cả cây tiến trình (taskkill /T /F), có timeout.
@@ -11,6 +11,8 @@ param(
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }   # console PS 5.1 hiển thị đúng tiếng Việt
 $env:PYTHONDONTWRITEBYTECODE = '1'   # không sinh __pycache__ (QA vệ sinh yêu cầu sạch)
+$env:SMART_AUTO_VIOLATIONS = '1'    # demo: tự xác nhận/báo vi phạm
+$env:SMART_AUTO_COMPLAINT_PCT = '1' # 1% tự sinh khiếu nại
 $Root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $Smart = Join-Path $Root 'outputs\smart-traffic'
 $Backend = Join-Path $Smart 'backend'
@@ -69,6 +71,24 @@ function Stop-All {
 
 if ($Stop -or ($Thua -contains '--stop')) { Stop-All; exit 0 }
 
+# Dùng runtime riêng 3.11; không dùng Python 3.14 mặc định của máy.
+$PythonFile = ''
+$PythonArgs = @()
+if (Get-Command py -ErrorAction SilentlyContinue) {
+    $candidateOk = $false
+    try { & py -3.11 -c "import sys; assert sys.version_info[:2] == (3, 11)" 2>$null; $candidateOk = $LASTEXITCODE -eq 0 } catch { }
+    if ($candidateOk) { $PythonFile = 'py'; $PythonArgs = @('-3.11') }
+}
+if (-not $PythonFile -and (Get-Command python -ErrorAction SilentlyContinue)) {
+    $candidateOk = $false
+    try { & python -c "import sys; assert sys.version_info[:2] == (3, 11)" 2>$null; $candidateOk = $LASTEXITCODE -eq 0 } catch { }
+    if ($candidateOk) { $PythonFile = 'python' }
+}
+if (-not $PythonFile) { Fail 'cần Python 3.11 (py -3.11). Có thể dùng start-smart.cmd với Docker.' }
+if (-not (Get-Command node -ErrorAction SilentlyContinue) -or -not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) { Fail 'cần Node.js 22.12+ và npm; hoặc dùng start-smart.cmd.' }
+& node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit((a===20&&b>=19)||(a===22&&b>=12)||a>22?0:1)"
+if ($LASTEXITCODE -ne 0) { Fail 'cần Node.js 20.19+ hoặc 22.12+; hoặc dùng start-smart.cmd.' }
+
 # Kiểm cổng TRƯỚC khi ghi lại PID file, để không mất dấu vết tiến trình cũ.
 foreach ($mucCong in @(@($StaticPort, 'server tĩnh 3D'), @($ApiPort, 'backend API'), @($WebPort, 'web build'))) {
     if (Test-CongMo $mucCong[0]) { Fail "cổng $($mucCong[0]) đang bận ($($mucCong[1])). Chạy -Stop trước." }
@@ -76,23 +96,18 @@ foreach ($mucCong in @(@($StaticPort, 'server tĩnh 3D'), @($ApiPort, 'backend A
 New-Item -ItemType Directory -Force -Path $VarDir | Out-Null
 [System.IO.File]::WriteAllText($PidFile, '')
 
-Write-Host 'run-smart: (a) server tĩnh ...'
-$env:PORT = "$StaticPort"
-$serve = Join-Path $Root 'outputs\hcmc-poc\serve.py'
-$p = Start-Process -FilePath 'python' -ArgumentList "`"$serve`"" -WindowStyle Hidden -PassThru `
-    -RedirectStandardOutput (Join-Path $VarDir 'run-smart-static.log') -RedirectStandardError (Join-Path $VarDir 'run-smart-static.err.log')
-Ghi-TienTrinh $p.Id 'static'
-
-$VenvPy = Join-Path $Backend '.venv\Scripts\python.exe'
+$VenvPy = Join-Path $Backend '.venv311\Scripts\python.exe'
 if (-not (Test-Path $VenvPy)) {
     Write-Host 'run-smart: (b) tạo .venv backend ...'
-    & python -m venv (Join-Path $Backend '.venv')
+    & $PythonFile @PythonArgs -m venv (Join-Path $Backend '.venv311')
     if ($LASTEXITCODE -ne 0) { Fail 'không tạo được .venv' }
 }
+& $VenvPy -c "import sys; assert sys.version_info[:2] == (3, 11)"
+if ($LASTEXITCODE -ne 0) { Fail '.venv311 phải dùng Python 3.11; hãy chọn Docker hoặc chuẩn bị lại môi trường riêng.' }
 & $VenvPy -c "import fastapi, uvicorn" | Out-Null
 if ($LASTEXITCODE -ne 0) {
     Write-Host 'run-smart: (b) pip install -r requirements.txt ...'
-    & $VenvPy -m pip install -q -r (Join-Path $Backend 'requirements.txt')
+    & $VenvPy -m pip install -q -r (Join-Path $Root 'docker\requirements.lock')
     if ($LASTEXITCODE -ne 0) { Fail 'pip install thất bại' }
 }
 
@@ -103,6 +118,13 @@ Push-Location $Backend
 $rc = $LASTEXITCODE
 Pop-Location
 if ($rc -ne 0) { Fail 'init/seed DB thất bại' }
+
+Write-Host 'run-smart: (a) server tĩnh ...'
+$env:PORT = "$StaticPort"
+$serve = Join-Path $Root 'outputs\hcmc-poc\serve.py'
+$p = Start-Process -FilePath $VenvPy -ArgumentList "`"$serve`"" -WindowStyle Hidden -PassThru `
+    -RedirectStandardOutput (Join-Path $VarDir 'run-smart-static.log') -RedirectStandardError (Join-Path $VarDir 'run-smart-static.err.log')
+Ghi-TienTrinh $p.Id 'static'
 
 Write-Host 'run-smart: (b) backend API ...'
 $env:SMART_ALLOWED_ORIGINS = "http://127.0.0.1:$StaticPort,http://localhost:$StaticPort,http://127.0.0.1:$WebPort,http://localhost:$WebPort"

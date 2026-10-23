@@ -50,3 +50,16 @@ outputs/smart-traffic/models/*.onnx
 # Smart traffic web: cài đặt và bản dựng tái tạo được (chỉ giữ mã nguồn + package-lock).
 outputs/smart-traffic/web/node_modules/
 outputs/smart-traffic/web/dist/
+
+# Môi trường, cache và dữ liệu kiểm thử có thể tạo lại.
+.env
+.env.*
+!.env.example
+**/.venv/
+**/.venv311/
+**/.venv-*/
+**/.pytest_cache/
+outputs/smart-traffic/backend/outputs/
+work/browser-qa-*/
+work/.backend-qa-var*/
+work/.qa-backend*/

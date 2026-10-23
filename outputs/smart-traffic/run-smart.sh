@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # T14a: bật cả hệ smart-traffic bằng một lệnh (Git Bash trên Windows):
 #   (a) server tĩnh outputs/hcmc-poc/serve.py (cổng 8821) cho trang 3D
-#   (b) backend FastAPI (cổng 8900): tạo .venv + pip install nếu thiếu, init DB, seed, chạy uvicorn
+#   (b) backend FastAPI (cổng 8900): tạo .venv311 Python 3.11 + pip install nếu thiếu, init DB, seed, chạy uvicorn
 #   (c) web build (cổng 5173): npm ci nếu thiếu node_modules, npm run build, vite preview
 # Dùng: bash outputs/smart-traffic/run-smart.sh            (bật)
 #       bash outputs/smart-traffic/run-smart.sh --stop     (tắt cả cây tiến trình đã bật)
 # PID file var/run-smart.pids: mỗi dòng "<winpid> <tên>". --stop dùng taskkill //T //F có timeout, không đọc stdin.
 set -u
 export PYTHONDONTWRITEBYTECODE=1   # không sinh __pycache__ (QA vệ sinh yêu cầu sạch)
+export SMART_AUTO_VIOLATIONS=1     # demo: tự xác nhận/báo vi phạm
+export SMART_AUTO_COMPLAINT_PCT=1  # 1% tự sinh khiếu nại
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SMART="$ROOT/outputs/smart-traffic"
 BACKEND="$SMART/backend"
@@ -22,7 +24,7 @@ GIOI_HAN=20   # giây tối đa cho mỗi lệnh tasklist/taskkill
 # GNU timeout của Git Bash; không dùng timeout.exe của Windows (cú pháp khác).
 co_timeout() { if timeout --version >/dev/null 2>&1; then timeout "$GIOI_HAN" "$@"; else "$@"; fi; }
 
-port_mo() { python -c "import socket,sys; s=socket.socket(); s.settimeout(1); sys.exit(0 if s.connect_ex(('127.0.0.1', int(sys.argv[1]))) == 0 else 1)" "$1"; }
+port_mo() { "${PYTHON_CMD[@]}" -c "import socket,sys; s=socket.socket(); s.settimeout(1); sys.exit(0 if s.connect_ex(('127.0.0.1', int(sys.argv[1]))) == 0 else 1)" "$1"; }
 
 # Chạy nền một lệnh, ghi winpid (PID Windows, để taskkill //T diệt cả cây) vào PID file.
 chay_nen() {  # $1 = tên, $2... = lệnh
@@ -60,6 +62,14 @@ tat_ca() {
 
 if [ "${1:-}" = "--stop" ]; then tat_ca; exit 0; fi
 
+PYTHON_CMD=()
+if command -v py >/dev/null 2>&1 && py -3.11 -c 'import sys; assert sys.version_info[:2] == (3, 11)' >/dev/null 2>&1; then PYTHON_CMD=(py -3.11)
+elif command -v python3.11 >/dev/null 2>&1; then PYTHON_CMD=(python3.11)
+elif command -v python >/dev/null 2>&1 && python -c 'import sys; assert sys.version_info[:2] == (3, 11)' >/dev/null 2>&1; then PYTHON_CMD=(python)
+else echo 'run-smart LỖI: cần Python 3.11; hoặc dùng sh start-smart.sh với Docker.' >&2; exit 1; fi
+if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then echo 'run-smart LỖI: cần Node.js 22.12+ và npm; hoặc dùng Docker.' >&2; exit 1; fi
+node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit((a===20&&b>=19)||(a===22&&b>=12)||a>22?0:1)" || { echo 'run-smart LỖI: cần Node.js 20.19+ hoặc 22.12+.' >&2; exit 1; }
+
 # Kiểm cổng TRƯỚC khi ghi lại PID file, để không mất dấu vết tiến trình cũ.
 for cong_mo_ta in "$STATIC_PORT:server tĩnh 3D" "$API_PORT:backend API" "$WEB_PORT:web build"; do
   cong="${cong_mo_ta%%:*}"; mo_ta="${cong_mo_ta#*:}"
@@ -72,24 +82,25 @@ done
 mkdir -p "$VAR_DIR"
 : > "$PIDFILE"
 
-echo "run-smart: (a) server tĩnh :$STATIC_PORT ..."
-(export PORT="$STATIC_PORT"; chay_nen static python "$ROOT/outputs/hcmc-poc/serve.py") || exit 1
-
-if [ -x "$BACKEND/.venv/Scripts/python.exe" ]; then VENV_PY="$BACKEND/.venv/Scripts/python.exe"
-elif [ -x "$BACKEND/.venv/bin/python" ]; then VENV_PY="$BACKEND/.venv/bin/python"
+if [ -x "$BACKEND/.venv311/Scripts/python.exe" ]; then VENV_PY="$BACKEND/.venv311/Scripts/python.exe"
+elif [ -x "$BACKEND/.venv311/bin/python" ]; then VENV_PY="$BACKEND/.venv311/bin/python"
 else
-  echo "run-smart: (b) tạo .venv backend ..."
-  python -m venv "$BACKEND/.venv" || { echo "run-smart LỖI: không tạo được .venv" >&2; exit 1; }
-  if [ -x "$BACKEND/.venv/Scripts/python.exe" ]; then VENV_PY="$BACKEND/.venv/Scripts/python.exe"; else VENV_PY="$BACKEND/.venv/bin/python"; fi
+  echo "run-smart: (b) tạo .venv311 backend ..."
+  "${PYTHON_CMD[@]}" -m venv "$BACKEND/.venv311" || { echo "run-smart LỖI: không tạo được .venv311" >&2; exit 1; }
+  if [ -x "$BACKEND/.venv311/Scripts/python.exe" ]; then VENV_PY="$BACKEND/.venv311/Scripts/python.exe"; else VENV_PY="$BACKEND/.venv311/bin/python"; fi
 fi
+"$VENV_PY" -c 'import sys; assert sys.version_info[:2] == (3, 11)' || { echo 'run-smart LỖI: .venv311 phải dùng Python 3.11.' >&2; exit 1; }
 if ! "$VENV_PY" -c "import fastapi, uvicorn" >/dev/null 2>&1; then
   echo "run-smart: (b) pip install -r requirements.txt ..."
-  "$VENV_PY" -m pip install -q -r "$BACKEND/requirements.txt" </dev/null || { echo "run-smart LỖI: pip install thất bại" >&2; exit 1; }
+  "$VENV_PY" -m pip install -q -r "$ROOT/docker/requirements.lock" </dev/null || { echo "run-smart LỖI: pip install thất bại" >&2; exit 1; }
 fi
 
 echo "run-smart: (b) init DB + seed ..."
 (cd "$BACKEND" && SMART_VAR_DIR="$VAR_DIR" "$VENV_PY" -c "from app.db import init_db, get_conn; c = get_conn(); init_db(c); c.close(); from app.seed.run_seed import run_seed; run_seed()" </dev/null) \
   || { echo "run-smart LỖI: init/seed DB thất bại" >&2; exit 1; }
+
+echo "run-smart: (a) server tĩnh :$STATIC_PORT ..."
+(export PORT="$STATIC_PORT"; chay_nen static "$VENV_PY" "$ROOT/outputs/hcmc-poc/serve.py") || exit 1
 
 echo "run-smart: (b) backend API :$API_PORT ..."
 (cd "$BACKEND" && export SMART_VAR_DIR="$VAR_DIR" SMART_ALLOWED_ORIGINS="http://127.0.0.1:$STATIC_PORT,http://localhost:$STATIC_PORT,http://127.0.0.1:$WEB_PORT,http://localhost:$WEB_PORT" \
