@@ -5,16 +5,18 @@
 //                    xe tuân thủ tránh đoạn ngập (routeBias), bảng VMS gần nhất hiện cảnh báo ngập.
 // Thuần JS (không DOM/THREE trong logic); THREE và DOM chỉ nạp khi gọi mountScenarioPanel32 / createBlockProps32.
 // Mọi vị trí theo hệ tọa độ cảnh (ROAD_GRAPH_31). Nhãn tiếng Việt, không chữ cấm.
-import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
+import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32c';
 import { roadNameOf32 } from './heat-live-32.js?v=32a';
+import { EMERGENCY_KINDS_32 } from './emergency-32.js?v=32a';
 
 export const SCENARIOS_32_VERSION = 'scenarios-32a';
-export const SCENARIO_KEYS_32 = Object.freeze(['none', 'peak-hang-xanh', 'lane-block', 'flood-nhc']);
+export const SCENARIO_KEYS_32 = Object.freeze(['none', 'peak-hang-xanh', 'lane-block', 'flood-nhc', 'priority-run']);
 export const SCENARIO_LABELS_32 = Object.freeze({
   none: 'Dừng kịch bản',
   'peak-hang-xanh': 'Cao điểm 17:30 · Hàng Xanh',
   'lane-block': 'Xe hỏng chặn làn · Điện Biên Phủ',
-  'flood-nhc': 'Ngập · Nguyễn Hữu Cảnh'
+  'flood-nhc': 'Ngập · Nguyễn Hữu Cảnh',
+  'priority-run': 'Xe khẩn cấp · ưu tiên qua nút'
 });
 export const PEAK_CLOCK_32 = Object.freeze({ hour: 17, minute: 30 });
 export const BLOCK_MIN_DEFAULT_32 = 10;          // phút sim (mặc định)
@@ -109,7 +111,7 @@ export function findLaneBlock32(net, nodeMap = [], { dist = BLOCK_DIST_M_32, nod
 // Trạng thái kịch bản. deps: {traffic (api có setRestrictions/setVisibleFraction/sim), clock (có goTo) | null,
 // routing (createRouteBias32) | null, vms (createVmsBus32), nodeMap, boards (chooseVmsBoards32), props (3D tùy chọn),
 // now () → ms (mặc định Date.now), log}.
-export function createScenarios32({ traffic, clock = null, routing = null, vms = null, nodeMap = [], boards = [], props = null, now = () => Date.now(), log = () => {} } = {}) {
+export function createScenarios32({ traffic, clock = null, routing = null, vms = null, nodeMap = [], boards = [], props = null, emergency = null, now = () => Date.now(), log = () => {} } = {}) {
   if (!traffic || !traffic.sim) throw new TypeError('createScenarios32 cần traffic.sim');
   const net = traffic.net || (traffic.sim && traffic.sim.net) || null;
   let key = 'none', since = null, sinceMs = 0, startSimT = 0, params = {}, endSimT = null;
@@ -117,6 +119,7 @@ export function createScenarios32({ traffic, clock = null, routing = null, vms =
   const simT = () => Number(traffic.sim.counters.t) || 0;
 
   function clearAll() {
+    if (emergency) emergency.stop();
     traffic.setRestrictions({});
     if (routing && routing.setExtraAvoid) routing.setExtraAvoid([]);
     if (vms) vms.clearFloodAll();
@@ -179,7 +182,7 @@ export function createScenarios32({ traffic, clock = null, routing = null, vms =
   function stop() {
     const was = key;
     clearAll();
-    key = 'none'; since = null; sinceMs = 0; params = {};
+    key = 'none'; since = null; sinceMs = 0; params = {}; lastError = null;
     return was;
   }
 
@@ -193,6 +196,10 @@ export function createScenarios32({ traffic, clock = null, routing = null, vms =
       let info;
       if (name === 'peak-hang-xanh') info = startPeak();
       else if (name === 'lane-block') info = startBlock(p || {});
+      else if (name === 'priority-run') {
+        if (!emergency) throw new Error('Trạm chưa cài mô phỏng xe khẩn cấp');
+        info = emergency.start(p || {});
+      }
       else info = startFlood();
       key = name; params = { ...(p || {}) }; since = new Date(now()).toISOString(); sinceMs = now(); startSimT = simT();
       lastError = null;
@@ -208,6 +215,7 @@ export function createScenarios32({ traffic, clock = null, routing = null, vms =
 
   // Gọi định kỳ (≈1 s): hết thời gian chặn làn → trả làn; mỗi lần vẽ nhấp nháy do props quản lý.
   function tick() {
+    if (key === 'priority-run' && !emergency.status().active) { const result = emergency.status().label; stop(); lastError = result; }
     if (key === 'lane-block' && endSimT !== null && simT() >= endSimT) { log('[scenario] hết thời gian chặn làn'); stop(); }
     if (props && props.blink) props.blink(simT());
   }
@@ -223,7 +231,7 @@ export function createScenarios32({ traffic, clock = null, routing = null, vms =
   }
 
   // Trường `scenario` gửi trạm (metrics): {key, since} — since là thời điểm bắt đầu (ISO) hoặc null khi dừng.
-  function metricsStatus() { return { key, since }; }
+  function metricsStatus() { return { key, since, ...(emergency ? {emergency: emergency.status()} : {}) }; }
 
   function dispose() { clearAll(); key = 'none'; }
 
@@ -323,7 +331,7 @@ export const SCENARIO_CSS_32 = `
 #smartHud32 .scn-stop32{width:100%;padding:6px 8px;margin:0 0 6px;border-radius:10px;border:1px solid rgba(137,216,223,.35);background:rgba(3,17,21,.28);color:inherit;font:inherit;font-size:11px;cursor:pointer}
 #smartHud32 .scn-status32{margin:0;font-size:11px;opacity:.9;min-height:1.4em}
 `;
-export function mountScenarioPanel32(host, { onPick = () => {}, onStop = () => {}, minutesChoices = BLOCK_MIN_CHOICES_32, defaultMinutes = BLOCK_MIN_DEFAULT_32 } = {}) {
+export function mountScenarioPanel32(host, { onPick = () => {}, onStop = () => {}, onFocus = () => {}, minutesChoices = BLOCK_MIN_CHOICES_32, defaultMinutes = BLOCK_MIN_DEFAULT_32 } = {}) {
   const doc = host.ownerDocument;
   if (!doc.getElementById('scenarioCss32')) {
     const style = doc.createElement('style');
@@ -348,14 +356,21 @@ export function mountScenarioPanel32(host, { onPick = () => {}, onStop = () => {
   for (const m of minutesChoices) { const o = doc.createElement('option'); o.value = String(m); o.textContent = `${m} phút`; if (m === defaultMinutes) o.selected = true; sel.append(o); }
   lab.append(' ', sel); row.append(lab);
   const stop = doc.createElement('button'); stop.type = 'button'; stop.dataset.scenario = 'none'; stop.textContent = SCENARIO_LABELS_32.none;
+  const focus = doc.createElement('button'); focus.type = 'button'; focus.className = 'scn-stop32'; focus.disabled = true;
+  focus.textContent = 'Đến vị trí xe khẩn cấp'; focus.addEventListener('click', onFocus);
+  const kindRow = doc.createElement('label'); kindRow.className = 'scn-row32'; kindRow.textContent = 'Loại xe khẩn cấp';
+  const kindSelect = doc.createElement('select'); kindSelect.setAttribute('aria-label', 'Loại xe khẩn cấp');
+  for (const [value,label] of Object.entries(EMERGENCY_KINDS_32)) { const option=doc.createElement('option'); option.value=value; option.textContent=label; kindSelect.append(option); }
+  kindRow.append(kindSelect);
   stop.className = 'scn-stop32';
   const status = doc.createElement('p'); status.className = 'scn-status32'; status.setAttribute('aria-live', 'polite'); status.textContent = 'Chưa chạy kịch bản nào';
-  sec.append(h, grid, row, stop, status);
+  sec.append(h, kindRow, grid, focus, row, stop, status);
   host.append(sec);
-  for (const [k, b] of buttons) b.addEventListener('click', () => onPick(k, k === 'lane-block' ? { minutes: Number(sel.value) } : {}));
+  for (const [k, b] of buttons) b.addEventListener('click', () => onPick(k, k === 'lane-block' ? { minutes: Number(sel.value) } : k === 'priority-run' ? { kind: kindSelect.value } : {}));
   stop.addEventListener('click', () => onStop());
   return {
     setActive(k, text) {
+      focus.disabled = k !== 'priority-run';
       for (const [kk, b] of buttons) b.setAttribute('aria-pressed', String(kk === k));
       status.textContent = text || (k && k !== 'none' ? `Đang chạy: ${SCENARIO_LABELS_32[k] || k}` : 'Chưa chạy kịch bản nào');
     },

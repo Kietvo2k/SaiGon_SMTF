@@ -2,7 +2,7 @@
 // và phần DOM trong panel app smart (công tắc "Bản đồ nhiệt" mặc định tắt + danh sách cảnh báo).
 // Phần hình học (ribbonEdges32, buildRibbon32, paintRibbon32) là thuần JS để test Node; THREE chỉ nạp qua tham số.
 import { colorOf, HEAT_COLORS_32 } from './heat-32.js?v=32a';
-import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
+import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32c';
 import { vmsDisplay32, groupAlertsByRoad32 } from './heat-live-32.js?v=32a';
 
 export const HEAT_SCENE_32_VERSION = 'heat-scene-32a';

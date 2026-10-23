@@ -12,6 +12,13 @@ const G = globalThis.ROAD_GRAPH_31;
 const nodeMap = JSON.parse(fs.readFileSync(path.resolve('outputs/smart-traffic/backend/app/seed/node_map.json'), 'utf8'));
 const plan = buildSignalPlan32({ graph: G, nodeMap });
 
+test('chỉ đánh dấu nhánh nội bộ khi hai đầu thuộc cùng cụm, không xóa nhánh giao lộ khác',()=>{
+  const extra=[{from:366390689,to:701671562,c:[-251,-2440,-242,-2465]}, {from:366390689,to:366440827,c:[-251,-2440,395,-2427]}];
+  const p=buildSignalPlan32({graph:{...G,edges:[...G.edges,...extra]},nodeMap});
+  assert.ok(p.internalSt.has(G.edges.length*2)); assert.ok(p.internalSt.has(G.edges.length*2+1));
+  assert.equal(p.internalSt.has((G.edges.length+1)*2),false);
+});
+
 test('đủ 6 nút Hàng Xanh, chỉ số nút khớp osm_id', () => {
   assert.equal(SIGNAL_PLAN_32_VERSION, 'signal-plan-32a');
   assert.equal(plan.signalNodes.length, 6);

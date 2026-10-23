@@ -5,7 +5,7 @@
 //   - bằng chứng POST multipart /station/violations/{id}/evidence (trùng kind → 409);
 //   - WS: tin nhắn đầu {"type":"auth","token"} trong 5 s; lệnh cmd.* đến từ backend qua WS.
 // Không dùng `process`; chạy được trong Node (test) và trình duyệt.
-import { TRAFFIC_KINDS, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
+import { TRAFFIC_KINDS, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32c';
 export const TRANSPORT_32_VERSION = 'transport-32a';
 export const STATION_ID_32 = 'STATION-3D-01';
 export const HEARTBEAT_S = 15;
@@ -27,12 +27,18 @@ const VIOLATION_FIELDS_32 = [
 ];
 
 // Địa chỉ backend: ?api= nếu là máy cục bộ, không thì mặc định. Tài khoản trạm KHÔNG được gửi tới máy khác.
-export function resolveApiBase32(search = '') {
-  const raw = new URLSearchParams(String(search || '')).get('api') || DEFAULT_API_32;
+export function resolveApiBase32(search = '', pageOrigin = globalThis.location?.origin) {
+  let dockerOrigin = null;
+  try {
+    const page = new URL(pageOrigin);
+    if (LOOPBACK_HOSTS_32.includes(page.hostname) && page.port === '8088' && ['http:', 'https:'].includes(page.protocol)) dockerOrigin = page.origin;
+  } catch { /* Node/test hoặc trang không có origin */ }
+  const defaultApi = dockerOrigin || DEFAULT_API_32;
+  const raw = new URLSearchParams(String(search || '')).get('api') || defaultApi;
   let u = null;
-  try { u = new URL(raw); } catch (e) { u = null; }
+  try { u = new URL(raw, defaultApi); } catch (e) { u = null; }
   const ok = !!u && (u.protocol === 'http:' || u.protocol === 'https:') && LOOPBACK_HOSTS_32.includes(u.hostname);
-  if (!ok) u = new URL(DEFAULT_API_32);
+  if (!ok) u = new URL(defaultApi);
   return { baseUrl: u.origin, wsUrl: `${u.protocol === 'https:' ? 'wss:' : 'ws:'}//${u.host}/ws/v1`, fallback: !ok };
 }
 
@@ -46,6 +52,10 @@ function writeStoredToken32(storage, token) {
 // Đăng nhập tài khoản trạm → access_token (vai trò bắt buộc là station). Không đưa mật khẩu vào thông báo lỗi.
 export async function loginStation32({ baseUrl, username = STATION_LOGIN_32.username, password = STATION_LOGIN_32.password,
   fetchImpl = globalThis.fetch, storage = null } = {}) {
+  const target = new URL(baseUrl);
+  if (!LOOPBACK_HOSTS_32.includes(target.hostname) || !['http:', 'https:'].includes(target.protocol)) {
+    throw new Error('Tài khoản trạm mẫu chỉ dùng trên máy cục bộ');
+  }
   const res = await fetchImpl(`${baseUrl}/api/v1/auth/login`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password })
   });
@@ -465,35 +475,62 @@ export function createCommandRouter32({ scenarios = null, vms = null, log = defa
 // Vòng trạm: quét vi phạm 0,5 s → chụp bằng chứng → gửi (có bằng chứng kèm); ảnh "trước vạch" ~1 fps
 // cho camera không stream; khung stream ≤ 2 fps cho camera đang mở (mặc định camera đầu registry).
 export function startStationLoop32(app, { perception, capture, transport, cameras = [], scanMs = 500, beforeMs = 1000,
-  openCamera = null, log = defaultLog32 } = {}) {
+  openCamera = null, streamAll = false, rotGapMs = 0, log = defaultLog32 } = {}) {
   if (!perception || !capture || !transport) throw new TypeError('startStationLoop32 cần perception, capture, transport');
   const camIds = cameras.map(c => c.camera_id);
   const frameGapMs = 1000 / FRAME_FPS_32 - 50;   // chừa biên để nhịp 0,5 s không bỏ mất khung
-  let running = true, busy = false, timer = null, open = null, lastSeq = null, lastFrameMs = 0;
+  // Luân phiên: mỗi camera một khung mỗi ROT_GAP_MS; 10 camera × 12 khung/phút = 120 < hạn mức 150 khung/phút.
+  const ROT_GAP_MS = rotGapMs || 5000;
+  let running = true, busy = false, timer = null, open = null, lastSeq = null, lastFrameMs = 0, rotIndex = 0;
   const lastBeforeMs = new Map();
+  const lastSentMs = new Map();
   const setOpen = id => {
     const next = id && camIds.includes(id) ? id : null;
     if (open === next) return open;
-    if (open && capture.setStream) capture.setStream(open, false, FRAME_FPS_32);
+    if (!streamAll) {                     // streamAll: mọi camera đã bật 1 fps, không quản theo từng camera
+      if (open && capture.setStream) capture.setStream(open, false, FRAME_FPS_32);
+      if (next && capture.setStream) capture.setStream(next, true, FRAME_FPS_32);
+    }
     open = next;
     lastSeq = null;
-    if (open && capture.setStream) capture.setStream(open, true, FRAME_FPS_32);
     return open;
   };
   setOpen(openCamera || camIds[0] || null);
 
-  const sendOpenFrame = () => {
-    if (!open) return;
-    const f = capture.latestFrame(open);
-    if (!f || !f.jpeg || f.seq === lastSeq) return;
-    const now = Date.now();
-    if (now - lastFrameMs < frameGapMs) return;
-    lastSeq = f.seq;
-    lastFrameMs = now;
-    transport.sendFrame(open, f.seq, base64OfDataUrl32(f.jpeg), f.w, f.h);
+  // Mở rộng: bật/tắt stream nhẹ (1 fps) cho MỌI camera để web xem được từng camera; khung gửi đi luân phiên.
+  const streamAllOn = (on = true) => {
+    if (!streamAll || !capture.setStream) return;
+    for (const id of camIds) capture.setStream(id, on, 1);
+  };
+  streamAllOn();
+
+  // Gửi khung: nếu streamAll thì xoay vòng từng camera, ngược lại chỉ camera đang mở (2 fps).
+  const sendFrameTick = () => {
+    if (!camIds.length) return;
+    let id = null;
+    if (streamAll) {
+      const now = Date.now();
+      for (let n = 0; n < camIds.length; n++) {
+        const cand = camIds[(rotIndex + n) % camIds.length];
+        if (now - (lastSentMs.get(cand) || 0) >= ROT_GAP_MS) { id = cand; rotIndex = (rotIndex + n + 1) % camIds.length; break; }
+      }
+      if (!id) return;
+    } else {
+      if (!open) return;
+      if (Date.now() - lastFrameMs < frameGapMs) return;
+      id = open;
+    }
+    const f = capture.latestFrame(id);
+    if (!f || !f.jpeg) return;
+    if (id === open && f.seq === lastSeq) return;
+    lastSentMs.set(id, Date.now());
+    if (id === open) { lastSeq = f.seq; lastFrameMs = Date.now(); }
+    transport.sendFrame(id, f.seq, base64OfDataUrl32(f.jpeg), f.w, f.h);
   };
 
   const handleViolation = async (rec, tSim) => {
+    const emergency = app.modules && app.modules.emergency;
+    if (emergency) Object.assign(rec, emergency.reviewContext(rec));
     const cam = cameras.find(c => c.camera_id === rec.camera_id);
     const before = capture.latestFrame(rec.camera_id);
     // Tác nhân WRONG-WAY (rec._pose, không gửi lên backend): vẽ và chụp theo tư thế HIỆN TẠI của nó (đã đi tiếp từ lúc phát hiện).
@@ -524,7 +561,7 @@ export function startStationLoop32(app, { perception, capture, transport, camera
         for (const rec of perception.drainViolations()) {
           try { await handleViolation(rec, tSim); } catch (e) { log(`[station] vi phạm ${rec.vehicle_id}: ${e && e.message}`); }
         }
-        sendOpenFrame();
+        sendFrameTick();
       } catch (e) {
         log(`[station] vòng trạm lỗi: ${e && e.message}`);
       } finally {
@@ -536,7 +573,7 @@ export function startStationLoop32(app, { perception, capture, transport, camera
   tick();
 
   return {
-    stop() { running = false; clearTimeout(timer); setOpen(null); },
+    stop() { running = false; clearTimeout(timer); streamAllOn(false); setOpen(null); },
     openCamera: id => setOpen(id),
     currentOpen: () => open
   };

@@ -1,8 +1,9 @@
 // Đèn giao thông 3D + đếm ngược + cột camera cho cụm Hàng Xanh (M1).
 // KHÔNG import tĩnh 'three/webgpu' (Node không resolve được) — THREE truyền qua tham số.
-import { SIGNAL_PLAN_32 } from './signal-plan-32.js?v=32a';
-import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
-export const SIGNALS_32_VERSION = 'signals-32a';
+import { SIGNAL_PLAN_32 } from './signal-plan-32.js?v=32c';
+import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32c';
+import { buildJunctionLayout32, junctionPlacements32 } from './junction-layout-32.js?v=32c';
+export const SIGNALS_32_VERSION = 'signals-32b';
 // Vạch dừng sơn trắng ngang mỗi làn tiếp cận nút đèn, đặt đúng vị trí dừng của mô phỏng (L − Rz).
 const STOP_LINE_DEPTH_32 = 0.45;   // m: bề dày vạch
 const STOP_LINE_LIFT_32 = 0.15;    // m: nâng khỏi mặt đường (mặt đường cảnh cao hơn groundY một chút; 0,05 m bị che)
@@ -13,11 +14,34 @@ const IDLE_COLOR = 0x2a2f33;
 export const HELPER_LAYER_32 = 1;
 const POLE_H = 6.0;
 const HEAD_Y = 5.0;
-const LAMP_R = 0.5;
-const HALO_BASE = 2.2;          // đường kính quầng sáng tối thiểu (m)
-const HALO_PX = 20;             // quầng sáng phải luôn ≥ 20 px trên màn hình
-const COUNTDOWN_PX = 40;        // bảng đếm ngược phải luôn ≥ 40 px cao (đọc được ở góc cận cảnh)
-const COUNTDOWN_H = 1.6;        // cao tối thiểu thực (m); rộng = 2 × cao
+const LAMP_R = 0.24;
+const COUNTDOWN_H = 0.42;
+const COUNTDOWN_MAX_DIST = 220;   // m: xa hơn thì ẩn bảng, tránh nhiều bảng đen nổi giữa cảnh
+
+// Một đầu đèn cho mỗi hướng tiếp cận, bên phải vạch dừng ngoài cùng.
+// Nhóm pha lấy trực tiếp từ mô phỏng, không suy đoán từ trục màn hình.
+export function signalApproachesOf32(net, geo, nodeMap) {
+  const out=[];
+  for(const node of nodeMap) {
+    const approaches=new Map();
+    for(let l=0;l<net.lanes.edge.length;l++) {
+      if(net.lanes.to[l]!==node.index) continue;
+      const st=net.lanes.st[l], prev=approaches.get(st);
+      if(net.signalPlan?.internalSt?.has(st)) continue;
+      if(prev!==undefined && net.lanes.offset[prev]>=net.lanes.offset[l]) continue;
+      approaches.set(st,l);
+    }
+    for(const l of approaches.values()) {
+      const p=geo.lanePoint(l,Math.max(0,net.lanes.length[l]-net.Rz[node.index]),net.lanes.offset[l]+net.lanes.width[l]/2+0.8,{});
+      const cluster=net.signalPlan?.clusters.find(c=>c.nodeIds.includes(node.index))?.cluster_id || node.node_id;
+      const yaw=Math.atan2(-p.tx,-p.tz), groupIdx=net.arriveGroup[net.lanes.st[l]];
+      // Hai nhánh bản đồ gần song song trong cùng giao lộ chỉ cần một đầu đèn demo.
+      if(out.some(a=>a.cluster===cluster && a.groupIdx===groupIdx && Math.abs(Math.atan2(Math.sin(a.yaw-yaw),Math.cos(a.yaw-yaw)))<Math.PI/6)) continue;
+      out.push({node_id:node.node_id,cluster,x:p.x,z:p.z,y:geo.laneY(l,Math.max(0,net.lanes.length[l]-net.Rz[node.index])),groupIdx,yaw});
+    }
+  }
+  return out;
+}
 
 export function lightColorOf(phase) {
   return phase === 'green' ? 'green' : phase === 'yellow' ? 'yellow' : 'red';
@@ -40,16 +64,17 @@ export function stopLinesOf32(net, geo, nodeMap) {
     if (!(node.index >= 0)) continue;
     for (let l = 0; l < lanes.edge.length; l++) {
       if (lanes.to[l] !== node.index) continue;
+      if(net.signalPlan?.internalSt?.has(lanes.st[l])) continue;
       const s = Math.max(0, lanes.length[l] - Rz[node.index]);
       const a = geo.lanePoint(l, s, lanes.offset[l] + lanes.width[l] / 2, {});
       const b = geo.lanePoint(l, s, lanes.offset[l] - lanes.width[l] / 2, {});
-      out.push({ node_id: node.node_id, x: (a.x + b.x) / 2, y, z: (a.z + b.z) / 2, ax: a.x - b.x, az: a.z - b.z });
+      out.push({ node_id: node.node_id, lane: l, x: (a.x + b.x) / 2, y, z: (a.z + b.z) / 2, ax: a.x - b.x, az: a.z - b.z });
     }
   }
   return out;
 }
 
-export function createTrafficSignals32({ scene, THREE, controller, nodeMap, cameras, stopLines = [], camera = null, getViewportH = () => (typeof innerHeight === 'number' ? innerHeight : 900) }) {
+export function createTrafficSignals32({ scene, THREE, controller, nodeMap, cameras, stopLines = [], approaches = null, camera = null, getViewportH = () => (typeof innerHeight === 'number' ? innerHeight : 900) }) {
   if (!THREE) throw new TypeError('createTrafficSignals32 cần THREE (truyền từ app, không import tĩnh)');
   const group = new THREE.Group();
   group.name = 'traffic-signals-32';
@@ -65,19 +90,20 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
   };
 
   const heads = [];        // { node, groupIdx, lamps, head }
-  const countdowns = [];   // { node, groupIdx, mesh, canvas, texture }
+  const countdowns = [];   // { node, groupIdx, mesh, canvas, texture, x, z }
   const cones = [];        // { cone, frame }
+  const cameraColumns = [];// cột camera: mặc định ẩn, hiện cùng "Vùng quan sát camera"
 
   // Mỗi bóng đèn: khi tắt thì emissive = 0 (không phát sáng) và quầng ẩn.
   // Quầng (halo) chỉ dùng cho cảnh chính; khi chụp bằng chứng thì ẩn hết để không che xe.
   const makeLamp = (color, y, parent, name) => {
     const lamp = new THREE.Mesh(new THREE.SphereGeometry(LAMP_R, 14, 14),
       new THREE.MeshStandardMaterial({ color: IDLE_COLOR, emissive: IDLE_COLOR, emissiveIntensity: 0, roughness: 0.4 }));
-    lamp.position.set(0, y, 0.6);
+    lamp.position.set(0, y, 0.3);
     lamp.userData.lampName = name;
     parent.add(lamp);
-    const halo = new THREE.Mesh(new THREE.SphereGeometry(0.5, 14, 14),
-      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.5, depthWrite: false }));
+    const halo = new THREE.Mesh(new THREE.SphereGeometry(0.44, 14, 14),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.18, depthWrite: false }));
     halo.position.copy(lamp.position);
     halo.visible = false;
     halo.userData.haloGlow = true;
@@ -86,62 +112,87 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
     return { lamp, halo };
   };
 
-  for (const node of nodeMap) {
-    const px = node.x, pz = node.z;
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, POLE_H, 10),
-      new THREE.MeshStandardMaterial({ color: 0x555c60, roughness: 0.7 }));
-    pole.position.set(px, POLE_H / 2, pz);
-    group.add(pole);
-    // Hai nhóm pha, mỗi nhóm hai mặt đối nhau. Mặt đèn của nhóm g quay theo TRỤC pha của nút
-    // (group_axis_deg; nhóm 1 vuông góc trục) để đèn đúng hướng xe tiếp cận thuộc nhóm đó.
-    // Pháp tuyến mặt (x,z) = (cos θ, sin θ); Object3D: +Z cục bộ = (sin yaw, cos yaw) ⇒ yaw = atan2(cos θ, sin θ).
+  // Đầu đèn dựng từ danh sách nhánh của giao lộ logic (mỗi nhánh một đầu), không nhân theo mã nút.
+  const nodeById = new Map(nodeMap.map(n => [n.node_id, n]));
+  const placements = (Array.isArray(approaches) && approaches.length) ? approaches : nodeMap.flatMap(node => {
+    // Fallback cho test/không có dữ liệu làn: 2 nhóm × 2 mặt đối nhau quanh nút.
     const axis = axisDegOf32(node.node_id) * Math.PI / 180;
-    for (const g of [0, 1]) {
-      const theta = axis + g * Math.PI / 2;
-      const front = Math.atan2(Math.cos(theta), Math.sin(theta));
-      for (const yaw of [front, front + Math.PI]) {
-        const head = new THREE.Group();
-        head.position.set(px, HEAD_Y, pz);
-        head.rotation.y = yaw;
-        head.userData.signalHead = true;
-        head.userData.signalNode = node.node_id;
-        head.userData.signalGroup = g;
-        const box = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2.2, 0.5),
-          new THREE.MeshStandardMaterial({ color: 0x1b1f22, roughness: 0.85 }));
-        head.add(box);
-        const green = makeLamp(PHASE_COLOR.green, 0.7, box, 'green');
-        const yellow = makeLamp(PHASE_COLOR.yellow, 0, box, 'yellow');
-        const red = makeLamp(PHASE_COLOR.red, -0.7, box, 'red');
-        group.add(head);
-        heads.push({ node, groupIdx: g, lamps: { green, yellow, red }, head });
-      }
-      // Bảng đếm ngược: canvas bám camera (billboard), phóng theo khoảng cách để luôn đọc được.
-      const canvas = document.createElement('canvas');
-      canvas.width = 256; canvas.height = 128;
-      const texture = new THREE.CanvasTexture(canvas);
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2 * COUNTDOWN_H, COUNTDOWN_H),
-        new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false }));
-      mesh.position.set(px + (g ? 1.1 : -1.1), POLE_H + 1.2, pz);
-      mesh.userData.countdown = true;
-      markHelper(mesh);
-      group.add(mesh);
-      countdowns.push({ node, groupIdx: g, mesh, canvas, texture });
+    return [0, 1].flatMap(g => {
+      const theta = axis + g * Math.PI / 2, front = Math.atan2(Math.cos(theta), Math.sin(theta));
+      return [front, front + Math.PI].map(yaw => ({ node_id: node.node_id, x: node.x + Math.sin(yaw) * 12, z: node.z + Math.cos(yaw) * 12, y: 0, groupIdx: g, yaw }));
+    });
+  });
+  const seenHead = new Set();
+  for (const placement of placements) {
+    const { x: px, z: pz, y: baseY = 0, groupIdx: g, yaw } = placement;
+    const key = `${(px || 0).toFixed(2)}|${(pz || 0).toFixed(2)}|${Math.round((yaw || 0) * 100)}`;
+    if (seenHead.has(key)) continue;   // chống hai nhánh trùng nhau ở cùng vạch dừng
+    seenHead.add(key);
+    const node = nodeById.get(placement.node_id) || { node_id: placement.node_id || 'HX', x: px || 0, z: pz || 0 };
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, POLE_H, 10), new THREE.MeshStandardMaterial({ color: 0x555c60, roughness: 0.7 }));
+    pole.position.set(px, baseY + POLE_H / 2, pz); group.add(pole);
+    const head = new THREE.Group();
+    head.position.set(px, baseY + HEAD_Y, pz);
+    head.rotation.y = yaw;
+    head.userData.signalHead = true;
+    head.userData.signalNode = node.node_id;
+    head.userData.signalCluster = placement.cluster || node.node_id;
+    head.userData.signalGroup = g;
+    head.userData.signalLabel = placement.label || node.node_id;
+    // Hộp đèn đứng, viền lưng tối để đầu đèn tách khỏi cột và bầu trời.
+    const box = new THREE.Mesh(new THREE.BoxGeometry(0.86, 2.1, 0.42),
+      new THREE.MeshStandardMaterial({ color: 0x1b1f22, roughness: 0.85 }));
+    head.add(box);
+    const backing = new THREE.Mesh(new THREE.BoxGeometry(1.02, 2.36, 0.06),
+      new THREE.MeshStandardMaterial({ color: 0x0e1114, roughness: 0.9 }));
+    backing.position.set(0, 0, -0.24);
+    head.add(backing);
+    const green = makeLamp(PHASE_COLOR.green, -0.7, box, 'green');
+    const yellow = makeLamp(PHASE_COLOR.yellow, 0, box, 'yellow');
+    const red = makeLamp(PHASE_COLOR.red, 0.7, box, 'red');
+    // Mũ che mỗi bóng: giảm chói khi nhìn ngang, không đổi màu đèn.
+    for (const y of [-0.7, 0, 0.7]) {
+      const hood = new THREE.Mesh(new THREE.CylinderGeometry(LAMP_R + 0.06, LAMP_R + 0.06, 0.12, 12, 1, true),
+        new THREE.MeshStandardMaterial({ color: 0x0b0d0f, roughness: 0.9 }));
+      hood.position.set(0, y, 0.37);
+      hood.rotation.x = Math.PI / 2;
+      box.add(hood);
     }
-    // Cột camera + nón FOV (nếu node có camera).
+    // Bảng đếm gắn liền đầu đèn (không lơ lửng trên cột), chỉ hiện khi đủ gần.
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; canvas.height = 256;
+    const texture = new THREE.CanvasTexture(canvas);
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(0.9, COUNTDOWN_H + 0.06, 0.04),
+      new THREE.MeshStandardMaterial({ color: 0x0b0e11, roughness: 0.9 }));
+    plate.position.set(0, -1.34, 0.21);
+    markHelper(plate); head.add(plate);
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.84, COUNTDOWN_H),
+      new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false }));
+    mesh.position.set(0, -1.34, 0.235);
+    mesh.userData.countdown = true;
+    markHelper(mesh); head.add(mesh);
+    group.add(head);
+    const ownNode = { ...node, x: px, z: pz };
+    heads.push({ node: ownNode, groupIdx: g, lamps: { green, yellow, red }, head });
+    countdowns.push({ node: ownNode, groupIdx: g, mesh, canvas, texture, x: px, z: pz });
+  }
+
+  // Cột camera + nón FOV: mặc định ẩn để cảnh không rối; bật cùng checkbox "Vùng quan sát camera".
+  for (const node of nodeMap) {
     const cams = (cameras || []).filter(c => c.node_id === node.node_id);
     for (const cam of cams) {
       const column = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, cam.height_m, 8),
         new THREE.MeshStandardMaterial({ color: 0x6b7276 }));
       column.position.set(cam.x, cam.height_m / 2, cam.z);
       column.userData.cameraColumn = true;
+      column.visible = false;
       markHelper(column);
       group.add(column);
+      cameraColumns.push(column);
       const coneLen = cam.range_m;
       const geometry = new THREE.ConeGeometry(Math.tan((cam.fov_deg * Math.PI / 180) / 2) * coneLen, coneLen, 18, 1, true);
-      // Một mặt (FrontSide) để nón không bị chồng lớp kép khiến trông đậm hơn mức cần.
       const cone = new THREE.Mesh(geometry,
         new THREE.MeshBasicMaterial({ color: 0x69a7ff, transparent: true, opacity: 0.06, side: THREE.FrontSide, depthWrite: false }));
-      // Viền mảnh (≤ 0,1) để thấy biên vùng quan sát mà không che mặt đường.
       const frame = new THREE.Mesh(geometry,
         new THREE.MeshBasicMaterial({ color: 0x9cc6ff, wireframe: true, transparent: true, opacity: 0.08, depthWrite: false }));
       const yaw = cam.yaw_deg * Math.PI / 180, pitch = cam.pitch_deg * Math.PI / 180;
@@ -152,7 +203,7 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
       const rot = [pitch - Math.PI / 2, 0, -yaw + Math.PI / 2];
       cone.userData.coneHelper = true;
       frame.userData.coneHelper = true;
-      for (const mesh of [cone, frame]) { mesh.position.copy(pos); mesh.rotation.set(rot[0], rot[1], rot[2]); markHelper(mesh); group.add(mesh); }
+      for (const sheet of [cone, frame]) { sheet.position.copy(pos); sheet.rotation.set(rot[0], rot[1], rot[2]); sheet.visible = false; markHelper(sheet); group.add(sheet); }
       cones.push({ cone, frame });
     }
   }
@@ -171,18 +222,18 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
     group.add(strip);
   }
 
-  const drawCountdown = (item, seconds) => {
+  const drawCountdown = (item, seconds, phase) => {
     const ctx = item.canvas.getContext('2d');
     ctx.fillStyle = '#0d1013';
-    ctx.fillRect(0, 0, 256, 128);
+    ctx.fillRect(0, 0, 512, 256);
     ctx.strokeStyle = '#586065';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(3, 3, 250, 122);
-    ctx.fillStyle = '#f4f7f8';
-    ctx.font = 'bold 104px Arial';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(5, 5, 502, 246);
+    ctx.fillStyle = phase==='green'?'#2ecc71':phase==='yellow'?'#f1c40f':'#e74c3c';
+    ctx.font = 'bold 150px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(String(Math.max(0, Math.ceil(seconds))), 128, 70);
+    ctx.fillText(String(Math.max(0, Math.ceil(seconds))), 256, 140);
     item.texture.needsUpdate = true;
   };
 
@@ -196,11 +247,9 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
     update(tSim) {
       const camPos = camera && camera.position;
       for (const head of heads) {
-        const dist = camPos ? Math.hypot(head.node.x - camPos.x, head.node.z - camPos.z) : 400;
-        const wpp = worldPerPixel(dist);
-        const haloScale = Math.max(HALO_BASE, HALO_PX * wpp);
+        const haloScale = 0.7;
         const state = controller.stateOf(head.node.node_id, tSim);
-        const phaseInfo = state.phases.find(p => p.group === head.groupIdx) || state.phases[0];
+        const phaseInfo = state.phases.find(p => p.group === head.groupIdx) || {phase:'red'};
         const lit = lightColorOf(phaseInfo.phase);
         for (const [name, pair] of Object.entries(head.lamps)) {
           const on = name === lit;
@@ -213,14 +262,16 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
         }
       }
       for (const item of countdowns) {
-        const dist = camPos ? Math.hypot(item.node.x - camPos.x, item.node.z - camPos.z) : 400;
+        const dist = camPos ? Math.hypot(item.x - camPos.x, item.z - camPos.z) : 400;
         const wpp = worldPerPixel(dist);
-        const height = Math.max(COUNTDOWN_H, COUNTDOWN_PX * wpp);
-        item.mesh.scale.set(height / COUNTDOWN_H, height / COUNTDOWN_H, 1);
-        if (camera) item.mesh.quaternion.copy(camera.quaternion);
         const state = controller.stateOf(item.node.node_id, tSim);
-        const phaseInfo = state.phases.find(p => p.group === item.groupIdx) || state.phases[0];
-        drawCountdown(item, phaseInfo.countdown_s);
+        const phaseInfo = state.phases.find(p => p.group === item.groupIdx);
+        const seconds=phaseInfo?.countdown_s;
+        // Controller trả thời gian pha đang chạy cho cả hướng đỏ: chưa phải thời gian đến xanh.
+        // Chỉ hiện đếm lùi xanh/vàng, tránh báo hướng đỏ còn 3s rồi nhảy ngược lên 45s.
+        item.mesh.visible=phaseInfo?.phase!=='red' && Number.isFinite(seconds) && seconds>0
+          && (!camPos || (dist < COUNTDOWN_MAX_DIST && COUNTDOWN_H/wpp>=6));
+        if(item.mesh.visible) drawCountdown(item,seconds,phaseInfo.phase);
       }
     },
     litLampCount() {
@@ -230,9 +281,12 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
     },
     setConeVisible(on) {
       for (const { cone, frame } of cones) { cone.visible = !!on; frame.visible = !!on; }
+      for (const column of cameraColumns) column.visible = !!on;
     },
     get coneVisible() { return cones.length ? cones[0].cone.visible : false; },
+    get cameraVisible() { return cameraColumns.length ? cameraColumns[0].visible : false; },
     coneCount: cones.length,
+    cameraColumnCount: cameraColumns.length,
     dispose() {
       scene.remove(group);
     }
@@ -243,12 +297,18 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
 export function installSignals32(app, { nodeMap = [], cameras = [], THREE = null } = {}) {
   const traffic = app.traffic;
   const indexed = nodeMap.map(m => ({ ...m, index: traffic.net.G.nodes.findIndex(n => n.id === m.osm_id) }));
+  const geo = createTrafficGeometry31(traffic.net, { jit: [] });
+  // Giao lộ logic 3/4/5/6 hướng: mỗi nhánh một đầu đèn; nhánh hẻm bị bỏ khi đã đủ nhánh chính.
+  const layout = buildJunctionLayout32({ net: traffic.net, nodeMap: indexed, geo });
+  const approaches = junctionPlacements32(layout);
+  const controlled = new Set(layout.flatMap(j => j.arms.filter(a => a.head).flatMap(a => a.laneIds)));
+  const stopLines = stopLinesOf32(traffic.net, geo, indexed).filter(s => controlled.has(s.lane));
   const signals = createTrafficSignals32({
     scene: app.scene, THREE, controller: app.controller,
-    nodeMap: indexed,
-    stopLines: stopLinesOf32(traffic.net, createTrafficGeometry31(traffic.net, { jit: [] }), indexed),
+    nodeMap: indexed, stopLines, approaches,
     cameras, camera: app.camera, getViewportH: () => app.renderer?.domElement?.clientHeight || (typeof innerHeight === 'number' ? innerHeight : 900)
   });
+  signals.layout = layout;
   const tick = () => { signals.update(traffic.sim.counters.t); requestAnimationFrame(tick); };
   tick();
   app.registerSmartModule32('signals', signals);

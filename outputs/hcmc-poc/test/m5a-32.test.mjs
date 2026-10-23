@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import { buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31, SEED } from '../city-traffic-sim-31.js?v=32a';
 import { buildSignalPlan32 } from '../signal-plan-32.js?v=32a';
 import { createSignalController32 } from '../traffic-controller-32.js?v=32a';
+import { createEmergency32 } from '../emergency-32.js?v=32a';
 import { regionTrafficPayload, regionOf } from '../city-region-31.js?v=31a';
 import { regionPolygon } from '../city-region-31.js?v=31a';
 import * as LOCK from '../city-lock-32.js?v=32a';
@@ -38,6 +39,23 @@ const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
 const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
 const HX = [0, -2485];
 
+test('xe khẩn cấp trên mạng Bắc thật: đi qua nút với pha ưu tiên, không teleport/đi ngược; dừng nhả quyền', () => {
+  const {sim,controller}=northSim({demand:NORTH_DEMAND_32,mode:'smart'});
+  const emergency=createEmergency32({sim,net,controller,nodeMap});
+  const start=emergency.start({kind:'ambulance'});
+  let traveled=0, passed=0, yieldLanes=start.yield_lanes;
+  for(let k=0;k<1800;k++) {
+    sim.step(); const st=emergency.status();
+    traveled=Math.max(traveled,st.distance_m||0); passed=Math.max(passed,st.passed||0); yieldLanes=Math.max(yieldLanes,st.yield_lanes||0);
+    if(!st.active) break;
+  }
+  assert.ok(start.slot>=0); assert.ok(traveled>30,`mới đi ${traveled} m`);
+  assert.ok(passed>=1,`chưa qua nút sau ${sim.counters.t}s`);
+  assert.ok(yieldLanes>0,'phải đặt vùng nhường trên hướng xung đột; xe có mặt được kiểm riêng');
+  assert.equal(sim.counters.teleports,0); assert.equal(sim.stats().onewayViolations,0);
+  emergency.stop(); assert.ok(controller.metrics(sim.counters.t).overrides.every(x=>x.by!=='EMERGENCY-32'));
+});
+
 function northSim({ demand = null, mode = 'fixed', bridge = true } = {}) {
   const controller = createSignalController32({ net, sim: null, mode });
   const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: 180, seed: SEED, demand });
@@ -45,6 +63,58 @@ function northSim({ demand = null, mode = 'fixed', bridge = true } = {}) {
   sim.setRegion(bridge ? { ...payload, ...NORTH_BRIDGE_OPTS_32 } : payload);
   return { sim, controller };
 }
+
+test('điểm nhường thật tác động IDM: xe dừng trước điểm nhường và chạy lại khi nhả', () => {
+  const {sim}=northSim();
+  let i=-1;
+  for(let k=0;k<sim.N;k++) if(sim.active[k] && sim.kind[k]===1 && net.lanes.length[sim.lane[k]]-sim.s[k]>100) {i=k;break;}
+  assert.ok(i>=0);
+  const l=sim.lane[i], gate=sim.s[i]+25;
+  sim.setEmergencyPolicy({beforeStep(){},yieldStop(k){return k===i?gate:Infinity;}});
+  for(let k=0;k<300;k++) sim.step();
+  assert.equal(sim.lane[i],l); assert.ok(sim.s[i]+sim.len[i]/2<=gate+.05); assert.ok(sim.v[i]<.2);
+  sim.setEmergencyPolicy(null);
+  for(let k=0;k<600;k++) sim.step();
+  assert.ok(sim.lane[i]!==l || sim.s[i]+sim.len[i]/2>gate+1,'nhả nhường phải chạy lại');
+});
+
+test('slot khẩn cấp không thừa kế SPEED/PARK và không lấy khóa qua đỏ dù runsRed bật', () => {
+  const {controller}=northSim();
+  const sim=createTrafficSim31(net,{signalPlan,controller,behavior:{restrictedNodes:[]},breakerS:Infinity});
+  let behaviorSlot=-1, slot=-1;
+  for(let i=0;i<sim.N;i++) {
+    if(sim.active[i] && sim.behaviorCodeOf(i)) behaviorSlot=i;
+    const l=sim.lane[i], dist=net.lanes.length[l]-sim.s[i];
+    if(sim.active[i] && sim.kind[i]===1 && signalPlan.signalNodes.includes(net.lanes.to[l]) && dist>40 && dist<200 && !sim.holdsNode(i,net.lanes.to[l])) slot=i;
+  }
+  assert.ok(behaviorSlot>=0 && slot>=0);
+  let selected=behaviorSlot;
+  sim.setEmergencyPolicy({currentSlot:()=>selected,beforeStep(){},yieldStop(){return Infinity;}});
+  assert.equal(sim.behaviorCodeOf(behaviorSlot),null,'không mang hành vi vi phạm cũ vào xe khẩn cấp');
+  selected=slot; controller.isGreen=()=>false; controller.runsRed=()=>true;
+  const l=sim.lane[slot], node=net.lanes.to[l], line=net.lanes.length[l]-net.Rz[node];
+  for(let k=0;k<300;k++) sim.step();
+  assert.equal(sim.lane[slot],l); assert.ok(sim.s[slot]+sim.len[slot]/2<=line+.05); assert.equal(sim.holdsNode(slot,node),false);
+});
+
+test('giảm mật độ để tiết kiệm không tắt xe khẩn cấp đang chạy', () => {
+  const {sim}=northSim(); let slot=-1;
+  for(let i=0;i<sim.N;i++) if(sim.active[i] && !sim.isSignature(i)) {slot=i;break;}
+  assert.ok(slot>=0);
+  sim.setEmergencyPolicy({currentSlot:()=>slot,beforeStep(){},yieldStop(){return Infinity;}});
+  sim.setFraction(0); assert.equal(sim.active[slot],1,'giữ riêng slot đang thực hiện nhiệm vụ');
+  sim.setEmergencyPolicy(null); sim.setFraction(0); assert.equal(sim.active[slot],0);
+});
+
+test('Lite thưa xe: điều một slot trống an toàn, vẫn qua nút và không tăng toàn bộ mật độ',()=>{
+  const {sim,controller}=northSim({mode:'smart'}); sim.setFraction(0);
+  const before=sim.active.slice(), count=sim.activeCount(), e=createEmergency32({sim,net,controller,nodeMap});
+  const st=e.start(); assert.ok(sim.activeCount()<=count+1); assert.equal(sim.active[st.slot],1);
+  for(let k=0;k<1200 && e.status().active && !e.status().passed;k++)sim.step();
+  assert.ok(e.status().distance_m>10); assert.ok(e.status().passed>=1);
+  e.stop(); if(!before[st.slot]) assert.equal(sim.active[st.slot],0);
+  assert.equal(sim.counters.teleports,0);
+});
 function nearHx(sim) {
   const geo = createTrafficGeometry31(net, { jit: sim.jit, len: sim.len }), P = {};
   let n = 0, bridge = 0;
@@ -210,11 +280,11 @@ test('hạn chế làn không đổi hash cổ điển (không truyền gì): c0
 });
 
 // ---------------------------------------------------------------- kịch bản
-test('kịch bản: khóa đúng 4 mục; khóa lạ bị từ chối và trạng thái không đổi', () => {
-  assert.deepEqual([...SCENARIO_KEYS_32], ['none', 'peak-hang-xanh', 'lane-block', 'flood-nhc']);
+test('kịch bản: khóa đúng 5 mục; trạm chưa cài emergency không báo chạy giả', () => {
+  assert.deepEqual([...SCENARIO_KEYS_32], ['none', 'peak-hang-xanh', 'lane-block', 'flood-nhc', 'priority-run']);
   const { sim } = northSim({ demand: null });
   const scn = createScenarios32({ traffic: { sim, net, setRestrictions: r => sim.setRestrictions(r), setVisibleFraction: f => sim.setFraction(f) }, nodeMap, now: () => 0 });
-  assert.throws(() => scn.start('priority-run', {}), RangeError);
+  assert.throws(() => scn.start('priority-run', {}), /chưa cài mô phỏng/);
   assert.equal(scn.status().key, 'none');
 });
 

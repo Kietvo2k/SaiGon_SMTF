@@ -2,11 +2,12 @@
 // nội suy giữa hai bước mô phỏng. Lõi mô phỏng tất định ở city-traffic-sim-31.js.
 import * as THREE from 'three/webgpu';
 import { attribute, mix, vec3 } from 'three/tsl';
-import { TRAFFIC_31_VERSION, TRAFFIC_KINDS, LIGHT_FACTOR, STEP, MAX_STEPS_PER_FRAME, SEED, hashU32, buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
-import { createSignalController32 } from './traffic-controller-32.js?v=32a';
+import { TRAFFIC_31_VERSION, TRAFFIC_KINDS, LIGHT_FACTOR, STEP, MAX_STEPS_PER_FRAME, SEED, hashU32, buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32c';
+import { createSignalController32 } from './traffic-controller-32.js?v=32c';
 import { buildZones32 } from './violation-zones-32.js?v=32a';
 import { createWrongWayAgents32 } from './wrong-way-32.js?v=32a';
 import { violatorOf32 } from './violation-rules-32.js?v=32a';
+import { BOX_HEIGHTS_32, scaleVehicleBox32, isMainVehicleCamera32 } from './vehicle-bounds-32.js?v=32c';
 
 // ---------------------------------------------------------------- hình xe: khối đa diện có vát + bánh lăng trụ, màu đỉnh + mặt nạ sơn + phát sáng
 // Mỗi khối là tập mặt lồi; pháp tuyến hướng ra ngoài theo tâm khối nên không phụ thuộc thứ tự đỉnh. Bỏ mặt đáy và mặt khuất.
@@ -269,6 +270,24 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
   { const c = new THREE.Color(); for (let i = 0; i < sim.N; i++) { c.set(paintOf(sim.kind[i], i)); carColor[i * 3] = c.r; carColor[i * 3 + 1] = c.g; carColor[i * 3 + 2] = c.b; } }
   const drawnIds = meshes.map(m => new Int32Array(m.instanceMatrix.count));
   const drawnCount = TRAFFIC_KINDS.map(() => 0);
+  let boundsMesh=null, boundsOn=false;
+  const BOUNDS_CAP=400;
+  function setBoundingBoxes(on) {
+    boundsOn=!!on;
+    if(boundsOn && !boundsMesh) {
+      const S=createModel(), c=[1,1,1], t=.012;
+      for(const a of [-.5,.5]) for(const b of [-.5,.5]) {
+        S.box({x:0,y:a+.5,z:b,l:1,h:t,w:t,c});
+        S.box({x:a,y:.5,z:b,l:t,h:1,w:t,c});
+        S.box({x:a,y:b+.5,z:0,l:t,h:t,w:1,c});
+      }
+      boundsMesh=new THREE.InstancedMesh(S.geometry(),new THREE.MeshBasicNodeMaterial({color:0x62f5c5}),BOUNDS_CAP);
+      boundsMesh.name='Khung bao xe · công cụ kiểm tra'; boundsMesh.frustumCulled=false;
+      boundsMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); boundsMesh.layers.set(1); boundsMesh.count=0; group.add(boundsMesh);
+    }
+    if(boundsMesh) boundsMesh.visible=boundsOn;
+    return boundsOn;
+  }
   const auxCount = { helmet: 0, pax: 0, ghost: 0 }, PX = {};
   const setRgb = (mesh, h, rgb, i) => { const col = mesh.geometry.attributes.paint.array; col[h * 3] = rgb[i * 3]; col[h * 3 + 1] = rgb[i * 3 + 1]; col[h * 3 + 2] = rgb[i * 3 + 2]; };
   // Tư thế lệch dọc theo xe: cùng trục tới (X) như writeMatrix.
@@ -315,13 +334,21 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
     drawRadius = Math.max(1800, Math.min(9000, cameraDistance * 1.6));
     drawnCount.fill(0); auxCount.helmet = 0; auxCount.pax = 0; auxCount.ghost = 0;
     const arrays = meshes.map(m => m.instanceMatrix.array), colors = meshes.map(m => m.geometry.attributes.paint.array);
+    let boxCount=0;
+    // Camera bằng chứng chạy drawFor() sau camera chính: không được xóa khung bao của cảnh chính.
+    const mainCam = isMainVehicleCamera32(cam, camera);
+    if(boundsMesh && mainCam) boundsMesh.visible=boundsOn;
     pxPerM = (globalThis.innerHeight || 900) / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov || 45) / 2));
     for (let i = 0; i < N; i++) {
-      if (!D1.active[i]) continue;
+      if (!D1.active[i] || i === sim.emergencyPolicy?.currentSlot()) continue;
       const e = lanes.edge[D1.lane[i]], k = sim.kind[i];
       if (!edgeVisible(e) || kindLen[k] * pxPerM < MIN_PX * edgeNear[e]) continue;
       const c = drawnCount[k]++;
       interpPose(i, alpha, P); writeMatrix(arrays[k], c * 16, P);
+      if(boundsOn && mainCam && boxCount<BOUNDS_CAP) {
+        const offset=boxCount++*16, matrix=boundsMesh.instanceMatrix.array;
+        writeMatrix(matrix,offset,P); scaleVehicleBox32(matrix,offset,sim.len[i],sim.wid[i],BOX_HEIGHTS_32[k]);
+      }
       drawnIds[k][c] = i; colors[k][c * 3] = carColor[i * 3]; colors[k][c * 3 + 1] = carColor[i * 3 + 1]; colors[k][c * 3 + 2] = carColor[i * 3 + 2];
       if (k === 0) {
         const tr = traitOf(i);
@@ -335,6 +362,8 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
       writeMatrix(aux.ghost.instanceMatrix.array, h * 16, { x: g.x, y: g.y, z: g.z, tx: g.hx, tz: g.hz, grade: 0 });
       const col = aux.ghost.geometry.attributes.paint.array; col[h * 3] = GHOST_RGB[0]; col[h * 3 + 1] = GHOST_RGB[1]; col[h * 3 + 2] = GHOST_RGB[2];
     }
+    if (sim.emergencyPolicy) sim.emergencyPolicy.draw();
+    if(boundsMesh && mainCam) { boundsMesh.count=boxCount; if(boxCount) boundsMesh.instanceMatrix.needsUpdate=true; }
     meshes.forEach((m, k) => { m.count = drawnCount[k]; if (drawnCount[k]) { m.instanceMatrix.needsUpdate = true; m.geometry.attributes.paint.needsUpdate = true; } });
     for (const [key, m] of Object.entries(aux)) { m.count = auxCount[key]; if (auxCount[key]) { m.instanceMatrix.needsUpdate = true; m.geometry.attributes.paint.needsUpdate = true; } }
   }
@@ -397,8 +426,10 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
   const api = {
     // M5b-1: ghi lại ma trận xe theo camera chụp bằng chứng (trước khi render góc đó); không đổi trạng thái mô phỏng.
     zones, ghosts, auxMeshes: aux,
+    poseOf(i, out = {}) { return poseAt(i, sim.lane[i], sim.s[i], sim.next[i], sim.prevLane[i], out); },
     drawFor(cam) { const was = group.visible; group.visible = true; draw(1, 1800, cam); group.visible = was; },
     version: TRAFFIC_31_VERSION, group, meshes, kinds: TRAFFIC_KINDS, total: sim.N, sim, net,
+    setBoundingBoxes, get boundingBoxes() { return boundsOn; },
     update, recordCpu, lightLevel,
     cpuSamples: () => cpu.slice(),
     drawn: () => meshes.map((mesh, k) => ({ mesh, ids: drawnIds[k], count: drawnCount[k] })),
@@ -415,6 +446,8 @@ export function createTraffic31({ scene, graph, roads, widthOf, drawn, roadNetwo
     advance: seconds => { sim.finishStep(); const n = Math.round(seconds / STEP); for (let k = 0; k < n; k++) sim.step(); rebase(); acc = 0; return sim.stats(); },
     // Mật độ (bước E/F): giảm đều theo ô 200 m, tất định; trả về số xe đang hoạt động.
     setVisibleFraction: f => { const n = sim.setFraction(Number(f)); rebase(); publish(performance.now()); return n; },
+    spawnTestNpc: count => { const out=sim.spawnTestNpc(count); rebase(); publish(performance.now()); return out; },
+    clearTestNpcs: () => { const out=sim.clearTestNpcs(); rebase(); publish(performance.now()); return out; },
     // Khu mô phỏng (bước H): null = toàn thành phố; {id: string, polygon: [[x, z], …]} tọa độ cảnh (cùng hệ ROAD_GRAPH_31/CITY_DATA).
     // Xe ngoài đa giác tắt; sinh/tái sinh chỉ ở nút trong khu; setVisibleFraction áp lên tập xe trong khu. Trả về số xe đang hoạt động.
     setRegion: region => { const n = sim.setRegion(region); rebase(); publish(performance.now()); return n; },

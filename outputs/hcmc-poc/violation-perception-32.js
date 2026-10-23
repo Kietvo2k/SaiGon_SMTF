@@ -3,10 +3,10 @@
 // tác động) và NO-HELMET, OVERLOAD, PHONE, NO-SEATBELT (thuộc tính xe/người). M5b-1b: SPEED đo tại điểm đo (zones.speed*),
 // PARK trong vùng cấm đỗ (zones.park*), WRONG-WAY từ tác nhân ngược chiều (ghosts). Chỉ bật các mã trong `codes`;
 // mặc định ['RED-LIGHT'] như trước M5b-1. Mã hành vi chỉ được ghi khi sim có `behavior` (sim.behaviorOn).
-import { hashU32, TRAFFIC_KINDS, SEED, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
+import { hashU32, TRAFFIC_KINDS, SEED, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32c';
 import { violatorOf32, penaltyOf32, CODE_LABEL_32, PARK_STILL_S_32, SPEED_OVER_KMH_32,
   LEFT_TURN_RAD_32, BEHAVIOR_CODES_32, TRAIT_CODES_32 } from './violation-rules-32.js?v=32a';
-import { projectToPixel32, EVIDENCE_W, EVIDENCE_H, VEHICLE_Y_32 } from './camera-capture-32.js?v=32a';
+import { projectToPixel32, EVIDENCE_W, EVIDENCE_H, VEHICLE_Y_32 } from './camera-capture-32.js?v=32c';
 
 // Xe có nằm trong khung hình bằng chứng của camera không (cùng phép chiếu với ảnh chụp): phía trước camera và trong khung.
 export function inFrame32(x, z, cam) {

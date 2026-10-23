@@ -144,13 +144,15 @@ test('installHiddenTab32: lắng nghe visibilitychange, chạy sim khi ẩn, d�
 test('installResourceSaver32: bật thì setSave(true), lưu localStorage, gọi onApply', () => {
   const store = { v: null, getItem(k) { return this.v; }, setItem(k, val) { this.v = val; } };
   const host = { style: {}, setAttribute() {}, append() {}, addEventListener() {}, removeEventListener() {}, remove() {}, classList: { add() {}, remove() {} } };
-  const doc = { querySelector: sel => (sel === '#smartHud32' ? host : null), createElement: () => ({ style: {}, setAttribute() {}, append() {}, addEventListener() {}, removeEventListener() {}, remove() {}, classList: { add() {}, remove() {} } }), createTextNode: t => ({ textContent: t }) };
+  const inputs = [];
+  const doc = { querySelector: sel => (sel === '#smartHud32' ? host : null), createElement: tag => { const element = { style: {}, setAttribute() {}, append() {}, addEventListener() {}, removeEventListener() {}, remove() {}, classList: { add() {}, remove() {} } }; if (tag === 'input') inputs.push(element); return element; }, createTextNode: t => ({ textContent: t }) };
   const calls = [];
   const mod = installResourceSaver32({}, { root: doc, storage: store, onApply: on => calls.push(on) });
   assert.equal(mod.enabled(), false);
   assert.deepEqual(calls, [false]);
   mod.set(true);
   assert.equal(mod.enabled(), true);
+  assert.equal(inputs[0].checked, true, 'tự bật tiết kiệm phải đồng bộ cả công tắc trên UI');
   assert.equal(store.v, 'true');
   assert.deepEqual(calls, [false, true]);
 });

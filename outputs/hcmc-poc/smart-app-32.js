@@ -1,14 +1,14 @@
 // Vỏ app=smart — chỉ tải khi có ?app=smart. Không sửa file 31A; mọi ghi đè nhãn làm tại đây.
 // CHỮ KÝ CHUẨN: initSmartApp32({ scene, camera, renderer, traffic, status, root, mode }).
 // Các task sau (T9/T10/T11/T14) KHÔNG đổi chữ ký — chỉ mở rộng qua app.registerSmartModule32(name, mod).
-import { buildSignalPlan32 } from './signal-plan-32.js?v=32a';
-import { createSignalController32 } from './traffic-controller-32.js?v=32a';
+import { buildSignalPlan32 } from './signal-plan-32.js?v=32c';
+import { createSignalController32 } from './traffic-controller-32.js?v=32c';
 import { regionById } from './city-region-31.js?v=31a';
 // T9 — đèn 3D Hàng Xanh: tái xuất để webgpu-materials-24.js gọi qua `smartMod.installSignals32`.
-export { createTrafficSignals32, installSignals32 } from './traffic-signals-32.js?v=32a';
+export { createTrafficSignals32, installSignals32 } from './traffic-signals-32.js?v=32c';
 // T10 — camera render-to-texture: tái xuất để webgpu-materials-24.js gọi `smartMod.installCameraCapture32`
 // (đặt `window.__smartCapture`). Giữ chữ ký initSmartApp32 không đổi.
-export { createCameraCapture32, installCameraCapture32, projectToCamera32, projectToPixel32 } from './camera-capture-32.js?v=32a';
+export { createCameraCapture32, installCameraCapture32, projectToCamera32, projectToPixel32 } from './camera-capture-32.js?v=32c';
 // T11 — client trạm: hàng đợi IndexedDB, REST/WS tới backend, HUD A/B/KPI (xem installStation32 cuối file).
 import { createPerception32 } from './violation-perception-32.js?v=32a';
 import { ZONE_SPEC_32 } from './violation-zones-32.js?v=32a';
@@ -17,11 +17,15 @@ import { createQueue32, createIndexedDbStore32, createMemoryStore32 } from './st
 import { createTransport32, startStationLoop32, resolveApiBase32, readStoredToken32, loginStation32 } from './station-client-32.js?v=32a';
 import { installHud32 } from './kpi-panel-32.js?v=32a';
 export { installHud32 } from './kpi-panel-32.js?v=32a';
+export { mountTestLab32 } from './test-lab-32.js?v=32c';
+export { mountSignalInspector32 } from './signal-inspector-panel-32.js?v=32c';
+export { junctionRows32, previewSignals32 } from './signal-preview-32.js?v=32c';
 // M4b1 — bản đồ nhiệt, dự báo kẹt, lệch tuyến và bảng VMS (heat-live-32.js, heat-scene-32.js).
 import { createHeatLive32, createRouteBias32, chooseVmsBoards32, expandHeatHistory32, createVmsBus32 } from './heat-live-32.js?v=32a';
 import { createHeatScene32, mountHeatPanel32 } from './heat-scene-32.js?v=32a';
 // M5a — kịch bản (scenarios-32.js) và lệnh trạm (station-client-32.js: cmd.scenario, cmd.vms).
 import { createScenarios32, mountScenarioPanel32, createBlockProps32 } from './scenarios-32.js?v=32a';
+import { createEmergency32, createEmergencyVisual32 } from './emergency-32.js?v=32a';
 import { createCommandRouter32 } from './station-client-32.js?v=32a';
 export { createRouteBias32, createVmsBus32, vmsDisplay32 } from './heat-live-32.js?v=32a';
 export { createScenarios32, findLaneBlock32, findFloodEdges32, SCENARIO_KEYS_32, SCENARIO_LABELS_32 } from './scenarios-32.js?v=32a';
@@ -59,8 +63,8 @@ export const HEAT_TICK_MS_32 = 250;   // ms thực: nhịp gọi engine (việc 
 export const SMART_APP_32_VERSION = 'smart-app-32a';
 export const SMART_BREAKER_S = 180;   // M2a: ngắt chu kỳ đèn/thải xe 180 s trong app smart
 export const BANNED_STRINGS = ['giả lập', 'mô phỏng', 'minh họa', 'illustrative', 'simulated', 'demo', 'fake'];
-// Selector panel cổ điển THẬT trong webgpu-materials-24.html (giữ #controls để còn nút Flood Lab, #floodLab).
-export const HIDDEN_PANELS_32 = ['#story'];
+// Giữ DOM cổ điển để các listener dùng chung còn hoạt động; chỉ ẩn khỏi app smart.
+export const HIDDEN_PANELS_32 = ['#story', '#controls', '#floodLab'];
 export const SMART_LABELS_32 = [
   { selector: '#regionTitle', from: 'Khu mô phỏng', to: 'Khu vực' },
   { selector: '#runFloodScenario span', from: 'Chạy mô phỏng 1D/2D', to: 'Chạy tính toán 1D/2D' },
@@ -197,7 +201,7 @@ export function buildNorthViews32({ graph = null, nodeMap = [], registry = null 
   return { views, tour: NORTH_TOUR_32 };
 }
 
-// Thay panel "Tham quan" (#cityNav) sang các góc khu Bắc + công tắc "Vùng quan sát camera" (mặc định bật ở góc cận cảnh).
+// Vùng quan sát là công cụ kiểm tra: chỉ bật khi người dùng chọn checkbox.
 export function installNorthTour32(app, { views = {}, onSelect = null } = {}) {
   const root = app.root || document;
   const doc = root.documentElement ? root : document;
@@ -222,11 +226,9 @@ export function installNorthTour32(app, { views = {}, onSelect = null } = {}) {
   let toggle = null;
   const setCone = on => { if (signals && typeof signals.setConeVisible === 'function') signals.setConeVisible(!!on); };
   const pick = key => {
-    const on = key === NORTH_CONE_KEY_32;
-    setCone(on);
-    if (toggle) toggle.checked = on;
     if (onSelect) onSelect(key);
   };
+  setCone(false);
   for (const button of buttons) button.onclick = () => pick(button.dataset.view);
   const body = nav && nav.querySelector('.nav-body');
   if (body) {
@@ -284,7 +286,8 @@ export function installStation32(app, { cameras = [], nodeMap = [], search = (ty
   });
   hud = installHud32(app, { transport });
   transport.start();
-  const loop = startStationLoop32(app, { perception, capture, transport, cameras });
+  // streamAll: gửi khung luân phiên MỌI camera (~15 khung/phút/camera) để web công an xem được 10 camera.
+  const loop = startStationLoop32(app, { perception, capture, transport, cameras, streamAll: true });
   transport.dispose = () => { loop.stop(); transport.stop(); };
   app.registerSmartModule32('perception', perception);
   app.registerSmartModule32('transport', transport);
@@ -350,14 +353,22 @@ export function installScenarios32(app, { THREE = null, nodeMap = [], routing = 
   const vms = app.vms;
   const boards = heat && heat.boards ? heat.boards : chooseVmsBoards32({ net, nodeMap, max: 4 });
   const props = THREE && app.scene ? createBlockProps32({ THREE, scene: app.scene, traffic, net }) : null;
-  const scn = createScenarios32({ traffic, clock, routing, vms, nodeMap, boards, props, log });
+  const emergency = createEmergency32({ sim: traffic.sim, net, controller: app.controller, nodeMap,
+    visual: THREE && app.scene ? createEmergencyVisual32({ THREE, scene: app.scene, traffic }) : null });
+  app.registerSmartModule32('emergency', emergency);
+  const scn = createScenarios32({ traffic, clock, routing, vms, nodeMap, boards, props, emergency, log });
   const host = root && root.querySelector ? root.querySelector('#smartHud32') : null;
   const panel = host ? mountScenarioPanel32(host, {
+    onFocus: () => app.focusTraffic32?.(emergency.currentSlot()),
     onPick: (k, p) => { try { scn.start(k, p); } catch (e) { panel.setActive('none', `Không chạy được: ${e.message}`); } },
     onStop: () => { scn.stop(); }
   }) : null;
   const describe32 = st => {
-    if (!st.active) return undefined;
+    if (!st.active) return st.lastError || undefined;
+    if (st.key === 'priority-run') {
+      const e = emergency.status();
+      return `${e.label} · ${e.vehicle_id || ''} · ${e.distance_m || 0} m · qua ${e.passed || 0} nút · ${e.yielded || 0} xe nhường${e.blocked ? ' · chờ ghi đè của cán bộ' : e.node_id ? ` · ưu tiên ${e.node_id}` : ''}`;
+    }
     if (st.key === 'lane-block' && st.remainingS !== null) return `Đang chạy: ${st.label} · còn ${Math.ceil(st.remainingS / 60)} phút sim`;
     return `Đang chạy: ${st.label} · ${Math.floor(st.simElapsedS / 60)} phút sim`;
   };
@@ -467,7 +478,7 @@ import { tabHidden32 } from './clock-32.js?v=32a';
 export function installResourceSaver32(app, { root = (typeof document !== 'undefined' ? document : null),
   storage = (typeof localStorage !== 'undefined' ? localStorage : null),
   onApply = null, log = (m => console.info(m)) } = {}) {
-  const host = root && root.querySelector ? root.querySelector('#smartHud32') : null;
+  const host = root && root.querySelector ? root.querySelector('#smartPerformanceBody32') || root.querySelector('#smartHud32') : null;
   if (!host) return { dispose() {}, enabled() { return false; } };
   const saved = () => { try { return storage && storage.getItem(SMART_SAVE_KEY_32) === 'true'; } catch { return false; } };
   const persist = on => { try { if (storage) storage.setItem(SMART_SAVE_KEY_32, on ? 'true' : 'false'); } catch { /* bỏ qua */ } };
@@ -488,6 +499,7 @@ export function installResourceSaver32(app, { root = (typeof document !== 'undef
   host.append(section);
   const apply = next => {
     on = !!next;
+    input.checked = on;
     persist(on);
     if (typeof onApply === 'function') { try { onApply(on); } catch (e) { log('tiết kiệm: ' + (e && e.message)); } }
     log(on ? 'Đã bật tiết kiệm tài nguyên (FPS 15, chế độ Lite, độ phân giải thấp)' : 'Đã tắt tiết kiệm tài nguyên');

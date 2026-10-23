@@ -361,6 +361,61 @@ test('startStationLoop32: bật stream 2 fps cho camera đang mở; vi phạm g�
   assert.equal(sets.at(-1).on, false);
 });
 
+test('luân phiên: mở rộng ra nhiều camera, mỗi khung gửi đúng 1 camera theo vòng, không vượt hạn mức', async () => {
+  const sets = [];
+  const frames = [];
+  const app = {
+    traffic: {
+      sim: { counters: { t: 1 }, active: [false], lane: [0], s: [1] },
+      net: { lanes: { edge: [0], length: [100] }, E: [{ c: [0, 0, 100, 0] }] }
+    }
+  };
+  const perception = { scan: () => {}, drainViolations: () => [] };
+  const jpeg = 'data:image/jpeg;base64,QUJD';
+  const capture = {
+    captureFrame: async () => null,
+    latestFrame: id => ({ jpeg, seq: 1, w: 320, h: 180 }),   // mọi camera đều có khung
+    captureEvidence: async () => null,
+    setStream: (id, on, fps) => sets.push({ id, on, fps })
+  };
+  const transport = { sendViolation: async () => ({}), sendFrame: async (id, seq) => { frames.push(id); return true; } };
+  const cameras = ['CAM-HX-001', 'CAM-HX-002', 'CAM-HX-003'].map(camera_id => ({ camera_id, x: 0, z: 0 }));
+  const loop = startStationLoop32(app, { perception, capture, transport, cameras, scanMs: 10, streamAll: true, rotGapMs: 10 });
+  await new Promise(r => setTimeout(r, 200));
+  loop.stop();
+  assert.equal(new Set(frames).size, 3, 'phải phát hình cho cả 3 camera');
+  assert.equal(frames.length >= 3, true);
+  assert.equal(sets.filter(s => s.on).length, 3, 'bật stream cho cả 3 camera');
+  assert.equal(sets.filter(s => s.on).every(s => s.fps <= 1), true, 'mỗi camera tối đa 1 fps để không vượt hạn mức');
+});
+
+test('mặc định: chỉ stream camera đầu, mở rộng khi gọi openCamera', async () => {
+  const sets = [];
+  const frames = [];
+  const app = {
+    traffic: {
+      sim: { counters: { t: 1 }, active: [false], lane: [0], s: [1] },
+      net: { lanes: { edge: [0], length: [100] }, E: [{ c: [0, 0, 100, 0] }] }
+    }
+  };
+  const perception = { scan: () => {}, drainViolations: () => [] };
+  const jpeg = 'data:image/jpeg;base64,QUJD';
+  const capture = {
+    captureFrame: async () => null,
+    latestFrame: id => ({ jpeg, seq: 1, w: 320, h: 180 }),
+    captureEvidence: async () => null,
+    setStream: (id, on, fps) => sets.push({ id, on, fps })
+  };
+  const transport = { sendViolation: async () => ({}), sendFrame: async id => { frames.push(id); return true; } };
+  const cameras = ['CAM-HX-001', 'CAM-HX-002'].map(camera_id => ({ camera_id, x: 0, z: 0 }));
+  const loop = startStationLoop32(app, { perception, capture, transport, cameras, scanMs: 10 });
+  await new Promise(r => setTimeout(r, 100));
+  loop.stop();
+  assert.equal(frames.every(id => id === 'CAM-HX-001'), true);
+  assert.equal(sets.filter(s => s.on).length, 1);
+  assert.equal(sets[0].fps, 2);
+});
+
 test('STATION-a: khung 429 bị bỏ ngay, KHÔNG chặn hàng đợi vi phạm (không xếp hàng, không dead-letter)', async () => {
   const fetchImpl = fakeFetch(async url => (url.endsWith('/station/frames')
     ? json(429, { error: { code: 'RATE_LIMITED' } }) : json(201, { id: 'VP-A' })));

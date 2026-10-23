@@ -416,3 +416,44 @@ body.ui-hidden .density-suggest{opacity:0;pointer-events:none}
 body[data-mode="lite"] .controls .legend,
 body[data-mode="lite"] #compare,
 body[data-mode="lite"] .flood-audit{display:none!important}
+
+/* Smart Traffic chỉ dùng một bảng vận hành; phần cổ điển vẫn giữ DOM cho bản 31A. */
+body[data-app="smart"] #story,
+body[data-app="smart"] #controls,
+body[data-app="smart"] #floodLab,
+body[data-app="smart"] [data-open-flood]{display:none!important}
+body[data-app="smart"] #smartHud32{
+  top:72px;right:16px;width:320px;max-height:calc(100dvh - 136px);
+  overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+  padding:16px;border-radius:15px;
+}
+body[data-app="smart"] #smartHud32 .smart-performance32{margin:12px 0;border-top:1px solid var(--line);padding-top:12px}
+body[data-app="smart"] #smartHud32 summary{cursor:pointer;min-height:30px;font-weight:700}
+body[data-app="smart"] #smartHud32 .mode-control{margin-top:8px}
+body[data-app="smart"] #smartHud32 .save-sec32{margin-top:12px}
+body[data-app="smart"] #smartHud32 #clockHud32{
+  position:static;width:auto;padding:12px 0 0;margin-top:12px;border:0;border-top:1px solid var(--line);
+  border-radius:0;background:none;box-shadow:none;backdrop-filter:none;
+}
+body[data-app="smart"] .nav-cone{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:11px}
+body[data-app="smart"].ui-hidden #smartHud32{opacity:0;pointer-events:none}
+@media(max-width:760px){
+  body[data-app="smart"] .topbar{left:8px;top:8px;height:44px}
+  body[data-app="smart"] #cityNav,
+  body[data-app="smart"] #cityNav.collapsed{
+    left:8px;right:8px;top:64px;bottom:auto;width:auto;max-height:180px;
+    overflow-y:auto;padding:10px;overscroll-behavior:contain;
+  }
+  body[data-app="smart"] #cityNav .nav-head{display:flex}
+  body[data-app="smart"] #cityNav .nav-body{display:block;max-height:none!important;overflow:visible}
+  body[data-app="smart"] #cityNav.collapsed .nav-body{display:none}
+  body[data-app="smart"] #cityNav .nav-views{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  body[data-app="smart"] #cityNav .nav-views button{min-width:0;height:36px;white-space:normal}
+  body[data-app="smart"] #cityNav .nav-light{display:grid}
+  body[data-app="smart"] #smartHud32{
+    left:8px;right:8px;top:256px;bottom:56px;width:auto;max-height:none;padding:12px;
+  }
+  body[data-app="smart"] .hud{left:8px;right:8px;bottom:8px;transform:none;justify-content:center}
+  body[data-app="smart"] .hud span:nth-child(n+2){display:none}
+  body[data-app="smart"] .hud b{font-size:8px;white-space:normal}
+}

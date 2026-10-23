@@ -2,7 +2,7 @@
 // Chọn theo ID cạnh (OSM way) và ĐOẠN LÀN NHÌN THẤY trong FOV camera (cùng phép thử với perception): đoạn s liên tục
 // dài nhất nằm trong khung ảnh bằng chứng. Không suy từ toạ độ tay; cấu hình ZONE_SPEC_32 chỉ nêu cạnh và làn.
 // Thuần JS, chạy được trong Node.
-import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
+import { createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32c';
 import { inFrame32 } from './violation-perception-32.js?v=32a';
 import { WRONG_LAT_EXTRA_M_32 } from './wrong-way-32.js?v=32a';
 

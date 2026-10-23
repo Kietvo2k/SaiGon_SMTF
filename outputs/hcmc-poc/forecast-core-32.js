@@ -2,8 +2,8 @@
 // Nhận ảnh trạng thái sim (exportState của trạm chính) + chế độ đèn + lệch tuyến → chạy BẢN SAO sim tới 30 phút sim
 // (heat theo giây sim, cùng cách với heat-live-32) → mức nhiệt tại 10/20/30 phút. Không đổi sim chính.
 // Ngân sách: ≤ 3 s thực cho 10 phút sim; chậm hơn thì giảm số xe theo tỉ lệ (scale) rồi chạy lại từ cùng ảnh, và ghi rõ scale.
-import { createTrafficSim31, SEED } from './city-traffic-sim-31.js?v=32a';
-import { createSignalController32 } from './traffic-controller-32.js?v=32a';
+import { createTrafficSim31, SEED } from './city-traffic-sim-31.js?v=32c';
+import { createSignalController32 } from './traffic-controller-32.js?v=32c';
 import { createHeat32 } from './heat-32.js?v=32a';
 import { collectSamples32, createRouteBias32, speedLimitsOf32, HORIZONS_MIN_32, ALPHA_32, DAY_START_HOUR_32 } from './heat-live-32.js?v=32a';
 

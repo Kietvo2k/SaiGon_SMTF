@@ -9,12 +9,12 @@
 export const SIGNAL_PLAN_32_VERSION = 'signal-plan-32a';
 
 export const SIGNAL_PLAN_32 = [
-  { node_id: 'HX-01', osm_id: 366390689, group_axis_deg: 160.4, offset_s: 0 },
-  { node_id: 'HX-02', osm_id: 366440827, group_axis_deg: 17.6, offset_s: 8 },
-  { node_id: 'HX-03', osm_id: 10118771782, group_axis_deg: 4.3, offset_s: 16 },
-  { node_id: 'HX-04', osm_id: 12437015526, group_axis_deg: 93.4, offset_s: 24 },
-  { node_id: 'HX-05', osm_id: 701671562, group_axis_deg: 162.9, offset_s: 0 },
-  { node_id: 'HX-06', osm_id: 1497276515, group_axis_deg: 171.4, offset_s: 32 }
+  { node_id: 'HX-01', osm_id: 366390689, group_axis_deg: 160.4, offset_s: 0, name: 'Ngã tư Hàng Xanh' },
+  { node_id: 'HX-02', osm_id: 366440827, group_axis_deg: 17.6, offset_s: 8, name: 'Nguyễn Gia Trí × Điện Biên Phủ' },
+  { node_id: 'HX-03', osm_id: 10118771782, group_axis_deg: 4.3, offset_s: 16, name: 'Bạch Đằng × Đinh Bộ Lĩnh' },
+  { node_id: 'HX-04', osm_id: 12437015526, group_axis_deg: 93.4, offset_s: 24, name: 'Bạch Đằng × Xô Viết Nghệ Tĩnh' },
+  { node_id: 'HX-05', osm_id: 701671562, group_axis_deg: 162.9, offset_s: 0, name: 'Ngã tư Hàng Xanh' },
+  { node_id: 'HX-06', osm_id: 1497276515, group_axis_deg: 171.4, offset_s: 32, name: 'Hàng Xanh × Xô Viết Nghệ Tĩnh' }
 ];
 
 export function buildSignalPlan32({ graph, nodeMap }) {
@@ -29,7 +29,7 @@ export function buildSignalPlan32({ graph, nodeMap }) {
     if (!meta) throw new Error(`node_map.json thiếu osm_id ${row.osm_id}`);
     let cluster = clusters.find(c => c.cluster_id === meta.cluster_id);
     if (!cluster) {
-      cluster = { cluster_id: meta.cluster_id, nodeIds: [], offset_s: row.offset_s };
+      cluster = { cluster_id: meta.cluster_id, name: row.name || row.node_id, nodeIds: [], offset_s: row.offset_s };
       clusters.push(cluster);
     }
     const ni = index.get(row.osm_id);
@@ -52,5 +52,11 @@ export function buildSignalPlan32({ graph, nodeMap }) {
       : Math.atan2(c[3] - c[1], c[2] - c[0]);
     arriveGroup[st] = Math.abs(Math.cos(head - row.group_axis_deg * Math.PI / 180)) > 0.5 ? 0 : 1;
   }
-  return { signalNodes, offset, arriveGroup, clusters };
+  // Đoạn nối hai điểm dữ liệu trong cùng giao lộ không tạo thêm vạch đèn bên trong.
+  const clusterOf=new Map(clusters.flatMap(c=>c.nodeIds.map(n=>[graph.nodes[n].id,c.cluster_id])));
+  const internalSt=new Set();
+  graph.edges.forEach((e,k)=>{
+    if(clusterOf.has(e.from) && clusterOf.get(e.from)===clusterOf.get(e.to)) { internalSt.add(k*2); internalSt.add(k*2+1); }
+  });
+  return { signalNodes, offset, arriveGroup, clusters, internalSt };
 }

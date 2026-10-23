@@ -1,5 +1,5 @@
 // Bộ điều khiển đèn M1 — hợp đồng đặc tả mục 4.1/6. Thuần JS, chạy được trong Node.
-import { SIGNAL_PLAN_32 } from './signal-plan-32.js?v=32a';
+import { SIGNAL_PLAN_32 } from './signal-plan-32.js?v=32c';
 
 export const CONTROLLER_32_VERSION = 'controller-32a';
 export const SIGNAL_PARAMS_32 = Object.freeze({
@@ -298,9 +298,23 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
   const overrideOf = (node, tSim) => {
     const o = overrides.get(node);
     if (!o) return null;
-    if (tSim > o.until_t_sim) { overrides.delete(node); return null; }
+    if (tSim > o.until_t_sim) { overrides.delete(node); resumeNormal(clusterOf.get(node), tSim); return null; }
     return o;
   };
+  // Nhả ưu tiên tại pha hiện tại; fixed không được nhảy thẳng sang xanh xung đột theo đồng hồ cũ.
+  function resumeNormal(c, t) {
+    if (!c) return;
+    if (c.phase === GREEN) {
+      const elapsed = t - c.tPhase, limit = curMode === 'fixed' ? greenOf(c) : P.maxGreenS;
+      if (elapsed >= limit) advancePhase(c, t);
+      else c.greenLen = Math.max(P.minGreenS, elapsed);
+    }
+    const start = c.group === 0 ? 0 : P.fixed.green0S + P.yellowS + P.allRedS;
+    const offset = c.phase === GREEN ? 0 : greenOf(c) + (c.phase === RED ? P.yellowS : 0);
+    c.cycleStart = t - start - offset - (t - c.tPhase);
+    c.ovTarget = null;
+  }
+  const clusterOverride = (c, t) => c ? c.nodeIds.map(n => overrideOf(n, t)).find(Boolean) : null;
   // Pha fixed suy TRỰC TIẾP từ thời gian (không phụ thuộc lần gọi `update` trước):
   // tính từ `cycleStart` (lúc nhóm-0 bắt đầu xanh) theo thời lượng cố định.
   const phaseFixed = (c, tSim, g) => {
@@ -314,9 +328,10 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     return el < s1 + g1 + y ? YELLOW : RED;
   };
   const isGreen = (node, st, tSim) => {
+    if(net.signalPlan?.internalSt?.has(st)) return true;
     if (!net.signal[node]) return true;
     const c = clusterOf.get(node);
-    const o = overrideOf(node, tSim);
+    const o = overrideOf(node, tSim) || clusterOverride(c, tSim);
     if (o) {
       // Ghi đè: chỉ nhóm đích xanh, và phải đã qua chuỗi vàng + đỏ chung (máy trạng thái đã tới nhóm đích).
       return !!c && c.phase === GREEN && c.group === o.group && net.arriveGroup[st] === o.group;
@@ -347,7 +362,7 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     const t = tSim - c.tPhase;
     const len = phaseLen(c, c.phase);
     const remain = phase => Math.max(0, +(len - t).toFixed(1));
-    const ov = overrideOf(node, tSim);
+    const ov = overrideOf(node, tSim) || clusterOverride(c, tSim);
     const phaseOf = g => {
       if (ov) {
         // Nhóm đích chỉ xanh khi máy trạng thái đã chuyển sang nó (đã qua vàng + đỏ chung); trong lúc chuyển, nhóm cũ giữ vàng/đỏ.
@@ -373,7 +388,8 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     // Chỉ B, C, D đọc mẫu tiếp cận (O(N) mỗi bước); A/E/F chỉ dùng hàng chờ nên bỏ qua để không chậm.
     const sample = (curMode === 'smart' && SAMPLE_ALGS_32.has(P.algorithm) && simRef) ? sampleApproach() : null;
     for (const c of clusters) {
-      decision(c, tSim, qmap, sample);
+      const held = clusterOverride(c, tSim);
+      if (!held) decision(c, tSim, qmap, sample);
       // So theo BƯỚC NGUYÊN (tránh float làm mỗi pha dài thêm 0,1 s); tôn trọng maxGreen.
       const elapsed = tSim - c.tPhase;
       const maxLen = curMode === 'fixed' ? greenOf(c) : (P.algorithm === 'cycle-max-pressure' ? greenLenOf(c) : P.maxGreenS);
@@ -383,7 +399,8 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
       if (c.phase === GREEN && curMode === 'smart' && P.algorithm !== 'cycle-max-pressure' && !fHeld) c.greenLen = Math.min(P.maxGreenS, Math.max(P.minGreenS, elapsed));
       const elapsedSteps = Math.round(elapsed * 10);
       const skipMax = curMode === 'smart' && ((P.algorithm === 'actuated-gap' && c.bHeld) || fHeld);   // B/F: tới max mà không ai chờ → giữ
-      if (c.phase === GREEN && !skipMax && elapsedSteps >= Math.round(maxLen * 10)) advancePhase(c, tSim);
+      if (held && c.phase === GREEN) c.greenLen = Math.max(P.minGreenS, elapsed + 1);
+      if (c.phase === GREEN && !held && !skipMax && elapsedSteps >= Math.round(maxLen * 10)) advancePhase(c, tSim);
       else if (c.phase !== GREEN && elapsedSteps >= Math.round(phaseLen(c, c.phase) * 10)) advancePhase(c, tSim);
       // D: vào đầu chu kỳ mới (nhóm 0 bắt đầu xanh) → chia lại 38 s xanh theo áp lực chu kỳ trước.
       if (P.algorithm === 'cycle-max-pressure' && curMode === 'smart' && c.group === 0 && c.phase === GREEN && c.tPhase === tSim) dOnGreenStart(c);
@@ -496,7 +513,7 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
     getMode: () => pendingMode || curMode,
     overridePhase(node0, group, duration_s, by, reason) {
       const n = normNode(node0);
-      if (group === null || group === undefined) { overrides.delete(n); return { ok: true, until_t_sim: 0, until_at: new Date(0).toISOString() }; }
+      if (group === null || group === undefined) { overrides.delete(n); resumeNormal(clusterOf.get(n), simRef ? simRef.counters.t : 0); return { ok: true, until_t_sim: 0, until_at: new Date(0).toISOString() }; }
       if (![0, 1].includes(group)) throw new TypeError('overridePhase: group 0|1|null');
       const dur = Math.min(120, Math.max(1, Number(duration_s)));
       const nowSim = simRef ? simRef.counters.t : 0;

@@ -52,6 +52,20 @@ export function installHud32(app, { transport = null } = {}) {
     + '</dl>'
     + '<p class="hud-status" id="stationStatus32" aria-live="polite">Trạm: đang kết nối</p>';
   (app.root && app.root.body ? app.root.body : document.body).append(panel);
+  // Đồ họa nằm cùng bảng vận hành để không chồng với panel vật liệu cổ điển.
+  const graphics = (app.root || document).querySelector('#controls .mode-control');
+  if (graphics) {
+    const settings = document.createElement('details');
+    settings.className = 'smart-performance32';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Hiệu năng đồ họa';
+    const body = document.createElement('div');
+    body.id = 'smartPerformanceBody32';
+    graphics.querySelector('.density-head small')?.remove();
+    body.append(graphics);
+    settings.append(summary, body);
+    panel.append(settings);
+  }
   const sw = panel.querySelector('#modeSwitch32');
   const el = id => panel.querySelector(id);
 

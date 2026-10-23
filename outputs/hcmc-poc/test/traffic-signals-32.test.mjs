@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lightColorOf, SIGNALS_32_VERSION, createTrafficSignals32, HELPER_LAYER_32, stopLinesOf32 } from '../traffic-signals-32.js?v=32a';
+import { lightColorOf, SIGNALS_32_VERSION, createTrafficSignals32, HELPER_LAYER_32, stopLinesOf32, signalApproachesOf32 } from '../traffic-signals-32.js?v=32a';
 import { SIGNAL_PLAN_32 } from '../signal-plan-32.js?v=32a';
 
 test('lightColorOf ánh xạ phase → màu đèn', () => {
-  assert.equal(SIGNALS_32_VERSION, 'signals-32a');
+  assert.equal(SIGNALS_32_VERSION, 'signals-32b');
   assert.equal(lightColorOf('green'), 'green');
   assert.equal(lightColorOf('yellow'), 'yellow');
   assert.equal(lightColorOf('red'), 'red');
@@ -14,7 +14,7 @@ test('lightColorOf ánh xạ phase → màu đèn', () => {
 
 function stubThree() {
   const mk = (name) => class {
-    constructor(...a) { this.type = name; this.args = a; this.children = []; this.visible = true; this.position = { x: 0, y: 0, z: 0, set() {}, copy(o) { Object.assign(this, o); } }; this.rotation = { set() {} }; this.quaternion = { copy() {} }; this.scale = { setScalar() {}, set() {} }; this.material = new (name === 'Mesh' ? StubMat : class { })(); this.layers = { mask: 1, set(v) { this.mask = 1 << v; }, enable(v) { this.mask |= 1 << v; } }; this.userData = {}; }
+    constructor(...a) { this.type = name; this.args = a; this.children = []; this.visible = true; this.position = { x: 0, y: 0, z: 0, set(x,y,z) { Object.assign(this,{x,y,z}); }, copy(o) { Object.assign(this, o); } }; this.rotation = { set() {} }; this.quaternion = { copy() {} }; this.scale = { setScalar(v) { this.x=this.y=this.z=v; }, set(x,y,z) { Object.assign(this,{x,y,z}); } }; this.material = new (name === 'Mesh' ? StubMat : class { })(); this.layers = { mask: 1, set(v) { this.mask = 1 << v; }, enable(v) { this.mask |= 1 << v; } }; this.userData = {}; }
     add(c) { this.children.push(c); }
     traverse(fn) { fn(this); for (const c of this.children) c.traverse(fn); }
   };
@@ -155,4 +155,36 @@ test('vạch dừng: tấm nằm ngang làn (trục rộng song song (ax, az)) v
     assert.equal(strip.rotation.order, 'YXZ');
     assert.equal(strip.userData.stopLine, 'HX-01');
   });
+});
+
+
+test('đỏ trên, xanh dưới; không phóng bảng đếm che nút và không vẽ số 0 giả',()=>{
+  const {s,camera}=makeSignals('green');
+  for(const head of collect(s.group,o=>o.userData.signalHead)) {
+    const lamps=collect(head,o=>o.userData.lampName && !o.userData.haloGlow);
+    assert.ok(lamps.find(o=>o.userData.lampName==='red').position.y > lamps.find(o=>o.userData.lampName==='green').position.y);
+  }
+  camera.position={x:100000,y:100,z:100000}; s.update(10);
+  for(const item of collect(s.group,o=>o.userData.countdown)) assert.equal(item.visible,false,'xa quá thì ẩn bảng thay vì phóng 40px');
+  for(const h of collect(s.group,o=>o.userData.haloGlow)) assert.ok(h.scale.x<=1.4,'quầng không che các bóng lân cận');
+});
+
+test('đếm lùi không xác định hoặc bằng 0 phải ẩn, giữ đúng màu pha còn thời gian',()=>{
+  const THREE=stubThree(), scene={add(){},remove(){}};
+  const s=createTrafficSignals32({scene,THREE,nodeMap,cameras:[],controller:{stateOf:()=>({phases:[{group:0,phase:'red',countdown_s:20},{group:1,phase:'green',countdown_s:12}]})}});
+  s.update(0);
+  const panels=collect(s.group,o=>o.userData.countdown);
+  assert.ok(panels.some(o=>!o.visible));
+  assert.ok(panels.some(o=>o.visible));
+});
+
+test('đầu đèn bên phải vạch dừng, gom làn cùng hướng và dùng nhóm pha của mô phỏng',()=>{
+  const net={lanes:{edge:[0,0,1,2],to:[5,5,5,9],st:[0,0,1,2],length:[80,80,80,80],offset:[1.75,5.25,1.75,0],width:[3.5,3.5,3.5,3.5]},Rz:{5:10},arriveGroup:[1,0,1]};
+  const geo={lanePoint:(l,s,lat)=>({x:lat,z:s,tx:0,tz:1}),laneY:()=>1.2};
+  const placements=signalApproachesOf32(net,geo,[{node_id:'HX-01',index:5}]);
+  assert.equal(placements.length,2,'không nhân đầu đèn theo số làn');
+  assert.equal(placements[0].x,7.8); assert.equal(placements[0].z,70);
+  assert.equal(placements[0].groupIdx,1); assert.equal(placements[1].groupIdx,0);
+  assert.ok(Math.abs(Math.cos(placements[0].yaw)+1)<1e-9,'mặt đèn quay về xe đang tới');
+  assert.equal(placements[0].y,1.2,'theo cao độ đường');
 });

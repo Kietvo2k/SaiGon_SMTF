@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import { buildTrafficNetwork31, createTrafficSim31, SEED } from '../city-traffic-sim-31.js?v=32a';
 import { buildSignalPlan32 } from '../signal-plan-32.js?v=32a';
 import { createSignalController32, SIGNAL_PARAMS_32, CONTROLLER_32_VERSION, CYCLE_MAX_PRESSURE_32, cycleMaxPressureSplit32 } from '../traffic-controller-32.js?v=32a';
+import { junctionRows32 } from '../signal-preview-32.js';
 
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
@@ -16,6 +17,38 @@ const nodeMap = JSON.parse(fs.readFileSync(path.resolve('outputs/smart-traffic/b
 const WIDTHS = { motorway: 16, trunk: 15, primary: 14, secondary: 11, tertiary: 8, residential: 5, living_street: 4, service: 3.5, unclassified: 5, footway: 2.5, pedestrian: 12, cycleway: 2, path: 1.5 };
 const widthOf = i => D.roads[i].lanes ? Math.max(WIDTHS[D.roads[i].type] || 4, D.roads[i].lanes * 3.1) : WIDTHS[D.roads[i].type] || 4;
 const drawn = i => !D.roads[i].tunnel && G.roads[i].skipRender !== 'hide';
+
+test('ưu tiên giữ đúng xanh sau vàng và đỏ chung, không bị thuật toán tự đổi giữa chừng', () => {
+  for (const mode of ['fixed', 'smart']) {
+    const {net,controller,signalPlan}=setup({mode,withSim:false});
+    const node=signalPlan.signalNodes[0];
+    controller.overridePhase(node,1,60,'EMERGENCY-32','thử');
+    for(let k=0;k<=500;k++) {
+      const t=k/10; controller.update(t,new Map());
+      const phases=controller.stateOf(node,t).phases;
+      assert.ok(phases.filter(p=>p.phase==='green').length<=1);
+      if(t<3) assert.equal(phases.find(p=>p.group===0).phase,'yellow');
+      if(t>=3 && t<5) assert.ok(phases.every(p=>p.phase==='red'));
+      if(t>=5) assert.equal(phases.find(p=>p.group===1).phase,'green',`${mode} ${t}s`);
+    }
+  }
+});
+
+test('nhả ưu tiên không khởi động lại trọn pha xanh gây kéo dài chờ hướng kia',()=>{
+  for(const mode of ['fixed','smart']) {
+    const {controller,signalPlan}=setup({mode,withSim:false}), sim={counters:{t:0}};
+    controller.attachSim(sim); const node=signalPlan.signalNodes[0]; let nextGreen=null;
+    for(let k=0;k<=1000;k++) {
+      const t=k/10; sim.counters.t=t;
+      if(k===300) controller.overridePhase(node,1,60,'EMERGENCY-32','thử');
+      if(k===400) controller.overridePhase(node,null,0,'EMERGENCY-32','nhả');
+      controller.update(t,new Map());
+      if(t>=40 && nextGreen===null && controller.stateOf(node,t).phases[0].phase==='green') nextGreen=t;
+    }
+    // Smart trống hàng chờ: nhóm 1 bắt đầu ở 35s, phải kết thúc trước 35+45+3+2=85s.
+    assert.ok(nextGreen!==null && nextGreen<=(mode==='fixed'?48:85),`${mode}: nhóm kia chờ tới ${nextGreen}`);
+  }
+});
 
 function setup({ mode = 'fixed', params = {}, redRun = null, withSim = true } = {}) {
   const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
@@ -504,4 +537,37 @@ test('F max-pressure-gated: tới maxGreen mà nhóm kia trống thì giữ xanh
   let switchedAt = -1;
   for (let t = 60.1; t <= 70; t += 0.1) { controller.update(t, withWait); if (controller.stateOf(node, t).phases.find(p => p.group === 0).phase !== 'green') { switchedAt = t; break; } }
   assert.ok(switchedAt > 60 && switchedAt <= 60.5, `đổi ngay sau khi nhóm 1 có xe chờ (nhận ${switchedAt})`);
+});
+
+
+test('NPC thử thêm đúng số an toàn, giới hạn 200, dọn không chạm xe gốc hay xe khẩn cấp',()=>{
+  const {sim,net}=setup(); sim.setFraction(.02);
+  assert.equal(typeof sim.spawnTestNpc,'function');
+  const original=new Set(Array.from(sim.active,(v,i)=>v?i:-1).filter(i=>i>=0));
+  const before=sim.activeCount(), result=sim.spawnTestNpc(50);
+  assert.ok(result.added>0 && result.added<=50); assert.equal(result.total,result.added);
+  assert.equal(sim.activeCount(),before+result.added);
+  const extras=Array.from(sim.active,(v,i)=>v && !original.has(i)?i:-1).filter(i=>i>=0);
+  for(const i of extras) {
+    const l=sim.lane[i]; assert.ok(sim.s[i]-sim.len[i]/2 >= net.Rz[net.lanes.from[l]]+1);
+    assert.ok(sim.s[i]+sim.len[i]/2 <= net.lanes.length[l]-net.Rz[net.lanes.to[l]]-10);
+  }
+  assert.throws(()=>sim.spawnTestNpc(500),RangeError); assert.throws(()=>sim.spawnTestNpc(NaN),RangeError);
+  for(let k=0;k<6;k++) sim.spawnTestNpc(50);
+  assert.ok(sim.testNpcCount()<=200);
+  sim.setFraction(.01); assert.ok(extras.every(i=>sim.active[i]),'giảm mật độ không xóa NPC thử');
+  const protectedId=extras[0]; sim.setEmergencyPolicy({currentSlot:()=>protectedId});
+  const clear=sim.clearTestNpcs(); assert.equal(clear.total,1); assert.ok(sim.active[protectedId]);
+  sim.setEmergencyPolicy(null); assert.equal(sim.clearTestNpcs().total,0); assert.equal(sim.active[protectedId],0);
+  sim.spawnTestNpc(10); sim.reset(); assert.equal(sim.testNpcCount(),0);
+});
+
+test('đoạn nối nội bộ HX-C1 không tạo thêm một đèn đỏ giữa cùng giao lộ',()=>{
+  const {net,controller,signalPlan}=setup({withSim:false});
+  const junctions=junctionRows32(net,nodeMap);
+  assert.equal(junctions.length,5,'6 mã dữ liệu được trình bày thành 5 giao lộ');
+  assert.ok(junctions.every(r=>r.arms.length>=3 && r.arms.length<=6),'demo chỉ có giao lộ 3–6 hướng');
+  const node=signalPlan.signalNodes[0], l=net.lanes.to.findIndex(n=>n===node), st=net.lanes.st[l];
+  signalPlan.internalSt.add(st);
+  assert.equal(controller.isGreen(node,st,30),true,'nhánh đã được đánh dấu nội bộ không bị chặn đỏ');
 });

@@ -4,7 +4,7 @@
 // Không tự đặt hẹn giờ: người gọi gọi engine.tick() theo nhịp của mình; mọi mốc tính theo giây sim.
 import { createHeat32 } from './heat-32.js?v=32a';
 import { forecastRaw32, alerts32, combineWithLookahead32, calibrateForecast32, slopeOf32 } from './forecast-32.js?v=32a';
-import { hashU32, SEED, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32a';
+import { hashU32, SEED, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32c';
 
 export const HEAT_LIVE_32_VERSION = 'heat-live-32b';
 export const SAMPLE_S_32 = 1;           // s sim: nhịp thu mẫu

@@ -17,8 +17,9 @@ import { createStreetFurniture31, hiddenFootwayRoads } from './city-street-furni
 import { createBridges31, fitRampToRoads, flatJoints, footbridgeRoads31, loftStrip } from './city-bridges-31.js?v=31a';
 import { createBuildingChunks31, createDensityController31, createInstanceDensity31, createMinimalMerge31, createSignatureGate31, instanceItems31, mergeStaticMeshes31 } from './city-density-31.js?v=31a';
 import { REGION_ALL_ID, REGION_URL_PARAM, REGION_STORAGE_KEY, REGIONS_31, regionById, regionOf, regionContains, regionPolygon } from './city-region-31.js?v=31a';
-import { DENSITY_STORAGE_KEY, MODE_URL_PARAM, anisotropyForMode, createModeController, modeById, resolveMode, textureUrlsForMode } from './city-mode-31.js?v=31a';
-import { createTraffic31 } from './city-traffic-31.js?v=31a';
+import { DENSITY_STORAGE_KEY, anisotropyForMode, createModeController, modeById, resolveMode, textureUrlsForMode } from './city-mode-31.js?v=31a';
+import { createTraffic31 } from './city-traffic-31.js?v=32c';
+import { sceneQuery32, sceneView32 } from './scene-context-32.js?v=32a';
 
 const D=window.CITY_DATA;
 const SM=window.SEMANTIC_MATERIALS_08||{records:{},directTaggedBuildings:0,directCoveragePercent:0};
@@ -27,6 +28,15 @@ if(!CORRECTIONS)throw new Error('WEBGPU_CORRECTIONS_24 không khả dụng');
 const APP_VERSION=CORRECTIONS.version;
 const $=selector=>document.querySelector(selector);
 const params=new URLSearchParams(location.search);
+const isSmart32=params.get('app')==='smart';
+if(isSmart32){
+  document.body.dataset.app='smart';document.title='Smart Traffic · Khu Bắc';
+  const brand=$('.brand');brand.querySelector('b').textContent='SMART TRAFFIC';
+  brand.setAttribute('aria-label','Toàn khu Bắc');brand.href=`?${sceneQuery32({search:location.search,view:'bac'})}`;
+  $('.topbar').setAttribute('aria-label','Thanh trạng thái Smart Traffic');
+  $('.loader-mark').textContent='SMART TRAFFIC';
+  $('#scene').setAttribute('aria-label','Giao thông 3D khu Bắc');
+}
 const forceWebGL=params.get('backend')==='webgl';
 const requestedQuality=params.get('quality')||'presentation';
 // Bước I 31A — Chế độ Preview/Lite: mode gói sẵn density/quality/texture/UI. `&quality=` do người dùng
@@ -225,12 +235,11 @@ function tri(a,b,c,ta,tb,tc,tint,surface,kind,seed,direct){
 
 // M2a — app smart: khóa 3 khu trung-tâm/ven-song/nam (chỉ giữ đường ≥ secondary) và dồn xe khu Bắc lên cạnh ≥ tertiary.
 // Chỉ chạy khi ?app=smart; chế độ classic không đổi. Bộ lọc thuần ở city-lock-32.js (test Node riêng).
-const smartQuery=new URLSearchParams(location.search);const isSmart32=smartQuery.get('app')==='smart';
 const signatureGate=createSignatureGate31({buildings:renderBuildings});
 let lock32=null,lockFactor32=null;   // lockFactor32: 1 ở khu khóa, 0 trong khu Bắc (mặt nạ tô xám đất/công viên/nước)
 if(isSmart32){
   const lockMod32=await import('./city-lock-32.js?v=32a');
-  const signalRows=(await import('./signal-plan-32.js?v=32a')).SIGNAL_PLAN_32;
+  const signalRows=(await import('./signal-plan-32.js?v=32c')).SIGNAL_PLAN_32;
   const registry32=(await import('./signature-registry-31.js?v=31a')).loadSignatureRegistry();
   const nodeById=new Map((window.ROAD_GRAPH_31?.nodes||[]).map(node=>[node.id,node]));
   const signalPoints=signalRows.map(row=>nodeById.get(row.osm_id)).filter(Boolean).map(node=>[node.x,node.z]);
@@ -825,9 +834,9 @@ function advanceUrbanMotion(now){
 // (surfaceChecked/belowRoad) vào materialStatus.motion và API ở materialStatus.traffic.api (bộ điều phối mật độ E/F dùng).
 materialStatus.motion={roadSource:'ROAD_GRAPH_31 (OSM centerlines)',vessels:vesselItems.length,vesselRoute:'illustrative Saigon River lane',vesselAuditSamples,vesselSamplesOutsideWater,vesselHeadingMismatches,classification:'giao thông và tàu minh họa (illustrative); không phải dữ liệu giao thông hay AIS thật'};
 materialStatus.traffic={};
-// (M2a) smartQuery/isSmart32 đã khai báo sớm ở khối khóa khu trước vòng dựng công trình.
+// isSmart32 đã khai báo trước vòng dựng công trình.
 let createTraffic=createTraffic31,smartMod=null;
-if(isSmart32){({createTraffic31:createTraffic}=await import('./city-traffic-31.js?v=32a'));smartMod=await import('./smart-app-32.js?v=32a');}
+if(isSmart32){({createTraffic31:createTraffic}=await import('./city-traffic-31.js?v=32c'));smartMod=await import('./smart-app-32.js?v=32c');}
 const smartPrep=smartMod?await smartMod.prepareSmart32({graph:window.ROAD_GRAPH_31}):null;const smartSignalPlan=smartPrep?smartPrep.signalPlan:null;
 const smartRoute=smartMod?smartMod.createRouteBias32():null;const simWidthOf=index=>roadWidth31(D.roads[index],widths);const simDrawn=index=>!D.roads[index].tunnel&&window.ROAD_GRAPH_31.roads[index].skipRender!=='hide'&&!(lock32&&lock32.simHidden.has(index));const traffic=createTraffic({scene:trafficGroup,graph:window.ROAD_GRAPH_31,roads:D.roads,widthOf:simWidthOf,drawn:simDrawn,roadNetwork,nightLevel,camera,getLight:()=>activeLight,status:materialStatus.traffic,motionStatus:materialStatus.motion,signalPlan:smartSignalPlan,breakerS:smartMod?smartMod.SMART_BREAKER_S:undefined,routeBias:smartRoute?smartRoute.routeBias:null,demand:smartMod?smartMod.NORTH_DEMAND_32:null,behavior:smartMod&&smartPrep?smartMod.smartBehavior32({graph:window.ROAD_GRAPH_31,nodeMap:smartPrep.nodeMap,cameras:smartPrep.cameras}):null});
 const smartApp=smartMod?smartMod.initSmartApp32({scene,camera,renderer,traffic,status:materialStatus.traffic,root:document}):null;
@@ -923,6 +932,9 @@ const presets={
   bason:{target:new THREE.Vector3(-300,76,-360),distance:930,az:2.43,polar:1.03,label:'BA SON · MARINA CENTRAL + GRAND MARINA'},
   flood25:{target:xyz(106.7305,10.8030,24),distance:1280,az:-.92,polar:1.01,label:'THẢO ĐIỀN · MÔ PHỎNG NGẬP 25A'}
 };
+// Nạp đủ góc Bắc trước khi đọc URL để tải lại Lite không làm mất view=hx/csg/…
+const northViews32=isSmart32&&smartApp?smartMod.buildNorthViews32({graph:window.ROAD_GRAPH_31,nodeMap:smartPrep.nodeMap,registry:window.SIGNATURE_REGISTRY_31}):null;
+if(northViews32)for(const [key,view] of Object.entries(northViews32.views))presets[key]={target:new THREE.Vector3(...view.target),distance:view.distance,az:view.az,polar:view.polar,label:view.label};
 // Bước H: góc nhìn theo khu. Trong khu, "Toàn vùng" (overview) = khung đúng khu đó; góc có tâm nằm ở khu khác thì tự chuyển sang
 // khu chứa tâm góc ấy (không tự về Toàn bộ: giữ tải GPU thấp) và báo ngắn gọn. Khu từ URL/localStorage quyết định khi trùng.
 const regionPreset=id=>{const region=regionById(id),view=region.view;return {target:new THREE.Vector3(...view.target),distance:view.distance,az:view.az,polar:view.polar,label:`KHU · ${region.label.toUpperCase()}`};};
@@ -946,7 +958,7 @@ function onRegionChosen(event){
   materialStatus.region.camera={region:event.id,from:event.from};
   if(!regionCameraLock)selectView('overview');
 }
-let startKey=params.get('view') in presets?params.get('view'):(activeRegion===REGION_ALL_ID?'materials':'overview');
+let startKey=sceneView32(params.get('view')||(activeRegion===REGION_ALL_ID?'materials':'overview'),isSmart32);
 if(activeRegion!==REGION_ALL_ID&&resolveView(startKey,activeRegion).switchTo)startKey='overview';
 const initial=resolveView(startKey,activeRegion).preset;
 let activeView=startKey;
@@ -954,6 +966,7 @@ let target=initial.target.clone(),cameraDistance=initial.distance,azimuth=initia
 const transitionVelocity=new THREE.Vector3();
 const transitionState={distance:cameraDistance,azimuth,polar};
 function selectView(key){
+  if(isSmart32)key=sceneView32(key,true);
   const resolved=resolveView(key,cityDensity.region);if(!resolved)return;
   if(resolved.switchTo){
     const owner=regionById(resolved.switchTo);
@@ -968,18 +981,34 @@ function selectView(key){
   transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
   transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
   document.querySelectorAll('[data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view===key));
-  $('#viewLabel').textContent=p.label;const density=new URLSearchParams(location.search).get('density');const keepMode=new URLSearchParams(location.search).get(MODE_URL_PARAM);const keepLight=new URLSearchParams(location.search).get('light');history.replaceState(null,'',`?v=${isSmart32?'32a':APP_VERSION}&view=${key}${isSmart32?'&app=smart&region=bac':''}${forceWebGL?'&backend=webgl':''}${effectiveQuality!=='presentation'?`&quality=${effectiveQuality}`:''}${density?`&density=${encodeURIComponent(density)}`:''}${regionParam()?`&${REGION_URL_PARAM}=${encodeURIComponent(regionParam())}`:''}${keepMode?`&${MODE_URL_PARAM}=${encodeURIComponent(keepMode)}`:''}${keepLight?`&light=${encodeURIComponent(keepLight)}`:''}`);
+  $('#viewLabel').textContent=p.label;
+  history.replaceState(null,'',`?${sceneQuery32({search:location.search,version:APP_VERSION,view:key,region:cityDensity.region})}`);
 }
-const regionParam=()=>new URLSearchParams(location.search).get(REGION_URL_PARAM);
 document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>selectView(button.dataset.view));
 selectView(startKey);
 materialStatus.selectView=selectView;
 // T9b — app smart: panel "Tham quan" = 5 góc khu Bắc (toạ độ từ node_map/registry/road graph) + công tắc vùng quan sát camera.
 if(isSmart32&&smartApp){
-  const north=smartMod.buildNorthViews32({graph:window.ROAD_GRAPH_31,nodeMap:smartPrep.nodeMap,registry:window.SIGNATURE_REGISTRY_31});
-  for(const [key,view] of Object.entries(north.views))presets[key]={target:new THREE.Vector3(...view.target),distance:view.distance,az:view.az,polar:view.polar,label:view.label};
-  smartMod.installNorthTour32(smartApp,{views:north.views,onSelect:key=>selectView(key)});
-  smartApp.modules.signals?.setConeVisible?.(activeView==='hx');
+  smartMod.installNorthTour32(smartApp,{views:northViews32.views,onSelect:key=>selectView(key)});
+  smartApp.focusTraffic32=slot=>{
+    if(slot<0||!traffic.sim.active[slot])return;
+    const p=traffic.poseOf(slot),limits=lock32?.cameraLimits;
+    const point=limits?lock32.mod.clampNorthCamera32({x:p.x,z:p.z,distance:90},limits):{x:p.x,z:p.z,distance:90};
+    desired={target:new THREE.Vector3(point.x,p.y,point.z),distance:point.distance,az:Math.atan2(-p.tx,-p.tz),polar:1.05,fov:42};
+    transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
+    transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
+    $('#viewLabel').textContent='Xe khẩn cấp · cận cảnh';
+  };
+  smartApp.focusJunction32=row=>{
+    const limits=lock32?.cameraLimits;
+    const point=limits?lock32.mod.clampNorthCamera32({x:row.x,z:row.z,distance:170},limits):{...row,distance:170};
+    desired={target:new THREE.Vector3(point.x,0,point.z),distance:point.distance,az:Math.PI*.2,polar:1.05,fov:42};
+    transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
+    transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
+    $('#viewLabel').textContent=row.label;
+  };
+  document.querySelectorAll('#cityNav [data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view===activeView));
+  smartApp.modules.signals?.setConeVisible?.(false);
   // M2a · A2 — nút khu bị khóa vẫn nhận bấm: bắt ở pha capture (chạy trước listener chọn khu của bộ điều phối mật độ)
   // nên chỉ báo ngắn và KHÔNG đổi khu. Mở lại disabled (đã đặt aria-disabled ở lockRegions32) để nút nhận sự kiện.
   const regionRoot=$('#regionControl');
@@ -1035,17 +1064,14 @@ const modeController=createModeController({root:$('#modeControl'),params,initial
   try{localStorage.setItem(DENSITY_STORAGE_KEY,preset.density);}catch{}
   // T3(b): đổi mode qua UI xử lý NHẤT QUÁN &density/&quality/&region — BỎ &density và &quality để preset mode có hiệu lực,
   // GIỮ &region vì khu mô phỏng là lựa chọn nội dung của người dùng, không phải cấu hình hiệu năng.
-  const query=new URLSearchParams();
-  query.set('v',APP_VERSION);query.set('view',activeView);
-  if(forceWebGL)query.set('backend','webgl');
-  query.set(MODE_URL_PARAM,id);query.set('light',activeLight);
-  if(activeRegion!==REGION_ALL_ID)query.set(REGION_URL_PARAM,activeRegion);
+  const query=sceneQuery32({search:location.search,version:APP_VERSION,view:activeView,region:activeRegion,mode:id,light:activeLight});
   showRegionNotice(`Đang chuyển sang chế độ ${preset.label} — giữ góc nhìn, trang sẽ tải lại…`);
   setTimeout(()=>{location.search=`?${query}`;},650);
 }});
 {
   const counts=$('#modeCounts');
-  if(counts)counts.textContent=modePreset.id==='lite'
+  if(counts&&isSmart32)counts.textContent=modePreset.id==='lite'?'Lite · ưu tiên hiệu năng':'Preview · chất lượng đầy đủ';
+  else if(counts)counts.textContent=modePreset.id==='lite'
     ?`Lite · mật độ Nhẹ · hiệu năng · texture ½ cạnh · UI gọn · signature vẫn đủ`
     :`Preview · mật độ Đầy đủ · trình diễn · texture đầy đủ · UI đầy đủ`;
 }
@@ -1074,6 +1100,12 @@ materialStatus.visualCalibration={profile:'hcmc-aerial-default-30',saturation:'1
 setLight(activeLight);
 // M4b2: đồng hồ trong ngày + tua (sau setLight vì đồng hồ đổi nhóm ánh sáng; mạng và vùng khu đã sẵn sàng ở đây).
 if(smartApp){try{smartMod.installClock32(smartApp,{traffic,setLight:key=>setLight(key),getLight:()=>activeLight,forecast:()=>smartApp.modules.forecast,heatLive:()=>smartApp.modules.heat&&smartApp.modules.heat.live});}catch(e){console.warn('clock32:',e);}try{smartMod.installScenarios32(smartApp,{THREE,nodeMap:smartPrep.nodeMap,routing:smartRoute});}catch(e){console.warn('scenarios32:',e);}}
+if(smartApp){
+  const hud=$('#smartHud32'),clock=$('#clockHud32');
+  if(hud&&clock)hud.append(clock);
+  // Đồng hồ khởi tạo đặt ánh sáng theo giờ; giữ lựa chọn URL khi vừa tải lại chế độ.
+  if(['day','golden','night'].includes(requestedLight))setLight(requestedLight);
+}
 
 const realismInput=$('#realism'),realismValue=$('#realismValue');
 function setRealism(value){const number=Math.max(0,Math.min(100,Number(value)));realism.value=number/100;realismInput.value=number;realismValue.value=`${Math.round(number)}%`;materialStatus.realism=number;}
@@ -1257,6 +1289,26 @@ renderer.setAnimationLoop(render);
 // PERF-2: khi app=smart, gắn xử lý tab ẩn (sim vẫn chạy) và công tắc "Tiết kiệm tài nguyên".
 if(isSmart32&&smartApp&&smartMod){try{const hiddenTab=smartMod.installHiddenTab32(smartApp,{traffic});window.__perf2_hiddenTab=hiddenTab;}catch(e){console.warn('PERF-2 hidden:',e);}try{const saver=smartMod.installResourceSaver32(smartApp,{root:document,onApply:on=>{smartFrame.setSave(on);if(on){smartMod.applyResourceSaver32({renderer,modeController,setSave:smartFrame.setSave,innerWidth,innerHeight});}else{smartMod.clearResourceSaver32({renderer,modeController,setSave:smartFrame.setSave,pixelRatio:Math.min(devicePixelRatio,visualQuality.maxPixelRatio),innerWidth,innerHeight});}}});window.__perf2_saver=saver;
 try{const monitor=smartMod.installResourceMonitor32(smartApp,{root:document,saver,capFpsOf:()=>smartMod.smartFpsCap32({savePower:smartFrame.isSave(),idleMs:performance.now()-smartFrame.lastInteraction()}).fps});window.__perf2_monitor=monitor;}catch(e){console.warn('PERF-2 monitor:',e);}}catch(e){console.warn('PERF-2 saver:',e);}}
+if(smartApp){
+  // Bảng điều khiển là nơi bắt buộc phải có: nếu HUD của trạm không dựng được (backend/capture lỗi),
+  // tạo host tối thiểu để tab "Đèn & dự báo" và "Thử & spawn" vẫn mở được.
+  let host=document.querySelector('#smartHud32');
+  if(!host){
+    host=document.createElement('aside');host.id='smartHud32';host.className='glass';
+    host.style.cssText='position:fixed;z-index:8;right:16px;top:72px;width:320px;max-height:calc(100dvh - 136px);overflow-y:auto;padding:16px;border-radius:15px;color:#eaf6f7;background:rgba(11,25,32,.94);font:12px system-ui;';
+    document.body.append(host);
+  }
+  let rows=[];
+  try{rows=smartMod.junctionRows32(traffic.net,smartPrep.nodeMap);}catch(e){console.warn('junctionRows32:',e);}
+  let snapshot=null,snapshotAt=-Infinity;
+  const readSnapshot=()=>{const now=performance.now();if(!snapshot||now-snapshotAt>1500){snapshot=smartMod.previewSignals32({net:traffic.net,sim:traffic.sim,controller:smartApp.controller,rows});snapshotAt=now;}return snapshot;};
+  try{
+    smartApp.registerSmartModule32('signalInspector',smartMod.mountSignalInspector32(host,{readSnapshot,onFocus:id=>{const row=rows.find(r=>r.id===id);if(row)smartApp.focusJunction32(row);},onBoxes:on=>traffic.setBoundingBoxes(on)}));
+  }catch(e){console.warn('signalInspector32:',e);}
+  try{
+    smartApp.registerSmartModule32('testLab',smartMod.mountTestLab32(host,{spawnNpc:count=>traffic.spawnTestNpc(count),clearNpcs:()=>traffic.clearTestNpcs(),npcCount:()=>traffic.sim.testNpcCount()}));
+  }catch(e){console.warn('testLab32:',e);}
+}
 await renderer.compileAsync(scene,camera);
 // Bước H: biên dịch sẵn pipeline cho từng khu (camera Toàn vùng, che sau màn nạp) — đổi khu lần đầu không bị khựng do dựng pipeline.
 {

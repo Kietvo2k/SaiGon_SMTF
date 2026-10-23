@@ -424,6 +424,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   if (beh) { beh.parkUntil = new Float64Array(N); beh.parkGen = new Int32Array(N).fill(-1); beh.vcGen = new Int32Array(N).fill(-1); beh.vc = new Uint8Array(N); }
   // Mã hành vi của xe theo thế hệ hiện tại (0 = không có). Tính lại khi gen đổi (respawn), không cần đồng bộ khi reset/import.
   const codeIdxOf = i => {
+    if (isEmergencyCar(i)) return 0;
     if (!beh) return 0;
     if (beh.vcGen[i] !== gen[i]) { beh.vc[i] = BEHAVIOR_IDX_32[violatorOf32(i + 1, gen[i], TRAFFIC_KINDS[kind[i]].name, beh.seed)] || 0; beh.vcGen[i] = gen[i]; }
     return beh.vc[i];
@@ -432,6 +433,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   const motoLaneBan = (i, l) => !!beh && lanes.k[l] === 0 && lanes.n[l] >= 2 && kind[i] !== 0 && !(kind[i] === 1 && codeIdxOf(i) === BEHAVIOR_IDX_32.LANE);
   // Vượt đỏ chủ động (M5b-1): xe vi phạm RED-LIGHT của chu kỳ này được đi tiếp khi nhóm của nó vừa chuyển đỏ (0–3 s).
   const redRunOk = (i, node, st) => {
+    if (isEmergencyCar(i)) return false;
     if (!beh || !controller || !controller.cycleIdOf) return false;
     const k = node * 2 + arriveGroup[st];
     if (!beh.wasRed[k]) return false;
@@ -485,7 +487,11 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   // laneVmul[l] nhân tốc độ mong muốn của làn; laneBlockS[l] = vị trí (m) mép sau xe hỏng đứng yên trên làn (∞ = không chắn);
   // laneClosed[l] = 1 → lộ trình không chọn làn này (xe đang trên làn vẫn đi hết).
   const laneVmul = new Float32Array(NL).fill(1), laneBlockS = new Float64Array(NL).fill(Infinity), laneClosed = new Uint8Array(NL);
-  let closedCount = 0;
+  let closedCount = 0, emergencyPolicy = null;
+  const emergencyActivated = new Map();
+  // Quyền sở hữu slot thử tồn tại đến khi dọn hoặc reset; không thay đổi mật độ nền.
+  const testNpcs = new Set();
+  function isEmergencyCar(i) { return emergencyPolicy?.currentSlot?.() === i; }
   // ---- Khu mô phỏng (bước H): region = null → toàn thành phố; {id, poly[x0,z0,x1,z1…]} → chỉ xe trên cạnh nằm hẳn trong đa giác.
   // insideLane: làn thuộc cạnh mà mọi đỉnh nằm trong khu; spawnList: làn điểm tái sinh (nút biên thật hoặc nút trong khu kề nút ngoài khu);
   // elig: xe được tính vào khu (đặt theo vị trí lúc setRegion; xe đang chờ chỗ giữ nguyên, xe đặt/tái sinh trong khu luôn hợp lệ).
@@ -591,6 +597,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     return false;
   }
   function green(node, st) {
+    if(signalPlan?.internalSt?.has(st)) return true;
     if (!signal[node]) return true;
     const managed = signalPlan && signalPlan.signalNodes.includes(node);
     if (controller && managed) return controller.isGreen(node, st, counters.t);
@@ -610,7 +617,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const st = lanes.st[inL];
     // Đèn chỉ chặn ở nút có đèn đầu tiên trên chuỗi khóa: chuỗi nút kề nhau (liên kết ngắn) có đèn lệch nhóm (xanh nhóm 0 / nhóm 1 không bao giờ trùng)
     // sẽ không bao giờ có đủ xanh cùng lúc → xe đứng vĩnh viễn; xe đã giữ/đang xin một nút có đèn coi cả cụm là một giao lộ.
-    if (!ignorePriority && !green(node, st) && !sigHeld(i, plan) && !(controller && controller.runsRed(i, node, st, counters.t)) && !redRunOk(i, node, st)) return false;
+    const mayRunRed = !isEmergencyCar(i) && ((controller && controller.runsRed(i, node, st, counters.t)) || redRunOk(i, node, st));
+    if (!(ignorePriority && !isEmergencyCar(i)) && !green(node, st) && !sigHeld(i, plan) && !mayRunRed) return false;
     const hs = holders.get(node) || [];
     for (const h of hs) if (h.car !== i && !compatible(inL, outL, h, i)) return false;
     for (const p of plan) if (p.node === node && !(p.inL === inL) && !compatible(inL, outL, { car: i, inL: p.inL, outL: p.outL, straight: straightMove(p.inL, p.outL) }, i)) return false;
@@ -811,9 +819,10 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   // Đánh dấu wanted: xe signature đang hoạt động trước (hạng −1), rồi theo selRank, hoà theo id; lấy max(Q, số signature) xe đầu.
   function chooseWanted(F, keepSignature) {
     let nElig = 0; for (let i = 0; i < N; i++) nElig += elig[i];
-    const Q = Math.round(F * nElig), key = i => (!elig[i] ? Infinity : keepSignature && isSignature(i) ? -1 : selRank[i]);
+    const protectedVehicle = i => isSignature(i) || ((isEmergencyCar(i) || testNpcs.has(i)) && active[i]);
+    const Q = Math.round(F * nElig), key = i => (!elig[i] ? Infinity : keepSignature && protectedVehicle(i) ? -1 : selRank[i]);
     order.sort((x, y) => { const a = key(x), b = key(y); return a < b ? -1 : a > b ? 1 : x - y; });
-    let take = Q; if (keepSignature) { let sig = 0; for (let i = 0; i < N; i++) if (elig[i] && isSignature(i)) sig++; take = Math.min(nElig, Math.max(Q, sig)); }
+    let take = Q; if (keepSignature) { let sig = 0; for (let i = 0; i < N; i++) if (elig[i] && protectedVehicle(i)) sig++; take = Math.min(nElig, Math.max(Q, sig)); }
     wanted.fill(0); for (let k = 0; k < take; k++) wanted[order[k]] = 1;
   }
   function select() {
@@ -918,6 +927,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
 
   function reset() {
+    if (emergencyPolicy?.reset) emergencyPolicy.reset();
+    testNpcs.clear();
     activeLanes.forEach(l => { laneCars[l] = []; laneActive[l] = 0; }); activeLanes = [];
     inStep = false; stepLanes = null;
     holders.clear(); inHold.fill(0); reqPrev.clear(); reqCur.clear(); zoneHold.clear(); zTok.fill(-1);
@@ -946,8 +957,9 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   function updateCar(i, l, idx) {
     const K = TRAFFIC_KINDS[kind[i]], Li = len[i], list = laneCars[l];
     let laneLen = lanes.length[l], si = s[i], vi = v[i];
+    const priorityGate = emergencyPolicy ? emergencyPolicy.yieldStop(i, l, si) : Infinity;
     // M5b-1: xe đang đỗ sai (beh.parkUntil): đứng yên tại chỗ, không tính breaker (đỗ có chủ đích, xem bước PARK bên dưới).
-    if (beh && beh.parkUntil[i] > counters.t) { v[i] = 0; return; }
+    if (beh && !isEmergencyCar(i) && beh.parkUntil[i] > counters.t) { v[i] = 0; return; }
     // Đường tắt cho xe đang đứng sát sau xe cũng đang đứng (đuôi hàng chờ): IDM chắc chắn cho v = 0, chỉ cộng thời gian dừng.
     if (vi === 0 && idx + 1 < list.length) {
       const o = list[idx + 1];
@@ -966,7 +978,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     if (inHold[l] > 0 && needsLock[node] && laneLen - si < 60) { const hs = holders.get(node); if (hs) for (const h of hs) { const o = h.car; if (o === i || h.inL !== l || lane[o] === l || !active[o]) continue; const past = s[o] + (lane[o] !== h.outL ? lanes.length[h.outL] : 0); let g = laneLen - (si + Li / 2) + past - len[o] / 2 - cornerPad(i, o, h.inL, h.outL); if (g < 12) g = Math.min(g, geoGap(i, o)); if (g < gap) { gap = g; vl = v[o]; } } }
     let holding = out0 < 0 || !needsLock[node] || holdsFor(i, node) >= 0;
     const front = si + Li / 2;
-    if (!holding && out0 >= 0 && front > laneLen - Rz[node] - (vi * vi / (2 * K.b) + 6)) holding = acquire(i);
+    if (!holding && priorityGate === Infinity && out0 >= 0 && front > laneLen - Rz[node] - (vi * vi / (2 * K.b) + 6)) holding = acquire(i);
     if (gap === Infinity) {
       let dist = laneLen - front;
       for (let p = 0; p < PN && dist < 70; p++) {
@@ -998,6 +1010,11 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     }
     let stopLimit = Infinity;
     if (!holding) { const g = laneLen - Rz[node] - front; if (g < gap) { gap = g; vl = 0; } stopLimit = laneLen - Rz[node] - Li / 2; }
+    // Nhường xe khẩn cấp: dừng trước vùng nút của hướng xung đột, vẫn qua IDM và hard gap.
+    if (emergencyPolicy) {
+      const gate = priorityGate;
+      if (gate < Infinity) { gap = Math.min(gap, gate - front); vl = 0; stopLimit = Math.min(stopLimit, gate - Li / 2); }
+    }
     // IDM rút gọn.
     // M5b-1 SPEED: xe vi phạm chạy nhanh hơn tốc độ mong muốn của làn (perception ghi khi vượt giới hạn đoạn + 5 km/h).
     const v0 = lanes.speed[l] * laneVmul[l] * vf[i] * (kind[i] >= HEAVY ? .85 : 1) * (beh && codeIdxOf(i) === BEHAVIOR_IDX_32.SPEED ? SPEED_MUL_32 : 1);
@@ -1046,6 +1063,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   function beginStep() {
     if (inStep) finishStep();
     counters.step++; counters.t = counters.step * STEP;
+    if (emergencyPolicy) emergencyPolicy.beforeStep(counters.t);
     if (controller) controller.update(counters.t, buildQueues());
     // M5b-1: ghi lúc mỗi nhóm đèn chuyển sang đỏ (để vượt đỏ đúng 0–3 s đầu của đỏ).
     if (beh && controller && beh.sampleNodes.length) {
@@ -1113,6 +1131,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       };
       for (const l of (lanesIntoNode.get(node) || [])) {
         const st = lanes.st[l], g = arriveGroup[st];
+        if(signalPlan?.internalSt?.has(st)) continue;
         let count = 0, wait_sum = 0, wait_max = 0, vsum = 0, crossed = 0;
         const stopPos = lanes.length[l] - Rz[node];
         const a = laneCars[l];
@@ -1179,6 +1198,8 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   function importState(st) {
     if (!st || st.format !== 1 || st.N !== N || st.NL !== NL) throw new RangeError('importState: trạng thái không khớp mạng (N/NL)');
+    if (emergencyPolicy?.reset) emergencyPolicy.reset();
+    testNpcs.clear();
     const put = (dst, src) => { if (!src || src.length !== dst.length) throw new RangeError('importState: sai độ dài mảng ' + dst.length); dst.set(src); };
     for (const l of activeLanes) { laneCars[l] = []; laneActive[l] = 0; }
     activeLanes = []; inStep = false; stepLanes = null;
@@ -1236,6 +1257,44 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     },
     behaviorCodeOf: i => { const c = codeIdxOf(i); return c ? Object.keys(BEHAVIOR_IDX_32).find(k => BEHAVIOR_IDX_32[k] === c) : null; },
     N, lane, s, v, lat, jit, gen, active, kind, len, wid, next, prevLane, pLane, pS, pGen, path, counters, exportState, importState,
+    setEmergencyPolicy(p) { emergencyPolicy = p; },
+    spawnTestNpc(count) {
+      if (!Number.isInteger(count) || count<1 || count>50) throw new RangeError('Mỗi lượt thêm từ 1 đến 50 NPC');
+      finishStep();
+      let added=0;
+      for(let i=0;i<N && added<count && testNpcs.size<200;i++) {
+        if(!elig[i] || active[i] || wanted[i] || pending[i] || testNpcs.has(i)) continue;
+        const l=lane[i];
+        if(!insideLane[l] || laneClosed[l] || s[i]-len[i]/2<Rz[lanes.from[l]]+1 || s[i]+len[i]/2>lanes.length[l]-Rz[lanes.to[l]]-10) continue;
+        if(!reactivate(i)) continue;
+        testNpcs.add(i); wanted[i]=1; pLane[i]=lane[i]; pS[i]=s[i]; pGen[i]=gen[i]; added++;
+      }
+      return {added,total:testNpcs.size};
+    },
+    clearTestNpcs() {
+      finishStep(); let removed=0;
+      for(const i of testNpcs) {
+        if(isEmergencyCar(i)) continue;
+        wanted[i]=0; pending[i]=0; deactivate(i); testNpcs.delete(i); removed++;
+      }
+      return {removed,total:testNpcs.size};
+    },
+    testNpcCount: () => testNpcs.size,
+    activateEmergencyVehicle(i) {
+      if (!Number.isInteger(i) || i<0 || i>=N || !elig[i] || kind[i]!==1 || active[i]) return false;
+      const l=lane[i];
+      if (!insideLane[l] || s[i]-len[i]/2 < Rz[lanes.from[l]]+1 || s[i]+len[i]/2 > lanes.length[l]-Rz[lanes.to[l]]-10) return false;
+      const wasWanted=wanted[i];
+      if (!reactivate(i)) return false;
+      emergencyActivated.set(i,{gen:gen[i],wanted:wasWanted}); wanted[i]=1; return true;
+    },
+    releaseEmergencyVehicle(i, generation) {
+      const saved=emergencyActivated.get(i); emergencyActivated.delete(i);
+      if (!saved || gen[i]!==generation || gen[i]!==saved.gen) return;
+      if (!saved.wanted) {wanted[i]=0;pending[i]=0;deactivate(i);}
+    },
+    holdsNode: (i, node) => holdsFor(i, node) >= 0,
+    get emergencyPolicy() { return emergencyPolicy; },
     step, beginStep, workStep, finishStep, get inStep() { return inStep; }, reset, stats, wantedCount: () => { let n = 0; for (let i = 0; i < N; i++) n += wanted[i]; return n; }, pendingCount: () => { let n = 0; for (let i = 0; i < N; i++) n += pending[i]; return n; }, stateHash: () => { finishStep(); return stateHash(); }, select: () => { finishStep(); return select(); }, activeCount, isSignature,
     setRestrictions, clearRestrictions: () => setRestrictions({}), restrictionCounts: () => ({ closed: closedCount, blocked: laneBlockS.reduce((a, b) => a + (b < Infinity ? 1 : 0), 0), slowed: laneVmul.reduce((a, k) => a + (k < 1 ? 1 : 0), 0) }),
     setRegion, get region() { return region ? { id: region.id, active: true, margin: region.margin, lanes: insideLane.reduce((a, b) => a + b, 0), spawnLanes: spawnList.length } : { id: null, active: false, margin: 0, lanes: NL, spawnLanes: spawnLanes.length }; },

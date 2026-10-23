@@ -90,7 +90,7 @@ export function readbackFlip32(renderer) {
 }
 
 // Khung bằng chứng chỉ giữ MỘT đầu đèn: đầu đèn của nút camera giám sát có mặt nhìn về camera nhất.
-// Một nút có 4 mặt (2 nhóm × 2 mặt đối nhau) nên nếu giữ hết thì đỏ và xanh của các hướng sẽ sáng cùng lúc.
+// Các hướng có pha khác nhau; chọn mặt nhìn về camera để khung bằng chứng không lẫn pha hướng khác.
 // cam: { node_id, x, z }; heads: [{ node_id, x, z, yaw }] với yaw = rotation.y của Group đầu đèn.
 // Trả về chỉ số đầu đèn được giữ, hoặc -1 nếu không mặt nào nhìn về camera.
 export function pickCaptureHeads32(cam, heads) {

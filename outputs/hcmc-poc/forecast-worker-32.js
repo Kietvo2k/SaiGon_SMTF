@@ -2,7 +2,7 @@
 //   init {graph, roads, widths, drawn, signalPlan, breakerS, expectStats} → dựng đúng mạng của trạm chính (một lần);
 //   run {id, job} → chạy bản sao sim từ job.state tới 30 phút sim → result {id, t0, scale, levels, …}.
 // Lỗi bất kỳ → {type:'error', id, message}. Worker không đụng DOM và không giữ trạng thái giữa các lần chạy (trừ mạng và sim tái dùng).
-import { buildTrafficNetwork31 } from './city-traffic-sim-31.js?v=32a';
+import { buildTrafficNetwork31 } from './city-traffic-sim-31.js?v=32c';
 import { createLookaheadRunner32 } from './forecast-core-32.js?v=32a';
 
 export const FORECAST_WORKER_32_VERSION = 'forecast-worker-32a';
