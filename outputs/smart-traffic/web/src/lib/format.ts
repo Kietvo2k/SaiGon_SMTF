@@ -2,6 +2,11 @@ export function formatVnd(n: number): string {
   return n.toLocaleString('vi-VN') + ' đ';
 }
 
+export function penaltyContext(p: { verified?: boolean; source?: string; license_deduction_points?: number | null } | null | undefined): string {
+  if (!p?.verified || !p.source) return '';
+  return p.source + (p.license_deduction_points == null ? '' : ` · Trừ ${p.license_deduction_points} điểm GPLX`);
+}
+
 // Chưa xác minh (NĐ 168/2024 chưa đủ) thì không hiện số tiền; backend cũng không gửi số tiền trong trường hợp này.
 export function formatPenalty(p: { vnd_min?: number | null; vnd_max?: number | null; verified?: boolean } | null | undefined): string {
   if (!p || !p.verified) return 'Mức phạt đang cập nhật theo NĐ 168/2024/NĐ-CP';

@@ -4,6 +4,8 @@ export interface Penalty {
   vnd_min: number | null;
   vnd_max: number | null;
   verified: boolean;
+  source?: string;
+  license_deduction_points?: number | null;
 }
 
 export interface Me {
@@ -34,6 +36,7 @@ export interface OfficerViolation {
   penalty: Penalty | null;
   priority_flag: boolean;
   priority_reason: string | null;
+  auto?: boolean;
 }
 
 export interface OfficerComplaint {

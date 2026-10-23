@@ -1,7 +1,13 @@
 // WebSocket M6: gửi token trong tin nhắn đầu (không đặt token trên URL), tự nối lại với backoff 1→30 s.
 import { API_BASE } from './api';
 
-const WS_URL: string = import.meta.env.VITE_WS_URL || API_BASE.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '/ws/v1');
+export function resolveWsUrl(configured: string | undefined, apiBase: string): string {
+  const url = new URL(configured || '/ws/v1', apiBase);
+  url.protocol = url.protocol === 'https:' || url.protocol === 'wss:' ? 'wss:' : 'ws:';
+  return url.href;
+}
+
+const WS_URL: string = resolveWsUrl(import.meta.env.VITE_WS_URL, API_BASE);
 
 export interface WsMessage {
   event: string;

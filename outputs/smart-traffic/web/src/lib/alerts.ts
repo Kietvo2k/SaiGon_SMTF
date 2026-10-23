@@ -16,6 +16,18 @@ export interface PublicAlertsView {
   updated_at: string | null;
 }
 
+// Gom các đoạn cùng đường/thời hạn; khóa UI không phụ thuộc xác suất thay đổi.
+export function groupPublicAlerts(items: PublicAlert[]): PublicAlert[] {
+  const groups = new Map<string, PublicAlert>();
+  for (const item of items) {
+    const key = JSON.stringify([item.name, item.horizon_min]);
+    const previous = groups.get(key);
+    if (!previous || item.prob_pct > previous.prob_pct ||
+      (item.prob_pct === previous.prob_pct && item.level > previous.level)) groups.set(key, item);
+  }
+  return [...groups.values()].sort((a, b) => b.prob_pct - a.prob_pct || a.horizon_min - b.horizon_min);
+}
+
 export function probPercent(prob: number): number {
   return Math.round(Math.min(1, Math.max(0, prob)) * 100);
 }

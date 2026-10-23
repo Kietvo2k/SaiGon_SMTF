@@ -7,7 +7,7 @@ export const SCENARIO_OPTIONS: { key: ScenarioChoice; label: string; hint: strin
   { key: 'peak-hang-xanh', label: 'Giờ cao điểm Hàng Xanh', hint: 'Tăng nhu cầu xe quanh nút Hàng Xanh.' },
   { key: 'lane-block', label: 'Sự cố chặn làn', hint: 'Một làn bị chặn, xe phải chuyển làn.' },
   { key: 'flood-nhc', label: 'Ngập Nguyễn Hữu Cảnh', hint: 'Đoạn Nguyễn Hữu Cảnh bị ngập nước.' },
-  { key: 'priority-run', label: 'Xe ưu tiên chạy qua', hint: 'Xe ưu tiên đi qua tuyến, xe khác nhường đường.' },
+  { key: 'priority-run', label: 'Xe khẩn cấp', hint: 'Điều xe, nhường đường và ưu tiên pha an toàn ở nút sắp tới.' },
   { key: 'none', label: 'Không (dừng kịch bản đang chạy)', hint: 'Trả hệ thống về vận hành bình thường.' },
 ];
 

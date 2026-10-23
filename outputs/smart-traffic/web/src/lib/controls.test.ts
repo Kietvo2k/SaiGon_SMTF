@@ -10,7 +10,7 @@ import {
 } from './controls';
 
 describe('kịch bản', () => {
-  it('có đủ 4 kịch bản và mục dừng "Không", theo đúng khóa của backend', () => {
+  it('chỉ cho gửi các kịch bản trạm thực sự hỗ trợ, có mục dừng', () => {
     expect(SCENARIO_OPTIONS.map(o => o.key)).toEqual(['peak-hang-xanh', 'lane-block', 'flood-nhc', 'priority-run', 'none']);
     expect(scenarioLabel('flood-nhc')).toBe('Ngập Nguyễn Hữu Cảnh');
     expect(scenarioLabel(null)).toBe('Không có kịch bản');

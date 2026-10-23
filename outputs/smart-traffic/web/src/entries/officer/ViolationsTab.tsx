@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Api, errorMessage, streamUrl } from '../../lib/api';
-import { formatDateTime, formatPenalty } from '../../lib/format';
+import { formatDateTime, formatPenalty, penaltyContext } from '../../lib/format';
 import { violationLabel, violationStatusLabel } from '../../lib/labels';
 import { Pager, pageCount } from '../../components/Pager';
-import { cameraDefault, cameraOptions } from '../../lib/cameras';
+import { cameraDefault, cameraOptions, CameraOption } from '../../lib/cameras';
 import type { OfficerViolation, Page } from '../../lib/types';
 
 type Filter = 'pending' | 'confirmed' | 'notified' | 'disputed' | 'paid' | 'dismissed' | 'all';
@@ -44,16 +44,19 @@ const SUCCESS_TEXT: Record<Action, (status?: string) => string> = {
 
 export function ViolationsTab({ api, tick, streamTick, onChanged, onCameraChange }: Props) {
   const [camOk, setCamOk] = useState(true);
-  const [cams, setCams] = useState<string[]>([]);
+  const [cams, setCams] = useState<CameraOption[]>([]);
   const [cameraId, setCameraId] = useState<string>(CAMERA_ID);
   const camBox = useRef<HTMLElement | null>(null);
-  const [filter, setFilter] = useState<Filter>('pending');
+  const [filter, setFilter] = useState<Filter>('all');
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<OfficerViolation[]>([]);
   const [total, setTotal] = useState(0);
   const [loadError, setLoadError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [flash, setFlash] = useState<Flash | null>(null);
+
+  // Trang có thể mở trước khi trạm gửi khung đầu; mỗi lần làm mới phải thử lại ảnh đã lỗi.
+  useEffect(() => setCamOk(true), [cameraId, streamTick, tick]);
 
   // Danh sách camera giao lộ để chọn (10 camera, mỗi nút 1–2 hướng).
   useEffect(() => {
@@ -62,11 +65,11 @@ export function ViolationsTab({ api, tick, streamTick, onChanged, onCameraChange
       .then(r => {
         if (!alive) return;
         const opts = cameraOptions(r.streams);
-        setCams(opts.map(o => o.value));
+        setCams(opts);
         const first = cameraDefault(r.streams);
         if (first) { setCameraId(first); onCameraChange(first); }
       })
-      .catch(() => { if (alive) setCams([CAMERA_ID]); });
+      .catch(() => { if (alive) setCams([{value: CAMERA_ID, label: CAMERA_ID}]); });
     return () => { alive = false; };
   }, [api]);
 
@@ -140,7 +143,7 @@ export function ViolationsTab({ api, tick, streamTick, onChanged, onCameraChange
         <div className="toolbar">
           <label>Camera giao lộ
             <select value={cameraId} onChange={e => { setCameraId(e.target.value); onCameraChange(e.target.value); setCamOk(true); }}>
-              {cams.map(id => <option key={id} value={id}>{id}</option>)}
+              {cams.map(cam => <option key={cam.value} value={cam.value}>{cam.label}</option>)}
             </select>
           </label>
           <label>Lọc theo trạng thái
@@ -149,6 +152,7 @@ export function ViolationsTab({ api, tick, streamTick, onChanged, onCameraChange
             </select>
           </label>
           <p className="count">Có {total} vi phạm{filter === 'pending' && total > items.length ? `, đang hiện ${items.length} mục` : ''}.</p>
+          <p className="hint">Tự động: vi phạm được xác nhận và báo về ngay; khoảng 1% tự sinh khiếu nại để xử lý ở mục Khiếu nại.</p>
         </div>
       </div>
 
@@ -176,8 +180,11 @@ export function ViolationsTab({ api, tick, streamTick, onChanged, onCameraChange
                 <td>{violationLabel(v.violation_code)}</td>
                 <td>{formatDateTime(v.occurred_at)}</td>
                 <td>{v.node_id}</td>
-                <td>{formatPenalty(v.penalty)}</td>
-                <td><span className={`badge s-${v.status}`}>{violationStatusLabel(v.status)}</span></td>
+                <td>{formatPenalty(v.penalty)}<small style={{display:'block',marginTop:4}}>{penaltyContext(v.penalty)}</small></td>
+                <td>
+                  <span className={`badge s-${v.status}`}>{violationStatusLabel(v.status)}</span>
+                  {v.auto && <span className="badge auto">Tự động</span>}
+                </td>
                 <td className="actions">
                   {(v.status === 'new' || v.status === 'needs_review') && (
                     <>

@@ -42,6 +42,7 @@ export function ControlsTab({ api, tick, canControl }: Props) {
   const [duration, setDuration] = useState(DEFAULT_DURATION_S);
   const [reason, setReason] = useState('');
   const [pending, setPending] = useState<ScenarioChoice | null>(null);
+  const [emergencyKind, setEmergencyKind] = useState('ambulance');
   const [pendingMode, setPendingMode] = useState<string | null>(null);   // chế độ vừa gửi, chờ trạm báo lại
   const [now, setNow] = useState(() => Date.now());
 
@@ -108,8 +109,8 @@ export function ControlsTab({ api, tick, canControl }: Props) {
 
   const startScenario = (choice: ScenarioChoice) => {
     setPending(null);
-    run(() => api.post('/officer/controls/scenario', { scenario: choice }),
-      choice === 'none' ? 'Đã dừng kịch bản đang chạy.' : `Đã chạy kịch bản: ${scenarioLabel(choice)}.`);
+    run(() => api.post('/officer/controls/scenario', { scenario: choice, params: choice === 'priority-run' ? {kind: emergencyKind} : {} }),
+      `Đã gửi lệnh ${choice === 'none' ? 'dừng kịch bản' : scenarioLabel(choice)}. Theo dõi trạng thái thực tế tại trạm 3D.`);
   };
 
   const saveVms = (item: VmsItem, text: string, mode: 'auto' | 'manual') =>
@@ -127,7 +128,7 @@ export function ControlsTab({ api, tick, canControl }: Props) {
 
       <div className="toolbar">
         <p className="count">Chế độ đèn hiện tại: <b>{MODE_LABEL[state?.mode ?? ''] ?? (state?.mode || '–')}</b></p>
-        <p className="count">Kịch bản đang chạy: <b>{current ? scenarioLabel(current.key) : 'Không có'}</b></p>
+        <p className="count">Lệnh kịch bản đã gửi: <b>{current ? scenarioLabel(current.key) : 'Không có'}</b>. Trạng thái thực hiện xem tại trạm 3D.</p>
       </div>
 
       {flash && <p className={flash.ok ? 'notice' : 'error'} role={flash.ok ? 'status' : 'alert'}>{flash.text}</p>}
@@ -233,9 +234,12 @@ export function ControlsTab({ api, tick, canControl }: Props) {
               </li>
             ))}
           </ul>
+          <label>Loại xe khẩn cấp <select value={emergencyKind} onChange={e=>setEmergencyKind(e.target.value)} disabled={busy}>
+            <option value="ambulance">Xe cứu thương</option><option value="fire">Xe chỉ huy cứu hỏa</option><option value="police">Xe cảnh sát</option>
+          </select></label>
           {pending && (
             <div className="confirm-box" role="alertdialog" aria-label="Xác nhận kịch bản">
-              <span>Xác nhận {pendingLabel}? Trạm 3D áp dụng ngay và việc này được ghi vào nhật ký.</span>
+              <span>Xác nhận {pendingLabel}? Lệnh được ghi nhật ký; cần trạm 3D đang kết nối để thực hiện.</span>
               <span className="actions">
                 <button type="button" disabled={busy} onClick={() => startScenario(pending)}>Xác nhận</button>
                 <button type="button" className="ghost" onClick={() => setPending(null)}>Hủy</button>

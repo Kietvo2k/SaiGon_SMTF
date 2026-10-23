@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../../lib/api';
-import { PublicAlertsView, publicAlertSummary } from '../../lib/alerts';
+import { PublicAlertsView, publicAlertSummary, groupPublicAlerts } from '../../lib/alerts';
 import { formatDateTime } from '../../lib/format';
 
 const REFRESH_MS = 30000;
@@ -43,8 +43,8 @@ export function TrafficAlertsPanel() {
       {data && data.items.length === 0 && <p className="hint">Hiện chưa có cảnh báo</p>}
       {data && data.items.length > 0 && (
         <ul className="alert-list">
-          {data.items.map(item => (
-            <li key={`${item.name}-${item.horizon_min}-${item.prob_pct}`}>{publicAlertSummary(item)}</li>
+          {groupPublicAlerts(data.items).map(item => (
+            <li key={JSON.stringify([item.name, item.horizon_min])}>{publicAlertSummary(item)}</li>
           ))}
         </ul>
       )}

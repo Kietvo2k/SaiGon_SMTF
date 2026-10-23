@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { alertSummary, horizonText, levelLabel, probPercent, publicAlertSummary } from './alerts';
+import { alertSummary, horizonText, levelLabel, probPercent, publicAlertSummary, groupPublicAlerts } from './alerts';
+
+it('gom đoạn đường trùng thành một cảnh báo công khai mạnh nhất mỗi hướng thời gian', () => {
+  const items = groupPublicAlerts([
+    {name:'Điện Biên Phủ',level:1,level_label:'Đông nhẹ',prob_pct:75,horizon_min:30},
+    {name:'Điện Biên Phủ',level:4,level_label:'Kẹt nặng',prob_pct:75,horizon_min:30},
+    {name:'Điện Biên Phủ',level:2,level_label:'Đông',prob_pct:90,horizon_min:10},
+  ]);
+  expect(items).toHaveLength(2);
+  expect(items.find(a=>a.horizon_min===30)?.level).toBe(4);
+  expect(items.find(a=>a.horizon_min===10)?.prob_pct).toBe(90);
+});
 
 describe('chữ hiển thị cảnh báo kẹt', () => {
   it('xác suất đổi sang phần trăm nguyên và kẹp trong 0–100', () => {

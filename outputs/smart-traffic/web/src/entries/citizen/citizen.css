@@ -13,6 +13,42 @@
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Luồng công khai ưu tiên tra cứu; phần hồ sơ cá nhân nằm ở lối phụ. */
+.public-page { display:flex; flex-direction:column; min-height:100vh; background:#f5f7f8; }
+.public-header { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:24px max(24px, calc((100vw - 1120px) / 2)); border-bottom:1px solid #dce3e6; }
+.wordmark { display:flex; align-items:center; gap:10px; color:#123a43; font-size:23px; font-weight:800; letter-spacing:-.7px; text-decoration:none; }
+.wordmark span { border-left:1px solid #b9c8cc; padding-left:10px; font-size:10px; letter-spacing:2px; font-weight:650; }
+.public-area { font-size:13px; color:#53656c; }
+.public-main { width:min(100% - 40px, 760px); margin:60px auto 48px; flex:1; }
+.lookup-intro { margin-bottom:30px; }
+.eyebrow { color:#54747a; font-size:11px; font-weight:700; letter-spacing:2px; margin:0 0 16px; }
+.lookup-intro h1 { font-size:clamp(32px, 5vw, 48px); line-height:1.12; letter-spacing:-1.6px; color:#14343d; font-weight:650; }
+.lookup-intro > p:last-child { color:#53656c; margin:18px 0 0; }
+.lookup-card { padding:28px; border-radius:6px; border-color:#d6dfe2; box-shadow:0 8px 28px #19394308; }
+.lookup-card h2 { font-size:16px; color:#263f48; margin-bottom:18px; }
+.lookup-card .row-form { display:flex; align-items:end; gap:12px; }
+.lookup-card .row-form label { flex:1; }
+.lookup-card input { font-size:21px; font-weight:600; letter-spacing:1px; padding:12px 14px; border-radius:4px; }
+.lookup-card button { background:#145d68; border-radius:4px; min-height:55px; padding-inline:22px; }
+.lookup-card .status-line:empty, .lookup-card .list:empty { display:none; }
+.lookup-card .hint { margin:12px 0 0; }
+.traffic-disclosure { margin-top:24px; border-top:1px solid #dce3e6; padding-top:18px; color:#53656c; font-size:14px; }
+.traffic-disclosure summary { cursor:pointer; padding:4px 0; }
+.traffic-disclosure .card { margin-top:14px; }
+.public-footer { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:20px max(24px, calc((100vw - 1120px) / 2)); border-top:1px solid #dce3e6; font-size:12px; color:#62757c; }
+.text-button { background:transparent; color:#38616a; padding:4px 0; min-height:32px; font-size:12px; text-decoration:underline; text-underline-offset:3px; }
+.penalty-context { display:block; color:#5a6573; font-size:12px; line-height:1.5; margin-top:5px; }
+button:focus-visible, input:focus-visible, summary:focus-visible, a:focus-visible { outline:3px solid #3a8b9b; outline-offset:3px; }
+@media (max-width:540px) {
+  .public-header { padding:20px; }
+  .public-area { font-size:11px; }
+  .public-main { margin-top:36px; width:calc(100% - 32px); }
+  .lookup-card { padding:20px; }
+  .lookup-card .row-form { flex-direction:column; align-items:stretch; }
+  .lookup-card input { width:100%; }
+  .public-footer { padding:18px 20px; }
+}
+
 * { box-sizing: border-box; }
 
 body {

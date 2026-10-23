@@ -39,6 +39,7 @@ export const COMPLAINT_KIND_LABELS: Record<string, string> = {
   priority_vehicle: 'Xe được ưu tiên đi trước',
   wrong_plate: 'Sai biển số, không phải xe của tôi',
   other: 'Lý do khác',
+  auto_1pct: 'Hệ thống tự động ghi nhận (1%)',
 };
 
 export function complaintKindLabel(kind: string): string {

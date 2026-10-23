@@ -163,6 +163,7 @@ td.empty { text-align: center; color: var(--muted); padding: 22px; }
 .badge.s-disputed, .badge.c-open { background: #fdecea; color: var(--danger); }
 .badge.s-paid, .badge.c-resolved { background: #e7f6ee; color: var(--ok); }
 .badge.c-rejected, .badge.s-dismissed { background: #eceff3; color: #475467; }
+.badge.auto { background: #eef2ff; color: #4338ca; margin-left: 4px; }
 
 .cards { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
 .card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfcfe; }

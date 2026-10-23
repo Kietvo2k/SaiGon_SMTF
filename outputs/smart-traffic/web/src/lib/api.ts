@@ -1,6 +1,10 @@
 // Gọi API M6. Token chỉ nằm trong sessionStorage (theo từng web) hoặc trong state; không lưu mật khẩu.
 
-export const API_BASE: string = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8900/api/v1';
+export function resolveApiBase(configured?: string, pageOrigin = globalThis.location?.origin): string {
+  return new URL(configured || 'http://127.0.0.1:8900/api/v1', pageOrigin || 'http://127.0.0.1:8900').href.replace(/\/$/, '');
+}
+
+export const API_BASE: string = resolveApiBase(import.meta.env.VITE_API_BASE);
 // Gốc máy chủ (bỏ /api/v1) để ghép URL bằng chứng `/api/v1/media/...`.
 export const ORIGIN: string = API_BASE.replace(/\/api\/v1\/?$/, '');
 
