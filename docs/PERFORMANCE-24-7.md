@@ -1,5 +1,7 @@
 # Hiệu năng khi chạy 24/7: hiện trạng, nguồn tải nghi vấn và đề xuất
 
+> Tài liệu khảo sát tháng 10. Dùng mục [PERF-01 trong đặc tả public](agent/PUBLIC-DEMO-SPEC.md#perf-01-hiệu-năng-và-tải-tài-nguyên) để đo và nghiệm thu bản chấm thi hiện tại.
+
 Ngày: 2026-10-17. Phạm vi: chỉ ghi tài liệu, không sửa mã. Mọi nhận định dưới đây là **nghi vấn**. Mục "Trạng thái" ghi rõ đã thấy trong mã hay chưa xác nhận.
 
 ## 1. Hiện trạng

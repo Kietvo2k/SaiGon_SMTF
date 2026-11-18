@@ -1,0 +1,48 @@
+name: quality-gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality-gate:
+    name: quality-gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      HARDTEST_ARTIFACT_DIR: ${{ runner.temp }}/smtf-hardtest
+      HARDTEST_PYTHON: python
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: outputs/smart-traffic/web/package-lock.json
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Cài dependency web
+        working-directory: outputs/smart-traffic/web
+        run: npm ci
+      - name: Cài dependency backend và pytest
+        run: python -m pip install -r docker/requirements.lock httpx==0.28.1 pytest==9.1.1
+      - name: Chạy hardtest CI
+        run: node scripts/hardtest/run.mjs --profile ci --output-dir "$HARDTEST_ARTIFACT_DIR"
+      - name: Lưu báo cáo và log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: hardtest-ci
+          path: |
+            ${{ env.HARDTEST_ARTIFACT_DIR }}/**/report.json
+            ${{ env.HARDTEST_ARTIFACT_DIR }}/**/*.log
+            ${{ env.HARDTEST_ARTIFACT_DIR }}/**/WEB-TEST.json
+            ${{ env.HARDTEST_ARTIFACT_DIR }}/**/API-REGRESSION.xml
+          retention-days: 7
+          if-no-files-found: warn

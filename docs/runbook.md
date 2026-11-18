@@ -1,5 +1,7 @@
 # Vận hành Smart Traffic
 
+Tài liệu này dành cho Docker và phát triển cục bộ. Bản public ghim tài nguyên Pages và phục vụ cả ba trang từ Vercel, theo [runbook riêng](deploy-public.md).
+
 ## Chạy bằng Docker
 
 Cần Docker Engine đang hoạt động và Docker Compose v2. Từ thư mục gốc kho mã:

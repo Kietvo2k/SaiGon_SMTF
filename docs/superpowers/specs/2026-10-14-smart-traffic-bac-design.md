@@ -1,5 +1,7 @@
 # Đặc tả thiết kế Smart Traffic khu Bắc
 
+> Đặc tả lịch sử của phần Smart Traffic khu Bắc. Quyết định hiện hành cho phase public nằm trong [Public Demo v1](../../agent/PUBLIC-DEMO-SPEC.md).
+
 | Trường | Giá trị |
 |---|---|
 | Ngày | 2026-10-14 |

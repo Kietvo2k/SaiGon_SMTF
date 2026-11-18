@@ -1,6 +1,17 @@
 # Quyết định đã chốt — Smart Traffic khu Bắc (SaiGon SMTF)
 
-Nguồn: phỏng vấn người dùng 13–14/10/2026. Đây là ĐẦU VÀO BẮT BUỘC cho mọi agent. Không tự đổi quyết định; thấy mâu thuẫn thì ghi vào báo cáo.
+## Quyết định ngày 18/11/2026 cho public v1
+
+- Ba trải nghiệm đi từ một landing page trên Vercel. Cloudflare Pages Free phục vụ dữ liệu tĩnh. Toàn bộ luồng demo công khai chạy trong trình duyệt bằng dữ liệu mẫu riêng mỗi hồ sơ. Docker dành cho chạy cục bộ khi cần.
+- Chỉ phát hành dữ liệu khu Bắc, mở rộng đúng năm cụm có đèn và cải thiện chỗ xe quay hoặc chuyển làn. Cần tuyến có điểm đến, diễn giải quyết định đèn, kết quả A/B, chẩn đoán kẹt và camera toàn cảnh.
+- Phiên public hiển thị tài khoản mẫu ngay tại form. Nhận diện YOLOX từ ảnh và điều phối từ mô phỏng là hai luồng. UI ghi nguồn dữ liệu và rõ hành vi chạy thật.
+- Hai nhánh UI/lõi dùng chung đặc tả và hợp đồng từ cùng commit. Tách người viết code, hardtest, meta, kiểm chéo, review và browser-qa. Tối đa hai vòng sửa trước khi chuyển chẩn đoán.
+
+Áp dụng [đặc tả mới](PUBLIC-DEMO-SPEC.md), [hợp đồng](CONTRACT-PUBLIC-DEMO.md) và [quy trình điều phối](RULES.md) nếu nội dung tháng 10 bên dưới khác.
+
+## Lịch sử quyết định tháng 10
+
+Nguồn: phỏng vấn người dùng 13–14/10/2026. Các mục còn lại là đầu vào của đợt Smart Traffic trước.
 
 ## 1. Mục tiêu và bối cảnh
 - Đồ án / cuộc thi. Demo giải pháp giao thông thông minh trên digital twin 3D Sài Gòn đã có (nhánh 31A, Three.js r186 WebGPU + WebGL2 fallback, app tĩnh `outputs/hcmc-poc/`).

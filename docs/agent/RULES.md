@@ -1,122 +1,64 @@
-# Quy tắc chung cho agent (bắt buộc đọc trước mọi task)
+# Quy tắc điều phối và nghiệm thu Public Demo
 
-Áp dụng cho mọi prompt trong `docs/prompts/`. Thay cho `work/oc-task.md` cũ, vì thư mục `work/` không có trong repo.
+Áp dụng cho hai [prompt hiện hành](../prompts/README.md). Bắt đầu với `AGENTS.md`, [bàn giao](HANDOFF.md), [đặc tả](PUBLIC-DEMO-SPEC.md) và [hợp đồng](CONTRACT-PUBLIC-DEMO.md). Các nguồn này làm căn cứ giao việc và xác minh. Tài liệu tháng 10 là lịch sử.
 
-1. **Đọc trước:**
-   - Bắt buộc: `docs/agent/DECISIONS.md` (quyết định người dùng đã chốt) và `docs/agent/HANDOFF.md` (hiện trạng, hợp đồng backend, việc còn mở).
-   - Đặc tả chuẩn là `docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md`. Chỉ đọc những mục mà prompt trích dẫn.
-2. **Phạm vi:**
-   - Chỉ sửa các file mà prompt cho phép.
-   - Không refactor ngoài phạm vi.
-   - Thấy đặc tả hay kế hoạch mâu thuẫn với mã thật: chọn cách nhỏ nhất mà vẫn đúng đặc tả, rồi ghi rõ trong báo cáo.
-3. **TDD:** viết test, chạy thấy FAIL, cài đặt tối thiểu, rồi chạy thấy PASS.
-4. **Không sa lầy:**
-   - Mỗi mục tiêu đo lường được thử tối đa 2 vòng chỉnh.
-   - Hết 2 vòng mà chưa đạt thì dừng: giữ mặc định cũ, đưa biến thể mới vào sau cờ tùy chọn, rồi báo cáo trung thực bằng số.
-   - Không vá lỗi này sang lỗi khác ngoài phạm vi prompt; ghi lại để làm task sau.
-5. **Giữ tương thích:**
-   - Mở `webgpu-materials-24.html` không có `app=smart` thì phải chạy 31A cổ điển y nguyên.
-   - Sim chạy không có tham số mới thì giữ hash cổ điển `c05ce91e`.
-   - `fixed` và mặc định `max-pressure` không đổi, trừ khi prompt cho phép.
-6. **Server và tiến trình nền:**
-   - Chạy bằng `nohup … > work/tmp-<tên>.log 2>&1 < /dev/null &`.
-   - Dùng cổng riêng ghi trong prompt. Nếu prompt không ghi: tĩnh 8831, backend 8930.
-   - Tắt mọi server, Chromium và node của mình trước khi kết thúc.
-7. **Cài package:**
-   - Chỉ cài trong dự án: npm trong `outputs/smart-traffic/web`, pip trong `outputs/smart-traffic/backend/.venv`.
-   - Không cài global.
-8. **Git:**
-   - Chỉ `git add <từng file>`. Không `git add -A` hoặc `.`, không stash, reset, đổi nhánh hay push. Riêng điều phối viên của `docs/prompts/AUTO-RUN.md` được push nhánh `main` và được `git revert` commit của sub agent.
-   - Không commit `work/`, `var/`, `node_modules/`, `.venv/`, `dist/`, media hay model.
-   - Message commit bằng tiếng Việt, theo mẫu prompt ghi.
-9. **UI:**
-   - Không dùng các chữ "giả lập", "mô phỏng", "minh họa", "illustrative", "simulated", "demo", "fake".
-   - Không dùng tên, logo hay tên miền của CSGT, Bộ Công an, Cổng dịch vụ công hoặc cổng phạt nguội thật.
-   - Nộp phạt chỉ đổi trạng thái: không có ô thẻ hay tài khoản ngân hàng.
-   - Tài liệu kỹ thuật thì ghi rõ bản chất mô phỏng.
-10. **Chống vỡ dấu:**
-    - Không ghi file nguồn bằng PowerShell `Set-Content`, `Out-File` hay `>` (PowerShell 5.1 làm hỏng UTF-8). Dùng công cụ edit của agent hoặc Python `encoding='utf-8'`.
-    - Trước mỗi commit chạy `grep -c "Ã¡\|Ã©\|Ã³\|Ãº\|á»\|áº\|Ä‘\|Æ°" <file>` cho từng file; kết quả phải bằng 0.
-11. **Phạm vi đọc:**
-    - Chỉ đọc và ghi trong repo (cộng thư mục tạm của hệ thống).
-    - Không mở thư mục cá nhân của người dùng (Pictures, Documents, Desktop, Downloads…) hay repo khác.
-12. **Bí mật:** tài khoản seed dev chỉ nằm trong `outputs/smart-traffic/backend/app/seed/accounts.json`. Không in mật khẩu ra báo cáo, UI hay README.
-13. **Kết thúc:**
-    - Chạy lại toàn bộ lệnh kiểm mà prompt ghi.
-    - Ghi báo cáo ≤ 25 dòng vào `work/<TÊN-TASK>.report.md` theo đúng mẫu dưới đây, rồi in ra cuối phiên.
+## Nhận việc và kiểm phiên bản
 
-```markdown
-# <TÊN-TASK>: ĐẠT | KHÔNG ĐẠT | DỪNG SỚM
-Commit: <hash> — <message>
-File đã đổi: <danh sách>
-## Số đo
-| Chỉ số | Trước | Sau | Ngưỡng | Đạt? |
-|---|---|---|---|---|
-## Kiểm
-- <lệnh>: <pass>/<tổng>
-## Lệch khỏi prompt
-- <điều gì, vì sao> (không có thì ghi "Không")
-## Ngưỡng đề xuất cho bước sau (chỉ prompt đo)
-- <chỉ số>: <giá trị> — lý do
-## Việc còn dở / phát hiện ngoài phạm vi
-- ...
+Điều phối viên chốt kế hoạch sau khi gọi một `planner` kiểm đọc, đối chiếu mã thật, rủi ro và cách đo. Sau đó chia từng lát độc lập, khóa requirement ID, input, oracle, file ownership, lệnh và kết quả cần trả. Hai nhánh cấp chính xuất phát từ cùng mốc `smtf-public-demo-base-v1`. Mỗi agent ghi dùng một worktree riêng của lát, còn agent review dùng ứng viên đúng SHA ở worktree chỉ đọc. Điều phối viên giữ các file hợp đồng và kiểm tích hợp.
+
+Với mỗi vai trò/lần sửa, cấp một ID in hoa riêng. Tạo `work/smtf-agent/briefs/<ID>.json` tại worktree được giao trước khi agent bắt đầu. Brief có `task`, `role`, `branch`, `worktree` tuyệt đối, `baseSha`, `specVersion: "public-demo-v1"`, `requirements`, `writablePaths`, `round` từ `0` đến `2` và `requiredReads` tùy chọn. Dùng đường dẫn repo đầy đủ cho từng file; dấu `/` cuối entry biểu thị prefix thư mục. `planner`, `review`, `browser-qa` có `writablePaths: []`. Điều phối viên ghi cả SHA thực tế lúc giao vào ledger.
+
+Agent mở phiên, resumed hoặc sau compact phải đối chiếu ledger và brief, rồi chạy preflight trước khi chỉnh sửa hoặc kiểm:
+
+```powershell
+git status --short --branch
+git rev-parse HEAD
+node scripts/agent/preflight.mjs --task <ID> --role <vai-trò>
 ```
 
-## Lệnh kiểm chung
+Preflight kiểm branch, worktree, base SHA, đặc tả, phạm vi, số vòng và tạo receipt trong `work/smtf-agent/receipts/`. Nó in các tài liệu chung và đoạn đặc tả đúng requirement ID. Agent trả `READY` với requirement ID, ca biên có ý nghĩa và lệnh đầu tiên. Xác minh nội dung `READY` trước khi giao phần việc có tác động. Receipt cho biết nội dung nào được nạp theo phiên bản. Mức hiểu yêu cầu được kiểm qua ca biên, diff và kết quả kiểm độc lập.
 
-```bash
-node --test "outputs/hcmc-poc/test/*.test.mjs"
+Codex dùng `AGENTS.md`, `.codex/hooks.json`, `.codex/agents/` và `.agents/skills/` nếu gọi skill. Claude Code dùng `CLAUDE.md` import `@AGENTS.md`, `.claude/settings.json` và `.claude/agents/`. Hook `SessionStart` và `SubagentStart` cung cấp nhắc đọc lúc chạy trên client đã tin cậy hook. Codex yêu cầu duyệt hook theo hash. Dùng preflight thủ công ở client không chạy hook. Khởi động lại phiên khi sửa chỉ dẫn và đầu vào đã đổi. [Codex AGENTS.md](https://developers.openai.com/codex/guides/agents-md) · [Codex hooks](https://developers.openai.com/codex/hooks) · [Claude Code memory](https://code.claude.com/docs/en/memory) · [Claude Code hooks](https://code.claude.com/docs/en/hooks)
+
+## Thứ tự agent cho từng lát
+
+| Vai trò | Đầu vào và phần việc | Kết quả cần có |
+|---|---|---|
+| `planner` | Đọc spec, hợp đồng và mã. Tìm lỗ hổng kế hoạch. | Rủi ro, ca biên, phụ thuộc và đề xuất thứ tự. |
+| `code` | Thực hiện đúng yêu cầu và phạm vi sản phẩm. | Commit cục bộ, ghi cách hoạt động, giới hạn và lệnh để tái hiện. |
+| `hardtest` | Cùng spec, dùng worktree riêng. Viết suite chính từ dữ liệu và hành vi quan sát được. | Commit test, bảng requirement → test, kết quả đỏ trên sự cố đã biết. |
+| `meta` | Độc lập với tác giả test. Kiểm runner lẫn bộ test chính bằng ca lỗi có kiểm soát. | Script xác minh exit code, danh mục test, log và báo cáo. Có red khi bỏ test hoặc tạo kết quả sai. |
+| `cross` | Độc lập với suite chính. Tự viết cách tính, fixture và kiểm tra tương đương từ đặc tả. | Script chéo, kết quả trên ứng viên sạch và các ca lỗi. |
+| `review` | Chỉ đọc diff sản phẩm, test, meta và chéo sau khi có kết quả. | Mục sai với spec, lỗ hổng cho kết quả xanh giả, mức độ và bằng chứng. |
+| `browser-qa` | Chỉ đọc ứng viên đã qua kiểm script. Thao tác luồng thật trong trình duyệt sạch. | SHA/URL, bước và kết quả quan sát, ảnh/trace, hạn chế và ca không đạt. |
+
+Trong một đợt chỉ chạy song song tối đa hai subagent ghi. Giao `code` và `hardtest` cùng đợt sau khi planner đã trả lời. Sau đó giao `meta` và `cross`, rồi review và browser-qa trên đúng ứng viên. Các vai trò kiểm có context mới và phạm vi hẹp. Lead chỉ dùng các phần tổng hợp cần thiết trong chat, phần chi tiết giữ ở log/handoff. Giới hạn cây ở một tầng dưới lead. Khi công cụ không có subagent, chạy các vai trò qua phiên độc lập và chờ kết quả từng vai trò trước khi duyệt.
+
+Điều phối viên ghép các commit mà các bước đã bàn giao, rồi kiểm lại candidate trong worktree tích hợp. Agent chỉ ghi tệp thuộc allowlist, kể cả tài liệu của đúng vai trò. Giữ fixture mong đợi từ đặc tả, độc lập với thuật toán trong sản phẩm. Nếu phải đổi hợp đồng hoặc ngoại lệ nghiệm thu, ghi lý do, lấy review cả hai nhánh, tạo commit bổ sung chung rồi cấp brief mới với đường dẫn và hash mới.
+
+## Cổng kiểm và chống kết quả xanh giả
+
+Từ root, chạy `node scripts/hardtest/run.mjs --profile ci` ở lát thay đổi. Trước release, chạy `node scripts/hardtest/run.mjs --profile release` trên cùng commit với report browser, camera và hiệu năng. Kiểm báo cáo có `PASS` cho đủ ID trong đặc tả. `FAIL`, `BLOCKED`, test bị skip, thiếu test, số test bằng 0, lỗi hạ tầng hoặc evidence sai SHA đều chặn nghiệm thu tương ứng. Cấu hình cổng kiểm đáp lại exit code khác 0 và giữ log cho mọi ca. Cổng phát hành kiểm artifact và dữ liệu thực thi theo [QA](../qa-public-demo.md).
+
+- Suite chính kiểm hành vi ở biên người dùng và ràng buộc dữ liệu. Mỗi yêu cầu trọng yếu có positive case và ít nhất một ca hỏng phân biệt. Tập trung vào lệnh hiện thành công trước ack, xe bị thu hồi được đếm như đã đến đích, hộp AI lệch frame và hồ sơ mẫu lẫn giữa hai profile.
+- Suite meta chạy runner trong môi trường kiểm riêng với ca thiếu test/ID, tiến trình lỗi, log hỏng, report/commit lệch, thiếu artifact và ca thành công. Với logic sản phẩm, dùng một biến thể lỗi có chủ đích trong worktree kiểm riêng hoặc fixture đứng ở biên ngoài. Ca đỏ phải lỗi ở đúng assertion, rồi chạy lại ứng viên sạch. Ghi SHA và cách tái tạo; giữ biến thể kiểm ngoài nhánh phát hành.
+- Suite chéo tự tính giá trị mong đợi và dùng ít nhất một input khác. Với A1, tính lại các cặp từng seed, ngưỡng và lỗi chia cho 0. Với luồng UI, ưu tiên hành vi qua trình duyệt hoặc public API của adapter, không dùng helper mà code hoặc test chính dùng để tính kết quả. Review loại nhận xét chỉ dựa số dòng coverage và yêu cầu ca bắt hồi quy cụ thể.
+- CI phải luôn đánh giá toàn bộ job bắt buộc. Nếu dùng job tổng hợp, chọn `if: always()` và kiểm explicit từng kết quả `needs`. GitHub có thể hiển thị job bị skip là thành công. Kích hoạt required check ổn định trên repo có quyền và gói hỗ trợ. Khi chưa kích hoạt, người điều phối phải kiểm cổng từ candidate SHA trước merge và triển khai. [GitHub required checks](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks)
+
+## Hai vòng sửa và xử lý bế tắc
+
+Vòng 0 là lần ghép và kiểm đầu tiên. Một lỗi sản phẩm làm lát quay lại `code`; chạy ca hỏng trước rồi chạy lại suite chính, meta, kiểm chéo và những luồng liên quan. Lỗi test hoặc môi trường phải có tái hiện nhỏ trước khi chuyển tới đúng chủ sở hữu. Failing test không được làm xanh bằng cách bỏ assertion, giảm ngưỡng, dùng `skip` hoặc đổi fixture để khớp output. Mỗi lần thay ứng viên sau thất bại dùng một vòng sửa. Tối đa vòng 1 và vòng 2, tính chung cho lát kể cả khi đổi agent, đổi phiên hoặc lỗi chuyển từ code sang test. Không mở vòng con.
+
+Sau vòng 2 còn đỏ, đóng băng ứng viên ở trạng thái `blocked`. Điều phối viên lưu log, nguyên nhân đã xác định, mức ảnh hưởng, SHA, ca hỏng tối thiểu và người có thể xử lý. Giao một agent đọc độc lập để chẩn đoán, chọn giữa thu hẹp lát với hợp đồng được review lại hoặc sửa dependency/môi trường bị hỏng. Giữ bản xanh gần nhất. Chỉ lập lát mới sau khi xác định nguyên nhân gốc và cập nhật kế hoạch. Mọi mục bị rút ra vẫn phải hiện trên danh sách yêu cầu chưa đạt. Giữ release dừng nếu còn bất kỳ mục bắt buộc nào đỏ.
+
+## Bàn giao bắt buộc
+
+Commit cục bộ tệp đúng phạm vi. Agent cập nhật tài liệu triển khai hoặc báo cáo kiểm của vai trò trước khi bàn giao. `planner`, `review`, `browser-qa` ghi kết quả ở vùng worktree bỏ qua bởi Git, điều phối viên chắt lọc kết luận dài hạn vào docs. Đặt `work/smtf-agent/results/<ID>.<vai-trò>.json` với `task`, `role`, `baseSha`, `commit`, `receiptSha256`, `status` (`ready`, `blocked`, `failed`), `ready` gồm `requirements`, `edgeCase`, `firstCheck`, `checks` gồm `command`, `exitCode`, cùng `summary`, `remaining` và `next`. Có thể gắn đường dẫn log trong ghi chú và kết quả của từng check. Dùng `ready` cho phạm vi subagent đã kiểm, không thay cho kết luận release.
+
+Điều phối viên chạy trong worktree của brief:
+
+```powershell
+node scripts/agent/preflight.mjs --task <ID> --role <vai-trò> --verify --result work/smtf-agent/results/<ID>.<vai-trò>.json
 ```
-Bộ test đơn vị 3D và sim, khoảng 5 phút.
 
-```bash
-outputs/smart-traffic/backend/.venv/Scripts/python.exe -m pytest outputs/smart-traffic/backend/tests -q -p no:cacheprovider
-```
-Test backend. Trên Linux/macOS dùng `.venv/bin/python`.
-
-```bash
-cd outputs/smart-traffic/web && npm run test && npm run build
-```
-Test và build web.
-
-```bash
-PORT=8831 nohup python outputs/hcmc-poc/serve.py > work/tmp-static.log 2>&1 < /dev/null &
-```
-Bật server tĩnh trước khi chạy các QA trình duyệt bên dưới.
-
-```bash
-PORT=8831 node outputs/hcmc-poc/scripts/qa-north-32.cjs
-```
-QA khu Bắc.
-
-```bash
-PORT=8831 node outputs/hcmc-poc/scripts/qa-capture-32.cjs
-```
-QA ảnh camera.
-
-```bash
-PORT=8831 node outputs/hcmc-poc/scripts/qa-traffic-31.cjs webgl
-```
-QA giao thông 31A cổ điển.
-
-```bash
-node outputs/hcmc-poc/scripts/qa-project-hygiene.cjs
-```
-QA vệ sinh dự án.
-
-```bash
-node scripts/kpi-ab-32.mjs --seeds 31031-31035 --scenario peak-hang-xanh --duration 1800 --mode both --out work/kpi-x
-```
-Đo A/B đèn. Có thêm `--scenario app-1730` và `--algorithm …`.
-
-Chạy cả hệ:
-
-```bash
-bash outputs/smart-traffic/run-smart.sh
-```
-Bật server tĩnh (8821), backend (8900) và web (5173). Trên Windows dùng `run-smart.ps1`.
-
-```bash
-bash outputs/smart-traffic/run-smart.sh --stop
-```
-Tắt cả ba.
+Đối chiếu receipt `startSha` với SHA điều phối viên đã ghi khi giao, rồi đọc diff và test. Phần test xanh từ SHA khác cần chạy lại. Cập nhật `work/smtf-agent/ledger.md` với ID, vòng, nhánh/worktree, base và candidate SHA, scope, kết quả từng vai trò, đường dẫn evidence và hành động kế tiếp. Nội dung tài liệu tiếng Việt có dấu, UTF-8. Chỉ stage file đúng nhiệm vụ. Log, dữ liệu runtime, bí mật và cấu hình riêng trên máy ở ngoài commit. Người điều phối nắm các thao tác ghép và phát hành.

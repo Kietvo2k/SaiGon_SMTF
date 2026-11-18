@@ -1,5 +1,11 @@
 # Kiến trúc và bản đồ mã Smart Traffic
 
+## Đích phát hành public v1
+
+Ba trang chạy cùng origin Vercel. Tài nguyên tĩnh của cảnh Bắc và AI theo origin Pages ghim trên commit. Transport public giữ hồ sơ bằng IndexedDB và cập nhật nhiều tab qua BroadcastChannel. Một tab 3D giữ lease trạm, tính mô phỏng và gửi ack khi áp dụng lệnh. Browser tách inference từ ảnh trong worker khỏi dữ liệu mô phỏng dùng để điều phối đèn. [Hợp đồng và fixture](agent/CONTRACT-PUBLIC-DEMO.md) · [Runbook triển khai](deploy-public.md)
+
+Các mục tiếp theo mô tả **hiện trạng local và Docker** được dùng làm đường cơ sở đối chiếu nghiệp vụ.
+
 ## Bắt đầu đọc
 
 Đọc README để chạy hệ thống, sau đó theo ba entry dưới đây. Không cần đọc toàn bộ lịch sử City Lab để hiểu Smart Traffic.

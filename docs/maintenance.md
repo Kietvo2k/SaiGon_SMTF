@@ -1,5 +1,7 @@
 # Phạm vi giữ/gỡ và bảo trì
 
+Đầu việc mới theo [đặc tả public v1](agent/PUBLIC-DEMO-SPEC.md). Giữ dữ liệu nguồn và kiểm hồi quy 31A, đồng thời cắt phần ngoài Bắc khỏi artifact public trước khi phát hành. Thêm test bằng quy trình [điều phối và nghiệm thu](agent/RULES.md). Các danh sách Docker và lịch sử bên dưới dùng để truy nguyên.
+
 ## Vùng cần để chạy
 
 | Vùng | Quyết định | Lý do |

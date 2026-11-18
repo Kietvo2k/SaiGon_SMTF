@@ -1,0 +1,86 @@
+{
+  "schema_version": "public-demo-v1",
+  "fixture_id": "smtf-contract-samples-v1",
+  "synthetic": true,
+  "accounts": [
+    { "id": 1, "role": "citizen", "username": "congdan_mau", "password": "SMTF-Mau-2026", "display_name": "Công dân mẫu" },
+    { "id": 2, "role": "officer", "username": "canbo_mau", "password": "SMTF-Mau-2026", "display_name": "Cán bộ mẫu" },
+    { "id": 3, "role": "commander", "username": "chihuy_mau", "password": "SMTF-Mau-2026", "display_name": "Chỉ huy mẫu" },
+    { "id": 4, "role": "admin", "username": "quantri_mau", "password": "SMTF-Mau-2026", "display_name": "Quản trị mẫu" }
+  ],
+  "lookups": {
+    "registered_plate": { "plate": "51K-123.45", "compact": "51K12345", "vehicle_class": "car", "registration_code": "25110001" },
+    "empty_plate": "51K-123.46",
+    "invalid_plate": "VAN-BAN",
+    "found": {
+      "items": [
+        {
+          "id": "VI-MAU-001",
+          "violation_code": "RED-LIGHT",
+          "violation_label": "Không chấp hành hiệu lệnh của đèn tín hiệu giao thông",
+          "occurred_at": "2026-11-18T01:00:00Z",
+          "node_label": "Hàng Xanh",
+          "camera_id": "CAM-HX-001",
+          "status": "confirmed",
+          "penalty": { "vnd_min": null, "vnd_max": null, "verified": false },
+          "evidence": [{ "kind": "after", "url": "/api/v1/media/MEDIA-MAU-001" }]
+        }
+      ],
+      "total": 1
+    },
+    "empty": { "items": [], "total": 0 }
+  },
+  "snapshot": {
+    "snapshot_version": "public-demo-v1",
+    "revision": 42,
+    "build_id": "fixture",
+    "station": { "status": "active", "id": "station-mau", "last_seen_at": "2026-11-18T01:00:06Z" },
+    "simulation": { "seed": 31031, "scenario": "lane-block", "mode": "smart", "t_sim": 60.1, "paused": false },
+    "junctions": [
+      {
+        "junction_id": "HX-C1",
+        "node_ids": ["HX-01", "HX-05"],
+        "label": "Hàng Xanh",
+        "phase": "yellow",
+        "group": 0,
+        "decision": { "t_sim": 60.1, "group": 1, "action": "switch", "reason_code": "PRESSURE", "queue": [6, 16], "exit_capacity": [7, 12], "score": [1.2, 9.3] }
+      }
+    ],
+    "kpi": { "wait_avg_s": 11.2, "queue_max": 16, "flow_per_min": 24, "trips_completed": 12, "admission_wait": 2, "recoveries": 0 },
+    "routes": [
+      { "vehicle_id": "XE-MAU-01", "origin": "Hàng Xanh", "destination": "Nguyễn Văn Thương", "junction_ids": ["HX-C1", "HX-C2", "Bac-02", "Bac-03"], "state": "running", "reason_code": "REROUTED" }
+    ],
+    "cameras": [
+      { "camera_id": "CAM-HX-001", "junction_id": "HX-C1", "label": "Hàng Xanh · hướng Điện Biên Phủ", "frame_id": "frame-0001", "source": "live", "status": "ready", "captured_at": "2026-11-18T01:00:06Z", "width": 1280, "height": 720 }
+    ]
+  },
+  "alternate_states": {
+    "station_missing": { "status": "missing", "id": null, "last_seen_at": null },
+    "station_stale": { "status": "stale", "id": "station-mau", "last_seen_at": "2026-11-18T01:00:00Z" },
+    "camera_missing": { "camera_id": "CAM-HX-001", "junction_id": "HX-C1", "label": "Hàng Xanh · hướng Điện Biên Phủ", "frame_id": null, "source": "live", "status": "missing", "captured_at": null, "width": null, "height": null },
+    "camera_stale": { "camera_id": "CAM-HX-001", "junction_id": "HX-C1", "label": "Hàng Xanh · hướng Điện Biên Phủ", "frame_id": "frame-0000", "source": "live", "status": "stale", "captured_at": "2026-11-18T01:00:01Z", "width": 1280, "height": 720 }
+  },
+  "commands": {
+    "pending": { "command_id": "cmd-mau-01", "status": "pending", "reason_code": null, "applied_t_sim": null },
+    "applied": { "command_id": "cmd-mau-01", "status": "applied", "reason_code": null, "applied_t_sim": 60.2 },
+    "rejected": { "command_id": "cmd-mau-02", "status": "rejected", "reason_code": "COMMAND_REJECTED", "applied_t_sim": null },
+    "expired": { "command_id": "cmd-mau-03", "status": "expired", "reason_code": "COMMAND_EXPIRED", "applied_t_sim": null }
+  },
+  "events": [
+    { "event": "snapshot.updated", "t": "2026-11-18T01:00:06Z", "seq": 1, "data": { "snapshot_version": "public-demo-v1", "revision": 42 } },
+    { "event": "stream.updated", "t": "2026-11-18T01:00:06Z", "seq": 2, "data": { "camera_id": "CAM-HX-001", "seq": 1 } },
+    { "event": "command.updated", "t": "2026-11-18T01:00:07Z", "seq": 3, "data": { "command_id": "cmd-mau-01", "status": "applied", "reason_code": null, "applied_t_sim": 60.2 } }
+  ],
+  "inference": {
+    "positive": { "frame_id": "frame-0001", "camera_id": "CAM-HX-001", "model_id": "yolox-nano-onnx-416", "source": "live", "status": "ready", "elapsed_ms": 102, "detections": [{ "label": "car", "confidence": 0.86, "box": [0.2, 0.36, 0.12, 0.19] }] },
+    "empty": { "frame_id": "frame-0002", "camera_id": "CAM-HX-001", "model_id": "yolox-nano-onnx-416", "source": "live", "status": "ready", "elapsed_ms": 100, "detections": [] },
+    "error": { "frame_id": "frame-0003", "camera_id": "CAM-HX-001", "model_id": "yolox-nano-onnx-416", "source": "live", "status": "error", "elapsed_ms": null, "detections": [], "error": { "code": "MODEL_UNAVAILABLE", "message": "Không tải được mô hình nhận diện" } }
+  },
+  "errors": {
+    "forbidden": { "status": 403, "body": { "error": { "code": "FORBIDDEN", "message": "Vai trò hiện tại không có quyền thực hiện thao tác này" } } },
+    "station_unavailable": { "status": 409, "body": { "error": { "code": "STATION_UNAVAILABLE", "message": "Mở trang 3D để chạy trạm" } } },
+    "invalid_plate": { "status": 422, "body": { "error": { "code": "VALIDATION", "message": "Biển số không hợp lệ" } } },
+    "media_missing": { "status": 404, "body": { "error": { "code": "NOT_FOUND", "message": "Chưa có khung từ camera này" } } },
+    "storage_unavailable": { "status": 503, "body": { "error": { "code": "STORAGE_UNAVAILABLE", "message": "Trình duyệt chưa cấp kho lưu trữ" } } }
+  }
+}

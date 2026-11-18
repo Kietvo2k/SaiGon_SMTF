@@ -1,5 +1,7 @@
 # Thiết kế sửa và đóng gói Smart Traffic — 22/10/2026
 
+> Thiết kế lịch sử của gói cục bộ. Xem [đặc tả Public Demo v1](../../agent/PUBLIC-DEMO-SPEC.md) khi triển khai bản public.
+
 ## Mục tiêu đã được người dùng yêu cầu
 
 Sửa lỗi đã tái hiện qua Browser, đơn giản hóa cổng công dân, khoanh vùng mã còn cần và phần dư, đóng gói để người sau đọc tài liệu là hiểu cấu trúc và khởi động được bằng Docker hoặc lệnh.

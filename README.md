@@ -2,6 +2,12 @@
 
 Mô phỏng giao thông khu Bắc TP.HCM: cảnh 3D, đèn tín hiệu, camera, phát hiện vi phạm, web cán bộ và tra cứu cho người dân. Dữ liệu xe/biển số/perception là dữ liệu mô phỏng; nền thành phố được tận dụng từ City Lab TP.HCM.
 
+## Bản public cho giám khảo
+
+Bản `public-demo-v1` đang được triển khai. Landing page trên Vercel sẽ mở ba trải nghiệm cùng origin. Cloudflare Pages phục vụ tài nguyên cảnh Bắc. Trình duyệt khách vận hành mô phỏng, nhận diện ảnh và hồ sơ mẫu. [Đặc tả phát hành](docs/agent/PUBLIC-DEMO-SPEC.md) · [Hướng dẫn phát hành](docs/deploy-public.md) · [Kịch bản chấm thi](docs/qa-public-demo.md)
+
+Để tiếp tục triển khai, bắt đầu từ `AGENTS.md` và [bàn giao hiện hành](docs/agent/HANDOFF.md). Hai prompt điều phối đi từ một mốc Git chung. [Chọn prompt UI hoặc lõi](docs/prompts/README.md)
+
 ## Khởi động nhanh bằng Docker
 
 Cần Docker đang chạy và Docker Compose v2. Tại thư mục gốc:
@@ -21,7 +27,7 @@ Hoặc Windows chạy `start-smart.cmd`; Linux/macOS/Git Bash chạy `sh start-s
 | Cán bộ | [Trung tâm điều hành](http://127.0.0.1:8088/index-officer.html) |
 | Người dân | [Tra cứu biển số](http://127.0.0.1:8088/index-citizen.html) |
 
-**Mở một tab 3D để trạm sinh dữ liệu và ảnh camera.** Docker chạy API và phục vụ web; cảnh 3D dùng GPU của trình duyệt máy người dùng. Cổng công dân tra cứu không cần tài khoản. Cán bộ dùng tài khoản seed `officer1`, mật khẩu `SaiGon@2026`, chỉ dành cho bản mô phỏng cục bộ.
+**Mở một tab 3D để trạm sinh dữ liệu và ảnh camera.** Docker chạy API và phục vụ web. Cảnh 3D dùng GPU của trình duyệt máy người dùng. Cổng công dân tra cứu không cần tài khoản. Tài khoản mẫu dành cho bản Docker được ghi trong [runbook cục bộ](docs/runbook.md#chạy-bằng-docker).
 
 **Chế độ tự động (demo):** vi phạm mới được xác nhận và báo về ngay, không cần bấm duyệt; khoảng **1%** tự sinh khiếu nại mở để thử quy trình xử lý. Tắt bằng `SMART_AUTO_VIOLATIONS=0`, đổi tỷ lệ bằng `SMART_AUTO_COMPLAINT_PCT` (mặc định `1`).
 
@@ -46,7 +52,7 @@ Bản chạy cục bộ dùng cổng 8821 cho 3D, 8900 cho API, 5173 cho hai web
 1. [Bản đồ kiến trúc và luồng dữ liệu](docs/architecture.md): bắt đầu ở đâu, module nào làm gì, dữ liệu đi qua đâu.
 2. [Vận hành, dữ liệu và sao lưu](docs/runbook.md): Docker/cục bộ, khởi động/dừng, health, backup/restore, lỗi thường gặp.
 3. [Phạm vi giữ/gỡ và quy tắc bảo trì](docs/maintenance.md): mã đang chạy, phần lịch sử, tệp đã gỡ và cách phục hồi.
-4. [Kế hoạch sửa và đóng gói](docs/superpowers/plans/2026-10-22-smart-traffic-package.md), [bàn giao hiện tại](docs/agent/HANDOFF.md).
+4. [Hợp đồng UI và lõi public](docs/agent/CONTRACT-PUBLIC-DEMO.md), [bàn giao hiện tại](docs/agent/HANDOFF.md).
 5. [Báo cáo kiểm thử Browser trước khi sửa](docs/agent/QA-BROWSER-2026-10-22.md), [yêu cầu UX/nghiệp vụ](docs/agent/BACKLOG-2026-10-22-ux-nghiep-vu.md).
 6. [Kết quả triển khai và kiểm thử sau sửa](docs/agent/IMPLEMENTATION-2026-10-22-smart-traffic-package.md).
 
@@ -70,7 +76,9 @@ outputs/smart-traffic/backend/.venv311/Scripts/python.exe -m pytest outputs/smar
 
 Nếu đã chạy script cục bộ thì bỏ bước tạo môi trường. Script chạy app chỉ cài dependency runtime; bước cài `requirements.txt` bổ sung pytest/httpx cho kiểm thử. Linux/macOS dùng `python3.11 -m venv` và `.venv311/bin/python` tương ứng.
 
-Các test Node và kiểm thử Browser theo phần thay đổi được liệt kê trong [bảo trì](docs/maintenance.md). Thay đổi UI phải được kiểm trên Browser thật; số test pass không thay cho việc xem cảnh vẽ và thao tác.
+Từ thư mục gốc, chạy `node scripts/hardtest/run.mjs --profile ci` để kiểm các bộ hiện hành và trình chạy. Profile `release` cần các suite sản phẩm, manifest và bằng chứng browser trên đúng commit. [Quy tắc test và bàn giao](docs/agent/RULES.md) · [Runbook public](docs/deploy-public.md)
+
+Các test Node và kiểm thử Browser theo phần thay đổi được liệt kê trong [bảo trì](docs/maintenance.md). Thay đổi UI cần kiểm cảnh vẽ và thao tác trực tiếp trên trình duyệt.
 
 ## Giới hạn còn mở
 

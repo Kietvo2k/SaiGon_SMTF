@@ -1,5 +1,7 @@
 # Kế hoạch sửa và đóng gói Smart Traffic
 
+> Kế hoạch lịch sử cho đợt Docker tháng 10. Công việc tiếp theo dùng [đặc tả Public Demo v1](../../agent/PUBLIC-DEMO-SPEC.md) và [handoff hiện hành](../../agent/HANDOFF.md).
+
 > Thực hiện theo từng phần có kiểm thử; các phần backend, đóng gói và giao diện được giao độc lập bằng skill dispatching-parallel-agents. Mỗi phần phải trả kết quả kiểm tra và danh sách tệp, sau đó được rà soát khi tích hợp.
 
 **Mục tiêu:** Sửa lỗi đã kiểm chứng, gọn luồng công dân/3D, có Docker và tài liệu vận hành có thể tái lập.

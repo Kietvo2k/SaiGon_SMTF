@@ -1,5 +1,7 @@
 # AUTO-RUN: một prompt cho opencode tự điều phối
 
+> **Lịch sử tháng 10.** Quy trình hiện hành dùng [hai prompt Public Demo](README.md), hai worktree riêng và cổng hardtest. Các lệnh và quyền push bên dưới thuộc phiên cũ.
+
 - **Agent chính** (điều phối): `vietapi/kimi-k3`. Chọn model này khi mở opencode.
 - **Sub agent** đã khai báo trong `opencode.json` ở gốc repo. Kiểm bằng lệnh `opencode debug agents`.
 

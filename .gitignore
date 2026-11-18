@@ -63,3 +63,9 @@ outputs/smart-traffic/backend/outputs/
 work/browser-qa-*/
 work/.backend-qa-var*/
 work/.qa-backend*/
+work/smtf-agent/
+work/hardtest/
+.claude/launch.json
+.vercel/
+.wrangler/
+/dist/public-demo/
