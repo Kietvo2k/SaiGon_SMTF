@@ -44,7 +44,8 @@ def test_emergency_scenario_is_audited_and_relayed_with_kind(client, monkeypatch
     messages = []
     async def capture(event, data, **kwargs):
         messages.append((event, data, kwargs))
-    monkeypatch.setattr('app.routers.officer.broadcast', capture)
+    # Quan sát biên WS chung, kể cả khi route giao lệnh cho service riêng.
+    monkeypatch.setattr('app.ws.broadcast', capture)
     ch = hdr(client, 'commander1')
     lease = claim_station(client)
     result = client.post('/api/v1/officer/controls/scenario', headers=ch,

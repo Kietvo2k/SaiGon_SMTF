@@ -1,6 +1,6 @@
 # DATA-T1 — suite hardtest độc lập
 
-Task hiện hành: `CORE-DATA-T1-TEST-SCOPE-00`, vai trò `hardtest`, vòng `0/2`.
+Task gốc: `CORE-DATA-T1-TEST-SCOPE-00`, vai trò `hardtest`, vòng `0/2`.
 Brief này thay `CORE-DATA-T1-TEST-00` trước khi ghi test; không reset số vòng.
 SHA nền và receipt `startSha`: `3c9dac9fee352ba8c7ed0e104ee13715ad6439eb`.
 Hợp đồng giữ nguyên `public-demo-v1`.
@@ -113,3 +113,68 @@ qua helper HTTP tường minh. Kiểm thu thập 95 ca bao gồm cả các ca h�
   được dùng để tuyên bố bị chặn nếu môi trường đã thay đổi.
 - Hồi quy 31A phải giữ hash `c05ce91e` qua cổng CI trên đúng candidate. Test này
   không sửa gate, CI, fixture chuẩn hay hợp đồng.
+
+## Bổ sung CORE-DATA-T1-COPY-00
+
+Task bổ sung giữ checkpoint DATA-T1 vòng `0/2`, chưa tạo candidate tích hợp lần đầu.
+Nền và receipt `startSha`: `7c84a3e91c7150a53a908f4274ad5cad414dd2d6`.
+Chỉ mở bốn tệp: `copy.test.ts`, suite Node DATA-T1, `test_m6c_controls.py` và báo cáo này.
+Không thay report hoặc receipt của task gốc đã verify.
+
+### Kiểm chữ hiển thị
+
+Repro trên draft với test gốc trả `./api.ts: demo` và `./types.ts: demo` dù nguồn
+chỉ dùng tên module/phiên bản kỹ thuật. Scanner vẫn giữ nguyên chín từ bị cấm và
+glob cũ. TypeScript AST chỉ che đúng span literal trong ba ngữ cảnh:
+
+1. Module specifier import/export bằng chính xác
+   `../../../../shared/public-demo/traffic-transport.js`.
+2. String literal type bằng chính xác `public-demo-v1`.
+3. Giá trị fallback `public-demo-v1` trong `buildId: import.meta.env.VITE_BUILD_ID || ...`
+   của options `{mode: 'public', ...}` truyền trực tiếp vào `createTrafficTransport`
+   được named-import từ đúng module ở mục 1. Không miễn cả options hoặc dòng gọi.
+
+28 ca copy gồm source scan hiện hữu và các ca phân biệt: chữ UI/comment/identifier
+cùng dòng import/export vẫn bị bắt; chuỗi thường, `textContent`, type phiên bản khác,
+module khác, `buildId` ngoài factory và property `label` không được miễn. Cả chín từ
+bị cấm vẫn bị bắt trong TSX/CSS/HTML. Không bỏ tệp, dòng hoặc thay literal sản phẩm.
+
+### Bridge và hồi quy backend
+
+Hai ca Node bổ sung dựng transport ở biên độc lập: giữ response PUT renew,
+stop/release rồi trả response cũ trước hoặc sau lần start mới. Oracle yêu cầu hai
+lần claim, chỉ callback/ACK command ở lifecycle mới với capability thế hệ 2;
+capability cũ không còn poll/ghi/ACK sau stop. Suite hiện có tổng cộng 18 ca Node.
+Transport không nhập probe hoặc helper sản phẩm làm expected.
+
+Không còn snapshot byte của bridge trước fix epoch nên không thể tái lập lịch sử đỏ
+cho riêng race này. Ca xanh trên draft không chứng minh khả năng bắt mutant; meta cần
+dựng biến thể lỗi có nhãn ở worktree riêng, bỏ epoch guard trước gán lease để kiểm.
+Missing-entry baseline không được dùng làm bằng chứng đỏ của race.
+
+Hook `app.routers.officer.broadcast` cũ bỏ lỡ command khi service phát qua biên WS
+chung; repro fail `StopIteration` ngay ở tìm `cmd.scenario`. Chỉ chuyển hook sang
+`app.ws.broadcast`, giữ nguyên expected event, params, `to_roles=['station']`, state,
+quyền và các assertion audit/payload trong toàn bộ tệp. Không thêm tham số test vào
+broadcaster sản phẩm hoặc đổi expected nghiệp vụ theo code.
+
+### Evidence bổ sung
+
+Các log tiếp tục ở `work/smtf-agent/logs/`, ngoài commit:
+
+| Log | Kết quả |
+|---|---|
+| `data-t1-copy-original-red.log` | Test copy gốc trên draft: 1 fail tại api/types, đúng false positive kỹ thuật. |
+| `data-t1-copy-ast-green-2.log` | 28/28 ca copy xanh, exit 0. |
+| `data-t1-copy-draft-sources-green.log` | Chạy chính helper scanner mới trên api/types thật của draft: cả hai trả `[]`. Probe trích helper từ AST test, không sửa nguồn sản phẩm. |
+| `data-t1-copy-forbidden-ui-red.log` | Thêm `document.body.textContent = 'public-demo-v1'` vào đầu vào trong bộ nhớ: assertion policy đỏ với `demo`, raw exit 1. Không ghi mutant vào sản phẩm. |
+| `data-t1-copy-web-full-green.log` | Web worktree test: 13 file, 91/91 ca xanh, exit 0. |
+| `data-t1-copy-typecheck.log` | TypeScript worktree test exit 0. |
+| `data-t1-copy-m6c-original-red.log` | Test emergency-kind cũ trên app draft: 1 fail tại `StopIteration` do hook lệch biên. |
+| `data-t1-copy-m6c-green.log` | Cả tệp M6c mới trên app draft: 15/15 xanh, exit 0, giữ assertion nghiệp vụ. |
+| `data-t1-copy-bridge-probe.log` | Ca stop/start độc lập: 1/1 xanh, 0 skip/cancel, exit 0 trên draft. Chưa có red mutant cho race. |
+| `data-t1-copy-node-full-final-probe.log` | Toàn suite Node cuối: 18/18 xanh, 0 fail/skip/cancel, exit 0; gồm hai thứ tự response renew cũ trước/sau start mới. |
+
+Probe M6c nạp package `app` từ draft, package test và fixture từ worktree test, không
+chép hoặc sửa file sản phẩm. Toàn bộ xanh draft cần chạy lại trên candidate đã ghép;
+chưa thay kiểm CI/release, meta/cross, Docker hoặc browser-qa/3D thật.

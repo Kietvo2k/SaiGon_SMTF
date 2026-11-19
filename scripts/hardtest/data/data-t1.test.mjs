@@ -321,6 +321,89 @@ test('DATA-T1-ACK bridge giữ pending đến callback, áp một lần và unsu
   }
 });
 
+for (const lateAfterRestart of [false, true]) {
+test(`DATA-T1-ACK bridge stop/start không nhận renew cũ hoặc ACK ngoài lifecycle hiện hành (${lateAfterRestart ? 'response sau start mới' : 'response trước start mới'})`, { timeout: 12000 }, async t => {
+  const page = await pageFor(t);
+  await page.evaluate(async () => {
+    const { createStationBridge } = await import('/outputs/shared/public-demo/station-bridge.js');
+    const state = window.restartCase = { claims: 0, calls: [], applied: [], acks: [], phase: 'initial', delivered: new Set() };
+    const transport = {
+      async request(input) {
+        state.calls.push({ method: input.method, path: input.path, token: input.token, phase: state.phase });
+        if (input.path.endsWith('/station/lease')) {
+          if (input.method === 'POST') {
+            state.claims++;
+            return state.lease = { station_id: input.body.station_id, owner_id: input.body.owner_id,
+              generation: state.claims, capability: 'restart-capability-' + state.claims,
+              expires_at: new Date(Date.now() + 6000).toISOString() };
+          }
+          if (input.method === 'DELETE') return { ok: true };
+          if (input.method === 'PUT' && !state.held) {
+            state.held = true;
+            const old = { ...state.lease };
+            return new Promise(resolve => { state.finishOldRenew = () => resolve({ ...old, expires_at: new Date(Date.now() + 6000).toISOString() }); });
+          }
+          if (input.method === 'PUT') return { ...state.lease, expires_at: new Date(Date.now() + 6000).toISOString() };
+        }
+        if (input.path.endsWith('/commands/pending') || input.path.endsWith('/station/heartbeat')) {
+          if (!state.commandsEnabled || state.delivered.has(input.token)) return { commands: [] };
+          state.delivered.add(input.token);
+          return { commands: [{ event: 'cmd.signal-mode', data: { mode: 'smart' },
+            command_id: input.token === 'restart-capability-2' ? 'restart-current' : 'restart-stale',
+            deadline_at: new Date(Date.now() + 10000).toISOString() }] };
+        }
+        if (input.path.endsWith('/ack')) {
+          state.acks.push({ token: input.token, body: input.body, phase: state.phase });
+          return { command_id: 'restart-current', ...input.body };
+        }
+        if (input.path.endsWith('/station/snapshot')) return { ok: true };
+        throw new Error('Request ngoài seam station đã chốt: ' + input.method + ' ' + input.path);
+      },
+      subscribe() { return () => {}; },
+      async readMedia() { throw new Error('Bridge không cần media trong ca lifecycle'); },
+    };
+    state.bridge = createStationBridge({ transport, stationId: 'station-hardtest',
+      readSnapshot: () => window.snapshotInput(),
+      applyCommand: async command => {
+        state.applied.push({ command_id: command.command_id, phase: state.phase });
+        return { status: 'applied', applied_t_sim: 73.4 };
+      },
+    });
+    state.firstStart = state.bridge.start();
+  });
+  await page.waitForFunction(() => typeof window.restartCase.finishOldRenew === 'function', null, { timeout: 4000 });
+  await page.evaluate(async lateAfterRestart => {
+    const state = window.restartCase;
+    await state.bridge.stop();
+    state.phase = 'stopped';
+    if (lateAfterRestart) {
+      state.phase = 'restarted';
+      await state.bridge.start();
+    }
+    state.finishOldRenew();
+    await state.firstStart;
+    // Cho continuation của response cũ chạy trước khi phát command kiểm.
+    await new Promise(resolve => setTimeout(resolve, 25));
+    state.commandsEnabled = true;
+    if (!lateAfterRestart) {
+      state.phase = 'restarted';
+      await state.bridge.start();
+    }
+  }, lateAfterRestart);
+  await page.waitForFunction(() => window.restartCase.acks.length > 0, null, { timeout: 4000 });
+  const result = await page.evaluate(async () => {
+    const state = window.restartCase;
+    await state.bridge.stop();
+    return { claims: state.claims, calls: state.calls, applied: state.applied, acks: state.acks };
+  });
+  assert.equal(result.claims, 2, 'Start mới phải claim lại; response renew cũ không được hồi sinh lease đã stop');
+  assert.deepEqual(result.applied, [{ command_id: 'restart-current', phase: 'restarted' }]);
+  assert.deepEqual(result.acks, [{ token: 'restart-capability-2', body: { status: 'applied', applied_t_sim: 73.4 }, phase: 'restarted' }]);
+  assert.equal(result.calls.some(call => call.phase !== 'initial' && call.method !== 'DELETE' && call.token === 'restart-capability-1'), false,
+    'Lifecycle cũ không được tiếp tục ghi/poll/ACK bằng capability cũ sau stop');
+});
+}
+
 test('DATA-T1-ACK callback từ chối trả rejected và không ghi applied_t_sim', async t => {
   const page = await pageFor(t);
   await page.evaluate(async account => {
