@@ -7,6 +7,7 @@ from app.db import connect
 from app.penalties import penalty_for, public_penalty
 from tests.m6_helpers import hdr
 from tests.test_station import officer_headers, station_headers, violation_body
+from tests.public_demo_helpers import apply_command, claim_station
 
 
 def _create_and_read(client, **over):
@@ -80,8 +81,11 @@ def test_speed_policy_uses_measured_speed_and_limit(client, speed, expected, poi
 
 def test_invalid_emergency_kind_rejected_without_mutation_or_broadcast(client, monkeypatch):
     ch = hdr(client, 'commander1')
-    first = client.post('/api/v1/officer/controls/scenario', headers=ch,
-                        json={'scenario': 'flood-nhc'}).json()
+    lease = claim_station(client)
+    first_response = client.post('/api/v1/officer/controls/scenario', headers=ch,
+                                 json={'scenario': 'flood-nhc'})
+    apply_command(client, first_response, lease)
+    first = first_response.json()
     broadcasts = []
 
     async def record_broadcast(*args, **kwargs):

@@ -2,6 +2,7 @@ import base64
 import io
 
 from tests.test_station import officer_headers, station_headers, violation_body
+from tests.public_demo_helpers import apply_command, claim_station
 
 PNG = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')
 
@@ -125,8 +126,10 @@ def test_signal_override_validation_422(client):
     for body in cases:
         r = client.post('/api/v1/officer/controls/signal-override', headers=ch, json=body)
         assert r.status_code == 422, (body, r.status_code, r.text)
+    lease = claim_station(client)
     ok = client.post('/api/v1/officer/controls/signal-override', headers=ch, json={'node_id': 'HX-01', 'group': 1, 'duration_s': 60})
     assert ok.status_code == 200
+    apply_command(client, ok, lease)
 
 
 def test_page_size_bounds(client):
@@ -140,11 +143,14 @@ def test_page_size_bounds(client):
 
 def test_audit_log_written_for_review_and_signals(client):
     h, oh, ch = station_headers(client), officer_headers(client), commander_headers(client)
+    lease = claim_station(client, h)
     vid = make_violation(client, h, vehicle_id='V-A001', cycle_id=301)
     client.post(f'/api/v1/officer/violations/{vid}/needs-review', headers=oh, json={'note': 'a'})
     client.post(f'/api/v1/officer/violations/{vid}/confirm', headers=oh, json={'note': 'b'})
-    client.post('/api/v1/officer/controls/signal-mode', headers=ch, json={'mode': 'smart'})
-    client.post('/api/v1/officer/controls/signal-override', headers=ch, json={'node_id': 'HX-01', 'group': 1, 'duration_s': 60, 'reason': 'ưu tiên'})
+    mode = client.post('/api/v1/officer/controls/signal-mode', headers=ch, json={'mode': 'smart'})
+    apply_command(client, mode, lease)
+    override = client.post('/api/v1/officer/controls/signal-override', headers=ch, json={'node_id': 'HX-01', 'group': 1, 'duration_s': 60, 'reason': 'ưu tiên'})
+    apply_command(client, override, lease)
     # officer không đọc được audit, commander thì được.
     assert client.get('/api/v1/officer/audit', headers=oh).status_code == 403
     r = client.get('/api/v1/officer/audit', headers=ch)

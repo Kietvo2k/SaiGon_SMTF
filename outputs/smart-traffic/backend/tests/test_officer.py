@@ -1,4 +1,5 @@
 from tests.test_station import officer_headers, station_headers, violation_body
+from tests.public_demo_helpers import apply_command, claim_station
 
 
 def test_lifecycle_confirmed_only_leads_to_notified(client):
@@ -38,9 +39,12 @@ def test_controls_require_commander(client):
     r = client.post('/api/v1/officer/controls/signal-mode', headers=oh, json={'mode': 'smart'})
     assert r.status_code == 403
     ch = {'Authorization': 'Bearer ' + client.post('/api/v1/auth/login', json={'username': 'commander1', 'password': 'SaiGon@2026'}).json()['access_token']}
+    lease = claim_station(client)
     r2 = client.post('/api/v1/officer/controls/signal-mode', headers=ch, json={'mode': 'smart'})
     assert r2.status_code == 200 and r2.json()['mode'] == 'smart'
+    apply_command(client, r2, lease)
     ov = client.post('/api/v1/officer/controls/signal-override', headers=ch,
                      json={'node_id': 'HX-01', 'group': 0, 'duration_s': 60, 'reason': 'ưu tiên'})
     assert ov.status_code == 200
     assert 'until_t_sim' in ov.json() and ov.json()['until_at'].endswith('Z')
+    apply_command(client, ov, lease)
