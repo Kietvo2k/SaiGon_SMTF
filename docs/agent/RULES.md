@@ -4,7 +4,7 @@
 
 ## Nhận việc và kiểm phiên bản
 
-Điều phối viên chốt kế hoạch sau khi gọi một `planner` kiểm đọc, đối chiếu mã thật, rủi ro và cách đo. Sau đó chia từng lát độc lập, khóa requirement ID, input, oracle, file ownership, lệnh và kết quả cần trả. Hai nhánh cấp chính xuất phát từ cùng mốc `smtf-public-demo-base-v1`. Mỗi agent ghi dùng một worktree riêng của lát, còn agent review dùng ứng viên đúng SHA ở worktree chỉ đọc. Điều phối viên giữ các file hợp đồng và kiểm tích hợp.
+Điều phối viên chốt kế hoạch sau khi gọi một `planner` kiểm đọc, đối chiếu mã thật, rủi ro và cách đo. Sau đó chia từng lát độc lập, khóa requirement ID, input, oracle, file ownership, lệnh và kết quả cần trả. Hai nhánh cấp chính xuất phát từ cùng mốc `smtf-public-demo-handoff-v1`. Mỗi agent ghi dùng một worktree riêng của lát, còn agent review dùng ứng viên đúng SHA ở worktree chỉ đọc. Điều phối viên giữ các file hợp đồng và kiểm tích hợp.
 
 Với mỗi vai trò/lần sửa, cấp một ID in hoa riêng. Tạo `work/smtf-agent/briefs/<ID>.json` tại worktree được giao trước khi agent bắt đầu. Brief có `task`, `role`, `branch`, `worktree` tuyệt đối, `baseSha`, `specVersion: "public-demo-v1"`, `requirements`, `writablePaths`, `round` từ `0` đến `2` và `requiredReads` tùy chọn. Dùng đường dẫn repo đầy đủ cho từng file; dấu `/` cuối entry biểu thị prefix thư mục. `planner`, `review`, `browser-qa` có `writablePaths: []`. Điều phối viên ghi cả SHA thực tế lúc giao vào ledger.
 

@@ -16,7 +16,7 @@ function temporaryDirectory(t) {
   return directory;
 }
 
-function runNodeSuite(directory, source, id = 'GATE-META-SAMPLE') {
+function runNodeSuite(directory, source, id = 'GATE-META-SAMPLE', requiredCases = []) {
   const file = join(directory, 'sample.test.mjs');
   writeFileSync(file, source, 'utf8');
   return runCheck({
@@ -27,10 +27,20 @@ function runNodeSuite(directory, source, id = 'GATE-META-SAMPLE') {
     timeoutMs: 5000,
     reporter: 'tap',
     requiredFiles: [file],
+    requiredCases,
     // Node bỏ lượt chạy --test lồng nhau khi thừa hưởng biến nội bộ này.
     env: { NODE_TEST_CONTEXT: undefined },
   }, { outputDir: directory });
 }
+
+test('GATE-META-09 kiểm bộ còn ca xanh nhưng bị bỏ mất ca bắt buộc', t => {
+  const directory = temporaryDirectory(t);
+  const result = runNodeSuite(directory, "import { test } from 'node:test'; test('CHECK-01 đạt', () => {});",
+    'GATE-META-MISSING-ID', ['CHECK-01', 'CHECK-02']);
+  assert.equal(result.status, 'FAIL');
+  assert.equal(result.reason, 'missing-test-ids');
+  assert.match(result.message, /CHECK-02/);
+});
 
 function reportCommand(directory, reportPath, contents) {
   return {

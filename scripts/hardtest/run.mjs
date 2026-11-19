@@ -37,20 +37,22 @@ function pythonExecutable() {
   return venvs.find(existsSync) ?? 'python';
 }
 
-function nodeTests(id, files, timeoutMs = 3 * minute) {
+function nodeTests(id, files, timeoutMs = 3 * minute, requiredCases = []) {
   return {
     id, command: node, cwd: root, args: ['--test', '--test-reporter=tap', ...files],
-    timeoutMs, reporter: 'tap', requiredFiles: files,
+    timeoutMs, reporter: 'tap', requiredFiles: files, requiredCases,
   };
 }
+
+const caseIds = (prefix, count) => Array.from({ length: count }, (_, i) => `${prefix}-${String(i + 1).padStart(2, '0')}`);
 
 function ciChecks(outputDir) {
   const vitestReport = join(outputDir, 'WEB-TEST.json');
   const pytestReport = join(outputDir, 'API-REGRESSION.xml');
   return [
     nodeTests('AGENT-PREFLIGHT', ['scripts/agent/preflight.test.mjs']),
-    nodeTests('GATE-META', ['scripts/hardtest/kpi.test.mjs', 'scripts/hardtest/evidence.test.mjs', 'scripts/hardtest/meta.test.mjs']),
-    nodeTests('GATE-CROSS', ['scripts/hardtest/cross.test.mjs']),
+    nodeTests('GATE-META', ['scripts/hardtest/kpi.test.mjs', 'scripts/hardtest/evidence.test.mjs', 'scripts/hardtest/meta.test.mjs'], 3 * minute, caseIds('GATE-META', 9)),
+    nodeTests('GATE-CROSS', ['scripts/hardtest/cross.test.mjs'], 3 * minute, caseIds('GATE-CROSS', 5)),
     nodeTests('SIM-REGRESSION', ['outputs/hcmc-poc/test/*.test.mjs'], 18 * minute),
     {
       id: 'WEB-TYPECHECK',
@@ -106,7 +108,7 @@ function kpiCheck(outputDir) {
 function releaseChecks() {
   return releaseIds.map(id => {
     const files = [`scripts/hardtest/release/${id}.test.mjs`];
-    return nodeTests(id, files, (id === 'PERF-01' ? 40 : 12) * minute);
+    return nodeTests(id, files, (id === 'PERF-01' ? 40 : 12) * minute, [id]);
   });
 }
 

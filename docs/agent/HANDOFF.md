@@ -1,6 +1,6 @@
 # Bàn giao hiện hành SaiGon SMTF
 
-**Mốc khảo sát:** `3f8e31e` · **Đích triển khai:** `public-demo-v1` · **Mốc bàn giao cho hai nhánh:** `smtf-public-demo-base-v1`.
+**Mốc khảo sát:** `3f8e31e` · **Đích triển khai:** `public-demo-v1` · **Mốc bàn giao cho hai nhánh:** `smtf-public-demo-handoff-v1`.
 
 ## Đọc trước khi tiếp tục
 
@@ -22,6 +22,9 @@ Những kết quả trên là đường cơ sở cho profile `ci`. A1, AI YOLOX,
 
 ## Kế hoạch tiếp người bàn giao
 
-- Sau khi đóng đặc tả, hợp đồng và fixture, tạo mốc Git chung và lấy SHA bằng `git rev-parse 'smtf-public-demo-base-v1^{commit}'`. Mở hai worktree từ cùng mốc. [Prompt UI](../prompts/PUBLIC-DEMO-UI.md) · [Prompt lõi](../prompts/PUBLIC-DEMO-CORE.md)
+- Đợt này bàn giao tài liệu, quy tắc, fixture và hardtest. Mốc dành cho agent tiếp theo lấy từ checkout sạch. Các bản nháp sản phẩm dừng giữa chừng nằm riêng ở các nhánh `codex/draft-public-demo-*`, ngoài mốc bàn giao.
+- Hardtest có hồi quy Node, React và FastAPI, kiểm chính runner, kiểm chéo KPI và kiểm gói tĩnh `PUB-01`. Cổng `release` yêu cầu thêm các suite DATA, SIM, AI, camera, luồng người dùng, hiệu năng và Docker trên sản phẩm thật. Agent triển khai và agent kiểm thử đóng các mục đó theo ma trận trong đặc tả.
+
+- Lấy SHA bằng `git rev-parse 'smtf-public-demo-handoff-v1^{commit}'`. Tạo hai worktree sạch từ các nhánh `codex/public-demo-ui` và `codex/public-demo-core`. Người dùng khởi chạy hai phiên từ hai prompt. [Prompt UI](../prompts/PUBLIC-DEMO-UI.md) · [Prompt lõi](../prompts/PUBLIC-DEMO-CORE.md)
 - Điều phối viên cập nhật một dòng ledger cho mỗi lần giao, kiểm đỏ, kiểm xanh, review hoặc bàn giao. Tệp kết quả của subagent nằm trong `work/smtf-agent/results/` của worktree đó. Nội dung quyết định dùng về sau được đưa vào tài liệu của lát triển khai trong commit của đúng vai trò.
 - Mỗi lát có mã yêu cầu, base và candidate SHA, người giữ phạm vi, lệnh kiểm, báo cáo và dấu vết thay đổi. Với phần chưa đạt, ghi ca hỏng tối thiểu, kết quả dự kiến/thực tế, giả thuyết đã loại và điểm tiếp tục. Đổi nhánh, đổi công cụ, resume hoặc compact giữ nguyên số vòng đã dùng.

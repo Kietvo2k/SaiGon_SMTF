@@ -56,14 +56,16 @@ export function createDelayTracker32({ net, hxNodes, approachM = A1_APPROACH_M, 
       const l = sim.lane[i], gen = sim.gen[i], sc = sim.s[i], vv = sim.v[i];
       let r = rec.get(i);
       if (!r || r.gen !== gen) { r = { gen, lane: l, sPrev: null, slow: 0, target: null, recorded: false }; rec.set(i, r); }
-      if (l !== r.lane) {
+      const changedLane = l !== r.lane;
+      if (changedLane) {
         const oldNode = lanes.to[r.lane];
         // Qua nút: nhảy làn sang làn kế có from = nút vừa rời (bắt cả trường hợp s nhảy qua vạch trong 1 bước).
         if (r.target !== null && oldNode === r.target && !r.recorded && lanes.from[l] === oldNode) {
           record(tSim, r.slow, i, gen, oldNode);
           r.slow = 0; r.recorded = true;
         }
-        r.lane = l; r.recorded = false;
+        if (lanes.to[l] !== oldNode) r.recorded = false;
+        r.lane = l;
       }
       const up = firstHxOf(i, l, sc, path, PN);
       const target = up ? up.node : null;
@@ -72,7 +74,9 @@ export function createDelayTracker32({ net, hxNodes, approachM = A1_APPROACH_M, 
       r.target = target;
       if (target !== null && !r.recorded) {
         const stopPos = lanes.length[l] - (Rz[target] || 0);
-        if (r.sPrev != null && r.sPrev <= stopPos && sc > stopPos) { record(tSim, r.slow, i, gen, target); r.slow = 0; r.recorded = true; }
+        if (!changedLane && lanes.to[l] === target && r.sPrev != null && r.sPrev <= stopPos && sc > stopPos) {
+          record(tSim, r.slow, i, gen, target); r.slow = 0; r.recorded = true;
+        }
         else if (up.dist <= approachM && vv < slowV) r.slow += delta;
       }
       r.sPrev = sc;

@@ -1,9 +1,9 @@
 # Prompt điều phối nhánh giao diện Public Demo
 
-Dán toàn bộ khối dưới đây cho một phiên điều phối Codex hoặc Claude Code trong worktree UI. Đợi mốc `smtf-public-demo-base-v1` được tạo trước khi tách. [Prompt nhánh lõi](PUBLIC-DEMO-CORE.md)
+Dán toàn bộ khối dưới đây cho một phiên điều phối Codex hoặc Claude Code trong worktree UI. Dùng mốc `smtf-public-demo-handoff-v1` để tách worktree. [Prompt nhánh lõi](PUBLIC-DEMO-CORE.md)
 
 ```text
-Bạn là điều phối viên giao diện SaiGon SMTF Public Demo v1. Làm trong worktree của nhánh codex/public-demo-ui tách từ mốc smtf-public-demo-base-v1. Chạy git rev-parse 'smtf-public-demo-base-v1^{commit}', git status --short --branch và git rev-parse HEAD. Với lần bắt đầu, HEAD phải đúng mốc chung. Nếu tiếp tục, SHA mốc phải là tổ tiên của HEAD và ledger phải ghi đúng ứng viên đang làm.
+Bạn là điều phối viên giao diện SaiGon SMTF Public Demo v1. Làm trong worktree của nhánh codex/public-demo-ui tách từ mốc smtf-public-demo-handoff-v1. Chạy git rev-parse 'smtf-public-demo-handoff-v1^{commit}', git status --short --branch và git rev-parse HEAD. Với lần bắt đầu, HEAD phải đúng mốc chung. Nếu tiếp tục, SHA mốc phải là tổ tiên của HEAD và ledger phải ghi đúng ứng viên đang làm.
 
 Đọc AGENTS.md, docs/agent/HANDOFF.md, docs/agent/RULES.md, docs/agent/PUBLIC-DEMO-SPEC.md, docs/agent/CONTRACT-PUBLIC-DEMO.md, docs/agent/fixtures/public-demo-v1.json và docs/qa-public-demo.md. Theo đúng section có ID khi chia lát. Bất kỳ lần mở mới, resume, compact hoặc đổi agent nào đều đối chiếu brief, receipt và ledger. Dùng .agents/skills khi phù hợp. Các hướng dẫn của hook là nhắc ngữ cảnh, kiểm bắt buộc bằng preflight và cổng test.
 

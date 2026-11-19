@@ -1,9 +1,9 @@
 # Prompt điều phối nhánh lõi Public Demo
 
-Dán toàn bộ khối dưới đây cho một phiên điều phối Codex hoặc Claude Code trong worktree lõi. Đợi mốc `smtf-public-demo-base-v1` được tạo trước khi tách. [Prompt nhánh UI](PUBLIC-DEMO-UI.md)
+Dán toàn bộ khối dưới đây cho một phiên điều phối Codex hoặc Claude Code trong worktree lõi. Dùng mốc `smtf-public-demo-handoff-v1` để tách worktree. [Prompt nhánh UI](PUBLIC-DEMO-UI.md)
 
 ```text
-Bạn là điều phối viên lõi/phát hành SaiGon SMTF Public Demo v1. Làm trong worktree của nhánh codex/public-demo-core tách từ mốc smtf-public-demo-base-v1. Chạy git rev-parse 'smtf-public-demo-base-v1^{commit}', git status --short --branch và git rev-parse HEAD. Với lần bắt đầu, HEAD phải đúng mốc chung. Nếu tiếp tục, SHA mốc phải là tổ tiên của HEAD và ledger phải ghi đúng ứng viên đang làm.
+Bạn là điều phối viên lõi/phát hành SaiGon SMTF Public Demo v1. Làm trong worktree của nhánh codex/public-demo-core tách từ mốc smtf-public-demo-handoff-v1. Chạy git rev-parse 'smtf-public-demo-handoff-v1^{commit}', git status --short --branch và git rev-parse HEAD. Với lần bắt đầu, HEAD phải đúng mốc chung. Nếu tiếp tục, SHA mốc phải là tổ tiên của HEAD và ledger phải ghi đúng ứng viên đang làm.
 
 Đọc AGENTS.md, docs/agent/HANDOFF.md, docs/agent/RULES.md, docs/agent/PUBLIC-DEMO-SPEC.md, docs/agent/CONTRACT-PUBLIC-DEMO.md, docs/agent/fixtures/public-demo-v1.json, docs/deploy-public.md và docs/qa-public-demo.md. Khi mở phiên, resume, compact hoặc đổi agent đều đối chiếu brief, receipt và ledger. Xác minh hình học đồ thị, trạng thái API và kết quả A/B đường cơ sở trước khi lập kế hoạch. Giữ tài liệu kỹ thuật tiếng Việt có dấu, UTF-8.
 
@@ -19,5 +19,5 @@ Triển khai theo lát: (1) áp hợp đồng transport và datastore, kiểm qu
 
 Vòng 0 là lần kiểm ứng viên đầu tiên. Mỗi test sai làm lát quay lại đúng người và sửa căn nguyên. Luôn chạy ca đỏ trước khi kiểm lại suite chính, meta và chéo. Chỉ tối đa vòng sửa 1 và vòng sửa 2, tính chung cho lát dù đổi phiên. Hết vòng 2 còn đỏ thì dừng ứng viên, giữ bản xanh gần nhất, gửi repro nhỏ và kế hoạch chẩn đoán tách biệt. Không bỏ test hoặc đổi ngưỡng để ghi nhận đã đạt.
 
-Bàn giao commits, SHA, tài liệu runtime và triển khai, bảng requirement → test ID → log, manifest và evidence theo docs/deploy-public.md. Chạy node scripts/hardtest/run.mjs --profile ci và --profile release đúng mốc tích hợp. Công bố mọi lỗi hoặc thiếu bằng chứng. Dùng scripts/deploy/publish.mjs --verify-only để kiểm artifact khi đủ điều kiện. Điều phối viên phát hành chịu trách nhiệm tích hợp và upload chính thức.
+Bàn giao commits, SHA, tài liệu runtime và triển khai, bảng requirement → test ID → log, manifest và evidence theo docs/deploy-public.md. Chạy node scripts/hardtest/run.mjs --profile ci và --profile release đúng mốc tích hợp. Công bố mọi lỗi hoặc thiếu bằng chứng. Dùng cổng release để kiểm artifact. Triển khai lệnh upload có xác minh lại bằng chứng và manifest của đúng ứng viên. Điều phối viên phát hành chịu trách nhiệm tích hợp và upload chính thức.
 ```

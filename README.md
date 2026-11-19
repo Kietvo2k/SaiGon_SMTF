@@ -4,7 +4,7 @@ Mô phỏng giao thông khu Bắc TP.HCM: cảnh 3D, đèn tín hiệu, camera, 
 
 ## Bản public cho giám khảo
 
-Bản `public-demo-v1` đang được triển khai. Landing page trên Vercel sẽ mở ba trải nghiệm cùng origin. Cloudflare Pages phục vụ tài nguyên cảnh Bắc. Trình duyệt khách vận hành mô phỏng, nhận diện ảnh và hồ sơ mẫu. [Đặc tả phát hành](docs/agent/PUBLIC-DEMO-SPEC.md) · [Hướng dẫn phát hành](docs/deploy-public.md) · [Kịch bản chấm thi](docs/qa-public-demo.md)
+Bản `public-demo-v1` đang ở mốc bàn giao đặc tả và kiểm thử cho đội triển khai. Đích là một landing page Vercel với ba trải nghiệm cùng origin và tài nguyên cảnh Bắc từ Cloudflare Pages. [Đặc tả](docs/agent/PUBLIC-DEMO-SPEC.md) · [Hai prompt bàn giao](docs/prompts/README.md) · [Cách nghiệm thu](docs/qa-public-demo.md)
 
 Để tiếp tục triển khai, bắt đầu từ `AGENTS.md` và [bàn giao hiện hành](docs/agent/HANDOFF.md). Hai prompt điều phối đi từ một mốc Git chung. [Chọn prompt UI hoặc lõi](docs/prompts/README.md)
 

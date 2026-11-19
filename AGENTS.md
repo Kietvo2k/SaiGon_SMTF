@@ -5,6 +5,9 @@ Repo gồm mô phỏng 3D trong `outputs/hcmc-poc`, hai web React trong
 
 ## Nhận và bàn giao việc
 
+Đợt bàn giao hiện tại chỉ gồm tài liệu, cấu hình agent và script nghiệm thu.
+Hai prompt triển khai dành cho các agent được người dùng khởi chạy ở phiên riêng.
+
 1. Đọc [bàn giao](docs/agent/HANDOFF.md) và [quy tắc](docs/agent/RULES.md).
    Với bản public, mở [đặc tả](docs/agent/PUBLIC-DEMO-SPEC.md) và
    [hợp đồng](docs/agent/CONTRACT-PUBLIC-DEMO.md) trước khi sửa.

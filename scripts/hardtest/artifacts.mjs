@@ -14,7 +14,10 @@ export function describeArtifact(root, platform) {
   function walk(directory, prefix) {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const path = prefix + entry.name;
-      if (privateFile.test(path)) throw new Error(`Tệp phát hành bị cấm: ${path}`);
+      const prebuilt = platform === 'vercel'
+        && (path === '.vercel' || path === '.vercel/output' || path.startsWith('.vercel/output/'));
+      const inspectPath = prebuilt ? path.slice('.vercel'.length) : path;
+      if (privateFile.test(inspectPath)) throw new Error(`Tệp phát hành bị cấm: ${path}`);
       const absolute = join(directory, entry.name);
       if (entry.isDirectory()) {
         walk(absolute, path + '/');

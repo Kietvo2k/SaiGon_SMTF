@@ -51,6 +51,23 @@ test('chỉ số mới chạy trên sim thật: HX có vạch, đếm xe qua và
   assert.ok(Number.isInteger(r.crossings));
 });
 
+test('A1 cộng trễ làn thượng lưu và chỉ ghi khi thật sự qua vạch ở nút đích', () => {
+  const net = { lanes: { from: [0, 1], to: [1, 2], length: [30, 40] }, Rz: [0, 0, 5] };
+  const tracker = createDelayTracker32({ net, hxNodes: [2] });
+  const sim = { N: 1, active: [1], lane: [0], s: [24], v: [0], gen: [1], path: [1] };
+  tracker.tick(300, sim);
+  sim.s[0] = 26;
+  tracker.tick(301, sim);
+  assert.equal(tracker.result().crossings, 0);
+  sim.lane[0] = 1;
+  sim.s[0] = 1;
+  sim.v[0] = 2;
+  tracker.tick(302, sim);
+  sim.s[0] = 36;
+  tracker.tick(303, sim);
+  assert.deepEqual(tracker.result(), { delay_avg_s: 1, crossings: 1, total_delay_s: 1 });
+});
+
 test('demand: không truyền = y nguyên (hash cổ điển c05ce91e); truyền demand → khác', () => {
   const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn });
   const base = createTrafficSim31(net);

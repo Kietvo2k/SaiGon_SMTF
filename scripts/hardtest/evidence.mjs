@@ -74,6 +74,9 @@ export function verifyReleaseInputs({ manifestPath, evidencePath, commit, contra
   }
   try {
     const evidence = boundDocument(evidencePath, 'HARDTEST_RELEASE_EVIDENCE', commit, contractDigest);
+    if (!releaseManifestDigest || evidence.value.releaseManifestDigest !== releaseManifestDigest) {
+      throw new Error('Bằng chứng phải gắn đúng SHA-256 của manifest ứng viên.');
+    }
     verifyManualEvidence(evidence);
     evidenceDigest = evidence.sha256;
   } catch (error) {

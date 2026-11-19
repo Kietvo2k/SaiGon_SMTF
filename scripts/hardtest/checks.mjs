@@ -49,7 +49,7 @@ const reporters = { tap: tapCounts, vitest: vitestCounts, junit: junitCounts };
 
 export function runCheck(check, { outputDir }) {
   const start = performance.now();
-  const { id, command, args, cwd, timeoutMs, reporter = 'exit', reportPath, inspect, env } = check;
+  const { id, command, args, cwd, timeoutMs, reporter = 'exit', reportPath, inspect, env, requiredCases = [] } = check;
   const logs = [`${id}.stdout.log`, `${id}.stderr.log`];
   const result = (status, reason, message, details) => ({
     id,
@@ -91,6 +91,11 @@ export function runCheck(check, { outputDir }) {
       if (counts.total <= 0 || !Number.isSafeInteger(counts.total) ||
           counts.passed !== counts.total || counts.incomplete !== 0) {
         return result('FAIL', 'incomplete-tests', 'Bộ test rỗng hoặc có ca chưa đạt.', counts);
+      }
+      if (reporter === 'tap' && requiredCases.length) {
+        const passed = new Set([...source.matchAll(/^\s*ok \d+ - ([A-Z0-9-]+)(?=\s|$)/gm)].map(match => match[1]));
+        const missing = requiredCases.filter(caseId => !passed.has(caseId));
+        if (missing.length) return result('FAIL', 'missing-test-ids', `Thiếu ca bắt buộc: ${missing.join(', ')}.`, counts);
       }
       return result('PASS', 'tests-passed', `Đạt đủ ${counts.total} ca.`, counts);
     } catch (error) {

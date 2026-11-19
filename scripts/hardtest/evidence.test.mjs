@@ -22,6 +22,7 @@ function fixture(t) {
   const artifacts = [{ path: 'capture.txt', sha256: createHash('sha256').update(capture).digest('hex') }];
   const evidence = {
     ...identity,
+    releaseManifestDigest: createHash('sha256').update(JSON.stringify(identity)).digest('hex'),
     checks: ['CAM-01', 'USER-01', 'PERF-01'].map(id => ({ id, artifacts })),
   };
   const writeEvidence = () => writeFileSync(evidencePath, JSON.stringify(evidence));
@@ -44,6 +45,14 @@ test('rejects an evidence record from another commit', t => {
   evidence.commit = 'f'.repeat(40);
   writeEvidence();
   assert.equal(verifyReleaseInputs(input).ok, false);
+});
+
+test('rejects evidence reused for different artifacts from the same commit', t => {
+  const { input, evidence } = fixture(t);
+  writeFileSync(input.manifestPath, JSON.stringify({
+    schemaVersion: 1, commit: evidence.commit, contractDigest: evidence.contractDigest, build: 'second',
+  }));
+  assert.match(verifyReleaseInputs(input).errors.join(' '), /SHA-256 của manifest/);
 });
 
 test('rejects a missing manual check and an artifact changed after capture', t => {

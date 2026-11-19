@@ -1,6 +1,6 @@
 # Đặc tả phát hành SaiGon SMTF Public Demo v1
 
-**Phiên bản hợp đồng:** `public-demo-v1` · **Commit hiện trạng đã khảo sát:** `3f8e31e` · **Mốc bàn giao triển khai:** `smtf-public-demo-base-v1`.
+**Phiên bản hợp đồng:** `public-demo-v1` · **Commit hiện trạng đã khảo sát:** `3f8e31e` · **Mốc bàn giao triển khai:** `smtf-public-demo-handoff-v1`.
 
 Các mục dưới đây quy định hành vi phải đạt trước khi phát hành. [Handoff](HANDOFF.md) ghi riêng phần đã kiểm chứng, phần đang làm và phần cần nghiệm thu.
 
@@ -130,4 +130,4 @@ Agent độc lập viết bộ kiểm gần tương đương từ đặc tả, d
 
 ### GATE-RELEASE-INPUTS Đầu vào phát hành
 
-Cổng xác minh `HARDTEST_RELEASE_MANIFEST` và `HARDTEST_RELEASE_EVIDENCE` cùng SHA và hash hợp đồng trước khi chạy profile `release`. Từng tệp bằng chứng phải tồn tại, có nội dung và đúng SHA-256. [Cách chuẩn bị tệp](../deploy-public.md#chạy-cổng-kiểm-phát-hành)
+Cổng xác minh `HARDTEST_RELEASE_MANIFEST` và `HARDTEST_RELEASE_EVIDENCE` cùng SHA và hash hợp đồng trước khi chạy profile `release`. Bằng chứng ghi thêm `releaseManifestDigest` của chính manifest ứng viên. Từng tệp bằng chứng phải tồn tại, có nội dung và đúng SHA-256. [Cách chuẩn bị tệp](../deploy-public.md#chạy-cổng-kiểm-phát-hành)
