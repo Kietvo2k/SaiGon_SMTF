@@ -182,6 +182,7 @@ class SignalOverrideIn(BaseModel):
     duration_s: float = Field(60, gt=0, le=600)
     reason: str = ''
     until_t_sim: Optional[float] = None   # giây sim nếu trạm đã biết (tùy chọn)
+    command_id: Optional[str] = Field(default=None, min_length=1, max_length=128)
 
 
 class ScenarioIn(BaseModel):
@@ -189,6 +190,7 @@ class ScenarioIn(BaseModel):
     model_config = ConfigDict(extra='forbid')
     scenario: Literal['peak-hang-xanh', 'lane-block', 'flood-nhc', 'priority-run', 'none']
     params: dict = Field(default_factory=dict)
+    command_id: Optional[str] = Field(default=None, min_length=1, max_length=128)
 
     @model_validator(mode='after')
     def _emergency_kind(self):
@@ -209,6 +211,7 @@ class VmsIn(BaseModel):
     model_config = ConfigDict(extra='forbid')
     text: str = Field(default='', max_length=300)
     mode: Literal['auto', 'manual']
+    command_id: Optional[str] = Field(default=None, min_length=1, max_length=128)
 
     @model_validator(mode='after')
     def _clean(self):
@@ -219,6 +222,24 @@ class VmsIn(BaseModel):
             raise ValueError('Chế độ thủ công cần nội dung hiển thị')
         self.text = text if self.mode == 'manual' else ''
         return self
+
+
+class LeaseClaimIn(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    station_id: str = Field(min_length=1, max_length=128)
+    owner_id: str = Field(min_length=1, max_length=128)
+
+
+class CommandAckIn(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    status: Literal['applied', 'rejected']
+    applied_t_sim: Optional[float] = Field(default=None, ge=0, allow_inf_nan=False)
+    reason_code: Optional[str] = Field(default=None, max_length=128)
+
+
+class SnapshotIn(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    snapshot: dict
 
 
 class ViolationIn(BaseModel):

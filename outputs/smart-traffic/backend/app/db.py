@@ -14,7 +14,7 @@ def get_conn():
 
 
 @contextmanager
-def connect():
+def connect(*, immediate=False):
     """Kết nối ghi an toàn: commit khi thành công, rollback + luôn đóng khi lỗi.
 
     Mọi handler ghi DB phải dùng `with connect() as conn:` để không để khóa ghi SQLite
@@ -22,6 +22,8 @@ def connect():
     """
     conn = get_conn()
     try:
+        if immediate:
+            conn.execute('BEGIN IMMEDIATE')
         yield conn
         conn.commit()
     except Exception:

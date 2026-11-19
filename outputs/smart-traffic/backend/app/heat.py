@@ -107,16 +107,21 @@ def save_snapshot(conn, t_sim, day_start_hour, levels, alerts, created_at):
                  (SNAPSHOT_KEEP,))
 
 
-async def ingest(body) -> dict:
+async def ingest(body, *, guard=None) -> dict:
     """Nhận một bản đồ nhiệt từ trạm: lưu, ghi lịch sử nếu đến hạn, phát WS. Trả về số liệu để trạm kiểm tra."""
     levels = sorted({int(e): float(lv) for e, lv in body.levels}.items())   # trùng cạnh: lấy giá trị cuối
     alerts = [a.model_dump() for a in body.alerts]
     t_sim = float(body.t_sim)
     now_iso = _now_iso()
     saved = False
-    if _snapshot_due(t_sim):
-        with connect() as conn:
+    due = _snapshot_due(t_sim)
+    # Kiểm fencing cả nhịp không ghi lịch sử; state và event chỉ đổi sau commit.
+    with connect(immediate=guard is not None) as conn:
+        if guard is not None:
+            guard(conn)
+        if due:
             save_snapshot(conn, t_sim, body.day_start_hour, levels, alerts, now_iso)
+    if due:
         _STATE['last_saved_t'] = t_sim
         saved = True
     hot = [a for a in alerts if a['prob'] >= ALERT_PROB]

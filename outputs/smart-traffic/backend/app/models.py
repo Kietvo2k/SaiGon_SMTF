@@ -1,4 +1,16 @@
 TABLES = [
+    """CREATE TABLE IF NOT EXISTS station_leases (
+        id TEXT PRIMARY KEY, station_id TEXT NOT NULL, owner_id TEXT NOT NULL,
+        generation INTEGER NOT NULL, capability_hash TEXT, username TEXT NOT NULL,
+        expires_at REAL NOT NULL, last_seen_at TEXT)""",
+    """CREATE TABLE IF NOT EXISTS traffic_commands (
+        command_id TEXT PRIMARY KEY, actor TEXT NOT NULL, route TEXT NOT NULL, payload_json TEXT NOT NULL,
+        event TEXT NOT NULL, data_json TEXT NOT NULL, compatible_json TEXT NOT NULL,
+        station_id TEXT NOT NULL, owner_id TEXT NOT NULL, generation INTEGER NOT NULL,
+        delivered INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL, reason_code TEXT, applied_t_sim REAL,
+        created_at REAL NOT NULL, deadline_at REAL NOT NULL)""",
+    """CREATE TABLE IF NOT EXISTS traffic_state (
+        id TEXT PRIMARY KEY, payload_json TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 0)""",
     """CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,

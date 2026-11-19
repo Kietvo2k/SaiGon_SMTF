@@ -6,6 +6,7 @@
 //   - WS: tin nhắn đầu {"type":"auth","token"} trong 5 s; lệnh cmd.* đến từ backend qua WS.
 // Không dùng `process`; chạy được trong Node (test) và trình duyệt.
 import { TRAFFIC_KINDS, createTrafficGeometry31 } from './city-traffic-sim-31.js?v=32c';
+import { stationRequest } from '../shared/public-demo/station-bridge.js';
 export const TRANSPORT_32_VERSION = 'transport-32a';
 export const STATION_ID_32 = 'STATION-3D-01';
 export const HEARTBEAT_S = 15;
@@ -110,7 +111,8 @@ const retryAfterOf32 = res => {
 
 export function createTransport32({
   baseUrl, wsUrl = '', token = null, login = null, stationId = STATION_ID_32, queue,
-  fetchImpl = globalThis.fetch, wsImpl = null, uptimeS = () => 0, fpsOf = () => 0, log = defaultLog32
+  fetchImpl = globalThis.fetch, wsImpl = null, uptimeS = () => 0, fpsOf = () => 0, log = defaultLog32,
+  runtimeTransport = null
 } = {}) {
   if (!queue) throw new TypeError('createTransport32 cần queue');
   let curToken = token || null;
@@ -124,6 +126,7 @@ export function createTransport32({
   const deadLetter = [];
   const evidenceByKey = new Map();    // bằng chứng của vi phạm đang xếp hàng (chỉ trong bộ nhớ)
   const pendingEvidence = [];         // {violationId, items:[{kind,dataUrl}]} chờ gửi/gửi lại
+  const frames = new Map();
   const nowIso = () => new Date().toISOString();
   const readJson = async res => {
     try { return res && typeof res.json === 'function' ? await res.json() : null; } catch (e) { return null; }
@@ -141,6 +144,17 @@ export function createTransport32({
   };
   // Mọi REST của trạm đi qua đây: gắn token; 401 → đăng nhập lại đúng một lần rồi gửi lại.
   const request = async (path, { method = 'POST', body, form } = {}) => {
+    if (runtimeTransport) {
+      try {
+        const data = await stationRequest(runtimeTransport, { method, path, body: form || body });
+        online = true;
+        return { ok: true, status: 200, json: async () => data };
+      } catch (error) {
+        online = false;
+        const status = error.code === 'STATION_UNAVAILABLE' ? 503 : error.status || 503;
+        return { ok: false, status, json: async () => ({ error: { code: error.code, message: error.message } }) };
+      }
+    }
     const send = async () => {
       const tok = await ensureToken();
       const headers = { Authorization: `Bearer ${tok}` };
@@ -281,9 +295,11 @@ export function createTransport32({
   // STATION-a: khung hình KHÔNG đi qua hàng đợi vi phạm; 429 → bỏ khung ngay (không thử lại, không dead-letter).
   const sendFrame = async (cameraId, seq, jpegBase64, w, h) => {
     try {
+      const capturedAt = nowIso();
       const res = await request('/api/v1/station/frames', {
-        body: { camera_id: cameraId, seq, t: nowIso(), jpeg_base64: jpegBase64, w, h }
+        body: { camera_id: cameraId, seq, frame_id: `${stationId}-${seq}-${capturedAt}`, t: capturedAt, jpeg_base64: jpegBase64, w, h }
       });
+      if (res.ok) frames.set(cameraId, { frame_id: `${stationId}-${seq}-${capturedAt}`, captured_at: capturedAt, width: w, height: h, source: 'live', status: 'ready' });
       return !!res.ok;
     } catch (e) { return false; }   // khung hình cũ không đáng xếp hàng: bỏ qua
   };
@@ -348,8 +364,7 @@ export function createTransport32({
     if (started && !stopped) return;
     started = true;
     stopped = false;
-    beat();
-    connectWs();
+    if (!runtimeTransport) { beat(); connectWs(); }
     flush();
   };
   const stop = () => {
@@ -369,6 +384,7 @@ export function createTransport32({
     wsState: () => (wsOpen ? 'open' : 'closed'),
     deadLetterCount: () => deadLetter.length,
     pendingCount: async () => queue.size(),
+    frameMetadata: cameraId => frames.get(cameraId),
     dispatch
   };
 }

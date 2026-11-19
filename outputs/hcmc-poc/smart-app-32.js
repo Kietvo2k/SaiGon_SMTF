@@ -14,7 +14,9 @@ import { createPerception32 } from './violation-perception-32.js?v=32a';
 import { ZONE_SPEC_32 } from './violation-zones-32.js?v=32a';
 import { ALL_CODES_32, restrictedNodeIndices32 } from './violation-rules-32.js?v=32a';
 import { createQueue32, createIndexedDbStore32, createMemoryStore32 } from './station-queue-32.js?v=32a';
-import { createTransport32, startStationLoop32, resolveApiBase32, readStoredToken32, loginStation32 } from './station-client-32.js?v=32a';
+import { createTransport32, startStationLoop32, resolveApiBase32, readStoredToken32, loginStation32, buildSignalStates32 } from './station-client-32.js?v=32a';
+import { createTrafficTransport } from '../shared/public-demo/traffic-transport.js';
+import { createStationBridge } from '../shared/public-demo/station-bridge.js';
 import { installHud32 } from './kpi-panel-32.js?v=32a';
 export { installHud32 } from './kpi-panel-32.js?v=32a';
 export { mountTestLab32 } from './test-lab-32.js?v=32c';
@@ -265,10 +267,31 @@ export function initSmartApp32({ scene, camera, renderer, traffic, status, root 
 // T11 — nối trạm: perception → (vi phạm + bằng chứng) → transport → backend; HUD A/B/KPI; nhận lệnh đèn.
 // Gọi SAU installCameraCapture32 (cần app.modules.capture). Không đổi chữ ký initSmartApp32.
 export function installStation32(app, { cameras = [], nodeMap = [], search = (typeof location !== 'undefined' ? location.search : ''),
-  storage = (typeof sessionStorage !== 'undefined' ? sessionStorage : null) } = {}) {
+  storage = (typeof sessionStorage !== 'undefined' ? sessionStorage : null),
+  mode = new URLSearchParams(search).get('transport') || globalThis.SMtfTransportMode ||
+    (['localhost', '127.0.0.1', '[::1]'].includes(globalThis.location?.hostname) ? 'local' : 'public'),
+  buildId = globalThis.SMtfBuildId || 'public-demo-v1' } = {}) {
   const capture = app.modules && app.modules.capture;
   if (!capture) throw new Error('installStation32 cần camera capture (gọi installCameraCapture32 trước)');
   const { baseUrl, wsUrl } = resolveApiBase32(search);
+  const source = createTrafficTransport(mode === 'public' ? { mode: 'public', buildId } : { mode, apiBase: baseUrl, wsUrl });
+  let stationToken = readStoredToken32(storage);
+  // JWT chỉ dùng để claim local; mọi request sau đó mang capability của bridge.
+  const runtime = {
+    ...source,
+    async request(input) {
+      if (mode === 'local' && input.method === 'POST' && input.path === '/api/v1/station/lease' && !input.token) {
+        stationToken ||= await loginStation32({ baseUrl, storage });
+        try { return await source.request({ ...input, token: stationToken }); }
+        catch (error) {
+          if (error.status !== 401) throw error;
+          stationToken = await loginStation32({ baseUrl, storage });
+          return source.request({ ...input, token: stationToken });
+        }
+      }
+      return source.request(input);
+    }
+  };
   const store = typeof indexedDB !== 'undefined' ? createIndexedDbStore32() : createMemoryStore32();
   const queue = createQueue32({ store });
   // M5b-1: mọi mã vi phạm; mã hành vi chỉ ghi khi sim bật behavior (sim.behaviorOn).
@@ -279,20 +302,67 @@ export function installStation32(app, { cameras = [], nodeMap = [], search = (ty
   const transport = createTransport32({
     baseUrl, wsUrl, token: readStoredToken32(storage),
     login: () => loginStation32({ baseUrl, storage }),
-    queue,
+    queue, runtimeTransport: runtime,
     wsImpl: typeof WebSocket !== 'undefined' ? WebSocket : null,
     uptimeS: () => (typeof performance !== 'undefined' ? performance.now() / 1000 : 0),
     fpsOf: () => (hud && hud.fps ? hud.fps() : 0)
   });
+  const bridge = createStationBridge({ transport: runtime, stationId: 'STATION-3D-01',
+    applyCommand: command => applyStationCommand32(app, command),
+    readSnapshot: () => readStationSnapshot32(app, cameras, transport, buildId) });
   hud = installHud32(app, { transport });
+  bridge.start().catch(error => console.warn('[station] không nối được trạm:', error.message));
   transport.start();
   // streamAll: gửi khung luân phiên MỌI camera (~15 khung/phút/camera) để web công an xem được 10 camera.
   const loop = startStationLoop32(app, { perception, capture, transport, cameras, streamAll: true });
-  transport.dispose = () => { loop.stop(); transport.stop(); };
+  transport.dispose = () => { loop.stop(); transport.stop(); return bridge.stop(); };
   app.registerSmartModule32('perception', perception);
   app.registerSmartModule32('transport', transport);
   app.registerSmartModule32('station-loop', loop);
   return { transport, perception, loop, hud };
+}
+
+export async function applyStationCommand32(app, command) {
+  const data = command.data || {};
+  if (command.event === 'cmd.signal-mode') {
+    // Nhận thiết lập vào controller; vàng/đỏ an toàn vẫn do controller thực hiện.
+    await app.controller.setMode(data.mode);
+  } else if (command.event === 'cmd.signal-override') {
+    app.controller.overridePhase(data.node_id, data.group, data.duration_s || 60, data.by || 'command', data.reason || '');
+  } else {
+    const scenarios = app.modules?.scenarios?.scenarios || null;
+    const result = await createCommandRouter32({ scenarios, vms: app.vms })(command);
+    if (!result?.ok) return { status: 'rejected', reason_code: 'COMMAND_REJECTED' };
+  }
+  return { status: 'applied', applied_t_sim: app.traffic.sim.counters.t };
+}
+
+export function readStationSnapshot32(app, cameras, transport, buildId) {
+  const { sim, net } = app.traffic;
+  const t = sim.counters.t;
+  const metrics = app.controller.metrics(t);
+  const states = buildSignalStates32(app.controller, net, t);
+  const clusters = net.signalPlan?.clusters || [];
+  return {
+    snapshot_version: 'public-demo-v1', revision: 0, build_id: buildId,
+    station: { status: 'active', id: 'STATION-3D-01', last_seen_at: new Date().toISOString() },
+    simulation: { seed: sim.seed ?? app.traffic.seed ?? null, scenario: app.modules?.scenarios?.scenarios.status().key || 'none',
+      mode: app.controller.getMode(), t_sim: t, paused: app.modules?.clock?.speed?.() === 0 || Boolean(sim.paused) },
+    junctions: clusters.map(cluster => {
+      const rows = states.filter(state => state.cluster_id === cluster.cluster_id);
+      const active = rows.find(row => row.phase === 'green') || rows.find(row => row.phase === 'yellow') || rows[0];
+      return { junction_id: cluster.cluster_id, node_ids: rows.map(row => row.node_id), label: cluster.label || cluster.cluster_id,
+        phase: active?.phase || 'red', group: active?.group ?? null, decision: null };
+    }),
+    kpi: { wait_avg_s: metrics.wait_avg_s, queue_max: metrics.queue_max, flow_per_min: metrics.flow_per_min,
+      trips_completed: sim.counters.trips_completed || 0,
+      admission_wait: sim.pending ? Array.from(sim.pending).filter(Boolean).length : 0,
+      recoveries: sim.counters.recoveries ?? sim.counters.breakerRespawns ?? 0 },
+    routes: [],
+    cameras: cameras.map(camera => ({ camera_id: camera.camera_id, junction_id: camera.junction_id || camera.node_id || null,
+      label: camera.label || camera.camera_id, frame_id: null, source: 'live', status: 'missing', captured_at: null,
+      width: null, height: null, ...transport.frameMetadata(camera.camera_id) }))
+  };
 }
 
 // M4b1 — nối lớp nhiệt/dự báo/VMS vào app smart. Cần installStation32 trước (để gửi /station/heat qua transport).
@@ -381,7 +451,6 @@ export function installScenarios32(app, { THREE = null, nodeMap = [], routing = 
     timer = typeof setTimeout === 'function' ? setTimeout(scnTick, scnInterval()) : 0;
   };
   if (typeof setTimeout === 'function') timer = setTimeout(scnTick, 1000);
-  const off = transport && typeof transport.onCommand === 'function' ? transport.onCommand(createCommandRouter32({ scenarios: scn, vms, log })) : null;
   app.metricsExtra32 = () => ({
     vms: vms.snapshot(boards, heat && heat.live ? heat.live.alerts() : []),
     scenario: scn.metricsStatus(),
@@ -389,7 +458,7 @@ export function installScenarios32(app, { THREE = null, nodeMap = [], routing = 
   });
   const mod = {
     scenarios: scn, panel, props, boards,
-    dispose() { if (timer) clearTimeout(timer); if (off) off(); scn.dispose(); if (props) props.remove(); if (panel) panel.dispose(); }
+    dispose() { if (timer) clearTimeout(timer); scn.dispose(); if (props) props.remove(); if (panel) panel.dispose(); }
   };
   return app.registerSmartModule32('scenarios', mod);
 }

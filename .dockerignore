@@ -45,6 +45,10 @@ outputs/hcmc-poc/data/*
 !outputs/hcmc-poc/data/tiles-18/**
 !outputs/shared/
 outputs/shared/*
+!outputs/shared/public-demo/
+outputs/shared/public-demo/*
+!outputs/shared/public-demo/*.js
+!outputs/shared/public-demo/*.d.ts
 !outputs/shared/digital-twin-core/
 outputs/shared/digital-twin-core/*
 !outputs/shared/digital-twin-core/*.js

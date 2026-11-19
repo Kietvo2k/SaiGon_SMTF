@@ -29,10 +29,15 @@ async def ws_handler(websocket):
         msg = json.loads(raw)
         if msg.get('type') != 'auth':
             return
-        claims = decode_token(msg.get('token', ''))
+        token = msg.get('token', '')
+        if token.startswith('station-'):
+            from app.command_service import station_claims
+            claims = station_claims(token)
+        else:
+            claims = decode_token(token)
         role = claims['role']
         close_code = 1000
-        CLIENTS.append({'ws': websocket, 'role': role, 'username': claims['sub']})
+        CLIENTS.append({'ws': websocket, 'role': role, 'username': claims['sub'], 'capability': claims.get('capability')})
         while True:
             data = await websocket.receive_text()
             payload = json.loads(data)
@@ -44,6 +49,11 @@ async def ws_handler(websocket):
                 safe = ''.join(ch for ch in str(event)[:40] if ch.isprintable())
                 print(f'[ws] bỏ qua event không hợp lệ: role={role} event={safe}', flush=True)
                 continue
+            if claims.get('capability'):
+                from app.command_service import require_lease
+                from app.db import connect
+                with connect(immediate=True) as conn:
+                    require_lease(conn, claims['capability'])
             await broadcast(event, payload.get('data', {}), to_roles=['officer', 'commander', 'admin'])
     except Exception:
         pass
@@ -75,6 +85,11 @@ async def broadcast(event: str, data: dict, to_roles=None, to_users=None):
         if not _wanted(c, to_roles, to_users):
             continue
         try:
+            if c.get('capability'):
+                from app.command_service import require_lease
+                from app.db import connect
+                with connect() as conn:
+                    require_lease(conn, c['capability'])
             await c['ws'].send_text(payload)
         except Exception:
             dead.append(c)

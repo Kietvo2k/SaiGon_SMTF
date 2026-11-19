@@ -6,15 +6,16 @@ import secrets
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 
-from app import config, heat
-from app.auth import StationLimiter, require_role
+from app import config, heat, command_service
+from app import snapshot as snapshots
+from app.auth import StationLimiter, require_role, bearer_of
 from app.db import connect
 from app.errors import err
 from app.lifecycle import OFFICER_ROLES, announce_violation, auto_process_violation, push_notifications
 from app.penalties import penalty_for
-from app.schemas import HeatIn, ViolationIn
+from app.schemas import HeatIn, ViolationIn, LeaseClaimIn, CommandAckIn, SnapshotIn
 from app.vms import report_from_station
 from app.ws import broadcast
 
@@ -25,7 +26,8 @@ FRAMES = {}   # camera_id → frame mới nhất
 
 def _station_guard(group):
     # §11 (STATION-a): hạn mức theo NHÓM — mỗi nhóm một cửa sổ riêng, 429 kèm Retry-After.
-    def dep(claims=Depends(require_role('station'))):
+    def dep(request: Request):
+        claims = command_service.station_claims(bearer_of(request))
         StationLimiter.check(claims['sub'], group)
         return claims
     return dep
@@ -34,6 +36,65 @@ def _station_guard(group):
 STATION = _station_guard('violation')             # vi phạm, bằng chứng, media, nhịp sống
 STATION_TELEMETRY = _station_guard('telemetry')   # metrics, heat
 STATION_FRAME = _station_guard('frame')           # khung stream
+
+
+def v1_station(request: Request):
+    claims = command_service.station_claims(bearer_of(request))
+    if not claims.get('capability'):
+        command_service.failure(403, 'FORBIDDEN', 'Giao thức v1 cần capability lease')
+    return claims
+
+
+@router.post('/lease')
+async def claim_lease(body: LeaseClaimIn, claims=Depends(require_role('station'))):
+    value, events = command_service.claim(body, claims)
+    await command_service.publish(events)
+    return value
+
+
+@router.put('/lease')
+async def renew_lease(claims=Depends(v1_station)):
+    value, events = command_service.renew(claims['capability'])
+    await command_service.publish(events)
+    return value
+
+
+@router.delete('/lease')
+async def release_lease(claims=Depends(v1_station)):
+    value, events = command_service.renew(claims['capability'], release=True)
+    await command_service.publish(events)
+    return value
+
+
+@router.get('/commands/pending')
+async def pending_commands(claims=Depends(v1_station)):
+    value, events = command_service.pending(claims['capability'])
+    await command_service.publish(events)
+    return value
+
+
+@router.post('/commands/{command_id}/ack')
+async def acknowledge_command(command_id: str, body: CommandAckIn, claims=Depends(v1_station)):
+    value, events = command_service.acknowledge(claims['capability'], command_id, body)
+    await command_service.publish(events)
+    return value
+
+
+@router.post('/snapshot')
+async def update_snapshot(body: SnapshotIn, claims=Depends(v1_station)):
+    value = body.snapshot
+    simulation = value.get('simulation', {})
+    if (not isinstance(simulation, dict) or simulation.get('mode') not in ('fixed', 'smart') or
+            not isinstance(simulation.get('t_sim'), (int, float)) or
+            not all(isinstance(value.get(k), list) for k in ('junctions', 'routes', 'cameras')) or
+            not isinstance(value.get('kpi'), dict)):
+        command_service.failure(422, 'VALIDATION', 'Snapshot không hợp lệ')
+    with connect(immediate=True) as conn:
+        command_service.guard_write(conn, claims)
+        snapshots.put_state(conn, 'snapshot', value)
+        event = snapshots.snapshot_event(conn)
+    await command_service.publish([event])
+    return {'ok': True}
 
 
 def _now():
@@ -53,13 +114,18 @@ def _sniff(data: bytes):
 
 @router.post('/heartbeat')
 async def heartbeat(body: dict, claims=Depends(STATION)):
+    if claims.get('capability'):
+        value, events = command_service.pending(claims['capability'])
+        await command_service.publish(events)
+        return {'ok': True, 'server_time': _now(), **value}
     return {'ok': True, 'server_time': _now(), 'commands': []}
 
 
 @router.post('/metrics')
 async def metrics(body: dict, claims=Depends(STATION_TELEMETRY)):
     kpi = body.get('kpi', {})
-    with connect() as conn:
+    with connect(immediate=True) as conn:
+        command_service.guard_write(conn, claims)
         conn.execute('INSERT INTO kpi_samples (t_sim, window_s, wait_avg_s, wait_p95_s, queue_max, queue_avg, flow_per_min, mode, scenario_key, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)',
                      (body.get('t_sim', body.get('t')), 60, kpi.get('wait_avg_s', 0), 0, kpi.get('queue_max', 0), 0, kpi.get('flow_per_min', 0), body.get('signal_mode', 'fixed'), None, _now()))
         conn.execute('INSERT INTO station_metrics (station_id, t, payload_json, created_at) VALUES (?,?,?,?)',
@@ -73,6 +139,10 @@ async def metrics(body: dict, claims=Depends(STATION_TELEMETRY)):
                 conn.execute('INSERT INTO signal_state_log (node_id, cluster_id, t_sim, phase, grp, mode, override_by, reason, created_at) VALUES (?,?,?,?,?,?,?,?,?)',
                              (s.get('node_id'), s.get('cluster_id'), s.get('t_sim'), s.get('phase'), s.get('group'),
                               s.get('mode'), s.get('override_by'), s.get('reason'), _now()))
+        if claims.get('capability'):
+            state = snapshots.controls(conn)
+            state.update(mode=body.get('signal_mode', state['mode']), overrides=body.get('overrides', state['overrides']))
+            snapshots.put_state(conn, 'controls', state)
     # Trạm báo lại danh sách override đang áp dụng (kèm `until_t_sim` theo đồng hồ sim) → lưu trạng thái.
     ovs = body.get('overrides')
     if isinstance(ovs, list):
@@ -98,7 +168,8 @@ async def create_violation(body: ViolationIn, claims=Depends(STATION)):
     data = body.model_dump()
     data['penalty'] = penalty_for(data['violation_code'], data['vehicle_class'], data['signal'])
     auto = None
-    with connect() as conn:
+    with connect(immediate=True) as conn:
+        command_service.guard_write(conn, claims)
         cycle_id = data['cycle_id']
         dup = conn.execute('SELECT id FROM violations WHERE vehicle_id=? AND node_id=? AND cycle_id=? AND violation_code=?',
                            (data['vehicle_id'], data['node_id'], cycle_id, data['violation_code'])).fetchone()
@@ -157,7 +228,8 @@ async def upload_evidence(vid: str, file: UploadFile = File(...), kind: str = Fo
     sha = hashlib.sha256(data).hexdigest()
     mid = f'MD-{secrets.token_hex(8)}'
     path = config.VAR_DIR / 'frames' / f'{mid}{ext}'
-    with connect() as conn:
+    with connect(immediate=True) as conn:
+        command_service.guard_write(conn, claims)
         if not conn.execute('SELECT id FROM violations WHERE id=?', (vid,)).fetchone():
             raise HTTPException(status_code=404, detail=err('NOT_FOUND', 'Không có vi phạm'))
         # Kiểm trùng kind TRƯỚC khi ghi để trả 409 (không để lại file mồ côi / khóa ghi).
@@ -168,8 +240,8 @@ async def upload_evidence(vid: str, file: UploadFile = File(...), kind: str = Fo
         eid = f'EV-{vid}-{kind}'
         conn.execute('INSERT INTO evidence (id, violation_id, kind, media_id, captured_at, width, height, sha256) VALUES (?,?,?,?,?,?,?,?)',
                      (eid, vid, kind, mid, _now(), 0, 0, sha))
-    # Ghi file SAU khi DB đã commit thành công (tránh file mồ côi khi insert lỗi).
-    path.write_bytes(data)
+        # Giữ lease lock tới khi ghi xong, không để callback cũ ghi sau takeover.
+        path.write_bytes(data)
     await broadcast('violation.evidence', {'violation_id': vid, 'kind': kind, 'media_id': mid, 'sha256': sha}, to_roles=['officer', 'commander', 'admin'])
     return {'media_id': mid, 'sha256': sha}
 
@@ -191,17 +263,18 @@ async def upload_media(file: UploadFile = File(...), claims=Depends(STATION)):
     sha = hashlib.sha256(data).hexdigest()
     mid = f'MD-{secrets.token_hex(8)}'
     dest = config.VAR_DIR / 'frames' / f'{mid}{ext}'   # tên theo media_id, không dùng tên client
-    with connect() as conn:
+    with connect(immediate=True) as conn:
+        command_service.guard_write(conn, claims)
         conn.execute('INSERT INTO media_assets (id, kind, path, mime, bytes, sha256, camera_id, created_at) VALUES (?,?,?,?,?,?,?,?)',
                      (mid, 'video' if mime.startswith('video/') else 'image', str(dest), mime, len(data), sha, m.group(1), _now()))
-    dest.write_bytes(data)
+        dest.write_bytes(data)
     return {'media_id': mid, 'camera_id': m.group(1)}
 
 
 @router.post('/heat')
 async def post_heat(body: HeatIn, claims=Depends(STATION_TELEMETRY)):
     """Bản đồ nhiệt + cảnh báo kẹt từ trạm (M4c). Lỗi hình dạng/giới hạn → 422 thống nhất."""
-    result = await heat.ingest(body)
+    result = await heat.ingest(body, guard=lambda conn: command_service.guard_write(conn, claims))
     return {'ok': True, **result}
 
 
@@ -218,8 +291,19 @@ async def post_frame(body: dict, claims=Depends(STATION_FRAME)):
         raw = base64.b64decode(raw_b64, validate=True)
     except Exception:
         raise HTTPException(status_code=422, detail=err('VALIDATION', 'jpeg_base64 không hợp lệ'))
-    FRAMES[cam] = {'seq': body.get('seq'), 't': body.get('t'), 'w': body.get('w'), 'h': body.get('h'), 'jpeg': raw}
-    (config.VAR_DIR / 'frames' / f'{cam}-latest.jpg').write_bytes(raw)
+    frame = {'seq': body.get('seq'), 't': body.get('t'), 'w': body.get('w'), 'h': body.get('h'), 'jpeg': raw}
+    with connect(immediate=True) as conn:
+        lease = command_service.guard_write(conn, claims)
+        (config.VAR_DIR / 'frames' / f'{cam}-latest.jpg').write_bytes(raw)
+        if lease:
+            value = snapshots.read_snapshot(conn)
+            previous = next((c for c in value['cameras'] if c['camera_id'] == cam), {})
+            metadata = {**previous, 'camera_id': cam, 'junction_id': previous.get('junction_id'),
+                        'label': previous.get('label', cam), 'frame_id': body.get('frame_id') or f"{lease['generation']}-{body.get('seq')}",
+                        'source': 'live', 'status': 'ready', 'captured_at': body.get('t'), 'width': body.get('w'), 'height': body.get('h')}
+            value['cameras'] = [c for c in value['cameras'] if c['camera_id'] != cam] + [metadata]
+            snapshots.put_state(conn, 'snapshot', value)
+    FRAMES[cam] = frame
     await broadcast('stream.updated', {'camera_id': cam, 'seq': body.get('seq')},
                     to_roles=['officer', 'commander', 'admin'])
     return {'ok': True}

@@ -111,19 +111,6 @@ export function installHud32(app, { transport = null } = {}) {
     metricsTimer = setTimeout(sendMetrics, METRICS_S * 1000);
   };
 
-  // Lệnh từ backend (commander/admin qua REST → WS tới trạm). Lỗi giá trị bị bỏ qua, không làm dừng vòng chạy.
-  if (transport && typeof transport.onCommand === 'function') {
-    transport.onCommand(msg => {
-      const d = (msg && msg.data) || {};
-      try {
-        if (msg.event === 'cmd.signal-mode' && (d.mode === 'fixed' || d.mode === 'smart')) controller.setMode(d.mode);
-        else if (msg.event === 'cmd.signal-override') {
-          controller.overridePhase(d.node_id, d.group, d.duration_s || 60, d.by || 'command', d.reason || '');
-        }
-      } catch (e) { console.warn(`[hud] lệnh bị từ chối: ${e && e.message}`); }
-    });
-  }
-
   const rafLoop = () => {
     frames++;
     if (alive && typeof requestAnimationFrame === 'function') rafId = requestAnimationFrame(rafLoop);

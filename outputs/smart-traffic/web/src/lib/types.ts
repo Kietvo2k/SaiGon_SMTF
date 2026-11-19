@@ -1,4 +1,20 @@
 // Kiểu dữ liệu theo hợp đồng API M6 (đặc tả §4.5, mục "API M6"). Chỉ khai báo trường web thực dùng.
+export type { TrafficTransport, RequestInput, EventEnvelope } from '../../../../shared/public-demo/traffic-transport.js';
+export interface CommandResult {
+  command_id: string;
+  status: 'pending' | 'applied' | 'rejected' | 'expired';
+  reason_code: string | null;
+  applied_t_sim: number | null;
+}
+export interface TrafficSnapshot {
+  snapshot_version: 'public-demo-v1'; revision: number; build_id: string;
+  station: { status: 'missing' | 'active' | 'stale'; id: string | null; last_seen_at: string | null };
+  simulation: { seed: number | null; scenario: string; mode: 'fixed' | 'smart'; t_sim: number; paused: boolean };
+  junctions: Array<{ junction_id: string; node_ids: string[]; label: string; phase: string; group: number | null; decision?: unknown }>;
+  kpi: { wait_avg_s: number; queue_max: number; flow_per_min: number; trips_completed: number; admission_wait: number; recoveries: number };
+  routes: Array<{ vehicle_id: string; origin: string; destination: string; junction_ids: string[]; state: string; reason_code: string | null }>;
+  cameras: Array<{ camera_id: string; junction_id: string | null; label: string; frame_id: string | null; source: 'live' | 'sample'; status: 'missing' | 'ready' | 'stale' | 'error'; captured_at: string | null; width: number | null; height: number | null }>;
+}
 
 export interface Penalty {
   vnd_min: number | null;

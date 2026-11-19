@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app import audit, heat
+from app import audit, heat, command_service
+from app import snapshot as snapshots
 from app.audit import now_iso
 from app.auth import require_role
 from app.db import connect
@@ -240,11 +241,13 @@ async def signal_mode(body: dict, claims=Depends(COMMANDER)):
     mode = body.get('mode')
     if mode not in ('fixed', 'smart'):
         raise HTTPException(status_code=422, detail=err('VALIDATION', 'mode phải là fixed|smart'))
-    with connect() as conn:
-        audit.write(conn, actor=claims['sub'], role=claims.get('role'), action='signal-mode',
-                    target_type='signal', target_id=None, to_state=mode, payload={'mode': mode})
-    await broadcast('cmd.signal-mode', {'mode': mode}, to_roles=['station'])
-    return {'ok': True, 'mode': mode}
+    if set(body) - {'mode', 'command_id'} or ('command_id' in body and
+            (not isinstance(body['command_id'], str) or not 1 <= len(body['command_id']) <= 128)):
+        raise HTTPException(status_code=422, detail=err('VALIDATION', 'command_id hoặc trường dữ liệu không hợp lệ'))
+    response, events = command_service.enqueue(actor=claims, route='/api/v1/officer/controls/signal-mode',
+        body=body, event='cmd.signal-mode', data={'mode': mode}, compatible={'ok': True, 'mode': mode})
+    await command_service.publish(events)
+    return response
 
 
 @router.post('/controls/signal-override')
@@ -256,25 +259,20 @@ async def signal_override(body: SignalOverrideIn, claims=Depends(COMMANDER)):
             raise HTTPException(status_code=422, detail=err('VALIDATION', f'node_id không tồn tại: {node_id}'))
         now = datetime.now(timezone.utc)
         until_at = datetime.fromtimestamp(now.timestamp() + body.duration_s, timezone.utc).isoformat().replace('+00:00', 'Z')
-        if group is None:
-            OVERRIDES.pop(node_id, None)
-        else:
-            OVERRIDES[node_id] = {'node_id': node_id, 'group': group, 'by': claims['sub'],
-                                  'reason': body.reason, 'until_t_sim': body.until_t_sim, 'until_at': until_at}
-        audit.write(conn, actor=claims['sub'], role=claims.get('role'), action='signal-override',
-                    target_type='signal', target_id=node_id, to_state='cancel' if group is None else str(group),
-                    reason=body.reason,
-                    payload={'group': group, 'duration_s': body.duration_s, 'until_t_sim': body.until_t_sim, 'until_at': until_at})
-    await broadcast('cmd.signal-override', {'node_id': node_id, 'group': group,
-                                            'duration_s': body.duration_s, 'by': claims['sub'], 'reason': body.reason},
-                    to_roles=['station'])
-    return {'ok': True, 'until_t_sim': body.until_t_sim, 'until_at': until_at}
+    response, events = command_service.enqueue(actor=claims, route='/api/v1/officer/controls/signal-override',
+        body=body.model_dump(), event='cmd.signal-override',
+        data={'node_id': node_id, 'group': group, 'duration_s': body.duration_s, 'by': claims['sub'], 'reason': body.reason},
+        compatible={'ok': True, 'until_t_sim': body.until_t_sim, 'until_at': until_at})
+    await command_service.publish(events)
+    return response
 
 
 @router.get('/controls/state')
 def controls_state(claims=Depends(OFFICER)):
     """Trạng thái điều khiển: chế độ đèn, ghi đè đang có, kịch bản đang chạy, pha mới nhất của từng nút đèn."""
     with connect() as conn:
+        confirmed = snapshots.controls(conn)
+        has_confirmed = snapshots.get_state(conn, 'controls') is not None
         last = conn.execute('SELECT mode FROM kpi_samples ORDER BY id DESC LIMIT 1').fetchone()
         run = conn.execute('SELECT id, key, params_json, started_at FROM scenario_runs WHERE finished_at IS NULL '
                            'ORDER BY started_at DESC LIMIT 1').fetchone()
@@ -288,8 +286,9 @@ def controls_state(claims=Depends(OFFICER)):
     if run:
         scenario = {'scenario_id': run['id'], 'key': run['key'], 'params': json.loads(run['params_json'] or '{}'),
                     'started_at': run['started_at']}
-    return {'mode': last['mode'] if last else 'fixed', 'overrides': list(OVERRIDES.values()),
-            'scenario': scenario, 'signals': signals}
+    return {'mode': confirmed['mode'] if has_confirmed else last['mode'] if last else 'fixed',
+            'overrides': confirmed['overrides'] if has_confirmed else list(OVERRIDES.values()),
+            'scenario': confirmed['scenario'] if has_confirmed else scenario, 'signals': signals}
 
 
 @router.post('/controls/scenario')
@@ -297,19 +296,13 @@ async def start_scenario(body: ScenarioIn, claims=Depends(COMMANDER)):
     """Chạy một kịch bản (hoặc `none` để dừng). Chỉ một kịch bản chạy tại một thời điểm; phát `cmd.scenario` tới trạm."""
     now = now_iso()
     scenario_id = None
-    with connect() as conn:
-        conn.execute('UPDATE scenario_runs SET finished_at=? WHERE finished_at IS NULL', (now,))
-        if body.scenario != 'none':
-            scenario_id = f'SC-{secrets.token_hex(6)}'
-            conn.execute('INSERT INTO scenario_runs (id, key, seed, mode, params_json, result_json, started_at, finished_at) '
-                         'VALUES (?,?,?,?,?,?,?,?)',
-                         (scenario_id, body.scenario, None, None, json.dumps(body.params, ensure_ascii=False), None, now, None))
-        audit.write(conn, actor=claims['sub'], role=claims.get('role'), action='scenario',
-                    target_type='scenario', target_id=scenario_id, to_state=body.scenario,
-                    payload={'scenario': body.scenario, 'params': body.params, 'scenario_id': scenario_id})
-    await broadcast('cmd.scenario', {'key': body.scenario, 'params': body.params, 'scenario_id': scenario_id},
-                    to_roles=['station'])
-    return {'ok': True, 'scenario': body.scenario, 'scenario_id': scenario_id}
+    if body.scenario != 'none':
+        scenario_id = f'SC-{secrets.token_hex(6)}'
+    response, events = command_service.enqueue(actor=claims, route='/api/v1/officer/controls/scenario',
+        body=body.model_dump(), event='cmd.scenario', data={'key': body.scenario, 'params': body.params, 'scenario_id': scenario_id},
+        compatible={'ok': True, 'scenario': body.scenario, 'scenario_id': scenario_id})
+    await command_service.publish(events)
+    return response
 
 
 @router.get('/vms')
@@ -336,11 +329,25 @@ async def put_vms(vms_id: str, body: VmsIn, claims=Depends(COMMANDER)):
     if vms_id not in VMS_IDS:
         raise HTTPException(status_code=422, detail=err('VALIDATION', f'vms_id không tồn tại: {vms_id}'))
     lines = [body.text] if body.text else []
-    with connect() as conn:
-        conn.execute('INSERT INTO vms_messages (vms_id, text, mode, set_by, set_at) VALUES (?,?,?,?,?)',
-                     (vms_id, body.text, body.mode, claims['sub'], now_iso()))
-        audit.write(conn, actor=claims['sub'], role=claims.get('role'), action='vms',
-                    target_type='vms', target_id=vms_id, to_state=body.mode, payload={'text': body.text, 'mode': body.mode})
-    await broadcast('cmd.vms', {'vms_id': vms_id, 'mode': body.mode, 'text': body.text, 'lines': lines, 'by': claims['sub']},
-                    to_roles=['station'])
-    return {'ok': True, 'vms_id': vms_id, 'mode': body.mode, 'text': body.text}
+    response, events = command_service.enqueue(actor=claims, route='/api/v1/officer/vms/' + vms_id,
+        body=body.model_dump(), event='cmd.vms',
+        data={'vms_id': vms_id, 'mode': body.mode, 'text': body.text, 'lines': lines, 'by': claims['sub']},
+        compatible={'ok': True, 'vms_id': vms_id, 'mode': body.mode, 'text': body.text})
+    await command_service.publish(events)
+    return response
+
+
+@router.get('/snapshot')
+async def public_demo_snapshot(claims=Depends(OFFICER)):
+    with connect(immediate=True) as conn:
+        events = command_service.expire(conn)
+        value = snapshots.read_snapshot(conn)
+    await command_service.publish(events)
+    return value
+
+
+@router.get('/commands/{command_id}')
+async def public_demo_command(command_id: str, claims=Depends(OFFICER)):
+    value, events = command_service.read_command(command_id)
+    await command_service.publish(events)
+    return value
