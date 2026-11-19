@@ -178,3 +178,50 @@ Các log tiếp tục ở `work/smtf-agent/logs/`, ngoài commit:
 Probe M6c nạp package `app` từ draft, package test và fixture từ worktree test, không
 chép hoặc sửa file sản phẩm. Toàn bộ xanh draft cần chạy lại trên candidate đã ghép;
 chưa thay kiểm CI/release, meta/cross, Docker hoặc browser-qa/3D thật.
+
+## CORE-DATA-T1-TEST-01, vòng sửa 1/2
+
+Nền `6e742ec3306e685b8f9496236c9fad435bc5d47f`, receipt
+`506ba97772a8b9df275b8c17df0fe331460eddaabfe98f659903e9beb0e58292`.
+Hai suite bổ sung có 5 ca Node và 6 ca pytest. Suite Node chính giữ đủ 18 tên.
+
+| Requirement | Ca kiểm bổ sung hoặc cập nhật | Oracle |
+|---|---|---|
+| DATA-01, USER-01, DOCKER-01 | R1, HTTP/WS trong `test_public_demo_review.py` | JWT legacy còn hoạt động trước lease. Sau takeover, 7 route ghi từ JWT legacy hoặc capability cũ không được đổi trạng thái, media, số bản ghi, audit hay phát event. WS đã mở và mở mới đều bị fence hai chiều. Chủ lease hiện hành nhận command và phát heartbeat thật. |
+| DATA-01, USER-01, DOCKER-01 | R2, hai ca M6c scenario/VMS | Chờ auth tại ASGI và xác nhận heartbeat đi từ trạm qua wire đến officer. Deadline receive 2 giây. Event, payload, quyền nhận, dequeue/ACK và audit giữ assertion cũ. |
+| DATA-01, USER-01, DOCKER-01 | R3, Chromium/IndexedDB và HTTP tới Uvicorn | POST lặp cho ID khoảng trắng, Unicode, dấu %, slash và literal %2F. Dequeue đúng một lần. Segment encode một lần phải round-trip GET/ACK. ID slash và literal %2F nhận trạng thái riêng. |
+| DATA-01 | R4/R5, snapshot runtime và fallback SQLite | Đối chiếu đủ 10 camera với các cặp trong `cameras.json` và `node_map.json`. Snapshot runtime được đọc từ sim thật với hai seed khác mặc định, 71037 và 82309. |
+| DATA-01, USER-01 | R6, controls qua public transport | Sau ACK rồi telemetry, controls phản ánh mode, signal và overrides mới. Ca TTL chờ hơn 1 giây thực trước ACK, xác nhận hạn chính xác từ ACK và đọc lại command applied sau hết hạn. |
+| DATA-01, DOCKER-01 | R7, frame local qua HTTP/WS | Hai event đi qua wire. Một GET khác đọc ngay tại biên gửi `snapshot.updated` để xác nhận revision và metadata đã commit, đồng thời media trả đúng bytes. |
+| DATA-01, USER-01 | R8, hai ca bridge thuộc primary | Poll tối đa 4 giây và báo trạng thái cuối. Assertion pending trước callback, ACK/rejection, trạng thái cuối và event giữ theo ca gốc. |
+| USER-01 | R9, penalty authority | Spy ở `app.ws.broadcast` thấy lệnh hợp lệ gửi tới station, rồi phản hồi 422 không phát event hoặc đổi audit/scenario. |
+
+Chạy từ root worktree. Đặt `HARDTEST_PYTHON` là đường dẫn Python có dependency của
+brief. `PW_MODULE` và `PW_CHROME` dùng chung quy ước với suite chính.
+
+```powershell
+node --test --test-reporter=tap scripts/hardtest/data/data-t1.test.mjs scripts/hardtest/data/data-t1-review.test.mjs
+& $env:HARDTEST_PYTHON -B -m pytest outputs/smart-traffic/backend/tests/test_public_demo_review.py outputs/smart-traffic/backend/tests/test_m6c_controls.py outputs/smart-traffic/backend/tests/test_penalty_authority.py -q -p no:cacheprovider
+node scripts/hardtest/run.mjs --profile ci
+```
+
+Bằng chứng trong `work/smtf-agent/logs/` của worktree test.
+
+| Log | Kết quả |
+|---|---|
+| `data-t1-r1-node-review-base.log` | 5/5 ca đỏ trên nền, exit 1. GET/ACK public trả 404, controls vẫn giữ dữ liệu cũ, TTL đo từ enqueue, camera trả node ID, seed null. 0 skip/cancel. |
+| `data-t1-r1-py-review-base.log` | 6/6 ca đỏ trên nền, exit 1. Bảy đường JWT legacy trả 200 và để lại side effect. Cả hai WS legacy vượt fence inbound/outbound. Uvicorn trả 404 cho slash. Fallback trả node ID. Frame vẫn có `stream.updated` nhưng revision giữ nguyên và thiếu `snapshot.updated`. 0 skip. |
+| `data-t1-r1-primary-base.log` | 18/18 ca chính đạt trên nền sau sửa cách chờ, exit 0. |
+| `data-t1-r1-py-controls-penalty-base.log` | Hai tệp hồi quy 59/59 đạt trên nền, exit 0. |
+| `data-t1-r1-ws-deadline-probe.log` | Bỏ riêng `cmd.vms` trong RAM tại biên WS. Ca VMS thất bại với “WS không nhận được event trong 2 giây”, exit 1. |
+| `data-t1-r1-async-wait-probe.log` | Predicate async cũ trả false sau một lần đọc. Poll mới đọc ba lần tới applied, trường hợp không bao giờ rejected dừng sau 4013 ms. Probe exit 0 khi quan sát đủ hai hành vi. |
+| `data-t1-r1-node-draft-probe.log` | 23/23 đạt, exit 0. Suite và product cùng trỏ HEAD nền, product worktree có thay đổi chưa commit tại lần chạy này. |
+
+R3 đo HTTP trực tiếp tới Uvicorn. Chuẩn hoá ID `.` và `..` của URL và hành vi qua
+reverse proxy nằm ngoài phép đo này. R4/R5 gọi đường đọc snapshot với mạng và sim
+thật trong Node. Chất lượng hiển thị 3D thuộc browser QA. Cổng CI ứng viên sau ghép,
+meta/cross, Docker và release do điều phối viên chạy trên SHA tích hợp.
+Probe pytest trên bản sửa chưa commit đạt 65/65 ca gồm hai tệp hồi quy và
+6 ca bổ sung. Hai ca WS hồi quy cũng đạt 3 lượt chạy liên tiếp trên sản phẩm
+nền, mỗi lượt 2/2 và exit 0. Log: `data-t1-r1-py-draft-probe.log` và
+`data-t1-r1-ws-repeat-base.log`.

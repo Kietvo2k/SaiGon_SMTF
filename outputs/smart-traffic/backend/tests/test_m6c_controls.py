@@ -7,18 +7,16 @@ import json
 
 from app.vms import clean_text
 from tests.m6_helpers import hdr
-from tests.public_demo_helpers import apply_command, claim_station
+from tests.public_demo_helpers import (
+    apply_command, capability_headers, claim_station, station_socket, ws_event, ws_ready,
+)
 
 
-def _ws_auth(sock, token):
-    sock.send_text(json.dumps({'type': 'auth', 'token': token}))
-
-
-def _station_metrics(client, **over):
+def _station_metrics(client, headers=None, **over):
     body = {'station_id': 'STATION-3D-01', 't': '2026-10-16T02:00:00Z', 't_sim': 100.0, 'fps': 58.0,
             'kpi': {'wait_avg_s': 10.0, 'queue_max': 4, 'flow_per_min': 30.0}, 'signal_mode': 'smart'}
     body.update(over)
-    r = client.post('/api/v1/station/metrics', headers=hdr(client, 'station-3d'), json=body)
+    r = client.post('/api/v1/station/metrics', headers=headers or hdr(client, 'station-3d'), json=body)
     assert r.status_code == 200, r.text
 
 
@@ -29,7 +27,7 @@ def _put_vms(client, vms_id, **body):
 def _officer_heartbeat(sock, marker):
     # command.updated là thông báo hợp lệ mới; cán bộ vẫn không nhận cmd.*.
     for _ in range(10):
-        message = json.loads(sock.receive_text())
+        message = ws_event(sock)
         assert not message['event'].startswith('cmd.')
         if message['event'] == 'station.heartbeat':
             assert message['data']['marker'] == marker
@@ -120,14 +118,13 @@ def test_scenario_relayed_only_to_station_over_ws(client):
     stok = client.post('/api/v1/auth/login', json={'username': 'station-3d', 'password': 'SaiGon@2026'}).json()['access_token']
     otok = client.post('/api/v1/auth/login', json={'username': 'officer1', 'password': 'SaiGon@2026'}).json()['access_token']
     lease = claim_station(client, {'Authorization': 'Bearer ' + stok})
-    with client.websocket_connect('/ws/v1') as officer:
-        _ws_auth(officer, otok)
-        with client.websocket_connect('/ws/v1') as station:
-            _ws_auth(station, stok)
+    with station_socket(client, otok) as (officer, _):
+        with station_socket(client, lease['capability']) as (station, _):
+            ws_ready(officer, station)
             r = client.post('/api/v1/officer/controls/scenario', headers=ch,
                             json={'scenario': 'lane-block', 'params': {'lane': 2}})
             assert r.status_code == 200, r.text
-            msg = json.loads(station.receive_text())
+            msg = ws_event(station)
             assert msg['event'] == 'cmd.scenario'
             assert {key: msg['data'][key] for key in ('key', 'params', 'scenario_id')} == {'key': 'lane-block', 'params': {'lane': 2}, 'scenario_id': r.json()['scenario_id']}
             apply_command(client, r, lease)
@@ -178,14 +175,14 @@ def test_vms_list_merges_officer_setting_with_station_report(client):
     v1 = items[0]
     assert v1['text'] == 'Ùn tắc phía trước' and v1['mode'] == 'manual' and v1['set_by'] == 'commander1'
     assert v1['shown'] is None   # trạm chưa báo
-    _station_metrics(client, vms=[{'vms_id': 'VMS-01', 'text': 'Nên rẽ Bạch Đằng', 'mode': 'manual'},
+    _station_metrics(client, capability_headers(lease), vms=[{'vms_id': 'VMS-01', 'text': 'Nên rẽ Bạch Đằng', 'mode': 'manual'},
                                   {'vms_id': 'VMS-09', 'text': 'bỏ', 'mode': 'manual'}])
     items = client.get('/api/v1/officer/vms', headers=hdr(client, 'officer1')).json()['items']
     assert items[0]['shown'] == 'Nên rẽ Bạch Đằng' and items[0]['shown_mode'] == 'manual'
     assert items[0]['reported_at'] and items[1]['shown'] is None
     assert all(i['vms_id'] != 'VMS-09' for i in items)
     # Trạm báo danh sách rỗng → xóa trạng thái đã báo.
-    _station_metrics(client, vms=[])
+    _station_metrics(client, capability_headers(lease), vms=[])
     assert client.get('/api/v1/officer/vms', headers=hdr(client, 'officer1')).json()['items'][0]['shown'] is None
 
 
@@ -194,13 +191,12 @@ def test_vms_put_audited_and_relayed_to_station(client):
     stok = client.post('/api/v1/auth/login', json={'username': 'station-3d', 'password': 'SaiGon@2026'}).json()['access_token']
     otok = client.post('/api/v1/auth/login', json={'username': 'officer1', 'password': 'SaiGon@2026'}).json()['access_token']
     lease = claim_station(client, {'Authorization': 'Bearer ' + stok})
-    with client.websocket_connect('/ws/v1') as officer:
-        _ws_auth(officer, otok)
-        with client.websocket_connect('/ws/v1') as station:
-            _ws_auth(station, stok)
+    with station_socket(client, otok) as (officer, _):
+        with station_socket(client, lease['capability']) as (station, _):
+            ws_ready(officer, station)
             response = _put_vms(client, 'VMS-02', text='Đường Nguyễn Hữu Cảnh ngập', mode='manual')
             assert response.status_code == 200
-            msg = json.loads(station.receive_text())
+            msg = ws_event(station)
             assert msg['event'] == 'cmd.vms'
             assert msg['data']['vms_id'] == 'VMS-02' and msg['data']['text'] == 'Đường Nguyễn Hữu Cảnh ngập'
             assert msg['data']['mode'] == 'manual' and msg['data']['lines'] == ['Đường Nguyễn Hữu Cảnh ngập']

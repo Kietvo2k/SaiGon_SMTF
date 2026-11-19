@@ -108,6 +108,36 @@ async function pageFor(t, context) {
   return page;
 }
 
+async function waitForCommandStatus(page, expected) {
+  await page.evaluate(async expected => {
+    const controller = new AbortController();
+    let last;
+    let timer;
+    try {
+      await Promise.race([
+        (async () => {
+          while (!controller.signal.aborted) {
+            const command = await window.transport.request({ method: 'GET',
+              path: '/api/v1/officer/commands/' + window.pending.command_id,
+              token: window.user.access_token, signal: controller.signal });
+            last = command.status;
+            if (last === expected) return;
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+        })(),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => {
+            reject(new Error('Command không đạt ' + expected + ' trong 4000 ms, trạng thái cuối: ' + last));
+            controller.abort();
+          }, 4000);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }, expected);
+}
+
 function errorIs(result, status, code) {
   assert.equal(result.ok, false, 'Thao tác phải bị từ chối');
   assert.equal(result.status, status, JSON.stringify(result));
@@ -301,7 +331,7 @@ test('DATA-T1-ACK bridge giữ pending đến callback, áp một lần và unsu
   assert.equal(pending.current.applied_t_sim, null);
   assert.equal(pending.events.some(event => event.event === 'command.updated' && event.data.status === 'applied'), false);
   await page.evaluate(() => window.finishApply({ status: 'applied', applied_t_sim: 73.4 }));
-  await page.waitForFunction(async () => (await window.transport.request({ method: 'GET', path: '/api/v1/officer/commands/' + window.pending.command_id, token: window.user.access_token })).status === 'applied');
+  await waitForCommandStatus(page, 'applied');
   const final = await page.evaluate(async () => {
     const current = await window.transport.request({ method: 'GET', path: '/api/v1/officer/commands/' + window.pending.command_id, token: window.user.access_token });
     const retry = await window.transport.request({ method: 'POST', path: '/api/v1/officer/controls/signal-mode', token: window.user.access_token, body: { mode: 'smart', command_id: 'bridge-delayed' } });
@@ -413,7 +443,7 @@ test('DATA-T1-ACK callback từ chối trả rejected và không ghi applied_t_s
     await window.bridge.start();
     window.pending = await window.transport.request({ method: 'POST', path: '/api/v1/officer/controls/signal-mode', token: window.user.access_token, body: { mode: 'smart' } });
   }, fixture.accounts[2]);
-  await page.waitForFunction(async () => (await window.transport.request({ method: 'GET', path: '/api/v1/officer/commands/' + window.pending.command_id, token: window.user.access_token })).status === 'rejected');
+  await waitForCommandStatus(page, 'rejected');
   const result = await page.evaluate(async () => {
     await window.bridge.stop();
     return window.transport.request({ method: 'GET', path: '/api/v1/officer/commands/' + window.pending.command_id, token: window.user.access_token });

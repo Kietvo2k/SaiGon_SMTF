@@ -82,16 +82,19 @@ def test_speed_policy_uses_measured_speed_and_limit(client, speed, expected, poi
 def test_invalid_emergency_kind_rejected_without_mutation_or_broadcast(client, monkeypatch):
     ch = hdr(client, 'commander1')
     lease = claim_station(client)
-    first_response = client.post('/api/v1/officer/controls/scenario', headers=ch,
-                                 json={'scenario': 'flood-nhc'})
-    apply_command(client, first_response, lease)
-    first = first_response.json()
     broadcasts = []
 
     async def record_broadcast(*args, **kwargs):
         broadcasts.append((args, kwargs))
 
-    monkeypatch.setattr('app.routers.officer.broadcast', record_broadcast)
+    monkeypatch.setattr('app.ws.broadcast', record_broadcast)
+    first_response = client.post('/api/v1/officer/controls/scenario', headers=ch,
+                                 json={'scenario': 'flood-nhc'})
+    apply_command(client, first_response, lease)
+    first = first_response.json()
+    assert any(args[0] == 'cmd.scenario' and args[1]['key'] == 'flood-nhc'
+               and kwargs['to_roles'] == ['station'] for args, kwargs in broadcasts)
+    broadcasts.clear()
     with connect() as conn:
         count = conn.execute('SELECT COUNT(*) FROM audit_log').fetchone()[0]
     rejected = client.post('/api/v1/officer/controls/scenario', headers=ch,
