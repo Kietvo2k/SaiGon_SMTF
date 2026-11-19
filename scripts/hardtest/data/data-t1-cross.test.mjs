@@ -15,7 +15,7 @@ const chromiumPath = process.env.SMTF_CROSS_CHROMIUM || 'C:/Users/Admin/AppData/
 const python = process.env.SMTF_CROSS_PYTHON || 'C:/Users/Admin/orca/workspaces/SaiGon_SMTF/tautog/outputs/smart-traffic/backend/.venv311/Scripts/python.exe';
 const out = path.resolve(root, process.env.SMTF_CROSS_OUTPUT || 'work/smtf-agent/data-t1-cross');
 const sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-const evidence = { sha, startedAt: new Date().toISOString(), fault: process.env.SMTF_CROSS_FAULT || null, checks: [], api: {}, runtime: { timeline: [], console: [], pageerror: [], network: [] } };
+const evidence = { sha, suiteDirty: execFileSync('git', ['status', '--porcelain', '--', 'scripts/hardtest/data/data-t1-cross.test.mjs'], { cwd: root, encoding: 'utf8' }).trim(), startedAt: new Date().toISOString(), fault: process.env.SMTF_CROSS_FAULT || null, checks: [], api: {}, runtime: { timeline: [], console: [], pageerror: [], network: [] } };
 const prefix = '/api/v1';
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 let browser, staticServer, origin, runtimeContext, scene, control, runtimeSnapshot, runtimeToken, apiProcess;
@@ -80,6 +80,18 @@ function publicRequest(page) {
 async function login(request, username, password) {
   return (await request('POST', '/auth/login', { username, password })).access_token;
 }
+async function cameraOracle() {
+  const registry = async file => JSON.parse(await fs.readFile(path.join(root, 'outputs/smart-traffic/backend/app/seed', file), 'utf8'));
+  const [nodes, cameras] = await Promise.all([registry('node_map.json'), registry('cameras.json')]);
+  const clusters = new Map(nodes.map(row => [row.node_id, row.cluster_id]));
+  return new Map(cameras.map(row => [row.camera_id, clusters.get(row.node_id)]));
+}
+async function verifyCameraJoin(snapshot) {
+  const expected = await cameraOracle();
+  assert.ok(expected.size > 0 && [...expected.values()].every(Boolean), 'Registry camera phải nối được với cụm nguồn');
+  assert.deepEqual([...new Map(snapshot.cameras.map(row => [row.camera_id, row.junction_id]))].sort(), [...expected].sort(), 'camera_id → node_id → cluster_id từ cấu hình chuẩn');
+  assert.equal(snapshot.cameras.length, expected.size, 'Không có camera trùng ID');
+}
 
 before(async () => {
   assert.ok(out.startsWith(path.join(root, 'work') + path.sep), 'Evidence phải nằm trong vùng ignored work/');
@@ -103,6 +115,19 @@ before(async () => {
 });
 after(async () => {
   if (runtimeContext) {
+    if (scene) {
+      const inspect = () => bounded(scene.evaluate(() => {
+        const loader = document.querySelector('#loading');
+        const style = loader && getComputedStyle(loader);
+        return { ready: window.crossRendererReady, done: loader?.classList.contains('done'), visibility: style?.visibility, loaderText: document.querySelector('#loaderText')?.textContent, canvas: Boolean(document.querySelector('#scene canvas')) };
+      }), 1500, 'kiểm renderer và lớp nạp');
+      try {
+        const value = await poll(async () => {
+          try { return evidence.runtime.visibility = await inspect(); } catch (error) { return { error: error.message }; }
+        }, row => row.ready !== null && Number.isFinite(row.ready) && row.done && row.visibility === 'hidden' && row.canvas, 15000, 'renderer-ready và loading.done');
+        evidence.runtime.visibility = { ...value, status: 'observed' };
+      } catch (error) { evidence.runtime.visibility = { ...evidence.runtime.visibility, status: 'unconfirmed', reason: error.message }; }
+    }
     if (scene) await bounded(scene.screenshot({ path: path.join(out, 'runtime-final.png'), timeout: 10000 }), 11000, 'ảnh cuối').catch(error => { evidence.runtime.screenshotError = String(error); });
     await bounded(runtimeContext.tracing.stop({ path: path.join(out, 'runtime-trace.zip') }), 10000, 'trace').catch(error => { evidence.runtime.traceError = String(error); });
   }
@@ -243,11 +268,11 @@ async function runProcess(command, args, options, logFile) {
   const code = await bounded(new Promise((resolve, reject) => { child.once('exit', resolve); child.once('error', reject); }), 45000, command);
   await fs.writeFile(logFile, output, 'utf8'); assert.equal(code, 0, output);
 }
-test('CROSS-DATA-T1-LOCAL: HTTP FastAPI và SQLite độc lập giữ lifecycle v1', { timeout: 80000 }, traced('LOCAL-HTTP-LIFECYCLE', async () => {
+async function withLocal(operation, name = 'local') {
   const cwd = path.join(root, 'outputs/smart-traffic/backend');
   const varDir = path.join(out, 'sqlite-' + Date.now());
   const env = { ...process.env, SMART_VAR_DIR: varDir, SMART_DB_PATH: path.join(varDir, 'cross.db'), SMART_CLEANUP: '0', PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' };
-  await runProcess(python, ['-c', 'from app.db import get_conn,init_db; c=get_conn(); init_db(c); c.close(); from app.seed.run_seed import run_seed; run_seed()'], { cwd, env }, path.join(out, 'local-init.log'));
+  await runProcess(python, ['-c', 'from app.db import get_conn,init_db; c=get_conn(); init_db(c); c.close(); from app.seed.run_seed import run_seed; run_seed()'], { cwd, env }, path.join(out, name + '-init.log'));
   const portServer = createServer(); await new Promise(resolve => portServer.listen(0, '127.0.0.1', resolve));
   const port = portServer.address().port; await new Promise(resolve => portServer.close(resolve));
   apiProcess = spawn(python, ['-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', String(port)], { cwd, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -262,12 +287,178 @@ test('CROSS-DATA-T1-LOCAL: HTTP FastAPI và SQLite độc lập giữ lifecycle 
     const officer = await login(request, 'officer1', 'SaiGon@2026');
     const citizen = await login(request, 'citizen1', 'SaiGon@2026');
     const station = await login(request, 'station-3d', 'SaiGon@2026');
-    await lifecycle(request, { commander, officer, citizen, station }, 'local');
+    return await operation(request, { commander, officer, citizen, station }, transport, apiBase);
   } finally {
-    await fs.writeFile(path.join(out, 'local-api.log'), log, 'utf8');
+    await fs.writeFile(path.join(out, name + '-api.log'), log, 'utf8');
     apiProcess.kill(); await bounded(new Promise(resolve => apiProcess.once('exit', resolve)), 5000, 'stop API').catch(() => {}); apiProcess = undefined;
   }
+}
+test('CROSS-DATA-T1-LOCAL: HTTP FastAPI và SQLite độc lập giữ lifecycle v1', { timeout: 80000 }, traced('LOCAL-HTTP-LIFECYCLE', () => withLocal(async (request, actors) => {
+  const fallback = await request('GET', '/officer/snapshot', undefined, actors.officer);
+  await verifyCameraJoin(fallback);
+  await lifecycle(request, actors, 'local');
+})));
+
+function wireMessages(url, token) {
+  const ws = new WebSocket(url.replace(/^http/, 'ws') + '/ws/v1');
+  const events = [];
+  const closed = new Promise(resolve => ws.addEventListener('close', event => resolve(event.code), { once: true }));
+  const opened = new Promise((resolve, reject) => {
+    ws.addEventListener('open', () => { ws.send(JSON.stringify({ type: 'auth', token })); resolve(); }, { once: true });
+    ws.addEventListener('error', () => reject(new Error('Không mở được WebSocket kiểm')), { once: true });
+  });
+  ws.addEventListener('message', event => events.push(JSON.parse(event.data)));
+  return { ws, opened, closed, events };
+}
+
+async function round1Wire(request, actors, subscribe, readMedia, mode, apiBase) {
+  const record = evidence.api['r1-' + mode] = {};
+  const { commander, officer, station } = actors;
+  const get = (route, token = officer) => request('GET', route, undefined, token);
+  const events = [];
+  const unsubscribe = await subscribe(events, officer);
+  const sockets = [];
+  try {
+    if (apiBase) {
+      const legacy = wireMessages(apiBase, station); sockets.push(legacy);
+      await bounded(legacy.opened, 3000, 'WS JWT trước lease');
+      await poll(async () => {
+        if (legacy.ws.readyState === WebSocket.OPEN) legacy.ws.send(JSON.stringify({ event: 'station.heartbeat', data: { probe: 'legacy-before' } }));
+        return events.find(event => event.event === 'station.heartbeat' && event.data.probe === 'legacy-before');
+      }, Boolean, 3000, 'Observer WS đã auth và JWT legacy còn hoạt động');
+    }
+    const lease = await request('POST', '/station/lease', { station_id: 'CROSS-R1', owner_id: 'cross-wire' }, station);
+    const claimRevision = (await get('/officer/snapshot')).revision;
+    await poll(async () => events.some(event => event.event === 'snapshot.updated' && event.data.revision === claimRevision), Boolean, 3500, 'Observer thấy lease commit');
+    if (apiBase) {
+      const legacyNew = wireMessages(apiBase, station); sockets.push(legacyNew);
+      await bounded(legacyNew.opened, 3000, 'WS JWT mới');
+      assert.equal(await bounded(legacyNew.closed, 3000, 'JWT mới bị chặn'), 4403);
+      await rejects(() => request('POST', '/station/heartbeat', {}, station), 403, 'FORBIDDEN');
+      const current = wireMessages(apiBase, lease.capability); sockets.push(current);
+      await bounded(current.opened, 3000, 'WS capability hiện hành');
+      await poll(async () => {
+        current.ws.send(JSON.stringify({ event: 'station.heartbeat', data: { probe: 'capability-live' } }));
+        return events.some(event => event.event === 'station.heartbeat' && event.data.probe === 'capability-live');
+      }, Boolean, 2000, 'Capability WS đã auth');
+    }
+    const commandPath = '/officer/controls/signal-override';
+    const ids = ['R1/Bến %', 'R1%2FBến %'];
+    const encoded = ids.map(encodeURIComponent);
+    const commandRead = id => get('/officer/commands/' + id);
+    const ack = (id, value) => request('POST', '/station/commands/' + id + '/ack', value, lease.capability);
+    const submitted = Date.now();
+    for (const [i, id] of ids.entries()) {
+      const body = { node_id: 'HX-06', group: i, duration_s: 1, command_id: id };
+      const item = await request('POST', commandPath, body, commander);
+      pending(item); assert.equal(item.command_id, id);
+      assert.equal((await request('POST', commandPath, body, commander)).command_id, id);
+      const read = await commandRead(encoded[i]); pending(read); assert.equal(read.command_id, id);
+    }
+    if (apiBase) {
+      await poll(async () => sockets[2].events.filter(event => event.event === 'cmd.signal-override').length === ids.length, Boolean, 2000, 'Capability nhận đủ hai cmd trên WS');
+      assert.deepEqual(sockets[2].events.filter(event => event.event === 'cmd.signal-override').map(event => event.data.command_id), ids);
+      assert.ok(!sockets[0].events.some(event => event.event.startsWith('cmd.')), 'JWT cũ không nhận cmd outbound');
+      assert.ok(!events.some(event => event.event.startsWith('cmd.')), 'Officer không nhận cmd dành cho trạm');
+    }
+    const queue = await get('/station/commands/pending', lease.capability);
+    assert.deepEqual(queue.commands.map(row => row.command_id).sort(), [...ids].sort());
+    await pause(Math.max(0, submitted + 1200 - Date.now()));
+    const ackStart = Date.now();
+    terminal(await ack(encoded[0], { status: 'applied', applied_t_sim: 22.4 }), 'applied', 22.4);
+    const ackFinish = Date.now();
+    const atAck = await get('/officer/controls/state');
+    const override = atAck.overrides.find(row => row.node_id === 'HX-06');
+    assert.equal(override?.group, 0, 'Override một giây còn hiệu lực ngay sau ACK muộn');
+    assert.equal(override.until_t_sim, 23.4);
+    assert.ok(Date.parse(override.until_at) >= ackStart + 900 && Date.parse(override.until_at) <= ackFinish + 1100, 'TTL bắt đầu theo lúc ACK');
+    terminal(await commandRead(encoded[0]), 'applied', 22.4); pending(await commandRead(encoded[1]));
+    terminal(await ack(encoded[1], { status: 'rejected', reason_code: 'COMMAND_REJECTED' }), 'rejected');
+    assert.deepEqual((await commandRead(encoded[1])).command_id, ids[1]);
+    record.commands = { ids, encoded, ackDelayMs: ackStart - submitted, override };
+    await poll(() => get('/officer/controls/state'), state => !state.overrides.some(row => row.node_id === 'HX-06'), 1800, 'Override hết hạn theo wall clock');
+    terminal(await commandRead(encoded[0]), 'applied', 22.4);
+
+    await request('PUT', '/station/lease', {}, lease.capability);
+    const liveId = 'cross-r1-live-override';
+    pending(await request('POST', commandPath, { node_id: 'HX-06', group: 1, duration_s: 25, command_id: liveId }, commander));
+    assert.equal((await get('/station/commands/pending', lease.capability)).commands[0].command_id, liveId);
+    terminal(await ack(liveId, { status: 'applied', applied_t_sim: 27.2 }), 'applied', 27.2);
+    assert.equal((await get('/officer/controls/state')).overrides.find(row => row.node_id === 'HX-06')?.group, 1);
+    const signal = { node_id: 'HX-06', cluster_id: 'HX-C5', t_sim: 31.2, phase: 'yellow', group: 1, mode: 'smart', override_by: null, reason: null };
+    await request('POST', '/station/metrics', { station_id: lease.station_id, t: 31.2, t_sim: 31.2, signal_mode: 'smart', kpi: { queue_max: 37 }, overrides: [], signal_states: [signal] }, lease.capability);
+    const state = await get('/officer/controls/state');
+    assert.equal(state.mode, 'smart'); assert.deepEqual(state.overrides, []);
+    const signalRead = state.signals.find(row => row.node_id === signal.node_id);
+    for (const field of ['node_id', 'cluster_id', 't_sim', 'phase', 'group', 'mode']) assert.equal(signalRead?.[field], signal[field], 'Telemetry giữ đúng ' + field);
+    const snapshot = await get('/officer/snapshot');
+    assert.equal(snapshot.simulation.mode, 'smart'); assert.equal(snapshot.simulation.t_sim, 31.2); assert.equal(snapshot.kpi.queue_max, 37);
+    record.metrics = { state: { mode: state.mode, overrides: state.overrides, signal: signalRead }, revision: snapshot.revision, simulation: snapshot.simulation };
+
+    await request('PUT', '/station/lease', {}, lease.capability);
+    const cameraId = 'CAM-HX-010';
+    for (const seq of [83, 84]) {
+      const bytes = [255, 216, seq, 255, 217];
+      const frame = { camera_id: cameraId, seq, frame_id: 'cross-r1-frame-' + seq, t: new Date().toISOString(), w: 320, h: 180, jpeg_base64: Buffer.from(bytes).toString('base64') };
+      const old = await get('/officer/snapshot');
+      const eventStart = events.length;
+      await request('POST', '/station/frames', frame, lease.capability);
+      const fresh = await get('/officer/snapshot');
+      assert.equal(fresh.revision, old.revision + 1, 'Mỗi frame commit tăng đúng một revision');
+      const frameMeta = fresh.cameras.find(row => row.camera_id === cameraId);
+      assert.equal(frameMeta?.frame_id, frame.frame_id); assert.equal(frameMeta.captured_at, frame.t);
+      assert.equal(frameMeta.status, 'ready'); assert.equal(frameMeta.width, 320); assert.equal(frameMeta.height, 180);
+      assert.deepEqual(await readMedia(prefix + '/media/stream/' + cameraId, officer), bytes);
+      const pair = await poll(async () => events.slice(eventStart).filter(event =>
+        event.event === 'stream.updated' && event.data.camera_id === cameraId && event.data.seq === seq ||
+        event.event === 'snapshot.updated' && event.data.revision === fresh.revision), value => value.length >= 2, 3500, 'Hai event của frame ' + seq);
+      assert.deepEqual(pair.map(event => event.event).sort(), ['snapshot.updated', 'stream.updated']);
+      (record.frames ??= []).push({ revision: fresh.revision, frameMeta, events: pair });
+    }
+    if (apiBase) {
+      const before = await get('/officer/snapshot');
+      const total = (await get('/officer/audit', commander)).total;
+      const count = events.length;
+      await rejects(() => request('POST', '/station/frames', { camera_id: cameraId, seq: 85, t: new Date().toISOString(), w: 1, h: 1, jpeg_base64: '/9gA/9k=' }, station), 403, 'FORBIDDEN');
+      const legacy = sockets[0];
+      legacy.ws.send(JSON.stringify({ event: 'station.heartbeat', data: { probe: 'legacy-after' } }));
+      assert.equal(await bounded(legacy.closed, 3000, 'JWT mở trước lease bị chặn inbound'), 4403);
+      const after = await get('/officer/snapshot');
+      assert.equal(after.revision, before.revision); assert.deepEqual(after.cameras, before.cameras);
+      assert.deepEqual(await readMedia(prefix + '/media/stream/' + cameraId, officer), [255, 216, 84, 255, 217]);
+      assert.equal((await get('/officer/audit', commander)).total, total);
+      assert.deepEqual(events.slice(count), [], 'JWT bị từ chối không phát event');
+      record.legacy = { before: 'heartbeat delivered', newClose: 4403, afterClose: 4403, frameMutation: false };
+    }
+    await request('DELETE', '/station/lease', undefined, lease.capability);
+  } finally {
+    await unsubscribe();
+    for (const socket of sockets) socket.ws.close();
+  }
+}
+
+test('CROSS-DATA-T1-R1-PUBLIC: round-trip ID, TTL từ ACK, telemetry và hai frame commit', { timeout: 30000 }, traced('R1-PUBLIC-WIRE', async () => {
+  const context = await browser.newContext();
+  try {
+    const page = await openPublic(context);
+    const request = publicRequest(page);
+    const commander = await login(request, 'chihuy_mau', 'SMTF-Mau-2026');
+    const officer = await login(request, 'canbo_mau', 'SMTF-Mau-2026');
+    const subscriber = async (events, token) => {
+      await page.exposeFunction('captureCrossEvent', event => { events.push(event); });
+      await page.evaluate(value => { window.crossOff = window.crossTransport.subscribe(window.captureCrossEvent, value); }, token);
+      return () => page.evaluate(() => window.crossOff());
+    };
+    const readMedia = (path, token) => page.evaluate(async input => Array.from(new Uint8Array(await (await window.crossTransport.readMedia(input.path, { token: input.token })).arrayBuffer())), { path, token });
+    await round1Wire(request, { commander, officer }, subscriber, readMedia, 'public');
+  } finally { await context.close(); }
 }));
+
+test('CROSS-DATA-T1-R1-LOCAL: Uvicorn HTTP/WS giữ ID, TTL, frame và chặn JWT cũ', { timeout: 45000 }, traced('R1-LOCAL-WIRE', () => withLocal(async (request, actors, transport, apiBase) => {
+  const subscriber = async (events, token) => transport.subscribe(event => events.push(event), token);
+  const readMedia = async (path, token) => Array.from(new Uint8Array(await (await transport.readMedia(path, { token })).arrayBuffer()));
+  await round1Wire(request, actors, subscriber, readMedia, 'local', apiBase);
+}, 'r1-local')));
 
 test('CROSS-DATA-T1-RUNTIME: scene thật áp mode/scenario/override rồi snapshot đọc lõi', { timeout: 100000 }, traced('ACTUAL-SCENE-LIFECYCLE', async () => {
   runtimeContext = await browser.newContext({ viewport: { width: 1000, height: 700 } });
@@ -279,6 +470,10 @@ test('CROSS-DATA-T1-RUNTIME: scene thật áp mode/scenario/override rồi snaps
   });
   runtimeToken = await login(request, 'chihuy_mau', 'SMTF-Mau-2026');
   scene = await runtimeContext.newPage();
+  await scene.addInitScript(() => {
+    window.crossRendererReady = null;
+    window.addEventListener('citylab:renderer-ready', () => { window.crossRendererReady = performance.now(); }, { once: true });
+  });
   scene.on('console', message => evidence.runtime.console.push({ type: message.type(), text: message.text() }));
   scene.on('pageerror', error => evidence.runtime.pageerror.push(String(error)));
   runtimeContext.on('request', req => { if (req.url().includes('/api/') || /^wss?:/.test(req.url())) evidence.runtime.network.push(req.url()); });
@@ -294,7 +489,7 @@ test('CROSS-DATA-T1-RUNTIME: scene thật áp mode/scenario/override rồi snaps
   evidence.runtime.initialSnapshot = safeResult(runtimeSnapshot);
   const readCore = () => bounded(scene.evaluate(() => {
     const app = window.__smartApp;
-    return { t: app.traffic.sim.counters.t, mode: app.controller.getMode(), counters: { ...app.traffic.sim.counters }, scenario: app.modules.scenarios.scenarios.status(), modules: Object.keys(app.modules) };
+    return { t: app.traffic.sim.counters.t, seed: app.traffic.sim.seed, mode: app.controller.getMode(), counters: { ...app.traffic.sim.counters }, scenario: app.modules.scenarios.scenarios.status(), modules: Object.keys(app.modules) };
   }), 5000, 'đọc actual core');
   const before = await readCore(); evidence.runtime.before = before;
   assert.ok(before.modules.includes('transport') && before.modules.includes('scenarios'));
@@ -373,9 +568,23 @@ test('CROSS-DATA-T1-RUNTIME: scene thật áp mode/scenario/override rồi snaps
   await scene.screenshot({ path: path.join(out, 'runtime-scene.png'), timeout: 15000 });
 }));
 
-test('CROSS-DATA-T1-SEED: snapshot thực thi có seed số để tái hiện', traced('ACTUAL-SNAPSHOT-SEED', async () => {
+test('CROSS-DATA-T1-SEED: snapshot giữ seed thực thi và seed khởi tạo khác mặc định', traced('ACTUAL-SNAPSHOT-SEED', async () => {
   assert.ok(runtimeSnapshot, 'Cần snapshot từ scene thật');
   assert.ok(Number.isInteger(runtimeSnapshot.simulation.seed), `snapshot.simulation.seed phải là số nguyên, thực tế=${JSON.stringify(runtimeSnapshot.simulation.seed)}`);
+  assert.equal(runtimeSnapshot.simulation.seed, evidence.runtime.before.seed);
+  // Khởi tạo lõi thật trên mạng đã tải; input của test là oracle, không đọc hằng số mặc định sản phẩm.
+  const seed = 5938701;
+  const custom = await bounded(scene.evaluate(async requested => {
+    const { createTrafficSim31 } = await import('/outputs/hcmc-poc/city-traffic-sim-31.js?v=32c');
+    const { readStationSnapshot32 } = await import('/outputs/hcmc-poc/smart-app-32.js?v=32c');
+    const app = window.__smartApp;
+    const sim = createTrafficSim31(app.traffic.net, { poolTarget: 8, seed: requested });
+    const snapshot = readStationSnapshot32({ ...app, traffic: { ...app.traffic, sim } }, [], app.modules.transport, 'cross-custom-seed');
+    return { coreSeed: sim.seed, snapshotSeed: snapshot.simulation.seed };
+  }, seed), 8000, 'snapshot seed khác mặc định từ lõi thật');
+  assert.notEqual(seed, runtimeSnapshot.simulation.seed);
+  assert.deepEqual(custom, { coreSeed: seed, snapshotSeed: seed });
+  evidence.runtime.seed = { actual: runtimeSnapshot.simulation.seed, requested: seed, ...custom };
 }));
 
 test('CROSS-DATA-T1-CAMERA-ID: camera dùng junction_id cụm logic có trong snapshot', traced('ACTUAL-SNAPSHOT-CAMERA-CLUSTER', async () => {
@@ -384,6 +593,7 @@ test('CROSS-DATA-T1-CAMERA-ID: camera dùng junction_id cụm logic có trong sn
   assert.ok(ids.size > 0);
   const invalid = runtimeSnapshot.cameras.filter(camera => !ids.has(camera.junction_id)).map(camera => ({ camera_id: camera.camera_id, junction_id: camera.junction_id }));
   assert.deepEqual(invalid, [], 'Mỗi camera phải tham chiếu junction_id cụm logic, không dùng node_id');
+  await verifyCameraJoin(runtimeSnapshot);
 }));
 
 test('CROSS-DATA-T1-ORACLE-RED: assertion bắt phản hồi thành công trước ACK', traced('ORACLE-NEGATIVE-CONTROL', async () => {

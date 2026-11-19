@@ -1,4 +1,92 @@
-# DATA-T1: kiểm chéo độc lập vòng 0
+# DATA-T1: kiểm chéo độc lập
+
+## Vòng 1 — ứng viên `d2bf791`
+
+Task `CORE-DATA-T1-CROSS-01/cross`, hợp đồng `public-demo-v1`.
+SHA sản phẩm `d2bf791c9f41e52673cdb221fff66859cfac8a58`; worktree `bd34`.
+Receipt `1f4f5be58c1407d898e9d783a61cc0e20aef13a631be9fa47914d1ea53e0894e`.
+Đã dùng vòng sửa 1/2; kết quả chéo này không cấp vòng sửa mới.
+
+**Kết quả: chưa ổn định.** Bản suite gốc chạy 7/7. Suite mở rộng chạy
+8/9 lần đầu vì browser không trả lời phép đọc core trong giới hạn 5 s;
+chạy lại nguyên suite và giới hạn đạt 9/9. Giữ cả hai kết quả. Hai lỗi
+seed và camera của vòng 0 không tái hiện. Chưa thấy cảnh hết lớp nạp.
+
+| Phạm vi | Test ID | Kết quả quan sát |
+|---|---|---|
+| DATA-01, USER-01, R1/R3/R6/R7 | `CROSS-DATA-T1-R1-PUBLIC`, `CROSS-DATA-T1-R1-LOCAL` | PASS riêng 2/2 và trong cả hai lần full. HTTP công khai qua IndexedDB; local qua Uvicorn/SQLite và WebSocket thật. |
+| DATA-01, USER-01 | `CROSS-DATA-T1-PUBLIC`, `CROSS-DATA-T1-ATOMIC` | PASS; vòng đời lease/ACK, giao dịch, phân quyền và profile giữ assertion vòng 0. |
+| DATA-01, USER-01, DOCKER-01 phần API | `CROSS-DATA-T1-LOCAL` | PASS; giữ vòng đời cũ và kiểm fallback camera local trước claim. |
+| DATA-01, R4/R5 | `CROSS-DATA-T1-SEED`, `CROSS-DATA-T1-CAMERA-ID` | PASS cả hai lần; đối chiếu seed scene và seed khởi tạo khác mặc định, join đủ 10 camera. |
+| DATA-01, USER-01 phần T1 | `CROSS-DATA-T1-RUNTIME` | Bản gốc PASS; mở rộng timeout 5 s lần đầu, PASS lần lặp. |
+| DATA-01, ca lỗi có kiểm soát | `CROSS-DATA-T1-ORACLE-RED` và lệnh fault dưới đây | Oracle báo đỏ đúng `pending` khi phản hồi giả lập thành `applied`; full lần lặp sạch PASS. |
+
+Oracle bổ sung tính trực tiếp từ hợp đồng và gói sửa, không dùng helper
+tính expected của sản phẩm hoặc suite chính:
+
+- `R1/Bến %` và `R1%2FBến %` thành hai đoạn wire khác nhau
+  `R1%2FB%E1%BA%BFn%20%25` và `R1%252FB%E1%BA%BFn%20%25`. Enqueue/retry,
+  GET, dequeue, ACK phân biệt cả hai; ACK applied ID đầu giữ ID thứ hai
+  pending, sau đó ID thứ hai bị rejected.
+- Giữ lease hiện hành; ACK sau khoảng 1,2 s cho override 1 s, t_sim 22,4.
+  Expected `until_t_sim=23,4`; hạn wall clock cách ACK khoảng 1 s.
+  Hết hạn chỉ dọn override, không sửa lịch sử applied. Override khác còn
+  hạn 25 s phải biến mất sau metrics `overrides:[]`, mode smart và signal
+  HX-06 mới; snapshot cũng đọc mode smart, t_sim 31,2 và queue_max 37.
+- Hai payload byte thử độc lập cho `CAM-HX-010`, seq 83 rồi 84. Sau
+  từng commit phải đọc đúng byte, ID/thời gian/kích thước frame, revision
+  tăng đúng 1 và nhận `snapshot.updated` cùng revision lẫn
+  `stream.updated` cùng camera/seq. Trong cả hai transport quan sát
+  revision 5 rồi 6. Đây là một kiểm bytes/metadata riêng; ảnh JPEG thật
+  được kiểm ở scene. Kho public trống chỉ nhận frame thử không có danh
+  mục camera trong snapshot, nên ca này không dùng metadata junction
+  đó để kết luận R4; R4 dùng scene thật và fallback local.
+- WebSocket local xác nhận JWT legacy nhận nhịp trước khi claim,
+  JWT auth mới và JWT cũ gửi nhịp sau claim đều đóng 4403. JWT cũ và
+  officer không nhận lệnh outbound; capability hiện hành nhận đúng hai
+  ID. Frame bị JWT từ chối không đổi bytes, metadata, revision, audit
+  hay event. Suite lifecycle cũ vẫn kiểm ACK capability cũ sau takeover.
+  Không suy kiểm phủ toàn bộ các đường station write hoặc mọi proxy URL.
+- Expected camera là join `cameras.json.camera_id → node_id` với
+  `node_map.json.node_id → cluster_id`: bắt cả đổi sang ID cụm sai và
+  thiếu/trùng camera, không chỉ kiểm ID nằm trong tập. Cảnh thật dùng
+  seed 31031 quan sát từ sim và snapshot; seed tự chọn 5938701 được
+  truyền vào một lõi mô phỏng riêng trên mạng đã tải và phải xuất hiện
+  ở cả lõi và snapshot, giữ nguyên cảnh đang chạy.
+
+Lần full đạt, trạm active với t_sim > 0 tại 13,892 s; ACK mode,
+scenario, override và VMS tại t_sim 2,3 / 2,5 / 3,3 / 8,4 s. HX-04 có
+vàng, đỏ chung rồi xanh nhóm đích. Ảnh stream thật là Blob JPEG
+59.045 byte, có đầu FF D8 và giữ `AbortError`; không pageerror hoặc
+request API/WS local từ scene public. Ảnh cuối vẫn phủ lớp “Đang nạp
+pipeline khu · Lõi Quận 1…”. Lần timeout dừng khi kiểm lớp nạp ở “Ven
+sông · Thủ Thiêm…”. Cả hai đợi tối đa 15 s sau suite vẫn chưa nhận
+`citylab:renderer-ready` hoặc `#loading.done`, dù đã có canvas. Đây là
+quan sát trên Chromium headless/GPU NVIDIA, chưa phải kết quả browser
+QA, PERF, artifact public hay Docker persistence.
+
+Lệnh kiểm (mỗi lần dùng thư mục ignored riêng; không đặt fault khi chạy sạch):
+
+```powershell
+$env:SMTF_CROSS_OUTPUT='work/smtf-agent/data-t1-cross-r1-repeat'
+node --test scripts/hardtest/data/data-t1-cross.test.mjs
+$env:SMTF_CROSS_FAULT='premature-applied'
+$env:SMTF_CROSS_OUTPUT='work/smtf-agent/data-t1-cross-r1-negative'
+node --test --test-name-pattern '^CROSS-DATA-T1-PUBLIC:' scripts/hardtest/data/data-t1-cross.test.mjs
+```
+
+Mỗi log `work/smtf-agent/data-t1-cross-r1-{first,wire,full,repeat,negative}.log`
+có thư mục cùng tiền tố với `evidence.json`; `full` và `repeat` giữ
+trace, ảnh cuối, log Uvicorn. Lần `first` suite gốc đạt 7/7 (54,970 s);
+`wire` 2/2 (10,576 s); `full` 8/9 (84,095 s);
+`repeat` 9/9 (73,225 s); `negative` 0/1 đúng assertion
+“HTTP thành công chỉ được pending trước ACK”. Không skip/cancel trong các lần này.
+Các lượt `wire/full/repeat/negative` chạy script thay đổi tại worktree
+cross; source sản phẩm vẫn nguyên SHA `d2bf791`. Result và bảng hash
+ghi SHA commit suite riêng, để điều phối viên chạy lại trên commit
+ghép. Chưa dùng các lượt này để kết luận gate CI/release.
+
+## Vòng 0 — ứng viên `6e742ec`
 
 Task `CORE-DATA-T1-CROSS-00`, vai trò `cross`, hợp đồng `public-demo-v1`.
 Ứng viên sản phẩm: `6e742ec3306e685b8f9496236c9fad435bc5d47f`.
