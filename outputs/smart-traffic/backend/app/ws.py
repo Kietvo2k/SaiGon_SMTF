@@ -3,10 +3,14 @@ import asyncio
 import datetime
 import json
 
+from fastapi import HTTPException
+
 from app.auth import decode_token
+from app.command_service import guard_write, station_claims
+from app.db import connect
 
 SEQ = 0
-CLIENTS = []   # {ws, role, username}
+CLIENTS = []   # {ws, role, username, capability}
 # Allowlist chiều trạm → backend: CHỈ `station` gửi các event này. `cmd.*` KHÔNG nhận từ WS
 # (chỉ sinh ở REST officer/commander/admin) nên không có đường leo quyền điều khiển đèn.
 # `violation.detected` KHÔNG nằm trong đường WS: vi phạm chỉ vào qua `POST /station/violations`
@@ -20,6 +24,11 @@ def _next_seq():
     return SEQ
 
 
+def _guard_station(claims):
+    with connect() as conn:
+        guard_write(conn, claims)
+
+
 async def ws_handler(websocket):
     role = None
     close_code = 4401
@@ -30,12 +39,10 @@ async def ws_handler(websocket):
         if msg.get('type') != 'auth':
             return
         token = msg.get('token', '')
-        if token.startswith('station-'):
-            from app.command_service import station_claims
-            claims = station_claims(token)
-        else:
-            claims = decode_token(token)
+        claims = station_claims(token) if token.startswith('station-') else decode_token(token)
         role = claims['role']
+        if role == 'station':
+            _guard_station(claims)
         close_code = 1000
         CLIENTS.append({'ws': websocket, 'role': role, 'username': claims['sub'], 'capability': claims.get('capability')})
         while True:
@@ -49,12 +56,10 @@ async def ws_handler(websocket):
                 safe = ''.join(ch for ch in str(event)[:40] if ch.isprintable())
                 print(f'[ws] bỏ qua event không hợp lệ: role={role} event={safe}', flush=True)
                 continue
-            if claims.get('capability'):
-                from app.command_service import require_lease
-                from app.db import connect
-                with connect(immediate=True) as conn:
-                    require_lease(conn, claims['capability'])
+            _guard_station(claims)
             await broadcast(event, payload.get('data', {}), to_roles=['officer', 'commander', 'admin'])
+    except HTTPException as exc:
+        close_code = 4403 if exc.status_code == 403 else 4401
     except Exception:
         pass
     finally:
@@ -81,16 +86,15 @@ async def broadcast(event: str, data: dict, to_roles=None, to_users=None):
     payload = json.dumps({'event': event, 't': datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z'),
                           'seq': _next_seq(), 'data': data}, ensure_ascii=False)
     dead = []
-    for c in CLIENTS:
+    for c in CLIENTS[:]:
         if not _wanted(c, to_roles, to_users):
             continue
         try:
-            if c.get('capability'):
-                from app.command_service import require_lease
-                from app.db import connect
-                with connect() as conn:
-                    require_lease(conn, c['capability'])
+            if c['role'] == 'station':
+                _guard_station(c)
             await c['ws'].send_text(payload)
+        except HTTPException:
+            continue
         except Exception:
             dead.append(c)
     for c in dead:

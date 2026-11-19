@@ -1245,6 +1245,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   }
   reset();
   const simApi = {
+    get seed() { return seed; },
     // M5b-1: bật/tắt hành vi xe phạm lỗi và mã hành vi của xe (LANE|SPEED|PARK|WRONG-TURN hoặc null).
     behaviorOn: !!beh,
     // M5b-1b: khoảng đỏ của nhóm `group` tại nút `node` chứa thời điểm t (sim s), hoặc null (không đỏ / không có hành vi).

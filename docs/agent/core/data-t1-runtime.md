@@ -1,6 +1,7 @@
 # DATA-T1: transport, phiên và vòng đời trạm
 
-Phạm vi checkpoint `CORE-DATA-T1-CODE-SCOPE-00`, hợp đồng `public-demo-v1`, vòng 0.
+Phạm vi checkpoint `CORE-DATA-T1-CODE-SCOPE-00` và `CORE-DATA-T1-CODE-01`,
+hợp đồng `public-demo-v1`.
 T1 bổ sung nền tảng thực thi và điểm ghép; chưa đóng toàn bộ `DATA-01`, `USER-01`
 hoặc `DOCKER-01`. Kết quả trên commit tích hợp, suite độc lập và cổng phát hành
 do điều phối viên xác minh.
@@ -69,14 +70,16 @@ Các đường dẫn dưới đây cùng prefix `/api/v1`. Capability được t
 Lease dài 6 giây, bridge renew/poll và gửi snapshot mỗi 1 giây theo wall clock.
 `expires_at` và `deadline_at` trên wire là ISO UTC. Claim local cần JWT tài khoản
 role station; sau đó bridge dùng capability. Public claim là seam nội bộ của
-trạm trong kho mẫu cùng profile. Các route station cũ vẫn nhận JWT local để giữ
-hồi quy telemetry/violation; commands và snapshot v1 bắt buộc capability.
+trạm trong kho mẫu cùng profile. Các route station cũ nhận JWT local khi lease
+v1 chưa hoạt động. Commands và snapshot v1 luôn yêu cầu capability.
 
 Claim/takeover, kiểm fencing và write dùng cùng transaction. SQLite dùng
 `BEGIN IMMEDIATE`; public dùng transaction IndexedDB chung scope. Mỗi write
 trạm kiểm lại capability/expiry trong chính transaction, gồm metrics, heat,
-violation, bằng chứng và frame. Heat kiểm cả nhịp chưa đến cửa sổ lưu lịch sử.
-Local WS cũng kiểm capability trước inbound/outbound của trạm.
+violation, bằng chứng, media và frame. Heat kiểm cả nhịp chưa đến cửa sổ lưu lịch
+sử. Heartbeat legacy cũng kiểm lease đang hoạt động. Local WS kiểm quyền trạm
+khi xác thực, khi nhận từng event và trước mỗi lần gửi cho trạm, kể cả kết nối
+JWT đã mở trước takeover.
 
 Thiếu lease còn hiệu lực thì controls/VMS trả `409 STATION_UNAVAILABLE` ở cả
 hai mode, không tạo command/audit/event thành công. Có trạm thì enqueue trả
@@ -89,6 +92,11 @@ ACK chưa dequeue bị từ chối. Sai capability/generation không thể tạo
 Terminal `applied`, `rejected`, `expired` bất biến. Retry cùng command ID kiểm
 actor, route và canonical payload, trả kết quả bền vững cũ; payload khác trả409.
 Đọc command dùng quyền reader chung officer/commander/admin như route local.
+Caller dùng `encodeURIComponent(command_id)` khi ghép đường dẫn GET/ACK. Public
+giải mã segment một lần. Local dùng route `:path` để giữ slash đã được Uvicorn
+giải mã. Kiểm trên Uvicorn và Chromium phân biệt được slash với literal `%2F`.
+Client có thể chuẩn hóa ID `.` hoặc `..` trước khi gửi. Reverse proxy cũng có
+thể xử lý đường dẫn theo quy tắc riêng.
 
 WS `cmd.*` giữ payload nghiệp vụ và thêm `command_id`, chỉ đánh thức polling.
 Audit enqueue giữ đích entity cũ (node/scenario/VMS), có `command_id` và
@@ -109,7 +117,17 @@ controller; chuyển pha an toàn vẫn do controller hiện hữu quản lý.
 `applied_t_sim` lấy từ counter sim sau callback, không lấy timestamp HTTP.
 
 Snapshot đọc controller, counter sim, junction state và metadata frame capture
-đã gửi thành công. Chưa có frame thì camera là missing; mất lease thành stale.
+đã gửi thành công. Seed lấy từ sim đã khởi tạo. Camera nối vào ID cụm logic theo
+kế hoạch đèn đang chạy. Fallback local lấy cụm từ `signal_nodes.cluster_id`.
+Chưa có frame thì camera là missing. Mất lease chuyển frame thành stale.
+Khi frame v1 cập nhật metadata local, server tăng revision trong giao dịch và
+phát `snapshot.updated` cùng `stream.updated` sau commit.
+
+Metrics của capability hiện hành cập nhật mode, KPI và thời gian snapshot.
+Controls đọc mode, override và pha đèn mới nhất từ telemetry. Thời hạn override
+bắt đầu từ ACK. Khi hết hạn, controls bỏ override và lịch sử lệnh vẫn ghi
+`applied`. Deadline ACK là 10 giây.
+
 Không dùng respawn làm trips_completed. T1 để routes rỗng và counter chưa có ở
 lõi bằng0; định tuyến đích/KPI đầy đủ thuộc lát SIM tiếp theo.
 
@@ -169,3 +187,20 @@ trạm active, kiểm callback thật và chụp cảnh. Đây là mục chưa x
 `work/smtf-agent/probe-runtime-browser.mjs` và
 `work/smtf-agent/logs/data-t1-runtime-public.json` của worktree code. Gate CI và
 Docker smoke trên candidate ghép vẫn thuộc bàn giao kế tiếp của điều phối viên.
+
+### Bằng chứng phát triển vòng sửa 1
+
+Ba probe trong `work/smtf-agent/` ghi HEAD, trạng thái worktree và kết quả từng
+assertion. Trên base sạch `6e742ec3306e`, cả ba trả exit 1. Các ca tương ứng
+chạy lại trên bản sửa trả exit 0. Tệp log trước và sau lần lượt có tiền tố
+`red-code-r1-` và `green-code-r1-`.
+
+| Probe | Hành vi quan sát |
+|---|---|
+| `python -B work/smtf-agent/repro-code-r1-local.py` | Uvicorn và SQLite riêng xác nhận JWT không ghi heartbeat/frame hay truyền WS khi lease active. Capability hiện tại ghi frame, bytes khớp chủ lease mới, revision tăng và có `snapshot.updated`. GET/ACK trả nguyên năm ID. |
+| `node work/smtf-agent/repro-code-r1-public.mjs` | Chromium dùng IndexedDB thật xác nhận dedup và round-trip năm ID. Override 1 giây ACK sau 1,1 giây vẫn có đủ thời hạn, hết hạn ở controls và lịch sử vẫn applied. Metrics cập nhật cả controls và snapshot. |
+| `node work/smtf-agent/repro-code-r1-runtime.mjs` | Sim thực với seed `9487321` trả đúng seed và ID cụm cho cả 10 camera. |
+
+Pytest DATA-T1 trước khi ghép đạt 15/15. Suite sim-state đạt 5/5 với hash 31A
+`c05ce91e`. Suite hardtest độc lập, kết quả CI và Docker trên commit tích hợp,
+cùng ảnh cảnh 3D sau renderer-ready thuộc bước kiểm do điều phối viên giữ.

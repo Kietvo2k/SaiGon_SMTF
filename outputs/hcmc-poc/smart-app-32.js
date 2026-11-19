@@ -343,10 +343,11 @@ export function readStationSnapshot32(app, cameras, transport, buildId) {
   const metrics = app.controller.metrics(t);
   const states = buildSignalStates32(app.controller, net, t);
   const clusters = net.signalPlan?.clusters || [];
+  const junctionByNode = new Map(states.map(({ node_id, cluster_id }) => [node_id, cluster_id]));
   return {
     snapshot_version: 'public-demo-v1', revision: 0, build_id: buildId,
     station: { status: 'active', id: 'STATION-3D-01', last_seen_at: new Date().toISOString() },
-    simulation: { seed: sim.seed ?? app.traffic.seed ?? null, scenario: app.modules?.scenarios?.scenarios.status().key || 'none',
+    simulation: { seed: sim.seed ?? null, scenario: app.modules?.scenarios?.scenarios.status().key || 'none',
       mode: app.controller.getMode(), t_sim: t, paused: app.modules?.clock?.speed?.() === 0 || Boolean(sim.paused) },
     junctions: clusters.map(cluster => {
       const rows = states.filter(state => state.cluster_id === cluster.cluster_id);
@@ -359,7 +360,7 @@ export function readStationSnapshot32(app, cameras, transport, buildId) {
       admission_wait: sim.pending ? Array.from(sim.pending).filter(Boolean).length : 0,
       recoveries: sim.counters.recoveries ?? sim.counters.breakerRespawns ?? 0 },
     routes: [],
-    cameras: cameras.map(camera => ({ camera_id: camera.camera_id, junction_id: camera.junction_id || camera.node_id || null,
+    cameras: cameras.map(camera => ({ camera_id: camera.camera_id, junction_id: junctionByNode.get(camera.node_id) ?? null,
       label: camera.label || camera.camera_id, frame_id: null, source: 'live', status: 'missing', captured_at: null,
       width: null, height: null, ...transport.frameMetadata(camera.camera_id) }))
   };

@@ -346,7 +346,7 @@ async def public_demo_snapshot(claims=Depends(OFFICER)):
     return value
 
 
-@router.get('/commands/{command_id}')
+@router.get('/commands/{command_id:path}')
 async def public_demo_command(command_id: str, claims=Depends(OFFICER)):
     value, events = command_service.read_command(command_id)
     await command_service.publish(events)

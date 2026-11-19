@@ -43,7 +43,9 @@ def require_lease(conn, capability):
 def guard_write(conn, claims):
     if claims.get('capability'):
         return require_lease(conn, claims['capability'])
-    return None  # JWT cũ chỉ dùng ở các route nghiệp vụ trước v1.
+    if conn.execute("SELECT 1 FROM station_leases WHERE id='station' AND expires_at>?", (time.time(),)).fetchone():
+        failure(403, 'FORBIDDEN', 'Trạm đang hoạt động cần capability lease')
+    return None
 
 
 def station_claims(token):
@@ -208,8 +210,8 @@ def _apply(conn, row, applied_t_sim):
     elif row['event'] == 'cmd.signal-override':
         state['overrides'] = [o for o in state['overrides'] if o['node_id'] != data['node_id']]
         if data['group'] is not None:
-            state['overrides'].append(data | {'until_epoch': time.time() + data['duration_s'],
-                                              'until_at': iso(time.time() + data['duration_s']),
+            until = time.time() + data['duration_s']
+            state['overrides'].append(data | {'until_epoch': until, 'until_at': iso(until),
                                               'until_t_sim': applied_t_sim + data['duration_s']})
     elif row['event'] == 'cmd.scenario':
         now = iso()

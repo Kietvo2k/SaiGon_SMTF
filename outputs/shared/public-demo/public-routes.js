@@ -8,6 +8,10 @@ const leaseView = lease => ({ station_id: lease.station_id, owner_id: lease.owne
   generation: lease.generation, expires_at: utc(lease.expires_at), capability: lease.capability });
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 const valid = condition => { if (!condition) fail(422, 'VALIDATION', 'Dữ liệu không hợp lệ'); };
+const commandId = segment => {
+  try { return decodeURIComponent(segment); }
+  catch { fail(422, 'VALIDATION', 'command_id mã hóa không hợp lệ'); }
+};
 const canonical = value => JSON.stringify(value, (_, v) => object(v)
   ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v);
 
@@ -134,7 +138,10 @@ async function ack(tx, lease, id, body) {
     if (command.event === 'cmd.signal-mode') state.value.mode = snap.value.simulation.mode = data.mode;
     if (command.event === 'cmd.signal-override') {
       state.value.overrides = state.value.overrides.filter(o => o.node_id !== data.node_id);
-      if (data.group !== null) state.value.overrides.push({ ...data, until_at: command.compatible.until_at });
+      if (data.group !== null) {
+        state.value.overrides.push({ ...data, until_at: utc(Date.now() + data.duration_s * 1000),
+          until_t_sim: command.applied_t_sim + data.duration_s });
+      }
     }
     if (command.event === 'cmd.scenario') {
       state.value.scenario = data.key === 'none' ? null : { ...data, key: data.key, started_at: utc() };
@@ -208,7 +215,7 @@ export function createPublicRoutes(store, buildId) {
         const lease = await leaseOf(tx, input.token);
         if (path === '/station/commands/pending' && input.method === 'GET') return { commands: await dequeue(tx, lease) };
         const match = path.match(/^\/station\/commands\/([^/]+)\/ack$/);
-        if (match && input.method === 'POST') return ack(tx, lease, match[1], body);
+        if (match && input.method === 'POST') return ack(tx, lease, commandId(match[1]), body);
         if (path === '/station/heartbeat' && input.method === 'POST') return { ok: true, server_time: utc(), commands: await dequeue(tx, lease) };
         const evidenceMatch = path.match(/^\/station\/violations\/([^/]+)\/evidence$/);
         if (evidenceMatch && evidence) {
@@ -232,8 +239,16 @@ export function createPublicRoutes(store, buildId) {
         if (path === '/station/metrics' && input.method === 'POST') {
           valid(object(body.kpi));
           const state = await tx.get('state', 'snapshot');
+          const controls = await tx.get('state', 'controls');
           state.value.kpi = { ...state.value.kpi, ...body.kpi };
-          state.value.simulation = { ...state.value.simulation, t_sim: body.t_sim ?? body.t, mode: body.signal_mode || state.value.simulation.mode };
+          const tSim = body.t_sim ?? body.t;
+          if (Number.isFinite(tSim)) state.value.simulation.t_sim = tSim;
+          if (['fixed', 'smart'].includes(body.signal_mode)) {
+            controls.value.mode = state.value.simulation.mode = body.signal_mode;
+          }
+          if (Array.isArray(body.overrides)) controls.value.overrides = body.overrides;
+          if (Array.isArray(body.signal_states)) controls.value.signals = body.signal_states;
+          await tx.put('state', controls);
           await tx.put('state', state); await tx.audit(lease, 'station.metrics', lease.station_id, body); await changed(tx);
           await tx.event('kpi.update', { ...body.kpi, t: body.t, mode: body.signal_mode }); return { ok: true };
         }
@@ -272,11 +287,15 @@ export function createPublicRoutes(store, buildId) {
         if (path === '/officer/snapshot' && input.method === 'GET') return snapshot(tx, buildId);
         const match = path.match(/^\/officer\/commands\/([^/]+)$/);
         if (match && input.method === 'GET') {
-          await expire(tx); const command = await tx.get('commands', match[1]);
+          await expire(tx); const command = await tx.get('commands', commandId(match[1]));
           if (!command) fail(404, 'NOT_FOUND', 'Không có lệnh');
           return resultOf(command);
         }
-        if (path === '/officer/controls/state' && input.method === 'GET') return (await tx.get('state', 'controls')).value;
+        if (path === '/officer/controls/state' && input.method === 'GET') {
+          const { value } = await tx.get('state', 'controls');
+          const now = Date.now();
+          return { ...value, overrides: value.overrides.filter(o => !o.until_at || Date.parse(o.until_at) > now) };
+        }
         if (['POST', 'PUT'].includes(input.method)) {
           await userOf(tx, input.token, WRITERS);
           valid(object(body));

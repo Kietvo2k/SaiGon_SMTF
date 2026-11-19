@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from datetime import datetime
 
 VERSION = 'public-demo-v1'
 
@@ -24,22 +25,35 @@ def bump(conn):
 
 def controls(conn):
     value = get_state(conn, 'controls', {'mode': 'fixed', 'overrides': [], 'scenario': None, 'signals': []})
-    value['overrides'] = [o for o in value['overrides'] if not o.get('until_epoch') or o['until_epoch'] > time.time()]
+    now = time.time()
+    value['overrides'] = [o for o in value['overrides'] if _override_active(o, now)]
     return value
+
+
+def _override_active(override, now):
+    if override.get('until_epoch') is not None:
+        return override['until_epoch'] > now
+    try:
+        until = datetime.fromisoformat(override['until_at'].replace('Z', '+00:00'))
+    except (KeyError, AttributeError, ValueError):
+        return True
+    return until.timestamp() > now
 
 
 def read_snapshot(conn):
     value = get_state(conn, 'snapshot')
     if value is None:
         last = conn.execute('SELECT * FROM kpi_samples ORDER BY id DESC LIMIT 1').fetchone()
-        cameras = [dict(r) for r in conn.execute('SELECT camera_id,node_id,label FROM cameras')]
+        cameras = conn.execute(
+            'SELECT c.camera_id, n.cluster_id, c.label FROM cameras c '
+            'LEFT JOIN signal_nodes n ON n.node_id=c.node_id')
         value = {
             'simulation': {'seed': None, 'scenario': 'none', 'mode': last['mode'] if last else 'fixed',
                            't_sim': last['t_sim'] if last else 0, 'paused': False},
             'junctions': [], 'routes': [],
             'kpi': {k: (last[k] if last and k in last.keys() else 0) for k in
                     ('wait_avg_s', 'queue_max', 'flow_per_min', 'trips_completed', 'admission_wait', 'recoveries')},
-            'cameras': [{'camera_id': c['camera_id'], 'junction_id': c['node_id'], 'label': c['label'],
+            'cameras': [{'camera_id': c['camera_id'], 'junction_id': c['cluster_id'], 'label': c['label'],
                          'frame_id': None, 'source': 'live', 'status': 'missing', 'captured_at': None,
                          'width': None, 'height': None} for c in cameras]}
     row = conn.execute("SELECT * FROM station_leases WHERE id='station'").fetchone()

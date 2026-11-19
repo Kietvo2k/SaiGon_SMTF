@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+import math
 import re
 import secrets
 from datetime import datetime, timezone
@@ -73,7 +74,7 @@ async def pending_commands(claims=Depends(v1_station)):
     return value
 
 
-@router.post('/commands/{command_id}/ack')
+@router.post('/commands/{command_id:path}/ack')
 async def acknowledge_command(command_id: str, body: CommandAckIn, claims=Depends(v1_station)):
     value, events = command_service.acknowledge(claims['capability'], command_id, body)
     await command_service.publish(events)
@@ -118,14 +119,17 @@ async def heartbeat(body: dict, claims=Depends(STATION)):
         value, events = command_service.pending(claims['capability'])
         await command_service.publish(events)
         return {'ok': True, 'server_time': _now(), **value}
+    with connect() as conn:
+        command_service.guard_write(conn, claims)
     return {'ok': True, 'server_time': _now(), 'commands': []}
 
 
 @router.post('/metrics')
 async def metrics(body: dict, claims=Depends(STATION_TELEMETRY)):
     kpi = body.get('kpi', {})
+    events = []
     with connect(immediate=True) as conn:
-        command_service.guard_write(conn, claims)
+        lease = command_service.guard_write(conn, claims)
         conn.execute('INSERT INTO kpi_samples (t_sim, window_s, wait_avg_s, wait_p95_s, queue_max, queue_avg, flow_per_min, mode, scenario_key, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)',
                      (body.get('t_sim', body.get('t')), 60, kpi.get('wait_avg_s', 0), 0, kpi.get('queue_max', 0), 0, kpi.get('flow_per_min', 0), body.get('signal_mode', 'fixed'), None, _now()))
         conn.execute('INSERT INTO station_metrics (station_id, t, payload_json, created_at) VALUES (?,?,?,?)',
@@ -139,10 +143,23 @@ async def metrics(body: dict, claims=Depends(STATION_TELEMETRY)):
                 conn.execute('INSERT INTO signal_state_log (node_id, cluster_id, t_sim, phase, grp, mode, override_by, reason, created_at) VALUES (?,?,?,?,?,?,?,?,?)',
                              (s.get('node_id'), s.get('cluster_id'), s.get('t_sim'), s.get('phase'), s.get('group'),
                               s.get('mode'), s.get('override_by'), s.get('reason'), _now()))
-        if claims.get('capability'):
+        if lease:
             state = snapshots.controls(conn)
-            state.update(mode=body.get('signal_mode', state['mode']), overrides=body.get('overrides', state['overrides']))
+            mode = body.get('signal_mode')
+            if mode in ('fixed', 'smart'):
+                state['mode'] = mode
+            if isinstance(body.get('overrides'), list):
+                state['overrides'] = body['overrides']
             snapshots.put_state(conn, 'controls', state)
+            value = snapshots.read_snapshot(conn)
+            if mode in ('fixed', 'smart'):
+                value['simulation']['mode'] = mode
+            t_sim = body.get('t_sim', body.get('t'))
+            if isinstance(t_sim, (int, float)) and math.isfinite(t_sim):
+                value['simulation']['t_sim'] = t_sim
+            value['kpi'].update(kpi)
+            snapshots.put_state(conn, 'snapshot', value)
+            events.append(snapshots.snapshot_event(conn))
     # Trạm báo lại danh sách override đang áp dụng (kèm `until_t_sim` theo đồng hồ sim) → lưu trạng thái.
     ovs = body.get('overrides')
     if isinstance(ovs, list):
@@ -157,6 +174,7 @@ async def metrics(body: dict, claims=Depends(STATION_TELEMETRY)):
     # M6c: trạm báo nội dung VMS đang hiển thị (tùy chọn) → GET /officer/vms gộp hiển thị.
     if 'vms' in body:
         report_from_station(body.get('vms'))
+    await command_service.publish(events)
     await broadcast('kpi.update', {'t': body.get('t'), 'wait_avg_s': kpi.get('wait_avg_s', 0),
                                    'queue_max': kpi.get('queue_max', 0), 'flow_per_min': kpi.get('flow_per_min', 0),
                                    'mode': body.get('signal_mode', 'fixed')}, to_roles=['officer', 'commander', 'admin'])
@@ -292,6 +310,7 @@ async def post_frame(body: dict, claims=Depends(STATION_FRAME)):
     except Exception:
         raise HTTPException(status_code=422, detail=err('VALIDATION', 'jpeg_base64 không hợp lệ'))
     frame = {'seq': body.get('seq'), 't': body.get('t'), 'w': body.get('w'), 'h': body.get('h'), 'jpeg': raw}
+    events = []
     with connect(immediate=True) as conn:
         lease = command_service.guard_write(conn, claims)
         (config.VAR_DIR / 'frames' / f'{cam}-latest.jpg').write_bytes(raw)
@@ -303,7 +322,9 @@ async def post_frame(body: dict, claims=Depends(STATION_FRAME)):
                         'source': 'live', 'status': 'ready', 'captured_at': body.get('t'), 'width': body.get('w'), 'height': body.get('h')}
             value['cameras'] = [c for c in value['cameras'] if c['camera_id'] != cam] + [metadata]
             snapshots.put_state(conn, 'snapshot', value)
+            events.append(snapshots.snapshot_event(conn))
     FRAMES[cam] = frame
+    await command_service.publish(events)
     await broadcast('stream.updated', {'camera_id': cam, 'seq': body.get('seq')},
                     to_roles=['officer', 'commander', 'admin'])
     return {'ok': True}
