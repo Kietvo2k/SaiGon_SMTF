@@ -1,5 +1,62 @@
 # DATA-T1 — kiểm meta độc lập
 
+## Vòng sửa 1 · CORE-DATA-T1-META-01
+
+Ứng viên và receipt `startSha`: `d2bf791c9f41e52673cdb221fff66859cfac8a58`.
+Worktree `f811`, nhánh `codex/core-data-t1-r1-meta`, vòng 1/2.
+Receipt: `6e9e2fdf1503107e9b256cf56af38a5748c76dc602982ab48eee06183001d125`.
+Hợp đồng và fixture vẫn là `public-demo-v1`.
+
+Meta khóa danh mục 18 tên Node chính, năm tên Node review và sáu ID Pytest review,
+gồm hai nhánh WS inbound/outbound. `runCheck` đọc TAP/JUnit thật và kiểm số ca;
+meta so toàn bộ tên/ID theo thứ tự trong từng suite. Hai lớp bắt riêng việc đổi
+ID nhóm, thiếu/lặp một tên cùng nhóm, số ca không khớp JUnit, skip, zero, child exit
+1 hoặc 5, thiếu report, TAP/XML hỏng. Kiểm gắn SHA và hash artifact của vòng 0 vẫn
+được giữ. Không lấy fixture replay làm bằng chứng hành vi sản phẩm.
+
+| Requirement | Meta ID | Biến thể mới và phép phân biệt |
+|---|---|---|
+| DATA-01, USER-01, DOCKER-01 | `DATA-T1-META-16..17` | Khóa inventory review và kiểm lỗi runner TAP/JUnit. |
+| DATA-01, USER-01, DOCKER-01 | `DATA-T1-META-18` | `MUT-LEASE-OLD-SOURCE`: bỏ kiểm lease khi nhận WS message sau auth; R1 inbound phải phát hiện nguồn cũ xuất hiện thay vì chỉ nguồn hiện tại. |
+| DATA-01, USER-01 | `DATA-T1-META-19` | `MUT-ID-DECODE-TWICE`: giải mã lần hai riêng chuỗi còn `%2F`; R3 phải bắt ID slash và literal bị nhập, dù các ID khác vẫn qua. |
+| DATA-01, USER-01 | `DATA-T1-META-20` | `MUT-TTL-ENQUEUE`: áp hạn đã ghi khi enqueue; R6 phải bắt override mất hiệu lực ngay sau ACK trễ. |
+| DATA-01, DOCKER-01 | `DATA-T1-META-21` | `MUT-FRAME-REVISION`: lưu metadata và vẫn gửi stream, bỏ tăng revision/phát snapshot event; R7 phải bắt ở assertion revision và snapshot event. |
+
+Biến thể Node chạy suite chính/review của worktree với `DATA_T1_ROOT` trỏ bản sao;
+biến thể Python chạy cùng test review và app tương ứng trong bản sao. Bản sao chỉ
+chứa các tệp Git đã đối chiếu sạch với HEAD; lưu SHA-256 của mỗi tệp và đối chiếu
+nguyên byte sau khi sao. Chỉ ghi biến thể vào bản sao nằm trong thư mục ignored của
+lượt kiểm. Mỗi biến thể phải làm đúng ca đích trượt ở assertion với exit 1; sau
+đó khôi phục byte và chạy lại ca đó trên cùng bản sao. Kiểm toàn bộ tệp gốc và
+bản sao ở cuối; không sửa test của tác giả khác, sản phẩm, gate hoặc CI.
+
+Kiểm JUnit cho thấy report đúng số ca nhưng ID bị thay có thể vẫn `PASS` qua API
+runner; lớp meta từ chối ID sai. Gap kiểm tên nhóm TAP và nhánh stale-report ở
+vòng 0 vẫn thuộc coordinator. Sửa 1 thay async wait trong primary bằng polling;
+không dùng quan sát vòng 0 để đánh dấu phiên bản mới flake. Browser QA cảnh đã
+render, AI frame identity, DATA-T2 và nghiệm thu CI/Docker/release đầy đủ nằm
+ngoài kết luận meta của vòng này.
+
+Bằng chứng lượt sạch trực tiếp ở `work/smtf-agent/meta/round1-baseline/`: 23/23
+Node (18 chính + 5 review), 6/6 Pytest review, cả hai exit 0. Lượt meta **21/21**,
+exit 0, không fail/skip/cancel/todo; cuối lượt vẫn đủ 18+5+6 ca sạch. Cả mười
+biến thể (sáu từ vòng 0 và bốn mới) trả exit 1 tại đúng assertion; từng file
+khớp hash ban đầu và từng ca đích chạy sạch sau khi khôi phục. Log ngoài:
+`work/smtf-agent/meta/round1-first.stdout.log`. Trong
+`work/smtf-agent/meta/data-t1-CLy78p/`, `summary.json` ghi command, productRoot
+và hash log/report; từng thư mục `MUT-*` lưu diff, byte trước/sau và kết quả
+khôi phục. Hai lượt kiểm chạy trước khi commit meta, trên tệp sản phẩm và
+suite chính/review không đổi so với `d2bf791`. Cần chạy lại khi ghép SHA mới.
+
+Lệnh tái hiện:
+
+```powershell
+node --test --test-reporter=tap scripts/hardtest/data/data-t1-meta.test.mjs
+node scripts/agent/preflight.mjs --task CORE-DATA-T1-META-01 --role meta --verify --result work/smtf-agent/results/CORE-DATA-T1-META-01.meta.json
+```
+
+## Hồ sơ vòng 0
+
 Task `CORE-DATA-T1-META-00`, vai trò `meta`, vòng `0`; chưa được cấp sửa 1/2.
 Ứng viên sản phẩm và receipt `startSha`:
 `6e742ec3306e685b8f9496236c9fad435bc5d47f`.
