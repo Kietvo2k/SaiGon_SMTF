@@ -47,3 +47,18 @@ Ghi chú ranh giới phiên này (không đụng):
 - Hai thư mục bằng chứng gốc ở F:\File\FileLapTrinhF\SaiGon_SMTF-wt\… vẫn còn nguyên, không xóa.
 
 Tổng kết phiên (23h55): đã đạt B0–B4 trọn vẹn + NAV/DATA/CAM(ảnh mẫu) trên URL production thật; còn mở: SIGNAL runtime vàng 3 s chưa chứng minh, HUD 768 cần người xem ảnh, camera trực tiếp chưa nghiệm thu. Vết nhỏ: cần xoá ảnh thử prefix live/ trong bucket demo sau đợt nộp (hiện chưa có vì chưa chạy frame POST).
+
+## Phiên Điều phối bản trình diễn v2 (21/11, glm-5.3)
+
+Ứng viên: `codex/demo-v2` — xuất phát `codex/vercel-submit-integration-c` ad81fa1 + ghép 5 commit nhóm A từ
+`codex/ui-polish-v0` (A1/A6/A3/A2/A4). Deploy cuối: **dpl_F9Z7FoVTeRFbCTWNajQcBy5abXEF**,
+SHA `c3953d94827194776101c1d367631a549ac27c30`, artifact 104 tệp 31,3 MB, production READY tại
+https://saigon-smtf-submit.vercel.app (Deployment Protection trống — public như trước).
+Nâng cấp: trạm 3D sống đầy đủ (HUD/KPI A/B, heat + dòng xe theo chiều, forecast, scenarios, inspector
+xanh kế hoạch + dự báo kẹt, bàn cưỡng chế có hoàn tác, xe ưu tiên cứu thương>cứu hỏa>công an + VMS mở làn),
+đẩy khung /api/demo/frame 3,2 s; API mở rộng record/record-media/timeline/decision/complaint (ngược tương thích);
+8 hồ sơ + 24 ảnh bằng chứng + 15/15 camera có ảnh mẫu từ chính trạm; landing theo mockup-demo-flow với ảnh chụp
+từ build mới. Cổng production 9/9 PASS (demo2-live.cjs): NAV, SIGNAL (vàng [3,3,3] s + đỏ chung [2,2] s — cổng đỏ
+cũ nay xanh), 3D modules, PERF medianFPS 102/p95 29,7 ms, CAMS, INSPECTOR, OFFICER (bảng + duyệt + 3 ảnh),
+CITIZEN (hồ sơ + căn cứ NĐ 168 + khiếu nại) + restore dữ liệu sau QA. Bằng chứng: work/smtf-agent/DEMO-V2-REPORT.md
++ demo2-live.json + ảnh demo2-*.png. Chi tiết từng mục P0–P3/3b và bài học xem DEMO-V2-REPORT.

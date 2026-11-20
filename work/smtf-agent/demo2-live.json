@@ -1,0 +1,256 @@
+{
+  "base": "https://saigon-smtf-submit.vercel.app",
+  "startedAt": "2026-11-20T18:14:12.443Z",
+  "checks": {
+    "nav": {
+      "title": "SaiGon SMTF · Điều phối giao thông khu Bắc",
+      "kicker": "Điều khiển thích ứng · Nhận diện vi phạm · Tra cứu công khai",
+      "h1": "Thành phố chuyển động. Tín hiệu đồng nhịp.",
+      "status": "PASS"
+    },
+    "signal": {
+      "found": true,
+      "node": "366376129",
+      "cluster": "Bac-02",
+      "cycle_s": 48,
+      "mode": "smart",
+      "sampleCount": 511,
+      "r0": [
+        [
+          "yellow",
+          2.8
+        ],
+        [
+          "red",
+          15
+        ],
+        [
+          "green",
+          8
+        ],
+        [
+          "yellow",
+          3
+        ],
+        [
+          "red",
+          17
+        ],
+        [
+          "green",
+          6.1
+        ]
+      ],
+      "r1": [
+        [
+          "red",
+          4.8
+        ],
+        [
+          "green",
+          8
+        ],
+        [
+          "yellow",
+          3
+        ],
+        [
+          "red",
+          15
+        ],
+        [
+          "green",
+          10
+        ],
+        [
+          "yellow",
+          3
+        ],
+        [
+          "red",
+          8.1
+        ]
+      ],
+      "bothRedRuns": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "first": [
+        {
+          "t": 10.2,
+          "p0": "yellow",
+          "p1": "red",
+          "cd0": 2.8
+        },
+        {
+          "t": 10.3,
+          "p0": "yellow",
+          "p1": "red",
+          "cd0": 2.7
+        },
+        {
+          "t": 10.4,
+          "p0": "yellow",
+          "p1": "red",
+          "cd0": 2.6
+        }
+      ],
+      "last": [
+        {
+          "t": 61.9,
+          "p0": "green",
+          "p1": "red",
+          "cd0": 2.1
+        },
+        {
+          "t": 62,
+          "p0": "green",
+          "p1": "red",
+          "cd0": 2
+        },
+        {
+          "t": 62.1,
+          "p0": "green",
+          "p1": "red",
+          "cd0": 1.9
+        }
+      ],
+      "yellowS": 3,
+      "allRedS": 2,
+      "yellows": [
+        3,
+        3,
+        3
+      ],
+      "bothRedTrimmed": [
+        2,
+        2
+      ],
+      "status": "PASS"
+    },
+    "modules": {
+      "modules": [
+        "signals",
+        "capture",
+        "hud",
+        "perception",
+        "transport",
+        "station-loop",
+        "heat",
+        "forecast",
+        "clock",
+        "emergency",
+        "scenarios",
+        "signalInspector",
+        "testLab",
+        "enforcement",
+        "enforcementPanel"
+      ],
+      "hud": true,
+      "heat": true,
+      "forecast": true,
+      "scenarios": true,
+      "inspector": true,
+      "testLab": true,
+      "capture": true,
+      "submitFrame": "{\"running\":true,\"cameraId\":\"CAM-HX-001\",\"sent\":13,\"failed\":0,\"lastError\":\"\",\"sessionReady\":true}",
+      "kpiText": "Vận hànhĐèn & dự báoThử & spawnĐiều khiển đèn · Khu BắcĐèn cố địnhThông minhThời gian chờ TB4.4giâyHàng chờ max8xeLưu lượng TB/nút7.3xe/phút/nútTrạm: đã kết nối kho cục bộ · chờ gửi 0Hiệu năng đồ họa\n          Chế độ\n   ",
+      "status": "PASS"
+    },
+    "perf": {
+      "medianFPS": 102,
+      "p95FrameMs": 29.7,
+      "renderFps": 14,
+      "status": "PASS"
+    },
+    "cams": {
+      "count": 15,
+      "ids": [
+        "CAM-HX-001",
+        "CAM-HX-002",
+        "CAM-HX-003",
+        "CAM-HX-004",
+        "CAM-HX-005",
+        "CAM-HX-006",
+        "CAM-HX-007",
+        "CAM-HX-008",
+        "CAM-HX-009",
+        "CAM-HX-010",
+        "CAM-BAC-001",
+        "CAM-BAC-002",
+        "CAM-BAC-003",
+        "CAM-BAC-004",
+        "CAM-BAC-005"
+      ],
+      "status": "PASS"
+    },
+    "inspector": {
+      "ok": true,
+      "title": "Đèn & dự báo",
+      "detail": "Ngã tư Hàng Xanh",
+      "lamps": [
+        "AXanh · còn 45s",
+        "BĐỏ · xanh sau 50s",
+        "AXanh · còn 45s",
+        "BĐỏ · xanh sau 50s"
+      ],
+      "arms": 3,
+      "alloc": "A 45s · B 8s",
+      "timelineSegs": 6,
+      "status": "PASS"
+    },
+    "officer": {
+      "kpis": [
+        "Nguồn chỉ sốDữ liệu mẫu",
+        "Chờ trung bình18 giây",
+        "Hàng chờ lớn nhất9 xe",
+        "Lưu lượng mỗi nút24 xe/phút"
+      ],
+      "rows": 8,
+      "cameras": 15,
+      "badges": [
+        "Đang khiếu nại",
+        "Cần xác minh",
+        "Đã xác nhận",
+        "Đã gỡ",
+        "Đã xác nhận",
+        "Đã xác nhận",
+        "Cần xác minh",
+        "Đã xác nhận"
+      ],
+      "evidence": {
+        "photos": 3,
+        "captions": [
+          "Trước khi vượt vạch",
+          "Sau khi vượt vạch (khung nhận diện tự động)",
+          "Ảnh cắt biển số"
+        ]
+      },
+      "decisionRoundtrip": false,
+      "status": "PASS"
+    },
+    "citizen": {
+      "message": "1 hồ sơ được tìm thấy.",
+      "detail": "51K-123.45Ô tôĐã xác nhận",
+      "evidencePhotos": 3,
+      "penalty": "Mức phạt: 18.000.000 – 20.000.000 đồng · trừ 4 điểm giấy phép lái xeCăn cứ: NĐ 168/2024/NĐ-CP · điểm b khoản 9 Điều 6 (đã đối chiếu)",
+      "timeline": 1,
+      "complaint": {
+        "status": "Đang khiếu nại",
+        "timeline": 8
+      },
+      "status": "PASS"
+    },
+    "restore": {
+      "status": "PASS",
+      "complaintRemoved": 7
+    }
+  },
+  "pass": true,
+  "errors": [],
+  "requestFailures": [],
+  "badRequests": [],
+  "finishedAt": "2026-11-20T18:15:48.766Z"
+}
