@@ -1,0 +1,33 @@
+{
+    "task":  "VERCEL-SUBMIT-CORE-00",
+    "role":  "code",
+    "branch":  "codex/vercel-demo-submit-core",
+    "worktree":  "F:\\File\\FileLapTrinhF\\SaiGon_SMTF-wt\\vercel-demo-submit-core",
+    "baseSha":  "b9bdd827cda09e1cd3f4f04810e054b8bc16ce44",
+    "specVersion":  "public-demo-v1",
+    "round":  0,
+    "requirements":  [
+                         "PUB-01",
+                         "DATA-01",
+                         "CAM-01",
+                         "SIM-01",
+                         "PERF-01",
+                         "DOCKER-01"
+                     ],
+    "writablePaths":  [
+                          "vercel.json",
+                          ".vercelignore",
+                          "package.json",
+                          "api/demo/",
+                          "supabase/",
+                          "scripts/vercel/",
+                          "outputs/hcmc-poc/public-submit/",
+                          "outputs/smart-traffic/web/vite.config.ts",
+                          "docs/agent/core/vercel-submit.md"
+                      ],
+    "requiredReads":  [
+                          "docs/agent/DEMO-VERCEL-SUPABASE.md",
+                          "docs/prompts/DEMO-VERCEL-CORE.md",
+                          ".agents/skills/smtf-vercel-demo/SKILL.md"
+                      ]
+}

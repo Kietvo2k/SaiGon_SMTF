@@ -1,0 +1,45 @@
+{
+  "task": "VERCEL-SUBMIT-CORE-00",
+  "role": "code",
+  "branch": "codex/vercel-demo-submit-core",
+  "worktree": "F:\\File\\FileLapTrinhF\\SaiGon_SMTF-wt\\vercel-demo-submit-core",
+  "baseSha": "b9bdd827cda09e1cd3f4f04810e054b8bc16ce44",
+  "briefSha256": "e154c17430f897a72f24b44d06431079f7714617d93d94af975199f2d2b3a95c",
+  "reads": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "2391df535f4cf2d54d7f8e664dfcbada65da2ba10e43a71fdd6bd82e165ccadb"
+    },
+    {
+      "path": "docs/agent/RULES.md",
+      "sha256": "4709e52182b2064ac4eab39e3804fec0c1db14f4c6833f3aa0232fd545c6b4fa"
+    },
+    {
+      "path": "docs/agent/HANDOFF.md",
+      "sha256": "7dbf1e2862ec16ac03922eaa0e5d15847883ac7c86614d1dc97fc0612770dd24"
+    },
+    {
+      "path": "docs/agent/CONTRACT-PUBLIC-DEMO.md",
+      "sha256": "5bbe444fbc32269a1144890e908b4de21b6a79b2a09f87f64c33f11012c7a97a"
+    },
+    {
+      "path": "docs/agent/PUBLIC-DEMO-SPEC.md",
+      "sha256": "63422d61b15437db7f3ba6e26e9e4a923e8646dbf30cf2318ad798ad687374dc"
+    },
+    {
+      "path": "docs/agent/DEMO-VERCEL-SUPABASE.md",
+      "sha256": "6d8ae9f283dca445f6c94fa263f41119163f5707957da22ca6024a8bf4f92658"
+    },
+    {
+      "path": "docs/prompts/DEMO-VERCEL-CORE.md",
+      "sha256": "1cec70bf69c978f0578758ed27ed3b7faf9236150b44268fa2a38b0e5f8cdd46"
+    },
+    {
+      "path": ".agents/skills/smtf-vercel-demo/SKILL.md",
+      "sha256": "f31aba8cf6be1c00978fd818717e4ee6c3b9403ce5bf6a85c0a205a39fa1f8dd"
+    }
+  ],
+  "startSha": "3706054f7b306f1e50e5c54f7ad4ac6258cdfde3",
+  "untracked": [],
+  "digest": "5090b861773f420986209fd717cab9bf15e9765759600fd60e6f5e1a3d0fabe6"
+}
