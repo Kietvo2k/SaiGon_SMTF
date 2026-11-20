@@ -161,10 +161,24 @@ export function App() {
       </header>
 
       <section className="kpi" aria-label="Chỉ số hệ thống">
-        <span>Chờ trung bình <b>{kpi.wait_avg_s ?? '–'}</b> s</span>
-        <span>Hàng chờ lớn nhất <b>{kpi.queue_max ?? '–'}</b></span>
-        <span>Lưu lượng <b>{kpi.flow_per_min ?? '–'}</b> xe/phút</span>
-        <span>Chế độ đèn <b>{MODE_LABEL[kpi.mode ?? ''] ?? (kpi.mode || '–')}</b></span>
+        <div className="kpi-item">
+          <span className="kpi-label">Chờ trung bình</span>
+          <strong className="kpi-val">{kpi.wait_avg_s ?? '–'} <small>s</small></strong>
+        </div>
+        <div className="kpi-item">
+          <span className="kpi-label">Hàng chờ lớn nhất</span>
+          <strong className="kpi-val">{kpi.queue_max ?? '–'} <small>xe</small></strong>
+        </div>
+        <div className="kpi-item">
+          <span className="kpi-label">Lưu lượng</span>
+          <strong className="kpi-val">{kpi.flow_per_min ?? '–'} <small>xe/phút</small></strong>
+        </div>
+        <div className="kpi-item">
+          <span className="kpi-label">Chế độ đèn</span>
+          <strong className={`kpi-val kpi-mode kpi-mode-${kpi.mode || 'unknown'}`}>
+            {MODE_LABEL[kpi.mode ?? ''] ?? (kpi.mode || '–')}
+          </strong>
+        </div>
       </section>
 
       {notice && <p className="notice" role="status">{notice}</p>}
