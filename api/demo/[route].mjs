@@ -90,7 +90,24 @@ function plateKey(input) {
 
 const cameraFields = 'camera_id,junction_id,label,sample_path';
 const cameraView = row => ({ cameraId: row.camera_id, junctionId: row.junction_id, label: row.label });
-const recordQuery = 'smtf_submit_records?select=plate,summary,status&order=plate&limit=100';
+// demo-v2: hồ sơ trả thêm trường nghiệp vụ (ngược tương thích — không bỏ trường cũ).
+const recordFields = 'plate,summary,status,occurred_at,violation_code,violation_label,vehicle_class,junction_id,camera_id,direction,penalty_amount_min,penalty_amount_max,penalty_points,penalty_source,priority_flag,priority_reason';
+const recordView = row => ({
+  plate: row.plate, summary: row.summary, status: row.status,
+  ...(row.occurred_at ? { occurredAt: row.occurred_at } : {}),
+  ...(row.violation_code ? { code: row.violation_code } : {}),
+  ...(row.violation_label ? { violationLabel: row.violation_label } : {}),
+  ...(row.vehicle_class ? { vehicleClass: row.vehicle_class } : {}),
+  ...(row.junction_id ? { junctionId: row.junction_id } : {}),
+  ...(row.camera_id ? { cameraId: row.camera_id } : {}),
+  ...(row.direction ? { direction: row.direction } : {}),
+  ...(Number.isFinite(row.penalty_amount_min) ? { penaltyAmountMin: row.penalty_amount_min } : {}),
+  ...(Number.isFinite(row.penalty_amount_max) ? { penaltyAmountMax: row.penalty_amount_max } : {}),
+  ...(Number.isFinite(row.penalty_points) ? { penaltyPoints: row.penalty_points } : {}),
+  ...(row.penalty_source ? { penaltySource: row.penalty_source } : {}),
+  ...(row.priority_flag ? { priorityFlag: true, priorityReason: row.priority_reason || null } : {}),
+});
+const recordQuery = `smtf_submit_records?select=${recordFields}&order=plate&limit=100`;
 const filters = 'select=camera_id,frame_id,captured_at,slot,sha256';
 
 async function findCamera(id) {
@@ -228,7 +245,81 @@ async function uploadFrame(request, camera, session, frameId) {
 const routes = new Map([
   ['session', 'POST'], ['officer', 'GET'], ['lookup', 'GET'],
   ['camera', 'GET'], ['media', 'GET'], ['frame', 'POST'],
+  ['record', 'GET'], ['record-media', 'GET'], ['timeline', 'GET'],
+  ['decision', 'POST'], ['complaint', 'POST'],
 ]);
+
+// Hồ sơ theo biển (công khai như lookup): trả đầy đủ trường + đường dẫn bằng chứng.
+async function recordDetail(plate) {
+  const [row] = await data(`smtf_submit_records?select=${recordFields}&plate=eq.${encodeURIComponent(plate)}&limit=1`);
+  if (!row) throw notFound();
+  const evidence = await data(`smtf_submit_evidence?select=kind,path&plate=eq.${encodeURIComponent(plate)}`);
+  return {
+    ...recordView(row),
+    evidence: evidence.map(item => ({
+      kind: item.kind,
+      url: `/api/demo/record-media?plate=${encodeURIComponent(plate)}&kind=${encodeURIComponent(item.kind)}`
+    }))
+  };
+}
+
+async function recordMedia(plate, kind) {
+  if (!kind || !['before', 'after', 'plate'].includes(kind)) throw invalid();
+  const [row] = await data(`smtf_submit_evidence?select=path&plate=eq.${encodeURIComponent(plate)}&kind=eq.${encodeURIComponent(kind)}&limit=1`);
+  if (!row) throw notFound();
+  const response = await supabase(storagePath(row.path));
+  if (response.status === 404) throw notFound();
+  if (!response.ok) throw unavailable();
+  const bytes = Buffer.from(await response.arrayBuffer());
+  return new Response(bytes, { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
+}
+
+async function timeline(plate) {
+  const [row] = await data(`smtf_submit_records?select=plate,status,occurred_at&plate=eq.${encodeURIComponent(plate)}&limit=1`);
+  if (!row) throw notFound();
+  const [audit, complaints] = await Promise.all([
+    data(`smtf_submit_audit?select=action,note,at&plate=eq.${encodeURIComponent(plate)}&order=at.asc&limit=50`),
+    data(`smtf_submit_complaints?select=id,kind,note,status,created_at&plate=eq.${encodeURIComponent(plate)}&order=created_at.asc&limit=50`),
+  ]);
+  return { plate: row.plate, status: row.status, occurredAt: row.occurred_at, audit, complaints };
+}
+
+const decisionActions = new Map([
+  ['confirm', 'confirmed'], ['dismiss', 'dismissed'], ['needs_review', 'needs_review']
+]);
+
+async function applyDecision(plate, action, note) {
+  const next = decisionActions.get(action);
+  if (!next) throw invalid();
+  const [row] = await data(`smtf_submit_records?select=plate,status&plate=eq.${encodeURIComponent(plate)}&limit=1`);
+  if (!row) throw notFound();
+  if (row.status === 'disputed') {
+    throw new DemoError(409, 'STATE_CONFLICT', 'Hồ sơ đang khiếu nại; cần xử lý khiếu nại trước.');
+  }
+  const updated = await rpc('smtf_submit_decision', {
+    p_plate: row.plate, p_status: next, p_action: action, p_note: typeof note === 'string' && note.trim() ? note.trim().slice(0, 500) : null
+  });
+  if (updated !== true) throw unavailable();
+  return json({ ok: true, plate: row.plate, status: next });
+}
+
+const complaintKinds = new Set(['priority_yield', 'wrong_plate', 'other']);
+
+async function createComplaint(plate, kind, note) {
+  if (!complaintKinds.has(kind)) throw invalid();
+  const [row] = await data(`smtf_submit_records?select=plate,status&plate=eq.${encodeURIComponent(plate)}&limit=1`);
+  if (!row) throw notFound();
+  if (row.status === 'disputed') throw new DemoError(409, 'STATE_CONFLICT', 'Hồ sơ đã có khiếu nại đang chờ xử lý.');
+  const created = await rpc('smtf_submit_complaint', {
+    p_plate: row.plate, p_kind: kind, p_note: typeof note === 'string' && note.trim() ? note.trim().slice(0, 500) : null
+  });
+  if (created !== true) throw unavailable();
+  return json({ ok: true, plate: row.plate, status: 'disputed' });
+}
+
+async function readJsonBody(request) {
+  try { return await request.json(); } catch { throw invalid(); }
+}
 
 async function handle(request) {
   try {
@@ -244,10 +335,22 @@ async function handle(request) {
     if (route === 'session') return startSession(request, url);
     if (route === 'lookup') {
       const plate = plateKey(url.searchParams.get('plate'));
-      return json({ plate, records: await data(`${recordQuery}&plate=eq.${encodeURIComponent(plate)}`) });
+      const rows = await data(`${recordQuery}&plate=eq.${encodeURIComponent(plate)}`);
+      return json({ plate, records: rows.map(recordView) });
     }
+    if (route === 'record') return json(await recordDetail(plateKey(url.searchParams.get('plate'))));
+    if (route === 'record-media') return await recordMedia(plateKey(url.searchParams.get('plate')), url.searchParams.get('kind'));
+    if (route === 'timeline') return json(await timeline(plateKey(url.searchParams.get('plate'))));
     const session = readSession(request);
     if (!session) throw new DemoError(401, 'SESSION_REQUIRED', 'Vui lòng vào demo để bắt đầu phiên.');
+    if (route === 'decision') {
+      const body = await readJsonBody(request);
+      return await applyDecision(plateKey(body?.plate), String(body?.action || ''), body?.note);
+    }
+    if (route === 'complaint') {
+      const body = await readJsonBody(request);
+      return await createComplaint(plateKey(body?.plate), String(body?.kind || ''), body?.note);
+    }
     if (route === 'officer') {
       const [[kpi], records, cameras] = await Promise.all([
         data('smtf_submit_kpi?select=source,wait_avg_s,queue_max,flow_per_node_min&id=eq.1&limit=1'),
@@ -255,7 +358,7 @@ async function handle(request) {
         data(`smtf_submit_cameras?select=${cameraFields}&order=camera_id&limit=100`),
       ]);
       if (!kpi || !cameras.length) throw unavailable();
-      return json({ kpi, records, cameras: cameras.map(cameraView) });
+      return json({ kpi, records: records.map(recordView), cameras: cameras.map(cameraView) });
     }
     const camera = await findCamera(url.searchParams.get('cameraId'));
     const frameId = url.searchParams.get('frameId');

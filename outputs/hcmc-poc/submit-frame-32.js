@@ -101,6 +101,8 @@ export function installSubmitFrame32({
       sessionReady = true;
     } catch (e) {
       lastError = `phiên: ${e && e.message ? e.message : String(e)}`;
+      // Không spam endpoint phiên khi đích chưa sẵn sàng: chờ thêm 2 gap rồi thử lại.
+      backoffUntil = now() + gapMs * 2;
       return false;
     }
     return true;
