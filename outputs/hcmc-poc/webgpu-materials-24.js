@@ -328,7 +328,7 @@ if(lock32&&lock32.boxes.length){
   const lockBoxMaterial=new THREE.MeshStandardNodeMaterial({color:'#a9aaa3',roughness:.96,metalness:.01});
   const lockBoxes32=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),lockBoxMaterial,lock32.boxes.length);
   const boxDummy=new THREE.Object3D();
-  const inset=lockMod32.NORTH_BOX_INSET_M_32;
+  const inset=lock32.mod.NORTH_BOX_INSET_M_32;
   lock32.boxes.forEach((building,i)=>{
     let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
     for(const point of building.r[0]){if(point[0]<minX)minX=point[0];if(point[0]>maxX)maxX=point[0];if(point[1]<minZ)minZ=point[1];if(point[1]>maxZ)maxZ=point[1];}
