@@ -22,6 +22,12 @@ export const NORTH_REGION_ID_32 = 'bac';
 export const LOCKED_REGION_IDS_32 = Object.freeze(['trung-tam', 'ven-song', 'nam']);
 export const LOCK_LABEL_32 = '🔒 Khu vực đang khóa';
 export const NORTH_KEEP_BUILDING_MAX_M_32 = 40;
+// Bản trình diễn v2 (P1-12): chế độ lite giữ nhà thường hẹp hơn quanh trục chính — bớt hộp nhà
+// ngoài vùng trọng điểm (mắt người xem tập trung vào nút giao), signature vẫn giữ 100 %.
+export const NORTH_KEEP_BUILDING_LITE_M_32 = 26;
+// Bản trình diễn v2 (P1-5): bounding-box hộp nhà thụt vào trong mỗi phía chừng này (m) để không
+// đè lên corridor mặt đường — hộp là bbox của footprint nên mép bbox thường vượt ra mép nhà thật.
+export const NORTH_BOX_INSET_M_32 = 2.5;
 export const NORTH_SIGNAL_RADIUS_M_32 = 80;
 export const NORTH_MIN_SIM_RANK_32 = 2;      // tertiary
 export const LOCKED_MIN_RENDER_RANK_32 = 3;  // secondary

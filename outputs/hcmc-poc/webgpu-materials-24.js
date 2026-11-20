@@ -263,7 +263,8 @@ if(isSmart32){
   const roadsFilter=lockMod32.lockRoadFilter32({roads:D.roads,regionOf,signalPoints,isSignatureWay:id=>registry32.isSignatureWay(id)});
   for(const i of bridgeHide)roadsFilter.hidden.add(i);
   const simHidden=new Set(roadsFilter.hidden);for(const index of roadsFilter.keptMinor)simHidden.add(index);
-  const buildingsFilter=lockMod32.selectNorthBuildings32({buildings:renderBuildings,roads:D.roads,regionOf,isSignature:id=>signatureGate.isSignatureBuilding(id)});
+  const buildingsFilter=lockMod32.selectNorthBuildings32({buildings:renderBuildings,roads:D.roads,regionOf,isSignature:id=>signatureGate.isSignatureBuilding(id),
+    maxM:modePreset.id==='lite'?lockMod32.NORTH_KEEP_BUILDING_LITE_M_32:lockMod32.NORTH_KEEP_BUILDING_MAX_M_32});
   const cameraLimits=lockMod32.northCameraLimits32(REGIONS_31.find(region=>region.id===lockMod32.NORTH_REGION_ID_32).bbox);
   lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints,buildings:buildingsFilter,boxes:[],cameraLimits,
     signatureHiddenIdx:sigIdx,signatureHiddenIds:sigIds,bridgeHiddenIdx:bridgeHide,bridgeKeptIdx:bridgeKeep,bldCenter,registry:registry32,hiddenModules:new Set(),moduleRefs:{}};
@@ -320,19 +321,21 @@ for(let bi=0;bi<renderBuildings.length;bi++){
   if(bi%5000===0){setProgress(12+bi/renderBuildings.length*42,`Đang phân loại ${bi.toLocaleString('vi-VN')} / ${renderBuildings.length.toLocaleString('vi-VN')} công trình…`);await yieldMain();}
 }
 
-// M2a — nhà thường khu Bắc giữ lại (tâm ≤ 40 m tim trunk/primary/secondary) vẽ bằng MỘT InstancedMesh hộp xám:
-// mái phẳng, không texture, 1 draw call; chi tiết facet của nhóm này đã bỏ ở vòng lặp trên.
+// M2a — nhà thường khu Bắc giữ lại (tâm ≤ 40 m tim trunk/primary/secondary; chế độ lite ≤ 26 m) vẽ bằng
+// MỘT InstancedMesh hộp xám: mái phẳng, không texture, 1 draw call; chi tiết facet của nhóm này đã bỏ ở vòng lặp trên.
+// Bản trình diễn v2 (P1-5): bounding-box thụt vào mỗi phía NORTH_BOX_INSET_M_32 — hết đè corridor mặt đường.
 if(lock32&&lock32.boxes.length){
   const lockBoxMaterial=new THREE.MeshStandardNodeMaterial({color:'#a9aaa3',roughness:.96,metalness:.01});
   const lockBoxes32=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),lockBoxMaterial,lock32.boxes.length);
   const boxDummy=new THREE.Object3D();
+  const inset=lockMod32.NORTH_BOX_INSET_M_32;
   lock32.boxes.forEach((building,i)=>{
     let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
     for(const point of building.r[0]){if(point[0]<minX)minX=point[0];if(point[0]>maxX)maxX=point[0];if(point[1]<minZ)minZ=point[1];if(point[1]>maxZ)maxZ=point[1];}
     const boxBase=building.min+1.5,boxTop=Math.max(boxBase+2,building.h+1.5);
     boxDummy.position.set((minX+maxX)/2,(boxBase+boxTop)/2,(minZ+maxZ)/2);
     boxDummy.rotation.set(0,0,0);
-    boxDummy.scale.set(Math.max(2,maxX-minX),boxTop-boxBase,Math.max(2,maxZ-minZ));
+    boxDummy.scale.set(Math.max(2,maxX-minX-inset*2),boxTop-boxBase,Math.max(2,maxZ-minZ-inset*2));
     boxDummy.updateMatrix();lockBoxes32.setMatrixAt(i,boxDummy.matrix);
   });
   lockBoxes32.name='M2a · hộp nhà tối giản khu Bắc';lockBoxes32.receiveShadow=true;scene.add(lockBoxes32);

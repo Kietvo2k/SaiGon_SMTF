@@ -63,6 +63,28 @@ test('selectNorthBuildings32: giữ nhà khu Bắc ≤ 40 m tới tim đường 
   assert.equal(result.signature, 1);
 });
 
+test('bản trình diễn v2 (P1-12/P1-5): chế độ lite giữ nhà hẹp hơn (26 m), signature vẫn giữ; hộp nhà thụt inset', async () => {
+  const mod = await import('../city-lock-32.js?v=32a');
+  assert.equal(mod.NORTH_KEEP_BUILDING_LITE_M_32, 26);
+  assert.ok(mod.NORTH_KEEP_BUILDING_LITE_M_32 < mod.NORTH_KEEP_BUILDING_MAX_M_32, 'lite hẹp hơn bản đầy đủ');
+  assert.ok(mod.NORTH_BOX_INSET_M_32 > 0, 'hộp nhà phải thụt vào để không đè corridor');
+  const roads = [road(1, 'primary', [-900, -1950], [-700, -1950])];
+  // nhà tâm cách tim đường ~30 m: bản đầy đủ (40 m) giữ, lite (26 m) bỏ → bớt hộp ngoài vùng trọng điểm.
+  const buildings = [
+    { id: 21, center: [-800, -1920] },
+    { id: 22, center: [-800, -1800] },
+    { id: 23, center: [-800, -1945] }
+  ];
+  const full = mod.selectNorthBuildings32({ buildings, roads, regionOf });
+  const lite = mod.selectNorthBuildings32({ buildings, roads, regionOf, maxM: mod.NORTH_KEEP_BUILDING_LITE_M_32 });
+  assert.deepEqual([...full.indices].sort((a, b) => a - b), [0, 2]);
+  assert.deepEqual([...lite.indices].sort((a, b) => a - b), [2], 'lite bỏ nhà 30 m — chỉ giữ sát trục');
+  assert.ok(lite.keptOrdinary <= full.keptOrdinary);
+  // signature không bao giờ bị lite bỏ.
+  const withSig = mod.selectNorthBuildings32({ buildings, roads, regionOf, maxM: 1, isSignature: id => id === 22 });
+  assert.deepEqual([...withSig.ids], [22]);
+});
+
 test('lockRoadFilter32: khu Bắc ẩn đường nhỏ TRỪ 80 m quanh nút có đèn; ngoài khu Bắc chỉ giữ ≥ secondary; signature way luôn giữ', () => {
   const signalPoints = [[0, -2480]];
   const roads = [
