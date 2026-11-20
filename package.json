@@ -1,0 +1,8 @@
+{
+  "name": "saigon-smtf-vercel-demo",
+  "private": true,
+  "engines": { "node": "22.x" },
+  "scripts": {
+    "build": "node scripts/vercel/build.mjs"
+  }
+}
