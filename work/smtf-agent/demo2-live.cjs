@@ -132,6 +132,8 @@ const ok = (name, detail) => { results.checks[name] = { ...(results.checks[name]
 
       // ---------- Perf: FPS rAF thô (cách bản nộp đo 120) + render FPS của HUD ----------
       const perf = await page.evaluate(async () => {
+        // chờ render ổn định sau các bước tương tác trước đó (khởi động GPU, JIT)
+        await new Promise(r => setTimeout(r, 3000));
         const raf = [];
         let frames = 0;
         const tick = () => { frames++; if (raf.keep) requestAnimationFrame(tick); };
@@ -145,8 +147,11 @@ const ok = (name, detail) => { results.checks[name] = { ...(results.checks[name]
         }
         raf.keep = false;
         const renderFps = Number(document.querySelector('#fps')?.textContent ?? 0);
-        raf.sort((a, b) => a - b);
-        return { samples: raf, median: raf[Math.floor(raf.length / 2)] ?? 0, renderFps };
+        // bỏ 5 mẫu đầu (khởi động), median theo phần ổn định
+        const steady = raf.slice(5);
+        const all = steady.length ? steady : raf;
+        all.sort((a, b) => a - b);
+        return { samples: raf, median: all[Math.floor(all.length / 2)] ?? 0, renderFps };
       });
       results.checks.perf = { ...perf, status: perf.median >= 100 ? 'PASS' : 'FAIL' };
       if (perf.median < 100) results.pass = false;

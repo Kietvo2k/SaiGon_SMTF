@@ -22,7 +22,7 @@ try {
   window.PUBLIC_NORTH_CONFIG_32 = config;
   Object.assign(window, config.globals);
   await import('../webgpu-materials-24.js?v=32c');
-  document.querySelector('#stationStatus32')?.remove();
+  document.querySelector('#stationStatus32')?.setAttribute('data-keep', 'station');
   if (document.querySelector('script[data-submit-hud]')) {
     const { mountSubmitHud } = await import('../submit-hud.js');
     const { junctionRows32 } = await import('../signal-preview-32.js?v=32c');

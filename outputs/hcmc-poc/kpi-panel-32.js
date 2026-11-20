@@ -79,11 +79,15 @@ export function installHud32(app, { transport = null } = {}) {
     el('#kpiFlow32').firstChild.textContent = fmt1(m.flow_per_node_min);
     sw.checked = controller.getMode() === 'smart';
     fps = frames; frames = 0;
-    if (transport) {
-      const link = transport.connectionState() === 'online' ? 'đã kết nối máy chủ' : 'mất kết nối, đang xếp hàng';
+    // Trạng thái trạm chỉ cập nhật khi dòng status còn trong HUD (nếu bị gỡ khỏi DOM thì bỏ lượt, không văng).
+    const statusEl = el('#stationStatus32');
+    if (transport && statusEl) {
+      const link = transport.connectionState() === 'online' ? 'đã kết nối kho cục bộ' : 'mất kết nối, đang xếp hàng';
       transport.pendingCount().then(n => {
-        if (alive) el('#stationStatus32').textContent = `Trạm: ${link} · chờ gửi ${n}`;
+        if (alive && statusEl.isConnected) statusEl.textContent = `Trạm: ${link} · chờ gửi ${n}`;
       }, () => {});
+    } else if (statusEl && statusEl.isConnected) {
+      statusEl.textContent = 'Trạm: chế độ chỉ xem';
     }
     tickTimer = setTimeout(tick, 1000);
   };
