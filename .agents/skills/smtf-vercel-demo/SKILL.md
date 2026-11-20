@@ -15,7 +15,7 @@ description: "Điều phối, triển khai, kiểm thử và bàn giao bản n�
 
 - Mở URL HTTPS trong trình duyệt sạch và đi hết ba demo. Khớp dữ liệu biển mẫu, kiểm phiên camera và nguồn ảnh. Kiểm ở 390, 768 và 1440 px. Dùng fixture cho test từng view. Kết luận bản nộp từ runtime và Supabase thật.
 - Ghi SHA, manifest, URL, từng ca bắt buộc, kết quả thô, ảnh/trace, log console/network và số đo trước/sau. Kiểm yêu cầu mạng đến đúng dịch vụ từ trình duyệt, gồm asset, worker, API và lỗi trả về. Thiếu bằng chứng hoặc test đỏ dẫn tới trạng thái chưa đạt của đúng lát.
-- Tái hiện lỗi trước, phân loại nhóm lỗi rồi giao đúng người. Giới hạn hai lượt sửa cho mỗi lát, tính cả các ứng viên thay thế, chạy ca ngắn trước toàn bộ kiểm thử. Sau hai lượt, cô lập ứng viên và nhờ một subagent độc lập trả lời một câu hỏi cụ thể về căn nguyên. Nếu có cơ chế khác, thử thiết kế lại trong phạm vi hẹp và tiếp tục việc độc lập. Giữ bản đã qua kiểm và số vòng đã dùng trong ledger.
+- Tái hiện lỗi trước, phân loại nhóm lỗi rồi giao đúng người. Chạy ca ngắn trước toàn bộ kiểm thử. Giới hạn hai lượt sửa sau vòng đầu cho mỗi lát. Sau hai lượt, cô lập ứng viên và nhờ một subagent độc lập trả lời một câu hỏi cụ thể về căn nguyên. Nếu có cơ chế khác, kiểm một ứng viên thiết kế lại hẹp trong một lượt nghiệm thu và tiếp tục việc độc lập. Giữ bản đã qua kiểm và số vòng đã dùng trong ledger.
 - Điều phối viên đối chiếu mỗi 20 phút và nhắc đúng hành động chưa xong khi phiên dừng. Agent ghi cách chạy, lệnh và kết quả test, giới hạn quan sát, bước tiếp theo và JSON bàn giao. Xác minh bằng preflight ở worktree của brief.
 
 ## Chốt theo giờ Việt Nam
