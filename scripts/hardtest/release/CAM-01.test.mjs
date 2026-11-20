@@ -22,4 +22,31 @@ test('CAM-01 · artifact có dữ liệu Bắc và entry camera không kéo cả
   const payload = JSON.parse(readFileSync(pagesNorth, 'utf8').replace(/^\uFEFF/, ''));
   assert.equal(payload.region, 'bac');
   assert.ok(statSync(join(parent, 'pages', northScene)).size < 25 * 1024 ** 2);
+  const find = suffix => {
+    const path = [...files].find(path => path.endsWith(suffix));
+    assert.ok(path, `Pages artifact thiếu ${suffix}`);
+    return JSON.parse(readFileSync(join(parent, 'pages', path), 'utf8').replace(/^\uFEFF/, ''));
+  };
+  const scene = find('public-north/scene.json');
+  const graph = find('public-north/road-graph.json');
+  const config = find('public-north/runtime-sidecars.json');
+  const cameras = find('public-north/cameras.json');
+  const nodeMap = find('public-north/node_map.json');
+  assert.ok(scene.roads?.length > 0 && scene.buildings?.length > 0, 'CAM artifact scene rỗng hoặc thiếu geometry');
+  assert.ok(graph.edges?.length > 0 && graph.nodes?.length > 0, 'CAM artifact graph rỗng');
+  assert.equal(scene.roads.length, graph.roads.length, 'CAM artifact graph/scene lệch road');
+  const ids = new Set(graph.nodes.map(n => n.id));
+  for (const edge of graph.edges) {
+    assert.ok(ids.has(edge.from) && ids.has(edge.to), 'CAM artifact thiếu topology endpoint');
+    assert.deepEqual(scene.roads[edge.road]?.c.flat(), edge.c, 'CAM artifact scene/edge geometry lệch');
+    assert.ok(graph.roads[edge.road]?.edges.includes(edge.id), 'CAM artifact road.edges thiếu');
+  }
+  assert.ok(graph.nodes.every(n => n.adj?.length > 0), 'CAM artifact adjacency rỗng');
+  assert.equal(config.region, 'bac');
+  assert.equal(config.signalRows?.length, 12, 'CAM artifact cần 12 signal rows');
+  assert.equal(new Set(nodeMap.map(n => n.cluster_id)).size, 10, 'CAM artifact cần 10 cụm');
+  for (const osm of [12310895540, 2351201590]) assert.ok(nodeMap.some(n => n.osm_id === osm), 'CAM artifact Bac-01 thiếu OSM');
+  assert.ok(cameras.length >= 15, 'CAM artifact tối thiểu 15 camera');
+  for (let n = 1; n <= 10; n++) assert.ok(cameras.some(c => c.camera_id === `CAM-HX-${String(n).padStart(3, '0')}`), 'CAM artifact mất camera cũ');
+  for (let n = 1; n <= 5; n++) assert.ok(cameras.some(c => c.camera_id === `CAM-BAC-${String(n).padStart(3, '0')}`), 'CAM artifact mất góc Bắc');
 });

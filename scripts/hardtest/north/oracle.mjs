@@ -1,103 +1,88 @@
+import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { registerHooks } from 'node:module';
+import { resolve, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const readJson = path => JSON.parse(readFileSync(path, 'utf8').replace(/^\uFEFF/, ''));
-export const region = readJson('work/smtf-agent/north-data-source-inventory.json').region;
+export const root = resolve(process.env.NORTH_TEST_ROOT || '.');
+export const poc = 'outputs/hcmc-poc/';
+export const north = `${poc}data/public-north/`;
+export const seeds = 'outputs/smart-traffic/backend/app/seed/';
+export const readJson = path => {assert.ok(existsSync(join(root,path)),`Thiếu JSON bắt buộc ${path}`);return JSON.parse(readFileSync(join(root, path), 'utf8').replace(/^\uFEFF/, ''));};
+export const readText = path => readFileSync(join(root, path), 'utf8');
+export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+export const region = JSON.parse(readFileSync(new URL('./fixtures/north-region.json', import.meta.url))).polygon;
+export const sourceHashes = Object.freeze({ graph: '1da1f3d4cc8a0e9de2e050f21ee2bf4450cbe4fc9a23e16726f46ef03bdb6149', scene: '50b89a3b8035ddc23c81ce20590f1274737d7443657fc791f3a6c069cf96dfa2' });
+export const targets = Object.freeze({ 'HX-01': [366390689,'HX-C1'], 'HX-02': [366440827,'HX-C2'], 'HX-03': [10118771782,'HX-C3'], 'HX-04': [12437015526,'HX-C4'], 'HX-05': [701671562,'HX-C1'], 'HX-06': [1497276515,'HX-C5'], 'Bac-01': [12310895540,'Bac-01'], 'Bac-01-02': [2351201590,'Bac-01'], 'Bac-02': [366376129,'Bac-02'], 'Bac-03': [366416151,'Bac-03'], 'Bac-04': [7975327079,'Bac-04'], 'Bac-05': [2028465981,'Bac-05'] });
+export const clusters = [...new Set(Object.values(targets).map(row => row[1]))];
 
-export function sha256(bytes) {
-  return createHash('sha256').update(bytes).digest('hex');
+// Dùng đúng vendor trong import map; không thay THREE bằng đối tượng giả.
+registerHooks({ resolve(specifier, context, nextResolve) {
+  if (specifier === 'three' || specifier === 'three/webgpu') return { url: pathToFileURL(join(root,poc,'vendor/three186/three.webgpu.js')).href, shortCircuit: true };
+  if (specifier === 'three/tsl') return { url: pathToFileURL(join(root,poc,'vendor/three186/three.tsl.js')).href, shortCircuit: true };
+  if (specifier.startsWith('three/addons/')) return { url: pathToFileURL(join(root,poc,'vendor/three186/addons',specifier.slice(13))).href, shortCircuit: true };
+  return nextResolve(specifier, context);
+} });
+export const product = name => import(pathToFileURL(join(root,poc,name)).href);
+export function dataset() { return { graph: readJson(`${north}road-graph.json`), scene: readJson(`${north}scene.json`), mapping: readJson(`${north}mapping.json`), source: readJson(`${poc}data/road-graph-31.json`), sourceScene: readJson(`${poc}data/scene.json`) }; }
+export function normalizePolyline(c) { return typeof c?.[0] === 'number' ? Array.from({length:c.length/2},(_,i)=>c.slice(i*2,i*2+2)) : c; }
+export const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
+export const lengthOf = c => {const p=normalizePolyline(c);return p.slice(1).reduce((v,x,i)=>v+distance(x,p[i]),0);};
+const cross = (a,b) => a[0]*b[1]-a[1]*b[0];
+const sub = (a,b) => [a[0]-b[0],a[1]-b[1]];
+const lerp = (a,b,t) => [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+export function boundaryDistance(p, ring) { return Math.min(...ring.map((a,i)=>{const b=ring[(i+1)%ring.length],v=sub(b,a),w=sub(p,a),t=Math.max(0,Math.min(1,(v[0]*w[0]+v[1]*w[1])/(v[0]**2+v[1]**2||1)));return distance(p,lerp(a,b,t));})); }
+export function pointInPolygon(p, polygon=region) {
+  if (boundaryDistance(p,polygon)<1e-8) return true;
+  let inside=false; for(let i=0,j=polygon.length-1;i<polygon.length;j=i++) {const a=polygon[i],b=polygon[j]; if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0]) inside=!inside;} return inside;
 }
-
-export function pointInPolygon([x, y], polygon = region) {
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const [xi, yi] = polygon[i];
-    const [xj, yj] = polygon[j];
-    const crosses = ((yi > y) !== (yj > y)) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-    if (crosses) inside = !inside;
-  }
-  return inside;
-}
-
-export function normalizePolyline(points) {
-  if (Array.isArray(points) && points.length && typeof points[0] === 'number') {
-    const pairs = [];
-    for (let index = 0; index + 1 < points.length; index += 2) pairs.push([points[index], points[index + 1]]);
-    return pairs;
-  }
-  return points;
-}
-
-function cross(a, b, c) { return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); }
-function between(a, b, t) { return a + (b - a) * t; }
-
-function segmentIntersectionParameter(a, b, c, d) {
-  const r = [b[0] - a[0], b[1] - a[1]];
-  const s = [d[0] - c[0], d[1] - c[1]];
-  const denominator = r[0] * s[1] - r[1] * s[0];
-  const q = [c[0] - a[0], c[1] - a[1]];
-  if (Math.abs(denominator) < 1e-10) return [];
-  const t = (q[0] * s[1] - q[1] * s[0]) / denominator;
-  const u = (q[0] * r[1] - q[1] * r[0]) / denominator;
-  return t >= -1e-9 && t <= 1 + 1e-9 && u >= -1e-9 && u <= 1 + 1e-9 ? [Math.max(0, Math.min(1, t))] : [];
-}
-
-export function clippedLength(polyline, polygon = region) {
-  polyline = normalizePolyline(polyline);
-  let length = 0;
-  for (let index = 1; index < polyline.length; index += 1) {
-    const a = polyline[index - 1];
-    const b = polyline[index];
-    const parameters = [0, 1];
-    for (let edge = 0; edge < polygon.length; edge += 1) {
-      parameters.push(...segmentIntersectionParameter(a, b, polygon[edge], polygon[(edge + 1) % polygon.length]));
+// Oracle JS theo từng đoạn có station: giữ thứ tự cả khi đường tự giao hoặc đi ngược.
+export function clipPolyline(c, polygon=region) {
+  const points=normalizePolyline(c), fragments=[]; let station=0;
+  for(let i=1;i<points.length;i++) {
+    const a=points[i-1],b=points[i],r=sub(b,a),len=distance(a,b); if(len<1e-10) continue;
+    const cuts=[0,1];
+    for(let j=0;j<polygon.length;j++) {
+      const q=polygon[j],s=sub(polygon[(j+1)%polygon.length],q),v=sub(q,a),den=cross(r,s);
+      if(Math.abs(den)>1e-10) { const t=cross(v,s)/den,u=cross(v,r)/den; if(t>=-1e-10&&t<=1+1e-10&&u>=-1e-10&&u<=1+1e-10) cuts.push(Math.max(0,Math.min(1,t))); }
+      else if(Math.abs(cross(v,r))<1e-7) for(const p of [q,polygon[(j+1)%polygon.length]]) {const t=((p[0]-a[0])*r[0]+(p[1]-a[1])*r[1])/(len*len); if(t>0&&t<1) cuts.push(t);}
     }
-    parameters.sort((left, right) => left - right);
-    const unique = parameters.filter((value, i, list) => i === 0 || Math.abs(value - list[i - 1]) > 1e-9);
-    const fullLength = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    for (let i = 1; i < unique.length; i += 1) {
-      const start = unique[i - 1];
-      const end = unique[i];
-      const middle = (start + end) / 2;
-      const point = [between(a[0], b[0], middle), between(a[1], b[1], middle)];
-      if (pointInPolygon(point, polygon)) length += fullLength * (end - start);
-    }
-  }
-  return length;
+    const ts=[...new Set(cuts.map(t=>Math.round(t*1e12)/1e12))].sort((x,y)=>x-y);
+    for(let j=1;j<ts.length;j++) {
+      const t0=ts[j-1],t1=ts[j]; if(t1-t0<1e-10||!pointInPolygon(lerp(a,b,(t0+t1)/2),polygon)) continue;
+      const start=station+t0*len,end=station+t1*len,first=lerp(a,b,t0),last=lerp(a,b,t1),prev=fragments.at(-1);
+      if(prev&&Math.abs(prev.end_m-start)<1e-7) {if(distance(prev.c.at(-1),last)>1e-8) prev.c.push(last);prev.end_m=end;} else fragments.push({c:[first,last],start_m:start,end_m:end});
+    } station+=len;
+  } return fragments;
+}
+export const clippedLength = (c,p=region) => clipPolyline(c,p).reduce((n,f)=>n+f.end_m-f.start_m,0);
+export const pointOutsideEndpoints = (c,p=region) => {c=normalizePolyline(c);return !pointInPolygon(c[0],p)&&!pointInPolygon(c.at(-1),p);};
+export function profileAt(p,s) {if(s<=p[0])return p[1];for(let i=2;i<p.length;i+=2)if(s<=p[i])return p[i-1]+(p[i+1]-p[i-1])*(s-p[i-2])/(p[i]-p[i-2]);return p.at(-1);}
+export function near(a,b,message,tolerance=.020001) {assert.ok(Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<=tolerance,`${message}: ${a} ≠ ${b}`);}
+export function geometryEqual(actual,expected,message) {actual=normalizePolyline(actual);expected=normalizePolyline(expected);assert.equal(actual.length,expected.length,`${message} số đỉnh`);actual.forEach((p,i)=>{near(p[0],expected[i][0],`${message} x${i}`);near(p[1],expected[i][1],`${message} z${i}`);});}
+export function project(camera, point, width=1280,height=720) {
+  const yaw=camera.yaw_deg*Math.PI/180,pitch=camera.pitch_deg*Math.PI/180;
+  const f=[Math.cos(pitch)*Math.cos(yaw),Math.sin(pitch),Math.cos(pitch)*Math.sin(yaw)],r=[-Math.sin(yaw),0,Math.cos(yaw)],u=[-Math.sin(pitch)*Math.cos(yaw),Math.cos(pitch),-Math.sin(pitch)*Math.sin(yaw)];
+  const v=[point[0]-camera.x,point[1]-camera.height_m,point[2]-camera.z],dot=a=>a.reduce((n,x,i)=>n+x*v[i],0),depth=dot(f),scale=height/(2*Math.tan(camera.fov_deg*Math.PI/360));
+  return {depth,x:width/2+scale*dot(r)/depth,y:height/2-scale*dot(u)/depth};
 }
 
-export function pointOutsideEndpoints(polyline, polygon = region) {
-  polyline = normalizePolyline(polyline);
-  return !pointInPolygon(polyline[0], polygon) && !pointInPolygon(polyline.at(-1), polygon);
-}
-
-export function requireMapping(mapping) {
-  if (!mapping || typeof mapping !== 'object') throw new Error('Thiếu mapping public-north.');
-  if (!Array.isArray(mapping.edgeMap) || !Array.isArray(mapping.nodeMap) || !Array.isArray(mapping.roadMap)) {
-    throw new Error('Mapping phải có edgeMap, nodeMap và roadMap.');
-  }
-  for (const [name, rows] of Object.entries(mapping)) {
-    if (!Array.isArray(rows)) continue;
-    const seen = new Set();
-    for (const row of rows) {
-      const key = row.public_edge_id ?? row.public_node_id ?? row.public_road_id ?? row.id;
-      if (key != null) {
-        if (seen.has(key)) throw new Error(`${name} có ID public trùng: ${key}`);
-        seen.add(key);
-      }
-    }
-  }
-}
-
-export function assertNorthOnlyRuntime(html, runtime) {
-  if (/<script[^>]+src=["']data\/(?:scene|road-graph-31)\.js(?:[?"'])/i.test(html)) {
-    throw new Error('Entry public có script trực tiếp nạp scene/graph toàn vùng.');
-  }
-  if (!html.includes('data/public-north/')) throw new Error('Entry public thiếu đường dẫn data/public-north/.');
-  if (/for\s*\(\s*const\s+region\s+of\s+REGIONS_31\s*\)/.test(runtime)) {
-    throw new Error('Runtime vẫn prewarm toàn bộ REGIONS_31.');
-  }
-  if (!/region(?:\s*===|\s*==|\s*:\s*)['"]bac['"]|regionById\(['"]bac['"]\)/.test(runtime)) {
-    throw new Error('Runtime không ghim region bac.');
-  }
+export const widths = Object.freeze({motorway:16,trunk:15,primary:14,secondary:11,tertiary:8,residential:5,living_street:4,service:3.5,unclassified:5,footway:2.5,pedestrian:12,cycleway:2,path:1.5});
+export async function publicNetwork({graph=readJson(`${north}road-graph.json`),roads=readJson(`${north}scene.json`).roads}={}) {
+  const sidecars=readJson(`${north}runtime-sidecars.json`),nodeMap=readJson(`${seeds}public-north/node_map.json`);
+  const [{buildSignalPlan32},{buildTrafficNetwork31},{roadWidth31},{lockRoadFilter32},{regionOf},{loadSignatureRegistry}]=await Promise.all([
+    product('signal-plan-32.js'),product('city-traffic-sim-31.js'),product('city-road-network-31.js'),product('city-lock-32.js'),product('city-region-31.js'),product('signature-registry-31.js')
+  ]);
+  const rows=sidecars.signalRows;
+  assert.ok(Array.isArray(rows)&&rows.length===12,'Public signal rows đủ 12');
+  const signalPlan=buildSignalPlan32({graph,nodeMap,rows});
+  const byId=new Map(graph.nodes.map((n,i)=>[n.id,{...n,index:i}])),signalPoints=rows.map(r=>{const n=byId.get(r.osm_id);assert.ok(n,`Signal OSM thiếu ${r.osm_id}`);return[n.x,n.z];});
+  const globals=sidecars.globals;
+  const registry=loadSignatureRegistry(globals.SIGNATURE_REGISTRY_31);
+  const filter=lockRoadFilter32({roads,regionOf,signalPoints,isSignatureWay:id=>registry.isSignatureWay(id)});
+  const simHidden=new Set(filter.hidden);for(const i of filter.keptMinor)simHidden.add(i);
+  const widthOf=i=>roadWidth31(roads[i],widths),drawn=i=>!roads[i].tunnel&&graph.roads[i].skipRender!=='hide'&&!simHidden.has(i);
+  const net=buildTrafficNetwork31({graph,roads,widthOf,drawn,signalPlan});
+  return {net,graph,roads,sidecars,nodeMap:nodeMap.map(r=>({...r,index:byId.get(r.osm_id)?.index})),signalPlan,signalPoints,filter,widthOf,drawn,widths};
 }
