@@ -19,6 +19,15 @@ export function pointInPolygon([x, y], polygon = region) {
   return inside;
 }
 
+export function normalizePolyline(points) {
+  if (Array.isArray(points) && points.length && typeof points[0] === 'number') {
+    const pairs = [];
+    for (let index = 0; index + 1 < points.length; index += 2) pairs.push([points[index], points[index + 1]]);
+    return pairs;
+  }
+  return points;
+}
+
 function cross(a, b, c) { return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); }
 function between(a, b, t) { return a + (b - a) * t; }
 
@@ -34,6 +43,7 @@ function segmentIntersectionParameter(a, b, c, d) {
 }
 
 export function clippedLength(polyline, polygon = region) {
+  polyline = normalizePolyline(polyline);
   let length = 0;
   for (let index = 1; index < polyline.length; index += 1) {
     const a = polyline[index - 1];
@@ -57,6 +67,7 @@ export function clippedLength(polyline, polygon = region) {
 }
 
 export function pointOutsideEndpoints(polyline, polygon = region) {
+  polyline = normalizePolyline(polyline);
   return !pointInPolygon(polyline[0], polygon) && !pointInPolygon(polyline.at(-1), polygon);
 }
 

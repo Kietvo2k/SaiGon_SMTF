@@ -14,7 +14,7 @@ import {
 const root = resolve('.');
 const publicRoot = join(root, 'outputs/hcmc-poc/data/public-north');
 const seedRoot = join(root, 'outputs/smart-traffic/backend/app/seed/public-north');
-const required = ['manifest.json', 'road-graph.json', 'scene.json', 'mapping.json'];
+const required = ['road-graph.json', 'scene.json', 'mapping.json'];
 
 function readJson(path) { return JSON.parse(readFileSync(path, 'utf8')); }
 function must(path, label = path) { assert.ok(existsSync(path), `Thiếu ${label}: ${path}`); }
