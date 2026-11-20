@@ -104,7 +104,11 @@ export function mountSignalInspector32(host, { readSnapshot, onFocus, onBoxes })
   const modeEl = q('mode'), statusEl = q('status'), overviewEl = q('overview');
   const detailName = q('detailName'), detailType = q('detailType'), focusBtn = q('focus');
   const allocTotal = q('allocTotal'), allocBar = q('allocBar');
+  const plannedEl = el('p', 'si32__sub', 'Xanh kế hoạch: —');
+  const jamEl = el('p', 'si32__sub', 'Dự báo kẹt: —');
   const timelineEl = q('timeline'), armsEl = q('arms'), boxesEl = q('boxes');
+  // demo-v2 (P1-8): dòng xanh kế hoạch + dự báo kẹt nằm ngay trên dòng thời gian pha.
+  timelineEl.after(plannedEl, jamEl);
 
   let rows = [], cards = new Map(), selected = null, lastIds = '';
   const setStatus = (text, isError) => { statusEl.textContent = text; statusEl.dataset.error = isError ? '1' : '0'; };
@@ -238,6 +242,7 @@ export function mountSignalInspector32(host, { readSnapshot, onFocus, onBoxes })
     if (!row) {
       detailName.textContent = '—'; detailType.textContent = ''; focusBtn.disabled = true;
       allocBar.textContent = ''; timelineEl.textContent = ''; armsEl.textContent = '';
+      plannedEl.textContent = 'Xanh kế hoạch: —'; jamEl.textContent = 'Dự báo kẹt: —';
       return;
     }
     selected = row.id;
@@ -245,6 +250,16 @@ export function mountSignalInspector32(host, { readSnapshot, onFocus, onBoxes })
     detailType.textContent = `${row.typeLabel || 'Giao lộ'} · ${row.armCount || 0} hướng · ${row.headCount ?? 0} đầu đèn`;
     focusBtn.disabled = false;
     renderAllocation(row); renderTimeline(row); renderArms(row);
+    // demo-v2 (P1-8): thời gian xanh kế hoạch của bộ điều khiển + xác suất kẹt theo nút (từ dự báo).
+    const planned = row.plannedGreen;
+    const plannedLabel = { fixed: 'bảng cố định', cycle: 'chia lại theo áp lực chu kỳ', adaptive: 'thích ứng theo hàng chờ' };
+    plannedEl.textContent = planned
+      ? `Xanh kế hoạch: nhóm A ${Math.round(planned.green[0])} s · nhóm B ${Math.round(planned.green[1])} s (${plannedLabel[planned.source] || planned.source})`
+      : 'Xanh kế hoạch: —';
+    const jam = row.jam;
+    jamEl.textContent = jam
+      ? `Dự báo kẹt ${jam.horizonMin ? `${jam.horizonMin} phút` : 'gần'}: ${Math.round(jam.prob * 100)}% · độ tin cậy ${Math.round(jam.reliability * 100)}%${jam.name ? ` · ${jam.name}` : ''}`
+      : 'Dự báo kẹt: chưa có cảnh báo cho hướng vào nút này';
   }
 
   function tick() {

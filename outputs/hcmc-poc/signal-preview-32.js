@@ -26,17 +26,45 @@ export function frozenQueues32(net, sim) {
 
 // Chạy bản sao máy trạng thái; xe/hàng chờ giữ nguyên. Không tua hoặc ghi đè controller đang chạy.
 // Bước mặc định 0,5 s: đủ mịn cho dải pha 60 s mà chỉ tốn 1/5 phép tính so với 0,1 s.
-export function previewSignals32({ net, sim, controller, rows, horizon = 60, stepS = 0.5 }) {
+// demo-v2 (P1-8): nhận thêm alerts (cạnh kẹt từ heat-live) để tính xác suất kẹt theo nút;
+// plannedGreen gọi controller.plannedGreenOf (thời gian xanh kế hoạch cho thanh tra đèn).
+export function previewSignals32({ net, sim, controller, rows, horizon = 60, stepS = 0.5, alerts = [] }) {
   const time = sim.counters.t, state = controller.exportPhases(), queues = frozenQueues32(net, sim);
+  const plannedOf = controller.plannedGreenOf || (() => null);
+  // Cạnh vào từng nút điều khiển: alert nào chạm nút thì nút đó có cảnh báo kẹt.
+  const hasEdges = Array.isArray(net.lanes && net.lanes.edge);
+  const edgesInto = new Map();
+  if (hasEdges) for (let l = 0; l < net.lanes.to.length; l++) {
+    const node = net.lanes.to[l], edge = net.lanes.edge[l];
+    let set = edgesInto.get(node);
+    if (!set) edgesInto.set(node, set = new Set());
+    set.add(edge);
+  }
+  const jamOfRow = row => {
+    let best = null;
+    if (!hasEdges || !alerts.length) return null;
+    for (const n of row.indexes) {
+      const edges = edgesInto.get(n);
+      if (!edges) continue;
+      for (const a of alerts) {
+        if (!a || !edges.has(a.edge)) continue;
+        if (!best || a.prob > best.prob) best = { prob: a.prob, reliability: a.reliability, horizonMin: a.horizonMin, name: a.name || null };
+      }
+    }
+    return best;
+  };
   const frozen = { N: sim.N, active: sim.active.slice(), lane: sim.lane.slice(), s: sim.s.slice(), v: sim.v.slice(), counters: { t: time } };
   const fork = createSignalController32({ net, sim: frozen, mode: state.curMode, params: controller.getParams() });
   fork.importPhases(state);
   const result = rows.map(row => {
     const st = controller.stateOf(row.nodeIds[0], time);
+    const planned = plannedOf(row.nodeIds[0], time);
     return {
       ...row, phases: st.phases, cycle_s: st.cycle_s,
       queue: [0, 1].map(g => row.indexes.reduce((sum, n) => sum + (queues.get(n)?.[g].count || 0), 0)),
-      segments: [], allocation: [0, 0], allocationPct: [0, 0], now: []
+      segments: [], allocation: [0, 0], allocationPct: [0, 0], now: [],
+      plannedGreen: planned ? { source: planned.source, green: planned.green.slice() } : null,
+      jam: jamOfRow(row)
     };
   });
   const steps = Math.max(1, Math.round(horizon / stepS));

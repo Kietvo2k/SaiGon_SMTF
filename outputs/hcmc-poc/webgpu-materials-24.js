@@ -1328,7 +1328,7 @@ if(smartApp){
   let rows=[];
   try{rows=smartMod.junctionRows32(traffic.net,smartPrep.nodeMap);}catch(e){console.warn('junctionRows32:',e);}
   let snapshot=null,snapshotAt=-Infinity;
-  const readSnapshot=()=>{const now=performance.now();if(!snapshot||now-snapshotAt>1500){snapshot=smartMod.previewSignals32({net:traffic.net,sim:traffic.sim,controller:smartApp.controller,rows});snapshotAt=now;}return snapshot;};
+  const readSnapshot=()=>{const now=performance.now();if(!snapshot||now-snapshotAt>1500){snapshot=smartMod.previewSignals32({net:traffic.net,sim:traffic.sim,controller:smartApp.controller,rows,alerts:smartApp.modules&&smartApp.modules.heat&&smartApp.modules.heat.live?smartApp.modules.heat.live.alerts():[]});snapshotAt=now;}return snapshot;};
   try{
     smartApp.registerSmartModule32('signalInspector',smartMod.mountSignalInspector32(host,{readSnapshot,onFocus:id=>{const row=rows.find(r=>r.id===id);if(row)smartApp.focusJunction32(row);},onBoxes:on=>traffic.setBoundingBoxes(on)}));
   }catch(e){console.warn('signalInspector32:',e);}

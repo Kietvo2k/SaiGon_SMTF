@@ -535,6 +535,19 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
       P = next; return getParams();
     },
     getParams: () => ({ ...P, fixed: { ...P.fixed } }),
+    // demo-v2 (P1-8): thời gian xanh KẾ HOẠCH của cụm — thanh tra đèn hiển thị cạnh pha hiện tại.
+    //   fixed: bảng cứng; cycle-max-pressure: chia lại cho chu kỳ tới; thích ứng: xanh đang áp
+    //   kẹp [minGreen, maxGreen] (nhóm kia ước lượng theo khoảng cách phục vụ gần nhất).
+    plannedGreenOf(node0, tSim = 0) {
+      const node = normNode(node0);
+      const c = clusterOf.get(node);
+      if (!c) return null;
+      if (curMode === 'fixed') return { source: 'fixed', green: [P.fixed.green0S, P.fixed.green1S] };
+      if (P.algorithm === 'cycle-max-pressure') return { source: 'cycle', green: [c.dGreen0, c.dGreen1] };
+      const len = greenLenOf(c);
+      const other = Math.max(P.minGreenS, Math.min(P.maxGreenS, Math.max(0, (Number(tSim) || 0) - c.lastServeEnd[(c.group + 1) % 2]) || P.minGreenS));
+      return { source: 'adaptive', green: [len, other] };
+    },
     cycleIdOf(node0, tSim) {
       const node = normNode(node0);
       const c = clusterOf.get(node) || clusters[0];

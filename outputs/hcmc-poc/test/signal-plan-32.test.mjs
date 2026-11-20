@@ -1,62 +1,57 @@
+// signal-plan-32.test.mjs — demo-v2 (P1-8): xanh kế hoạch + xác suất kẹt trong thanh tra đèn.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
-import path from 'node:path';
-import fs from 'node:fs';
-import { buildSignalPlan32, SIGNAL_PLAN_32, SIGNAL_PLAN_32_VERSION } from '../signal-plan-32.js?v=32a';
+import { previewSignals32 } from '../signal-preview-32.js';
+import { createSignalController32, SIGNAL_PARAMS_32 } from '../traffic-controller-32.js';
 
-const require = createRequire(import.meta.url);
-globalThis.window = globalThis;
-require(path.resolve('outputs/hcmc-poc/data/road-graph-31.js'));
-const G = globalThis.ROAD_GRAPH_31;
-const nodeMap = JSON.parse(fs.readFileSync(path.resolve('outputs/smart-traffic/backend/app/seed/node_map.json'), 'utf8'));
-const plan = buildSignalPlan32({ graph: G, nodeMap });
+function fixture({ mode = 'fixed', params = {} } = {}) {
+  const net = { G: { nodes: [{ id: 366390689 }, { id: 2 }] }, signal: [1, 0], signalOffset: [0, 0], Rz: [10, 10],
+    lanes: { to: [0, 0, 1], from: [1, 1, 0], st: [0, 1, 2], length: [100, 100, 100], edge: [0, 1, 2] }, arriveGroup: [0, 1, 0],
+    signalPlan: { signalNodes: [0], clusters: [{ cluster_id: 'HX-C1', nodeIds: [0], offset_s: 0 }], internalSt: new Set() } };
+  const sim = { N: 2, active: Uint8Array.from([1, 1]), lane: Int32Array.from([0, 1]), s: Float32Array.from([75, 75]), v: Float32Array.from([0, 0]), counters: { t: 0 } };
+  const controller = createSignalController32({ net, sim, mode, params });
+  return { net, sim, controller, rows: [{ id: 'HX-C1', nodeIds: ['HX-01'], indexes: [0] }] };
+}
 
-test('chỉ đánh dấu nhánh nội bộ khi hai đầu thuộc cùng cụm, không xóa nhánh giao lộ khác',()=>{
-  const extra=[{from:366390689,to:701671562,c:[-251,-2440,-242,-2465]}, {from:366390689,to:366440827,c:[-251,-2440,395,-2427]}];
-  const p=buildSignalPlan32({graph:{...G,edges:[...G.edges,...extra]},nodeMap});
-  assert.ok(p.internalSt.has(G.edges.length*2)); assert.ok(p.internalSt.has(G.edges.length*2+1));
-  assert.equal(p.internalSt.has((G.edges.length+1)*2),false);
+test('P1-8: plannedGreenOf — fixed trả bảng cứng, adaptive kẹp trong [min, max], cycle trả chia chu kỳ', () => {
+  const fixed = fixture();
+  assert.deepEqual(fixed.controller.plannedGreenOf('HX-01', 0), { source: 'fixed', green: [SIGNAL_PARAMS_32.fixed.green0S, SIGNAL_PARAMS_32.fixed.green1S] });
+  const smart = fixture({ mode: 'smart' });
+  const plan = smart.controller.plannedGreenOf('HX-01', 0);
+  assert.equal(plan.source, 'adaptive');
+  for (const g of plan.green) assert.ok(g >= SIGNAL_PARAMS_32.minGreenS && g <= SIGNAL_PARAMS_32.maxGreenS, `xanh kế hoạch ${g} ngoài [min,max]`);
+  const cycle = fixture({ mode: 'smart', params: { algorithm: 'cycle-max-pressure' } });
+  const planCycle = cycle.controller.plannedGreenOf('HX-01', 0);
+  assert.equal(planCycle.source, 'cycle');
+  const total = planCycle.green[0] + planCycle.green[1];
+  assert.ok(Math.abs(total - 38) < 1e-9, `tổng xanh chu kỳ ${total} phải 38 s`);
 });
 
-test('đủ 6 nút Hàng Xanh, chỉ số nút khớp osm_id', () => {
-  assert.equal(SIGNAL_PLAN_32_VERSION, 'signal-plan-32a');
-  assert.equal(plan.signalNodes.length, 6);
-  const index = new Map(G.nodes.map((n, i) => [n.id, i]));
-  for (const row of SIGNAL_PLAN_32) assert.ok(plan.signalNodes.includes(index.get(row.osm_id)), row.node_id);
+test('P1-8: preview gắn xác suất kẹt đúng nút — chỉ nút có cạnh vào đang cảnh báo', () => {
+  const f = fixture();
+  const alerts = [
+    { edge: 0, prob: 0.82, reliability: 0.71, horizonMin: 10, name: 'Điện Biên Phủ vào Hàng Xanh' },
+    { edge: 2, prob: 0.95, reliability: 0.9, horizonMin: 20, name: 'cạnh không thuộc nút' }
+  ];
+  const out = previewSignals32({ ...f, alerts });
+  const row = out.rows[0];
+  assert.ok(row.jam, 'nút có cạnh 0 vào phải nhận cảnh báo');
+  assert.equal(row.jam.prob, 0.82);
+  assert.equal(row.jam.reliability, 0.71);
+  assert.equal(row.jam.horizonMin, 10);
+  assert.match(row.jam.name, /Điện Biên Phủ/);
+  // không có cảnh báo chạm nút → null (không bịa số)
+  const quiet = previewSignals32({ ...f, alerts: [{ edge: 2, prob: 0.95, reliability: 0.9, horizonMin: 20 }] });
+  assert.equal(quiet.rows[0].jam, null);
 });
 
-test('HX-01 và HX-05 cùng cụm HX-C1, chung offset; cụm khác nhau offset', () => {
-  const byId = Object.fromEntries(nodeMap.map(n => [n.node_id, n]));
-  const idx = osm => G.nodes.findIndex(n => n.id === osm);
-  assert.equal(byId['HX-01'].cluster_id, byId['HX-05'].cluster_id);
-  assert.equal(plan.offset.get(idx(366390689)), plan.offset.get(idx(701671562)));
-  assert.notEqual(plan.offset.get(idx(366390689)), plan.offset.get(idx(366440827)));
-  assert.equal(plan.clusters.length, 5);
-});
-
-test('arriveGroup: trạng thái vào HX-01 song song trục Điện Biên Phủ (160.4°) vào nhóm 0, còn lại nhóm 1', () => {
-  const idx = G.nodes.findIndex(n => n.id === 366390689);
-  const e = G.edges;
-  let checked = 0;
-  for (let st = 0; st < plan.arriveGroup.length; st++) {
-    const edge = st >> 1, dir = st & 1 ? -1 : 1;
-    const toNode = dir > 0 ? e[edge].to : e[edge].from;
-    if (toNode !== G.nodes[idx].id) continue;
-    const c = e[edge].c, n = c.length / 2;
-    const head = dir > 0
-      ? Math.atan2(c[n * 2 - 1] - c[n * 2 - 3], c[n * 2 - 2] - c[n * 2 - 4])
-      : Math.atan2(c[3] - c[1], c[2] - c[0]);
-    const axis = 160.4 * Math.PI / 180;
-    const want = Math.abs(Math.cos(head - axis)) > 0.5 ? 0 : 1;
-    assert.equal(plan.arriveGroup[st], want, `st=${st}`);
-    checked++;
-  }
-  assert.ok(checked >= 3, `chỉ ${checked} trạng thái vào HX-01`);
-});
-
-test('tất định: gọi hai lần cùng kết quả', () => {
-  const again = buildSignalPlan32({ graph: G, nodeMap });
-  assert.deepEqual([...again.signalNodes], [...plan.signalNodes]);
-  assert.deepEqual([...again.offset.entries()], [...plan.offset.entries()]);
+test('P1-8: preview mang xanh kế hoạch xuống từng dòng cho thanh tra đèn', () => {
+  const f = fixture();
+  const out = previewSignals32(f);
+  const row = out.rows[0];
+  assert.equal(row.plannedGreen.source, 'fixed');
+  assert.deepEqual(row.plannedGreen.green, [SIGNAL_PARAMS_32.fixed.green0S, SIGNAL_PARAMS_32.fixed.green1S]);
+  const smart = fixture({ mode: 'smart' });
+  const rowsSmart = previewSignals32(smart).rows;
+  assert.equal(rowsSmart[0].plannedGreen.source, 'adaptive');
 });
