@@ -439,7 +439,8 @@ export function installScenarios32(app, { THREE = null, nodeMap = [], routing = 
   const boards = heat && heat.boards ? heat.boards : chooseVmsBoards32({ net, nodeMap, max: 4 });
   const props = THREE && app.scene ? createBlockProps32({ THREE, scene: app.scene, traffic, net }) : null;
   const emergency = createEmergency32({ sim: traffic.sim, net, controller: app.controller, nodeMap,
-    visual: THREE && app.scene ? createEmergencyVisual32({ THREE, scene: app.scene, traffic }) : null });
+    visual: THREE && app.scene ? createEmergencyVisual32({ THREE, scene: app.scene, traffic }) : null,
+    vms, boards: heat && heat.boards ? heat.boards : boards });
   app.registerSmartModule32('emergency', emergency);
   const scn = createScenarios32({ traffic, clock, routing, vms, nodeMap, boards, props, emergency, log });
   const host = root && root.querySelector ? root.querySelector('#smartHud32') : null;

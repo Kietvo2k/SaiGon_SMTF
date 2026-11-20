@@ -66,3 +66,49 @@ test('máy thưa xe có thể kích hoạt một slot an toàn từ pool và tr�
   const e=mod.createEmergency32({...f,nodeMap:[{osm_id:11,node_id:'HX-01'}]});
   const st=e.start(); assert.equal(st.active,true); e.stop(); assert.equal(released,st.slot); assert.equal(f.sim.active[st.slot],0);
 });
+
+test('demo-v2 (P1-7): hệ số ưu tiên cứu thương > cứu hỏa > công an; giữ pha theo hệ số',()=>{
+  assert.ok(mod);
+  assert.equal(mod.priorityWeightOf32('ambulance'),3);
+  assert.equal(mod.priorityWeightOf32('fire'),2);
+  assert.equal(mod.priorityWeightOf32('police'),1);
+  assert.throws(()=>mod.priorityWeightOf32('ufo'),RangeError);
+  assert.equal(mod.priorityHoldSOf32('ambulance'),18);
+  assert.equal(mod.priorityHoldSOf32('fire'),15);
+  assert.equal(mod.priorityHoldSOf32('police'),12);
+  // Giữ pha gọi đúng thời gian theo loại: xe cứu thương giữ 18 s.
+  const f=fixture(); const e=mod.createEmergency32({...f,nodeMap:[{osm_id:11,node_id:'HX-01'}]});
+  e.start({kind:'ambulance'}); e.beforeStep(0);
+  assert.equal(f.calls.at(-1).d,18);
+  const e2=mod.createEmergency32({...f,nodeMap:[{osm_id:11,node_id:'HX-01'}]});
+  e2.start({kind:'police'}); e2.beforeStep(0);
+  assert.equal(f.calls.at(-1).d,12);
+  assert.equal(e.status().weight,3); assert.equal(e.status().hold_s,18);
+});
+
+test('demo-v2 (P1-7): nhãn cờ ghi đúng "Nghi nhường xe ưu tiên"',()=>{
+  assert.ok(mod); const f=fixture(); const e=mod.createEmergency32({...f,nodeMap:[{osm_id:11,node_id:'HX-01'}]});
+  e.start(); e.beforeStep(0);
+  const rec=e.reviewContext({vehicle_id:'V-000001'});
+  assert.equal(rec.priority_flag,true);
+  assert.match(rec.priority_reason,/Nghi nhường xe ưu tiên/);
+});
+
+test('demo-v2 (P1-7): bảng VMS gần nút hiện mở làn khi ưu tiên, xoá khi dừng',()=>{
+  assert.ok(mod); const f=fixture();
+  const vmsCalls=[]; let flood=new Map();
+  const vms={ setFlood:(id,lines)=>{vmsCalls.push(['set',id,...lines]); flood.set(id,lines);},
+    clearFlood:id=>{vmsCalls.push(['clear',id]); flood.delete(id);} };
+  const boards=[{id:'VMS-01',x:5,z:5},{id:'VMS-02',x:500,z:500}];
+  const nodeMap=[{osm_id:11,node_id:'HX-01',x:6,z:6}];
+  const e=mod.createEmergency32({...f,nodeMap,vms,boards});
+  e.start({kind:'ambulance'}); e.beforeStep(0);
+  const setCall=vmsCalls.find(c=>c[0]==='set');
+  assert.ok(setCall,'phải có lệnh đặt bảng VMS khi bắt đầu ưu tiên');
+  assert.equal(setCall[1],'VMS-01','chọn bảng gần nút đang ưu tiên');
+  assert.match(setCall.join(' '),/MỞ LÀN CHO XE CẤP CỨU/);
+  assert.match(setCall.join(' '),/XE CỨU THƯƠNG/);
+  e.stop();
+  assert.ok(vmsCalls.some(c=>c[0]==='clear'&&c[1]==='VMS-01'),'dừng ưu tiên phải xoá bảng');
+  assert.equal(flood.size,0);
+});

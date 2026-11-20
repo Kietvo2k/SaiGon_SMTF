@@ -1,12 +1,38 @@
 // Xe khẩn cấp dùng một slot ô tô thật của sim: giữ IDM, tuyến, khóa nút và kiểm tra va chạm.
 // Ưu tiên cuốn chiếu ở nút sắp tới; không teleport, không cho xe vượt đỏ hoặc xuyên hàng chờ.
 export const EMERGENCY_KINDS_32 = Object.freeze({ ambulance: 'Xe cứu thương', fire: 'Xe chỉ huy cứu hỏa', police: 'Xe cảnh sát' });
+// demo-v2 (P1-7): hệ số ưu tiên cứu thương > cứu hỏa > công an — weight càng cao giữ pha ưu tiên càng lâu.
+export const PRIORITY_WEIGHTS_32 = Object.freeze({ ambulance: 3, fire: 2, police: 1 });
+export function priorityWeightOf32(kind) {
+  const weight = PRIORITY_WEIGHTS_32[kind];
+  if (!Number.isFinite(weight)) throw new RangeError('Loại xe khẩn cấp không hợp lệ');
+  return weight;
+}
+// Thời gian giữ pha ưu tiên: 9 s nền + 3 s mỗi điểm ưu tiên (cứu thương 18 s, cứu hỏa 15 s, công an 12 s).
+export function priorityHoldSOf32(kind) {
+  return 9 + 3 * priorityWeightOf32(kind);
+}
 const OWNER = 'EMERGENCY-32';
-export function createEmergency32({ sim, net, controller, nodeMap = [], visual = null } = {}) {
+export function createEmergency32({ sim, net, controller, nodeMap = [], visual = null, vms = null, boards = [] } = {}) {
   const controlled = new Map(nodeMap.map(m => [net.G.nodes.findIndex(n => Number(n.id) === Number(m.osm_id)), m.node_id]));
   let trip = null, last = { active: false, label: 'Chưa điều xe khẩn cấp' }, reserved = null, lastRequest = -Infinity;
   const gates = new Map(), yielded = new Set(), reviewUntil = new Map();
+  let vmsBoardId = null;
   const groupOf = l => net.arriveGroup[net.lanes.st[l]];
+  // Bảng VMS gần nút sắp tới hiện "mở làn" cho xe khẩn cấp (đúng P1-7); đổi nút thì dời bảng.
+  const nodeMapRows = new Map(nodeMap.map(m => [Number(m.osm_id), m]));
+  const announceVms = node => {
+    if (!vms || !boards.length) return;
+    const row = nodeMapRows.get(Number(net.G.nodes[node]?.id));
+    if (!row) return;
+    const near = boards.map(b => ({ b, d: Math.hypot((b.x ?? 0) - (row.x ?? 0), (b.z ?? 0) - (row.z ?? 0)) }))
+      .sort((p, q) => p.d - q.d)[0];
+    if (!near) return;
+    if (vmsBoardId && vmsBoardId !== near.b.id) vms.clearFlood(vmsBoardId);
+    vmsBoardId = near.b.id;
+    vms.setFlood(vmsBoardId, ['MỞ LÀN CHO XE CẤP CỨU', EMERGENCY_KINDS_32[trip.kind].toUpperCase()]);
+  };
+  const clearVms = () => { if (vmsBoardId && vms) vms.clearFlood(vmsBoardId); vmsBoardId = null; };
   function upcoming(i) {
     const route = [sim.lane[i], ...Array.from(sim.path.slice(i * 4, i * 4 + 4)).filter(x => x >= 0)];
     let distance = -sim.s[i];
@@ -24,7 +50,7 @@ export function createEmergency32({ sim, net, controller, nodeMap = [], visual =
   function stop(reason = 'Đã dừng xe khẩn cấp') {
     if (trip) last = { ...status(), active: false, label: reason };
     if (trip && sim.releaseEmergencyVehicle) sim.releaseEmergencyVehicle(trip.slot, trip.gen);
-    trip = null; release(); if (visual) visual.hide();
+    trip = null; release(); clearVms(); if (visual) visual.hide();
     return status();
   }
   function start({ kind = 'ambulance' } = {}) {
@@ -69,7 +95,8 @@ export function createEmergency32({ sim, net, controller, nodeMap = [], visual =
     if (trip.blocked) { release(); return; } // Ghi đè của cán bộ có quyền cao hơn tự động.
     reserved = target.n;
     if (t - lastRequest >= 5 || !existing || existing.group !== target.group) {
-      controller.overridePhase(target.n, target.group, 15, OWNER, EMERGENCY_KINDS_32[trip.kind]);
+      controller.overridePhase(target.n, target.group, priorityHoldSOf32(trip.kind), OWNER, EMERGENCY_KINDS_32[trip.kind]);
+      announceVms(target.n);
       lastRequest = t;
     }
     gates.clear();
@@ -87,13 +114,14 @@ export function createEmergency32({ sim, net, controller, nodeMap = [], visual =
   }
   function status() {
     return trip ? { active: true, slot: trip.slot, vehicle_id: `V-${String(trip.slot + 1).padStart(6,'0')}`, kind: trip.kind,
+      weight: priorityWeightOf32(trip.kind), hold_s: priorityHoldSOf32(trip.kind),
       label: EMERGENCY_KINDS_32[trip.kind], distance_m: Math.round(trip.distance), passed: trip.passed,
       yielded: yielded.size, yield_lanes: gates.size, node_id: reserved === null ? null : controlled.get(reserved), blocked: trip.blocked } : { ...last };
   }
   function reviewContext(rec) {
     const match = /^V-(\d+)$/.exec(rec.vehicle_id || '');
     const i = match ? Number(match[1]) - 1 : -1, review = reviewUntil.get(i);
-    return review && review.gen === sim.gen[i] && review.until >= sim.counters.t ? {priority_flag: true, priority_reason: 'Xe khẩn cấp hoặc đang nhường xe khẩn cấp; cần cán bộ xem xét'} : {};
+    return review && review.gen === sim.gen[i] && review.until >= sim.counters.t ? {priority_flag: true, priority_reason: 'Nghi nhường xe ưu tiên — xe khẩn cấp hoặc xe nhường tại thời điểm ghi nhận'} : {};
   }
   const api = {start, stop, beforeStep, yieldStop, status, reviewContext,
     reset() { stop('Đã đặt lại mô phỏng'); reviewUntil.clear(); yielded.clear(); },
