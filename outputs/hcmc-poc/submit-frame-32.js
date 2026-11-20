@@ -7,7 +7,7 @@
 // Thuần logic tách hàm để test trong Node; DOM/fetch chỉ chạm khi start() trong trình duyệt.
 
 export const SUBMIT_FRAME_VERSION_32 = 'submit-frame-32a';
-export const SUBMIT_FRAME_GAP_MS_32 = 3000;      // đúng nhịp hợp đồng: 1 frame / 3 s
+export const SUBMIT_FRAME_GAP_MS_32 = 3200;   // thưa hơn nhịp hợp đồng 3 s một chút — tránh biên 3.000 s trùng server vẫn chặn
 export const SUBMIT_FRAME_MAX_BYTES_32 = 256 * 1024;
 export const SUBMIT_FRAME_CHANNEL_32 = 'smtf-submit-camera';
 const FRAME_ID_RE_32 = /^[A-Za-z0-9_-]{1,80}$/;
