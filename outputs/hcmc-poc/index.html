@@ -1,1 +1,31 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sài Gòn · City Lab</title><link rel="icon" href="data:,"><script>(()=>{const q=new URLSearchParams(location.search);const allowed=new Set(['materials','river','boulevard','corridor','overview','bason','flood25']);const view=allowed.has(q.get('view'))?q.get('view'):'overview';const scenario=q.get('scenario')==='stress-test'?'&scenario=stress-test':'';if(q.get('app')==='smart'){location.replace(`webgpu-materials-24.html?v=32c&app=smart&view=${view}&region=bac`);return;}location.replace(`webgpu-materials-24.html?v=31a&view=${view}${scenario}`);})();</script><meta http-equiv="refresh" content="0;url=webgpu-materials-24.html?v=31a"></head><body><p><a href="webgpu-materials-24.html?v=31a">Mở bản hiện hành (City Lab, WebGPU)</a></p></body></html>
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sài Gòn · City Lab</title>
+  <link rel="icon" href="data:,">
+  <script>
+    const query = new URLSearchParams(location.search);
+    const views = new Set(['materials', 'river', 'boulevard', 'corridor', 'overview', 'bason', 'flood25', 'hx', 'l81', 'csg', 'ctn', 'bac']);
+    const requestedView = query.get('view');
+    const submit = query.get('demo') === 'vercel';
+    const classic = !submit && query.get('app') === 'classic';
+    const target = new URLSearchParams();
+    target.set('v', classic ? '31a' : '32c');
+    target.set('view', submit ? 'bac' : views.has(requestedView) ? requestedView : classic ? 'overview' : 'bac');
+    if (classic) {
+      if (query.get('scenario') === 'stress-test') target.set('scenario', 'stress-test');
+    } else {
+      target.set('app', 'smart');
+      target.set('region', 'bac');
+      if (submit) target.set('demo', 'vercel');
+    }
+    location.replace(`webgpu-materials-24.html?${target}`);
+  </script>
+  <noscript><meta http-equiv="refresh" content="0;url=webgpu-materials-24.html?v=32c&amp;app=smart&amp;view=bac&amp;region=bac"></noscript>
+</head>
+<body>
+  <p><a href="webgpu-materials-24.html?v=32c&amp;app=smart&amp;view=bac&amp;region=bac">Mở không gian 3D khu Bắc</a> · <a href="/">Về trang chọn demo</a></p>
+</body>
+</html>

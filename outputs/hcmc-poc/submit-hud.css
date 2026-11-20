@@ -1,0 +1,66 @@
+html[data-submit-hud] :is(#cityNav, #story, #controls, #floodLab, [data-open-flood], #smartHud32) {
+  display: none !important;
+}
+
+#submit-hud {
+  position: fixed;
+  z-index: 20;
+  inset: auto auto max(12px, env(safe-area-inset-bottom)) 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: min(580px, calc(100vw - 24px));
+  padding: 4px;
+  border: 1px solid #517171;
+  border-radius: 10px;
+  background: #10272b;
+  color: #f4f8f3;
+  font: 600 14px/1.3 system-ui, sans-serif;
+}
+
+#submit-hud :is(a, button, summary, select) {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 11px;
+  border: 0;
+  border-radius: 5px;
+  background: #1e3d40;
+  color: inherit;
+  font: inherit;
+}
+
+#submit-hud a {
+  display: inline-flex;
+  align-items: center;
+}
+
+#submit-hud :is(button, summary, select) { cursor: pointer; }
+#submit-hud select { width: 100%; }
+#submit-hud button:disabled { opacity: .65; cursor: default; }
+#submit-hud :focus-visible { outline: 2px solid #dded8e; outline-offset: 1px; }
+#submit-hud details[open] form {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  display: grid;
+  gap: 8px;
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 24px));
+  padding: 12px;
+  border-radius: 10px;
+  background: #10272b;
+}
+
+#submit-hud [data-camera] {
+  max-width: 30ch;
+  margin: 0;
+}
+
+#submit-hud [data-camera]:empty { display: none; }
+.submit-hud-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
