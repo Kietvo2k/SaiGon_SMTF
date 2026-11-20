@@ -2,8 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  resourceSample32, resourceOver32, resourceUnder32, createResourceWatch32,
-  RESOURCE_LIMITS_32, RESOURCE_MONITOR_KEY_32
+  resourceSample32, resourceOver32, resourceUnder32, resourceReasons32, formatResourceReason32,
+  createResourceWatch32, RESOURCE_LIMITS_32, RESOURCE_MONITOR_KEY_32
 } from '../resource-monitor-32.js?v=32a';
 
 test('resourceSample32: RAM từ heap, CPU từ long-task, GPU từ thời gian khung', () => {
@@ -78,4 +78,27 @@ test('createResourceWatch32: persist ghi localStorage khi tự bật/tắt', () 
   const cool = { cpuPct: 50, gpuPct: 40, ramPct: 60 };
   for (let i = 0; i < 5; i++) w.tick(cool);
   assert.deepEqual(saved, [[RESOURCE_MONITOR_KEY_32, 'true'], [RESOURCE_MONITOR_KEY_32, 'false']]);
+});
+
+test('resourceReasons32 và createResourceWatch32 ghi nhận lý do CPU/GPU/RAM khi bật tiết kiệm', () => {
+  const reasons = resourceReasons32({ cpuPct: 91.6, gpuPct: 70, ramPct: 88.2 });
+  assert.deepEqual(reasons, [
+    { key: 'CPU', pct: 92, limit: 80 },
+    { key: 'RAM', pct: 88, limit: 85 },
+  ]);
+  assert.equal(formatResourceReason32(reasons), 'CPU 92% · RAM 88%');
+  assert.equal(formatResourceReason32({ cpuPct: 40, gpuPct: 50, ramPct: 60 }), '');
+
+  const savedInfo = [];
+  const w = createResourceWatch32({
+    onSave: info => savedInfo.push(info),
+  });
+  for (let i = 0; i < 3; i++) w.tick({ cpuPct: 60, gpuPct: 84, ramPct: 55 });
+  assert.equal(w.mode(), 'save');
+  assert.deepEqual(w.reasons(), [{ key: 'GPU', pct: 84, limit: 70 }]);
+  assert.deepEqual(savedInfo[0].reasons, [{ key: 'GPU', pct: 84, limit: 70 }]);
+
+  for (let i = 0; i < 5; i++) w.tick({ cpuPct: 30, gpuPct: 30, ramPct: 30 });
+  assert.equal(w.mode(), 'normal');
+  assert.deepEqual(w.reasons(), []);
 });

@@ -2,7 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { BANNED_STRINGS, SMART_LABELS_32, sanitizeStatusText32, applySmartLabels32, lockRegions32, SMART_APP_32_VERSION } from '../smart-app-32.js?v=32a';
+import {
+  BANNED_STRINGS, SMART_LABELS_32, sanitizeStatusText32, applySmartLabels32, lockRegions32,
+  SMART_APP_32_VERSION, formatResourceChipText32, installResourceMonitor32,
+} from '../smart-app-32.js?v=32a';
 
 const fakeDom = () => {
   const mk = text => ({ textContent: text, setAttribute(k, v) { this[k] = v; }, disabled: false, hidden: false });
@@ -48,4 +51,42 @@ test('lockRegions32: giữ bac, khóa mọi lựa chọn khác, ẩn panel cổ 
   assert.equal(dom.btnNam.disabled, true);
   assert.equal(dom.btnNam['aria-disabled'], 'true');
   assert.equal(dom.story.hidden, true);
+});
+
+test('installResourceMonitor32 hiện chip góc màn hình kèm lý do CPU/GPU/RAM khi tự bật tiết kiệm', () => {
+  const appended = [];
+  const mkEl = tag => ({
+    tag,
+    children: [],
+    attrs: {},
+    hidden: false,
+    textContent: '',
+    title: '',
+    setAttribute(k, v) { this.attrs[k] = v; },
+    append(...nodes) { this.children.push(...nodes); },
+    remove() {},
+  });
+  const body = { append: (...nodes) => appended.push(...nodes) };
+  const doc = {
+    body,
+    createElement: mkEl,
+    querySelector: () => null,
+  };
+  const mon = installResourceMonitor32({}, { root: doc, intervalMs: 60000 });
+  try {
+    assert.ok(mon.chip);
+    assert.equal(mon.chip.hidden, true);
+    assert.equal(appended.includes(mon.chip), true);
+
+    for (let i = 0; i < 3; i++) mon.watch.tick({ cpuPct: 92, gpuPct: 84, ramPct: 50 });
+    assert.equal(mon.chip.hidden, false);
+    const labelText = mon.chip.children[1].textContent;
+    assert.equal(labelText, 'Tiết kiệm tài nguyên · CPU 92% · GPU 84%');
+    for (const bad of BANNED_STRINGS) assert.ok(!labelText.toLowerCase().includes(bad), bad);
+
+    for (let i = 0; i < 5; i++) mon.watch.tick({ cpuPct: 40, gpuPct: 40, ramPct: 40 });
+    assert.equal(mon.chip.hidden, true);
+  } finally {
+    mon.dispose();
+  }
 });

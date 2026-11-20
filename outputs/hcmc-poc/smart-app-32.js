@@ -592,8 +592,29 @@ export function installResourceSaver32(app, { root = (typeof document !== 'undef
   return { enabled: () => on, set: apply, dispose() { input.removeEventListener('change', onChange); if (section && section.remove) section.remove(); } };
 }
 
-import { createResourceWatch32, resourceSample32, RESOURCE_LIMITS_32 } from './resource-monitor-32.js?v=32a';
-export { createResourceWatch32, resourceSample32, resourceOver32, resourceUnder32, RESOURCE_LIMITS_32 } from './resource-monitor-32.js?v=32a';
+import { createResourceWatch32, formatResourceReason32, resourceSample32, RESOURCE_LIMITS_32 } from './resource-monitor-32.js?v=32a';
+export { createResourceWatch32, formatResourceReason32, resourceReasons32, resourceSample32, resourceOver32, resourceUnder32, RESOURCE_LIMITS_32 } from './resource-monitor-32.js?v=32a';
+
+const RESOURCE_CHIP_CSS_32 = `
+#resourceSaveChip32[hidden]{display:none!important}
+#resourceSaveChip32{position:fixed;z-index:15;top:16px;right:16px;display:inline-flex;align-items:center;gap:8px;max-width:min(360px,calc(100vw - 32px));padding:8px 13px;border-radius:999px;background:rgba(45,31,7,.88);border:1px solid rgba(245,190,82,.62);color:#fde6aa;font:600 12px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#resourceSaveChip32 .save-chip-dot32{width:8px;height:8px;border-radius:50%;background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.25);flex:none}
+#resourceSaveChip32 .save-chip-text32{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:760px){#resourceSaveChip32{top:8px;right:8px;max-width:calc(100vw - 180px);padding:6px 10px;font-size:11px}}
+`;
+
+export function formatResourceChipText32(reasons = []) {
+  const detail = formatResourceReason32(reasons);
+  return detail ? `Tiết kiệm tài nguyên · ${detail}` : 'Tiết kiệm tài nguyên';
+}
+
+export function formatResourceChipTitle32(reasons = []) {
+  if (!Array.isArray(reasons) || reasons.length === 0) {
+    return 'Hệ thống tự giảm xuống 15 FPS · Lite để giữ mượt';
+  }
+  const detail = reasons.map(r => `${r.key} ${r.pct}% (ngưỡng ${r.limit}%)`).join(', ');
+  return `Tự bật tiết kiệm tài nguyên (15 FPS · Lite) do ${detail}`;
+}
 
 // Giám sát tài nguyên: mỗi 1 s đo CPU (mật độ long-task), GPU proxy (thời gian khung so ngân sách
 // của FPS trần), RAM (performance.memory). Vượt ngưỡng 3 s liên tiếp → TỰ bật "Tiết kiệm tài nguyên";
@@ -602,23 +623,55 @@ export { createResourceWatch32, resourceSample32, resourceOver32, resourceUnder3
 export function installResourceMonitor32(app, { root = (typeof document !== 'undefined' ? document : null),
   saver = null, capFpsOf = () => 30, storage = (typeof localStorage !== 'undefined' ? localStorage : null),
   intervalMs = 1000, log = (m => console.info(m)) } = {}) {
-  const watch = createResourceWatch32({
-    autoPersist: storage,
-    onSave: () => { autoSet = true; if (saver && typeof saver.set === 'function' && !saver.enabled()) saver.set(true); },
-    onNormal: () => { if (autoSet) { autoSet = false; if (saver && typeof saver.set === 'function' && saver.enabled()) saver.set(false); } }
-  });
   let autoSet = false;
   let longTasks = 0, frames = 0, frameMs = 0, lastFrame = null;
-  const host = root && root.querySelector ? root.querySelector('#smartHud32') : null;
-  const banner = host && root.createElement ? root.createElement('p') : null;
-  if (banner) {
-    banner.className = 'save-note';
-    banner.setAttribute('role', 'status');
-    banner.textContent = 'Tài nguyên máy đang cao, đã tự bật tiết kiệm tài nguyên (FPS 15, chế độ Lite).';
-    banner.style.cssText = 'margin:.4em 0;padding:.4em .6em;border-radius:6px;background:#5a4a12;color:#ffe9a8;font:12px system-ui;';
-    banner.hidden = true;
-    host.append(banner);
+  const container = root && (root.body || (root.querySelector ? root.querySelector('body') : null) || root);
+  const chip = container && root.createElement ? root.createElement('div') : null;
+  let chipText = null;
+  if (chip) {
+    if (root.head && root.getElementById && !root.getElementById('resourceChipCss32')) {
+      const style = root.createElement('style');
+      style.id = 'resourceChipCss32';
+      style.textContent = RESOURCE_CHIP_CSS_32;
+      root.head.append(style);
+    }
+    chip.id = 'resourceSaveChip32';
+    chip.className = 'save-chip32';
+    chip.setAttribute('role', 'status');
+    chip.setAttribute('aria-live', 'polite');
+    chip.hidden = true;
+    const dot = root.createElement('span');
+    dot.className = 'save-chip-dot32';
+    dot.setAttribute('aria-hidden', 'true');
+    chipText = root.createElement('span');
+    chipText.className = 'save-chip-text32';
+    chipText.textContent = formatResourceChipText32([]);
+    chip.append(dot, chipText);
+    if (typeof container.append === 'function') container.append(chip);
   }
+  const syncChip = (active, reasons = []) => {
+    if (!chip) return;
+    chip.hidden = !active;
+    const text = formatResourceChipText32(reasons);
+    if (chipText) chipText.textContent = text;
+    else chip.textContent = text;
+    chip.title = formatResourceChipTitle32(reasons);
+  };
+  const watch = createResourceWatch32({
+    autoPersist: storage,
+    onSave: info => {
+      autoSet = true;
+      syncChip(true, info?.reasons || []);
+      if (saver && typeof saver.set === 'function' && !saver.enabled()) saver.set(true);
+    },
+    onReasonChange: info => {
+      syncChip(true, info?.reasons || []);
+    },
+    onNormal: () => {
+      syncChip(false, []);
+      if (autoSet) { autoSet = false; if (saver && typeof saver.set === 'function' && saver.enabled()) saver.set(false); }
+    }
+  });
   // Long-task: > 50 ms liên tục — đại lượng JS đo được gần nhất của tải luồng chính.
   let observer = null;
   if (typeof PerformanceObserver === 'function') {
@@ -641,16 +694,16 @@ export function installResourceMonitor32(app, { root = (typeof document !== 'und
     });
     longTasks = 0; frames = 0; frameMs = 0;
     const mode = watch.tick(sample);
-    if (banner) banner.hidden = mode !== 'save';
+    syncChip(mode === 'save', watch.reasons());
     return mode;
   }, intervalMs) : 0;
   return {
-    watch, mode: () => watch.mode(), limits: RESOURCE_LIMITS_32,
+    watch, chip, mode: () => watch.mode(), limits: RESOURCE_LIMITS_32,
     dispose() {
       if (timer) clearInterval(timer);
       if (rafId && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(rafId);
       if (observer) observer.disconnect();
-      if (banner && banner.remove) banner.remove();
+      if (chip && chip.remove) chip.remove();
     }
   };
 }
