@@ -3,7 +3,7 @@ import { Api, ApiError, errorMessage, login, loadToken, makeApi, saveToken } fro
 import { OFFICER_TAB_LABELS, OfficerTab, canControl, officerTabs } from '../../lib/access';
 import { roleLabel } from '../../lib/labels';
 import { connectSmartWs, WsMessage } from '../../lib/ws';
-import { createReloadScheduler, createStreamThrottle, StreamThrottle } from '../../lib/refresh';
+import { createMultiStreamThrottle, createReloadScheduler, MultiStreamThrottle } from '../../lib/refresh';
 import type { Kpi, Me } from '../../lib/types';
 import type { HeatView } from '../../lib/heat';
 import { alertDetail } from '../../lib/alerts';
@@ -28,7 +28,8 @@ export function App() {
   const [notice, setNotice] = useState('');
   const [heatLive, setHeatLive] = useState<HeatView | null>(null);
   const [alertNotice, setAlertNotice] = useState('');
-  const [streamTick, setStreamTick] = useState(0);   // đổi src ảnh stream theo stream.updated
+  const [streamTicks, setStreamTicks] = useState<Record<string, number>>({});   // đổi src ảnh từng camera theo stream.updated
+  const [visibleCameras, setVisibleCameras] = useState<string[]>([CAMERA_ID]);
 
   const signOut = useCallback((message: string) => {
     saveToken('officer', null);
@@ -71,18 +72,26 @@ export function App() {
   }, [token, signOut]);
 
   // Thời gian thực: sự kiện vi phạm/khiếu nại gộp lại rồi mới tải lại (PERF-5).
-  // KPI cập nhật trực tiếp; stream.updated chỉ đổi ảnh camera tối đa 1 lần/2 s; dự phòng làm mới 15 s.
+  // KPI cập nhật trực tiếp; stream.updated chỉ đổi ảnh từng camera đang hiển thị tối đa 1 lần/2 s; dự phòng làm mới 15 s.
   // Tab ẩn thì không tải lại gì; hiện lại thì tải lại đúng một lần.
-  const streamThrottle = useRef<StreamThrottle | null>(null);
+  const streamThrottle = useRef<MultiStreamThrottle | null>(null);
+  const visibleCamerasRef = useRef<string[]>(visibleCameras);
+  visibleCamerasRef.current = visibleCameras;
+
   useEffect(() => {
     if (!token || !me) return;
     const scheduler = createReloadScheduler(bump, { isVisible });
+    const throttle = createMultiStreamThrottle(
+      id => setStreamTicks(prev => ({ ...prev, [id]: (prev[id] ?? 0) + 1 })),
+      { cameraIds: visibleCamerasRef.current, isVisible },
+    );
+    streamThrottle.current = throttle;
     const stop = connectSmartWs(token, (msg: WsMessage) => {
       if (msg.event === 'kpi.update') setKpi(msg.data ?? {});
       else if (msg.event === 'heat.update') setHeatLive(msg.data ?? null);
       else if (msg.event === 'alert.congestion' && msg.data) setAlertNotice(`Cảnh báo kẹt mới trên ${msg.data.name}: ${alertDetail(msg.data)}.`);
       else if (['violation.created', 'violation.updated', 'complaint.updated'].includes(msg.event)) scheduler.schedule();
-      else if (msg.event === 'stream.updated') streamThrottle.current?.onStreamUpdated(msg.data);
+      else if (msg.event === 'stream.updated') throttle.onStreamUpdated(msg.data);
     });
     const timer = setInterval(() => scheduler.schedule(), 15000);
     const onVisibility = () => { if (isVisible()) scheduler.onVisible(); };
@@ -92,19 +101,14 @@ export function App() {
       clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibility);
       scheduler.dispose();
+      throttle.dispose();
+      streamThrottle.current = null;
     };
   }, [token, me, bump, isVisible]);
 
-  // Bộ giới hạn ảnh stream: chỉ đổi src khi sự kiện đúng camera đang chọn và đã qua 2 s.
-  const [cameraId, setCameraId] = useState(CAMERA_ID);
   useEffect(() => {
-    const t = createStreamThrottle(() => setStreamTick(v => v + 1), { cameraId, isVisible });
-    streamThrottle.current = t;
-    return () => {
-      t.dispose();
-      streamThrottle.current = null;
-    };
-  }, [cameraId, isVisible]);
+    streamThrottle.current?.setCameraIds(visibleCameras);
+  }, [visibleCameras]);
 
   // Thông báo cảnh báo kẹt mới tự ẩn sau 15 giây.
   useEffect(() => {
@@ -167,7 +171,15 @@ export function App() {
       </nav>
 
       <main role="tabpanel">
-        {current === 'violations' && <ViolationsTab api={api} tick={tick} streamTick={streamTick} onChanged={bump} onCameraChange={setCameraId} />}
+        {current === 'violations' && (
+          <ViolationsTab
+            api={api}
+            tick={tick}
+            streamTicks={streamTicks}
+            onChanged={bump}
+            onVisibleCamerasChange={setVisibleCameras}
+          />
+        )}
         {current === 'complaints' && <ComplaintsTab api={api} tick={tick} onChanged={bump} />}
         {current === 'stats' && <StatsTab api={api} tick={tick} />}
         {current === 'heat' && <HeatMapTab api={api} tick={tick} live={heatLive} />}

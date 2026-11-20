@@ -108,3 +108,41 @@ export function createStreamThrottle(
     dispose() { /* không có hẹn giờ dài hạn */ },
   };
 }
+
+/** Bộ làm mới ảnh stream cho nhiều camera đang hiển thị (A1): mỗi camera có ngưỡng chờ riêng. */
+export interface MultiStreamThrottle {
+  onStreamUpdated(data: StreamUpdated | null | undefined): string | null;
+  setCameraIds(ids: Iterable<string>): void;
+  dispose(): void;
+}
+
+export function createMultiStreamThrottle(
+  onCameraUpdate: (cameraId: string) => void,
+  opts: { cameraIds?: Iterable<string>; minGapMs?: number; isVisible?: () => boolean } = {},
+): MultiStreamThrottle {
+  const minGapMs = opts.minGapMs ?? STREAM_MIN_GAP_MS;
+  const isVisible = opts.isVisible ?? (() => true);
+  let activeIds: Set<string> | null = opts.cameraIds ? new Set(opts.cameraIds) : null;
+  const lastByCam = new Map<string, number>();
+
+  return {
+    setCameraIds(ids) {
+      activeIds = new Set(ids);
+    },
+    onStreamUpdated(data) {
+      const id = data?.camera_id ? String(data.camera_id) : '';
+      if (!id) return null;
+      if (activeIds && !activeIds.has(id)) return null;
+      const now = Date.now();
+      const prev = lastByCam.get(id) ?? -Infinity;
+      if (now - prev < minGapMs) return null;
+      if (!isVisible()) return null;
+      lastByCam.set(id, now);
+      onCameraUpdate(id);
+      return id;
+    },
+    dispose() {
+      lastByCam.clear();
+    },
+  };
+}

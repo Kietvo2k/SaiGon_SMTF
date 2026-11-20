@@ -24,7 +24,29 @@ export function cameraOptions(streams: CameraStream[] | null | undefined): Camer
   return out;
 }
 
+export type CameraGridSize = 1 | 4 | 9;
+
 export function cameraDefault(streams: CameraStream[] | null | undefined): string | null {
   const opts = cameraOptions(streams);
   return opts.length > 0 ? opts[0].value : null;
+}
+
+export function cameraGridSlice<T>(items: T[], gridSize: CameraGridSize, page: number): {
+  page: number;
+  totalPages: number;
+  items: T[];
+} {
+  const totalPages = Math.max(1, Math.ceil(items.length / gridSize));
+  const safePage = Math.min(Math.max(1, Math.trunc(page) || 1), totalPages);
+  const start = (safePage - 1) * gridSize;
+  return {
+    page: safePage,
+    totalPages,
+    items: items.slice(start, start + gridSize),
+  };
+}
+
+export function cameraPageForId<T extends { value: string }>(items: T[], id: string, gridSize: CameraGridSize): number {
+  const idx = items.findIndex(item => item.value === id);
+  return idx >= 0 ? Math.floor(idx / gridSize) + 1 : 1;
 }

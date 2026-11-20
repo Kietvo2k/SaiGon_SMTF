@@ -1,6 +1,6 @@
 // Test cho cameraOptions — danh sách camera giao lộ dùng để chọn trình chiếu.
 import { assert, describe, it } from 'vitest';
-import { cameraOptions, cameraDefault } from './cameras';
+import { cameraOptions, cameraDefault, cameraGridSlice, cameraPageForId } from './cameras';
 
 describe('cameraOptions', () => {
   const streams = [
@@ -28,5 +28,22 @@ describe('cameraOptions', () => {
   it('cameraDefault chọn camera đầu tiên; rỗng thì null', () => {
     assert.equal(cameraDefault(streams), 'CAM-HX-001');
     assert.equal(cameraDefault([]), null);
+  });
+
+  it('cameraGridSlice và cameraPageForId phân trang đúng cho lưới 1/4/9', () => {
+    const ten = Array.from({ length: 10 }, (_, i) => ({ value: `CAM-${i + 1}`, label: `Cam ${i + 1}` }));
+    const p1 = cameraGridSlice(ten, 4, 1);
+    assert.equal(p1.page, 1);
+    assert.equal(p1.totalPages, 3);
+    assert.deepEqual(p1.items.map(x => x.value), ['CAM-1', 'CAM-2', 'CAM-3', 'CAM-4']);
+    const p3 = cameraGridSlice(ten, 4, 99);
+    assert.equal(p3.page, 3);
+    assert.deepEqual(p3.items.map(x => x.value), ['CAM-9', 'CAM-10']);
+    const p9 = cameraGridSlice(ten, 9, 2);
+    assert.equal(p9.totalPages, 2);
+    assert.deepEqual(p9.items.map(x => x.value), ['CAM-10']);
+    assert.equal(cameraPageForId(ten, 'CAM-7', 4), 2);
+    assert.equal(cameraPageForId(ten, 'CAM-10', 9), 2);
+    assert.equal(cameraPageForId(ten, 'MISSING', 4), 1);
   });
 });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createReloadScheduler, createStreamThrottle } from './refresh';
+import { createMultiStreamThrottle, createReloadScheduler, createStreamThrottle } from './refresh';
 
 afterEach(() => { vi.useRealTimers(); });
 
@@ -87,5 +87,27 @@ describe('ảnh stream theo sự kiện stream.updated', () => {
     const t = createStreamThrottle(() => 0, { cameraId: 'CAM-HX-001' });
     expect(t.onStreamUpdated({})).toBe(null);
     t.dispose();
+  });
+});
+
+describe('làm mới nhiều camera trên lưới (A1)', () => {
+  it('mỗi camera đang hiển thị có ngưỡng 2 s độc lập, không ảnh hưởng camera khác', () => {
+    vi.useFakeTimers();
+    const hits: string[] = [];
+    const multi = createMultiStreamThrottle(id => hits.push(id), {
+      cameraIds: ['CAM-HX-001', 'CAM-HX-002'],
+      minGapMs: 2000,
+    });
+    expect(multi.onStreamUpdated({ camera_id: 'CAM-HX-001', seq: 1 })).toBe('CAM-HX-001');
+    expect(multi.onStreamUpdated({ camera_id: 'CAM-HX-002', seq: 2 })).toBe('CAM-HX-002');
+    expect(multi.onStreamUpdated({ camera_id: 'CAM-HX-003', seq: 3 })).toBe(null);
+    expect(multi.onStreamUpdated({ camera_id: 'CAM-HX-001', seq: 4 })).toBe(null);
+    vi.advanceTimersByTime(2000);
+    expect(multi.onStreamUpdated({ camera_id: 'CAM-HX-001', seq: 5 })).toBe('CAM-HX-001');
+    expect(hits).toEqual(['CAM-HX-001', 'CAM-HX-002', 'CAM-HX-001']);
+    multi.setCameraIds(['CAM-HX-003']);
+    expect(multi.onStreamUpdated({ camera_id: 'CAM-HX-002', seq: 6 })).toBe(null);
+    expect(multi.onStreamUpdated({ camera_id: 'CAM-HX-003', seq: 7 })).toBe('CAM-HX-003');
+    multi.dispose();
   });
 });
