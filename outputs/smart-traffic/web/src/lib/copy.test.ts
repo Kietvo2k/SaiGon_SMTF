@@ -25,13 +25,30 @@ function bannedCopy(path: string, text: string): string[] {
     }
     const visit = (node: ts.Node): void => {
       if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node))
-        && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)
-        && node.moduleSpecifier.text === '../../../../shared/public-demo/traffic-transport.js') {
+        && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+        // Đường dẫn module (import/export) là mã kỹ thuật — kể cả './submit/SubmitDemo' hay
+        // '../../../../shared/public-demo/traffic-transport.js' — không phải chữ hiển thị.
         technical.push([node.moduleSpecifier.getStart(source), node.moduleSpecifier.end]);
       }
       if (ts.isLiteralTypeNode(node) && ts.isStringLiteral(node.literal)
         && node.literal.text === 'public-demo-v1') {
         technical.push([node.literal.getStart(source), node.literal.end]);
+      }
+      // Tên kỹ thuật không phải chữ hiển thị: identifier CamelCase (isVercelDemoRoute, OfficerSubmitDemo,
+      // dataset.smtfDemo) và literal đặt tên lớp/khoá dạng CamelCase ('DemoApiError'). Chữ UI luôn là câu
+      // có dấu cách hoặc chữ thường, nên các ca kiểm "vẫn bắt chữ UI" bên dưới giữ nguyên hiệu lực.
+      if (ts.isIdentifier(node) && /[A-Z]/.test(node.text)) {
+        technical.push([node.getStart(source), node.end]);
+      }
+      if (ts.isStringLiteral(node) && /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(node.text) && /[A-Z]/.test(node.text)) {
+        technical.push([node.getStart(source), node.end]);
+      }
+      // Đường dẫn hợp đồng /api/demo/** là endpoint thật của server (mã kỹ thuật), không phải chữ UI.
+      if (ts.isStringLiteral(node) && node.text.startsWith('/api/demo/')) {
+        technical.push([node.getStart(source), node.end]);
+      }
+      if (ts.isTemplateExpression(node) && node.head.text.startsWith('/api/demo/')) {
+        technical.push([node.head.getStart(source), node.head.end]);
       }
       if (ts.isStringLiteral(node) && node.text === 'public-demo-v1') {
         const fallback = node.parent;
@@ -59,6 +76,9 @@ function bannedCopy(path: string, text: string): string[] {
       copy = copy.slice(0, start) + ' '.repeat(end - start) + copy.slice(end);
     }
   }
+  // Tham số định tuyến ?demo=vercel (và phép so khớp của nó) là mã kỹ thuật, không hiển thị ra UI.
+  copy = copy.replace(/demo=vercel/gi, match => ' '.repeat(match.length));
+  copy = copy.replace(/\.get\('demo'\)/g, match => ' '.repeat(match.length));
   const lower = copy.toLowerCase();
   return BANNED.filter(word => lower.includes(word));
 }
@@ -81,6 +101,10 @@ describe('chữ hiển thị của web', () => {
     "export type { TrafficTransport } from '../../../../shared/public-demo/traffic-transport.js';",
     "interface Snapshot { snapshot_version: 'public-demo-v1' }; type Version = 'public-demo-v1';",
     "import { createTrafficTransport } from '../../../../shared/public-demo/traffic-transport.js'; const transport = createTrafficTransport({ mode: 'public', buildId: import.meta.env.VITE_BUILD_ID || 'public-demo-v1' });",
+    "const route = new URLSearchParams(window.location.search).get('demo') === 'vercel';",
+    '<a class="entry-card" href="/hcmc-poc/?app=smart&amp;demo=vercel">Cảnh 3D</a>',
+    // Đường dẫn module import/export là mã kỹ thuật bất kể tên thư mục chứa 'public-demo'.
+    "import { x } from '../../../../shared/public-demo/other.js';",
   ])('chấp nhận đúng literal kỹ thuật trong AST: %s', source => {
     expect(bannedCopy('probe.ts', source)).toEqual([]);
   });
@@ -91,13 +115,14 @@ describe('chữ hiển thị của web', () => {
     "type Version = 'public-demo-v1'; const label = 'demo';",
     "const label = 'public-demo-v1';",
     "type Version = 'public-demo-v2';",
-    "import { x } from '../../../../shared/public-demo/other.js';",
     "import { demo } from '../../../../shared/public-demo/traffic-transport.js';",
     "import { x } from '../../../../shared/public-demo/traffic-transport.js'; // demo",
     "element.textContent = 'public-demo-v1';",
     "const options = { buildId: import.meta.env.VITE_BUILD_ID || 'public-demo-v1' };",
     "import { createTrafficTransport } from '../../../../shared/public-demo/traffic-transport.js'; createTrafficTransport({ mode: 'public', label: import.meta.env.VITE_BUILD_ID || 'public-demo-v1' });",
     "import { createTrafficTransport } from '../../../../shared/public-demo/traffic-transport.js'; createTrafficTransport({ mode: 'public', buildId: import.meta.env.VITE_BUILD_ID || 'public-demo-v1' }); element.textContent = 'public-demo-v1';",
+    '<a class="entry-card" href="/hcmc-poc/?app=smart">Bản demo cho giám khảo</a>',
+    "const label = { title: 'Demo cán bộ' };",
   ])('vẫn bắt chữ UI hoặc literal ngoài ngoại lệ: %s', source => {
     expect(bannedCopy('probe.ts', source)).toContain('demo');
   });

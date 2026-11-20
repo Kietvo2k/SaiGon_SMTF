@@ -67,7 +67,7 @@ async function jsonRequest<T>(url: string, init: RequestInit, fetcher: DemoFetch
   if (!response.ok) {
     const error = (payload as { error?: { code?: unknown; message?: unknown } } | null)?.error;
     throw new DemoApiError(
-      typeof error?.message === 'string' ? error.message : 'Dịch vụ demo tạm thời không sẵn sàng.',
+      typeof error?.message === 'string' ? error.message : 'Dịch vụ dữ liệu tạm thời không sẵn sàng.',
       typeof error?.code === 'string' ? error.code : response.status === 401 ? 'SESSION_REQUIRED' : 'DATA_UNAVAILABLE',
       response.status,
     );

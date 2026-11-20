@@ -15,7 +15,7 @@ const dateLabel = (value: string | null) => value
   : 'Ảnh mẫu · không có giờ chụp';
 
 function LandingBack() {
-  return <a className="submit-back" href="/">← Về trang chọn demo</a>;
+  return <a className="submit-back" href="/">← Về trang chọn lối vào</a>;
 }
 
 function MediaFrame({ camera, frame, busy, error, onRetry }: { camera: DemoCamera | null; frame: DemoCameraFrame | null; busy: boolean; error: string; onRetry: () => void }) {
@@ -43,7 +43,7 @@ function MediaFrame({ camera, frame, busy, error, onRetry }: { camera: DemoCamer
       {busy && <span className="submit-media-loading" role="status">Đang tải đúng camera…</span>}
     </div>
     <div className="submit-media-meta" aria-live="polite">
-      <span className={`submit-source submit-source-${shownSource}`}>{shownSource === 'live' ? 'Trực tiếp từ mô phỏng' : shownSource === 'sample' ? 'Ảnh mẫu' : busy ? 'Đang tải' : 'Mất nguồn'}</span>
+      <span className={`submit-source submit-source-${shownSource}`}>{shownSource === 'live' ? 'Trực tiếp' : shownSource === 'sample' ? 'Ảnh mẫu' : busy ? 'Đang tải' : 'Mất nguồn'}</span>
       {!missing && <span>{dateLabel(frame.capturedAt)}</span>}
       {camera && <span>{camera.junctionId} · {camera.cameraId}</span>}
     </div>
@@ -71,7 +71,7 @@ export function OfficerSubmitDemo() {
       setSelected(current => result.cameras.find(item => cameraIdsEqual(item, current)) ?? result.cameras[0] ?? null);
     } catch (err) {
       setSnapshot(null);
-      setError(err instanceof DemoApiError ? err.message : 'Không tải được dữ liệu demo. Thử lại sau.');
+      setError(err instanceof DemoApiError ? err.message : 'Không tải được dữ liệu phiên. Thử lại sau.');
     } finally { setBusy(false); }
   };
   useEffect(() => {
@@ -109,8 +109,8 @@ export function OfficerSubmitDemo() {
   }, [selected, cameraRetry]);
   return <main className="submit-shell">
     <header className="submit-header"><a className="submit-wordmark" href="/">SMTF <span>SAIGON · ĐIỀU HÀNH</span></a><LandingBack /></header>
-    <div className="submit-title"><p className="submit-eyebrow">TRUNG TÂM ĐIỀU HÀNH · CHẾ ĐỘ CHỈ XEM</p><h1>Demo cán bộ</h1><p>Một phiên demo tạm thời. Dữ liệu và quyền truy cập đến từ dịch vụ bản nộp.</p></div>
-    {!started ? <section className="submit-entry-callout"><p>Một phiên tạm thời để xem chỉ số, hồ sơ mẫu và camera. Không cần tạo tài khoản.</p><button type="button" onClick={() => void load()} disabled={busy}>Vào demo cán bộ</button></section> : error ? <section className="submit-error" role="alert"><strong>Chưa mở được demo cán bộ</strong><p>{error}</p><button type="button" onClick={() => void load()} disabled={busy}>{busy ? 'Đang thử…' : 'Thử tải lại'}</button></section> : <>
+    <div className="submit-title"><p className="submit-eyebrow">TRUNG TÂM ĐIỀU HÀNH · CHẾ ĐỘ CHỈ XEM</p><h1>Trung tâm điều hành</h1><p>Một phiên xem tạm thời. Dữ liệu và quyền truy cập được cấp cho phiên này.</p></div>
+    {!started ? <section className="submit-entry-callout"><p>Một phiên tạm thời để xem chỉ số, hồ sơ mẫu và camera. Không cần tạo tài khoản.</p><button type="button" onClick={() => void load()} disabled={busy}>Vào trung tâm điều hành</button></section> : error ? <section className="submit-error" role="alert"><strong>Chưa mở được trung tâm điều hành</strong><p>{error}</p><button type="button" onClick={() => void load()} disabled={busy}>{busy ? 'Đang thử…' : 'Thử tải lại'}</button></section> : <>
       <section className="submit-kpis" aria-label="Chỉ số giao thông">
         <Kpi label="Nguồn chỉ số" value={snapshot?.kpi.source === 'live' ? 'Trực tiếp' : snapshot?.kpi.source === 'sample' ? 'Dữ liệu mẫu' : busy ? 'Đang tải…' : 'Chưa có'} />
         <Kpi label="Chờ trung bình" value={snapshot ? `${snapshot.kpi.wait_avg_s} giây` : '—'} />
@@ -148,7 +148,7 @@ export function CitizenSubmitLookup() {
     try {
       const value = await lookupPlate(plate);
       setPlate(value.plate); setResult(value);
-      setMessage(value.records.length ? `${value.records.length} hồ sơ được tìm thấy.` : 'Biển số hợp lệ, chưa có hồ sơ trong dữ liệu demo.');
+      setMessage(value.records.length ? `${value.records.length} hồ sơ được tìm thấy.` : 'Biển số hợp lệ, chưa có hồ sơ trong dữ liệu hiện có.');
     } catch (err) {
       setError(err instanceof DemoApiError ? err.message : 'Không kết nối được dịch vụ tra cứu. Thử lại sau.');
     } finally { setBusy(false); }
@@ -157,7 +157,7 @@ export function CitizenSubmitLookup() {
     <header className="submit-header"><a className="submit-wordmark" href="/">SMTF <span>SAIGON · TRA CỨU</span></a><LandingBack /></header>
     <div className="submit-lookup">
       <p className="submit-eyebrow">TRA CỨU CÔNG KHAI · KHÔNG CẦN ĐĂNG NHẬP</p><h1>Tra cứu biển số.</h1>
-      <p>Tìm hồ sơ mẫu từ cùng nguồn dữ liệu demo với trang cán bộ.</p>
+      <p>Tìm hồ sơ mẫu từ cùng nguồn dữ liệu với trang điều hành.</p>
       <form className="submit-lookup-form" onSubmit={event => void lookup(event)}>
         <label htmlFor="submit-plate">Biển số xe</label><div className="submit-lookup-input"><input id="submit-plate" value={plate} onChange={event => setPlate(event.target.value.toUpperCase())} placeholder="Ví dụ: 51K-123.45" autoComplete="off" spellCheck={false} readOnly={busy} aria-describedby="submit-plate-hint" />
           <button type="submit" disabled={busy}>{busy ? 'Đang tra cứu…' : 'Tra cứu biển số'}</button></div>

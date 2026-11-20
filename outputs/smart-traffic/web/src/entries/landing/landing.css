@@ -11,7 +11,7 @@
   --landing-focus: #0a7d8c;
   --landing-badge-bg: #e5f2f7;
   --landing-badge-ink: #0c4a60;
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Be Vietnam Pro', system-ui, "Segoe UI", Roboto, sans-serif;
 }
 
 * {
@@ -94,7 +94,6 @@ body {
   margin: 0 0 4px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
   color: #b7d7eb;
 }
 
@@ -167,7 +166,6 @@ body {
 .entry-step {
   font-size: 11.5px;
   font-weight: 800;
-  letter-spacing: 0.12em;
   color: var(--landing-accent);
 }
 
@@ -260,8 +258,8 @@ button:focus-visible {
   --color-muted: #e6e9df;
   --color-border: #c9d6ce;
   --color-ring: #246259;
-  --font-display: Georgia, serif;
-  --font-body: system-ui, "Segoe UI", sans-serif;
+  --font-display: 'Be Vietnam Pro', Georgia, serif;
+  --font-body: 'Be Vietnam Pro', system-ui, "Segoe UI", sans-serif;
   font-family: var(--font-body);
 }
 html, body { overflow-x: clip; }
@@ -269,8 +267,8 @@ body { margin: 0; background: var(--color-background); color: var(--color-foregr
 .landing-shell { max-width: none; min-height: 100vh; padding: 0 clamp(20px, 6.4vw, 96px); background: var(--color-background); }
 .landing-header { min-height: 76px; padding: 0; border-bottom: 1px solid var(--color-border); background: transparent; }
 .landing-brand { display:flex; gap:12px; align-items:center; color:var(--color-foreground); text-decoration:none; }
-.landing-brand > span:last-child { display:grid; gap:3px; font-size:12px; letter-spacing:.12em; }
-.landing-brand small { color:#617477; font-size:9px; letter-spacing:.18em; }
+.landing-brand > span:last-child { display:grid; gap:3px; font-size:12px; }
+.landing-brand small { color:#617477; font-size:9px; }
 .landing-mark { display:grid; width:38px; height:38px; place-items:center; border-radius:50%; background:var(--color-primary); color:var(--color-accent); font-size:12px; font-weight:800; letter-spacing:-.08em; }
 .landing-nav-cta, .landing-primary-cta { display:inline-flex; min-height:48px; gap:16px; align-items:center; justify-content:center; padding:0 19px; background:var(--color-primary); color:var(--color-on-primary); text-decoration:none; font-size:14px; font-weight:650; transition:background-color .18s ease, color .18s ease; }
 .landing-nav-cta { min-height:42px; }
@@ -279,27 +277,27 @@ body { margin: 0; background: var(--color-background); color: var(--color-foregr
 .landing-main { max-width:1320px; margin:0 auto; }
 .landing-hero { display:grid; grid-template-columns:minmax(0,.84fr) minmax(0,1.16fr); align-items:center; gap:clamp(36px,7vw,104px); padding:clamp(48px,8vw,112px) 0 clamp(54px,8vw,108px); }
 .landing-copy { min-width:0; }
-.landing-kicker { display:flex; align-items:center; gap:9px; margin:0 0 23px; color:#4b6667; font-size:10px; font-weight:750; letter-spacing:.16em; }
+.landing-kicker { display:flex; align-items:center; gap:9px; margin:0 0 23px; color:#4b6667; font-size:10px; font-weight:750; }
 .landing-live-dot { width:8px; height:8px; border-radius:50%; background:#4b9a75; box-shadow:0 0 0 3px #d9e8d8; }
-.landing-copy h1 { max-width:590px; margin:0; color:var(--color-foreground); font-family:var(--font-display); font-size:clamp(2.7rem,5.2vw,5.2rem); font-weight:560; letter-spacing:-.065em; line-height:1.04; overflow-wrap:anywhere; }
+.landing-copy h1 { max-width:590px; margin:0; color:var(--color-foreground); font-family:var(--font-display); font-size:clamp(2.7rem,5.2vw,5.2rem); font-weight:560; line-height:1.06; overflow-wrap:anywhere; }
 .landing-copy h1 span { color:#64827e; }
 .landing-intro { max-width:430px; margin:23px 0 19px; color:#506366; font-size:16px; line-height:1.7; }
 .landing-data-note { margin:15px 0 0; color:#687879; font-size:11px; line-height:1.5; }
 .landing-scene { position:relative; min-width:0; margin:0; background:var(--color-primary); }
 .landing-scene img { display:block; width:100%; aspect-ratio:16/10; object-fit:cover; }
-.landing-scene figcaption { display:flex; justify-content:space-between; gap:12px; padding:13px 15px; color:#d2e0d8; font-size:9px; font-weight:650; letter-spacing:.12em; }
+.landing-scene figcaption { display:flex; justify-content:space-between; gap:12px; padding:13px 15px; color:#d2e0d8; font-size:9px; font-weight:650; }
 .landing-paths { border-top:1px solid var(--color-border); padding:34px 0 67px; }
 .landing-paths-heading { display:flex; align-items:baseline; justify-content:space-between; gap:24px; margin-bottom:18px; }
 .landing-paths-heading .landing-kicker { margin:0; }
-.landing-paths-heading h2 { margin:0; color:var(--color-foreground); font-size:clamp(20px,2.6vw,29px); font-weight:580; letter-spacing:-.04em; }
+.landing-paths-heading h2 { margin:0; color:var(--color-foreground); font-size:clamp(20px,2.6vw,29px); font-weight:580; }
 .landing-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid var(--color-border); border-bottom:1px solid var(--color-border); }
 .entry-card { display:flex; min-width:0; min-height:190px; flex-direction:column; padding:19px 22px 18px 0; color:var(--color-foreground); text-decoration:none; }
 .entry-card + .entry-card { border-left:1px solid var(--color-border); padding-left:22px; }
-.entry-card h3 { margin:0 0 5px; font-size:19px; font-weight:650; letter-spacing:-.03em; }
+.entry-card h3 { margin:0 0 5px; font-size:19px; font-weight:650; }
 .entry-card p { max-width:320px; margin:0 0 18px; color:#57686a; font-size:13px; line-height:1.65; }
 .entry-action { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:auto; color:#31585a; font-size:12px; font-weight:700; }
 .entry-card:hover .entry-action { color:#0e3335; }
-.landing-footer { display:flex; max-width:1320px; justify-content:space-between; gap:12px; margin:0 auto; padding:17px 0 23px; border-top:1px solid var(--color-border); color:#697879; font-size:9px; letter-spacing:.12em; }
+.landing-footer { display:flex; max-width:1320px; justify-content:space-between; gap:12px; margin:0 auto; padding:17px 0 23px; border-top:1px solid var(--color-border); color:#697879; font-size:9px; }
 .landing-header a:focus-visible, .landing-grid a:focus-visible, .landing-primary-cta:focus-visible { outline:3px solid var(--color-ring); outline-offset:4px; }
 @media (max-width:760px) {
   .landing-shell { padding-inline:22px; }
