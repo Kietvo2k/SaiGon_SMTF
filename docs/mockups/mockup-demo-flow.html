@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SaiGon SMTF · Phác thảo luồng demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FDF6EF; --grid:#EDE4D6; --navy:#111B53; --blue:#265DFF;
+    --teal:#0F2725; --ink:#1C2B2A; --mut:#5E6B66; --card:#FFFFFF;
+    --ok:#176B68; --warn:#B35C1E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Be Vietnam Pro','Segoe UI',system-ui,sans-serif;color:var(--ink);
+    background-color:var(--cream);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:22px 22px;line-height:1.55;
+  }
+  .note-bar{background:var(--teal);color:#D9E6E1;text-align:center;font-size:13px;padding:8px 16px}
+  .note-bar b{color:#fff}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+  .brand{display:flex;align-items:center;gap:12px}
+  .mark{width:40px;height:40px;border-radius:12px;background:var(--navy);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+  .brand h1{font-size:15px;letter-spacing:.02em}
+  .brand small{display:block;font-size:11px;color:var(--mut);letter-spacing:.08em}
+  .cta{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;
+    font-weight:600;font-size:14px;padding:12px 22px;border-radius:12px}
+  .cta.ghost{background:transparent;color:var(--navy);border:1.5px solid var(--navy)}
+  .eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;color:var(--mut);letter-spacing:.14em}
+  .pill{background:var(--blue);color:#fff;font-weight:800;padding:5px 12px;border-radius:999px;letter-spacing:.1em;font-size:12px}
+  .hero{padding:40px 0 28px;max-width:640px}
+  .hero h2{font-size:44px;font-weight:800;line-height:1.15;margin:14px 0}
+  .hero h2 .tone{color:#4E7BD6}
+  .hero p{color:var(--mut);font-size:16px}
+  .hero .actions{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap}
+  .micro{font-size:12px;color:var(--mut);margin-top:10px}
+  section{padding:34px 0;border-top:1px solid #D8CFBF}
+  h3{font-size:28px;font-weight:800;margin:10px 0 18px}
+  h3 .tone{color:var(--blue)}
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .step{background:var(--card);border-radius:14px;padding:16px 14px;border:1px solid #E5DCCB;
+    box-shadow:0 8px 18px rgba(17,27,83,.06)}
+  .step .n{width:30px;height:30px;border-radius:50%;border:2px solid #BFD0FF;color:var(--blue);
+    font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+  .step b{font-size:14px;display:block;margin-bottom:6px}
+  .step small{color:var(--mut);font-size:12px;display:block}
+  .step .where{margin-top:10px;font-size:11px;color:var(--ok);font-weight:600}
+  .tipbox{margin-top:16px;background:#EFF5EF;border:1px solid #CBE0CB;border-radius:12px;
+    padding:14px 18px;font-size:14px;color:#2B4A2E}
+  .core{display:grid;grid-template-columns:5fr 7fr;gap:26px;align-items:start}
+  .core-list{display:flex;flex-direction:column;gap:10px}
+  .core-item{background:var(--card);border:1px solid #E5DCCB;border-radius:14px;padding:14px 16px;
+    display:flex;gap:12px;align-items:flex-start;box-shadow:0 6px 14px rgba(17,27,83,.05)}
+  .core-item .n{min-width:34px;height:34px;border-radius:50%;background:#E7EDFF;color:var(--blue);
+    font-weight:800;display:flex;align-items:center;justify-content:center}
+  .core-item b{font-size:15px}
+  .core-item small{color:var(--mut);font-size:12.5px;display:block}
+  .shot{border:2px dashed #B9C6E8;border-radius:16px;background:#FBFCFF;
+    min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;color:var(--mut);font-size:14px}
+  .shot .ph{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px}
+  .caption{margin-top:12px;background:var(--navy);color:#fff;border-radius:12px;
+    padding:12px 18px;font-weight:600;font-size:15px;text-align:center}
+  .views{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .view{background:var(--teal);color:#DFEAE6;border-radius:16px;padding:20px}
+  .view h4{font-size:16px;color:#fff;margin-bottom:4px}
+  .view small{font-size:11.5px;color:#9FB8B0;letter-spacing:.08em}
+  .view ul{margin:12px 0 0 18px;font-size:13px;line-height:1.7}
+  .fix{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{background:#fff;border:1.5px solid var(--warn);color:var(--warn);
+    border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600}
+  footer{border-top:1px solid #D8CFBF;padding:22px 0 40px;color:var(--mut);font-size:12.5px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  @media(max-width:900px){.flow{grid-template-columns:repeat(2,1fr)}.core{grid-template-columns:1fr}.views{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="note-bar">BẢN PHÁC THẢO THIẾT KẾ — dùng chốt hướng đi với agent, <b>chưa phải sản phẩm chạy thật</b></div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mark">SM</div>
+      <h1>SAIGON · SMART TRAFFIC<small>ĐIỀU PHỐI GIAO THÔNG KHU BẮC TP.HCM</small></h1>
+    </div>
+    <a class="cta" href="#">Vào demo ▾</a>
+  </header>
+
+  <div class="hero">
+    <span class="pill">KHU BẮC · THỊ NGHÈ · BÌNH THẠNH</span>
+    <div class="eyebrow" style="margin-top:10px">ĐIỀU KHIỂN THÍCH ỨNG · NHẬN DIỆN VI PHẠM · TRA CỨU CÔNG KHAI</div>
+    <h2>Thành phố chuyển động.<br><span class="tone">Tín hiệu đồng nhịp.</span></h2>
+    <p>Một cổng demo, ba góc nhìn cùng một dòng dữ liệu: cảnh 3D điều khiển, cán bộ điều hành,
+       người dân tra cứu — hết cảnh báo “không có khung hình” và trang trắng.</p>
+    <div class="actions">
+      <a class="cta" href="#">Mở cảnh 3D →</a>
+      <a class="cta ghost" href="#">Mở trung tâm điều hành</a>
+    </div>
+    <p class="micro">Dữ liệu trình diễn được ghi nhãn rõ; phiên xem chỉ lưu trong trình duyệt.</p>
+  </div>
+
+  <section>
+    <span class="pill">LUỒNG TRÌNH DIỄN</span>
+    <h3>Chín mươi giây trước giám khảo.</h3>
+    <div class="flow">
+      <div class="step"><div class="n">1</div><b>Mở cảnh 3D</b>
+        <small>Chọn nút giao gần nhất, máy quay về góc chuẩn.</small>
+        <div class="where">Màn: 3D</div></div>
+      <div class="step"><div class="n">2</div><b>Bật giờ cao điểm</b>
+        <small>Đèn thích ứng tự chia pha theo hàng chờ; so sánh A/B ngay trên KPI.</small>
+        <div class="where">Màn: 3D · panel Đèn</div></div>
+      <div class="step"><div class="n">3</div><b>Xem bản đồ nhiệt</b>
+        <small>Đoạn đỏ dần sáng lên, dự báo 15 phút cảnh báo kẹt tới.</small>
+        <div class="where">Màn: 3D · panel Nhiệt</div></div>
+      <div class="step"><div class="n">4</div><b>Camera bắt vi phạm</b>
+        <small>Xe vượt đèn đỏ bị đóng khung, kèm biển số và ảnh bằng chứng.</small>
+        <div class="where">Màn: 3D → đẩy lên web</div></div>
+      <div class="step"><div class="n">5</div><b>Cán bộ duyệt, dân tra cứu</b>
+        <small>Hồ sơ hiện ảnh bằng chứng, dòng thời gian; tra biển ra kết quả.</small>
+        <div class="where">Màn: Web cán bộ + người dân</div></div>
+    </div>
+    <div class="tipbox">Mẹo trình diễn: mở tab 3D và tab cán bộ <b>cạnh nhau</b> — camera trên web đổi trạng thái
+      “Trực tiếp” khi cảnh 3D đang chạy, quay về ảnh mẫu có nhãn khi tab 3D đóng. Đây là thứ thiếu nhất ở bản hiện tại.</div>
+  </section>
+
+  <section>
+    <span class="pill">CÔNG NGHỆ CỐT LÕI</span>
+    <div class="eyebrow" style="margin-top:10px">NHẬN DIỆN · THÍCH ỨNG · ĐIỀU PHỐI</div>
+    <h3>Đèn tự chia pha <span class="tone">theo mật độ từng làn</span></h3>
+    <div class="core">
+      <div class="core-list">
+        <div class="core-item"><div class="n">1</div><div><b>Khung nhận diện tự động từng xe</b>
+          <small>Trong tầm camera: khung, loại xe, biển số, độ tin cậy — tin cậy thấp vào hàng chờ xác minh.</small></div></div>
+        <div class="core-item"><div class="n">2</div><div><b>Làn đông xe được ưu tiên đèn xanh</b>
+          <small>Bộ điều khiển tối ưu áp lực hàng chờ, so sánh với đèn cố định bằng một công tắc A/B.</small></div></div>
+        <div class="core-item"><div class="n">3</div><div><b>Giải tỏa xong thì cắt xanh, nhường pha khác</b>
+          <small>Hết hàng chờ là chuyển pha, không giữ xanh vô ích.</small></div></div>
+        <div class="core-item"><div class="n">4</div><div><b>Mất nguồn dữ liệu → về chu kỳ cố định</b>
+          <small>Đèn tự an toàn khi không nhận được số đo, không kẹt vì chờ tín hiệu.</small></div></div>
+        <div class="core-item"><div class="n">5</div><div><b>Theo dõi lưu lượng trên web điều hành</b>
+          <small>Bảng vi phạm đầy đủ cột, trạng thái tiếng Việt, xuất dữ liệu khi cần.</small></div></div>
+      </div>
+      <div>
+        <div class="shot">
+          <div class="ph">[ Ảnh chụp trực tiếp từ bản build mới đặt ở đây ]</div>
+          Cảnh 3D khu Bắc: nhà lùi khỏi mép đường, xe có hình khối đúng làn,<br>
+          overlay khung nhận diện và dải bản đồ nhiệt đang chạy.
+        </div>
+        <div class="caption">và mọi xe vượt đèn đều có bằng chứng kèm theo.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="pill">BA GÓC NHÌN · MỘT DÒNG DỮ LIỆU</span>
+    <h3>Web phải làm được việc, không chỉ hiển thị.</h3>
+    <div class="views">
+      <div class="view"><small>TRẠM 3D</small><h4>Cảnh khu Bắc</h4>
+        <ul><li>Đèn thích ứng A/B + KPI sống</li><li>Bản đồ nhiệt + dự báo kẹt</li>
+        <li>Overlay khung nhận diện theo camera</li><li>Kịch bản: cao điểm · chặn làn · ngập · xe ưu tiên</li>
+        <li>Đẩy khung hình thật lên web</li></ul></div>
+      <div class="view"><small>CÁN BỘ</small><h4>Trung tâm điều hành</h4>
+        <ul><li>Lưới camera 1 → 4 → 9, chọn theo nút giao</li><li>Bảng vi phạm: biển, loại, hướng, giờ, trạng thái</li>
+        <li>Duyệt / gỡ / chuyển cần xác minh kèm ảnh</li><li>KPI ghi rõ nguồn: Trực tiếp hay Dữ liệu mẫu</li></ul></div>
+      <div class="view"><small>NGƯỜI DÂN</small><h4>Tra cứu biển số</h4>
+        <ul><li>Kết quả có ảnh bằng chứng + địa điểm</li><li>Dòng thời gian trạng thái tiếng Việt</li>
+        <li>Mức phạt kèm căn cứ điều/khoản</li><li>Khiếu nại một bước, theo dõi được</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="pill" style="background:var(--warn)">SỬA TRƯỚC KHI LÊN MÀU</span>
+    <h3>Danh mục chắn cổng nghiệm thu.</h3>
+    <div class="fix">
+      <span class="chip">Nhà lùi khỏi mép đường — hết decal đè lên nhựa</span>
+      <span class="chip">Camera mặc định luôn có ảnh, không trang trắng</span>
+      <span class="chip">Bảng vi phạm đủ cột + trạng thái tiếng Việt</span>
+      <span class="chip">Tra cứu trả bằng chứng + dòng thời gian</span>
+      <span class="chip">Sửa lỗi dấu trên tiêu đề (đồ ng nhịp → đồng nhịp)</span>
+      <span class="chip">Bỏ chữ cấm §6 khỏi UI</span>
+      <span class="chip">Pha vàng 3 giây phải đo được</span>
+    </div>
+  </section>
+
+  <footer>
+    <span>SAIGON SMTF · TP. HỒ CHÍ MINH</span>
+    <span>Bản chất dữ liệu trình diễn được ghi trong tài liệu kỹ thuật · 2026</span>
+  </footer>
+</div>
+</body>
+</html>

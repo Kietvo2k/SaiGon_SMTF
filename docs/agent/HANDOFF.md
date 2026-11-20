@@ -2,6 +2,13 @@
 
 **Mốc khảo sát:** `3f8e31e` · **Đích triển khai:** `public-demo-v1` · **Mốc bàn giao cho hai nhánh:** `smtf-public-demo-handoff-v1`.
 
+> **Cập nhật 20/11/2026 (demo-v2):** Bản nộp production đã chạy tại
+> `https://saigon-smtf-submit.vercel.app` (SHA `6cac2b7`; NAV/DATA/CAM đạt, SIGNAL đỏ).
+> Kế hoạch nâng cấp thành demo sống + danh mục sửa P0–P3 nằm ở
+> [DEMO-V2-PLAN.md](DEMO-V2-PLAN.md); prompt cho agent điều phối tự chủ ở
+> [docs/prompts/DEMO-V2-AGENT.md](../prompts/DEMO-V2-AGENT.md).
+> **Ưu tiên đọc hai tài liệu đó trước khi làm tiếp.**
+
 ## Đọc trước khi tiếp tục
 
 1. Đọc [đặc tả](PUBLIC-DEMO-SPEC.md), [hợp đồng UI–lõi](CONTRACT-PUBLIC-DEMO.md) và [quy tắc](RULES.md). Xem [quyết định mới nhất](DECISIONS.md) khi một tài liệu cũ diễn giải khác.

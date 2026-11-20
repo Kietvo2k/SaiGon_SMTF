@@ -28,3 +28,18 @@ Hai prompt triển khai dành cho các agent được người dùng khởi ch�
 - Giữ hash hồi quy 31A và luồng Docker. Thay đổi web cần kiểm bằng trình duyệt.
 - Chỉ stage tệp của task. Giữ các tệp cá nhân, dữ liệu runtime và log ngoài commit.
   Agent triển khai bàn giao commit cục bộ. Điều phối viên chịu trách nhiệm tích hợp và phát hành.
+
+## Tự nạp skill đầu mỗi phiên (bắt buộc)
+
+Phiên làm việc nào trong repo này — OpenCode, Codex, sub agent — phải nạp bộ skill sau
+ngay khi bắt đầu, trước khi đọc kế hoạch hay sửa bất cứ thứ gì:
+
+1. `skill fe` — cho mọi việc đụng 3D, web React, UI, landing, CSS, UX (gõ tắt `/fe`).
+2. `skill code` — cho mọi việc sửa mã, viết test, review, git, lập plan.
+3. `skill agent-language-vi` — tiếng Việt có dấu, UTF-8 cho tài liệu, comment, commit.
+4. Khi cần kiểm trình duyệt thật: `skill browse`, ưu tiên Playwright script
+   (không dùng computer-use `get_app_state` để soi UI — đã từng trả khung trống).
+5. Trước khi tuyên bố việc xong: `skill verification-before-completion`, chạy lệnh kiểm thật.
+
+Gọi subagent theo nhiệm vụ: task đơn giản → `worker-cheap`; task nặng hoặc cần suy luận sâu
+→ `worker-strong`. Đã nạp skill miền (fe/code/…) thì không nạp thêm skill con trùng phạm vi.
