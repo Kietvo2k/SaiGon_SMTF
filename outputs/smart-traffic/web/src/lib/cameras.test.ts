@@ -1,6 +1,9 @@
 // Test cho cameraOptions — danh sách camera giao lộ dùng để chọn trình chiếu.
 import { assert, describe, it } from 'vitest';
-import { cameraOptions, cameraDefault, cameraGridSlice, cameraPageForId } from './cameras';
+import {
+  cameraDefault, cameraGridSlice, cameraGroups, cameraJunctions,
+  cameraOptions, cameraPageForId, filterCamerasByJunction,
+} from './cameras';
 
 describe('cameraOptions', () => {
   const streams = [
@@ -45,5 +48,37 @@ describe('cameraOptions', () => {
     assert.equal(cameraPageForId(ten, 'CAM-7', 4), 2);
     assert.equal(cameraPageForId(ten, 'CAM-10', 9), 2);
     assert.equal(cameraPageForId(ten, 'MISSING', 4), 1);
+  });
+
+  it('cameraGroups, cameraJunctions và filterCamerasByJunction nhóm và lọc đúng theo nút giao lộ', () => {
+    const groups = cameraGroups([
+      ...streams,
+      { camera_id: 'CAM-HX-004', label: 'Ngã tư Hàng Xanh ∩ Xô Viết Nghệ Tĩnh · hướng Nam', active: true },
+      { camera_id: 'CAM-HX-009', junction_id: 'HX-04', label: 'hướng về XVNT', active: true },
+    ]);
+    assert.deepEqual(
+      groups.map(g => [g.junction, g.items.map(i => i.value)]),
+      [
+        ['Cầu vượt Hàng Xanh × Điện Biên Phủ', ['CAM-HX-001']],
+        ['Ngã tư Hàng Xanh × Xô Viết Nghệ Tĩnh', ['CAM-HX-002', 'CAM-HX-004']],
+        ['Nút khác', ['CAM-HX-003']],
+        ['HX-04', ['CAM-HX-009']],
+      ],
+    );
+    assert.equal(groups[0].items[0].direction, 'hướng Điện Biên Phủ');
+    assert.deepEqual(cameraJunctions([
+      ...streams,
+      { camera_id: 'CAM-HX-004', label: 'Ngã tư Hàng Xanh ∩ Xô Viết Nghệ Tĩnh · hướng Nam' },
+    ]), [
+      { junction: 'Cầu vượt Hàng Xanh × Điện Biên Phủ', count: 1 },
+      { junction: 'Ngã tư Hàng Xanh × Xô Viết Nghệ Tĩnh', count: 2 },
+      { junction: 'Nút khác', count: 1 },
+    ]);
+    assert.deepEqual(
+      filterCamerasByJunction(groups, 'Ngã tư Hàng Xanh × Xô Viết Nghệ Tĩnh').map(c => c.value),
+      ['CAM-HX-002', 'CAM-HX-004'],
+    );
+    assert.equal(filterCamerasByJunction(groups, '').length, 5);
+    assert.deepEqual(filterCamerasByJunction(groups, 'Không tồn tại'), []);
   });
 });

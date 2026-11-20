@@ -3,7 +3,10 @@ import { Api, errorMessage, streamUrl } from '../../lib/api';
 import { formatDateTime, formatPenalty, penaltyContext } from '../../lib/format';
 import { violationLabel, violationStatusLabel } from '../../lib/labels';
 import { Pager, pageCount } from '../../components/Pager';
-import { cameraDefault, cameraGridSlice, CameraGridSize, cameraOptions, CameraOption, cameraPageForId } from '../../lib/cameras';
+import {
+  cameraDefault, cameraGridSlice, CameraGridSize, cameraGroups,
+  CameraStream, cameraPageForId, filterCamerasByJunction, GroupedCameraOption,
+} from '../../lib/cameras';
 import type { OfficerViolation, Page } from '../../lib/types';
 
 type Filter = 'pending' | 'confirmed' | 'notified' | 'disputed' | 'paid' | 'dismissed' | 'all';
@@ -45,7 +48,8 @@ const SUCCESS_TEXT: Record<Action, (status?: string) => string> = {
 
 export function ViolationsTab({ api, tick, streamTicks, onChanged, onVisibleCamerasChange }: Props) {
   const [failedCams, setFailedCams] = useState<Record<string, boolean>>({});
-  const [cams, setCams] = useState<CameraOption[]>([]);
+  const [rawStreams, setRawStreams] = useState<CameraStream[]>([]);
+  const [junctionFilter, setJunctionFilter] = useState<string>('');
   const [cameraId, setCameraId] = useState<string>(CAMERA_ID);
   const [gridSize, setGridSize] = useState<CameraGridSize>(4);
   const [camPage, setCamPage] = useState<number>(1);
@@ -83,18 +87,34 @@ export function ViolationsTab({ api, tick, streamTicks, onChanged, onVisibleCame
   // Danh sách camera giao lộ để chọn (10 camera, mỗi nút 1–2 hướng).
   useEffect(() => {
     let alive = true;
-    api.get<{ streams: { camera_id: string; label?: string }[] }>('/officer/streams')
+    api.get<{ streams: CameraStream[] }>('/officer/streams')
       .then(r => {
         if (!alive) return;
-        const opts = cameraOptions(r.streams);
-        const nextCams = opts.length > 0 ? opts : [{ value: CAMERA_ID, label: CAMERA_ID }];
-        setCams(nextCams);
-        const first = cameraDefault(r.streams);
+        const list = Array.isArray(r.streams) && r.streams.length > 0 ? r.streams : [{ camera_id: CAMERA_ID }];
+        setRawStreams(list);
+        const first = cameraDefault(list);
         if (first) setCameraId(first);
       })
-      .catch(() => { if (alive) setCams([{ value: CAMERA_ID, label: CAMERA_ID }]); });
+      .catch(() => { if (alive) setRawStreams([{ camera_id: CAMERA_ID }]); });
     return () => { alive = false; };
   }, [api]);
+
+  const groups = useMemo(() => cameraGroups(rawStreams), [rawStreams]);
+  const totalCameraCount = useMemo(() => groups.reduce((acc, g) => acc + g.items.length, 0), [groups]);
+  const visibleGroups = useMemo(
+    () => (junctionFilter ? groups.filter(g => g.junction === junctionFilter) : groups),
+    [groups, junctionFilter],
+  );
+  const cams = useMemo(
+    () => filterCamerasByJunction(groups, junctionFilter),
+    [groups, junctionFilter],
+  );
+
+  useEffect(() => {
+    if (cams.length > 0 && !cams.some(c => c.value === cameraId)) {
+      setCameraId(cams[0].value);
+    }
+  }, [cams, cameraId]);
 
   useEffect(() => {
     const syncFs = () => {
@@ -107,7 +127,7 @@ export function ViolationsTab({ api, tick, streamTicks, onChanged, onVisibleCame
   }, []);
 
   const gridState = useMemo(() => {
-    if (cams.length === 0) return { page: 1, totalPages: 1, items: [] as CameraOption[] };
+    if (cams.length === 0) return { page: 1, totalPages: 1, items: [] as GroupedCameraOption[] };
     if (gridSize === 1) {
       const idx = Math.max(0, cams.findIndex(c => c.value === cameraId));
       return { page: idx + 1, totalPages: cams.length, items: [cams[idx]] };
@@ -135,6 +155,15 @@ export function ViolationsTab({ api, tick, streamTicks, onChanged, onVisibleCame
   const changeGridSize = (next: CameraGridSize) => {
     setGridSize(next);
     if (next > 1) setCamPage(cameraPageForId(cams, cameraId, next));
+  };
+
+  const selectJunction = (nextJunction: string) => {
+    setJunctionFilter(nextJunction);
+    setCamPage(1);
+    const nextCams = filterCamerasByJunction(groups, nextJunction);
+    if (nextCams.length > 0 && !nextCams.some(c => c.value === cameraId)) {
+      setCameraId(nextCams[0].value);
+    }
   };
 
   const selectCamera = (nextId: string) => {
@@ -239,11 +268,35 @@ export function ViolationsTab({ api, tick, streamTicks, onChanged, onVisibleCame
               </div>
             )}
           </div>
-          <label className="cam-select-field">Camera giao lộ
-            <select value={cameraId} onChange={e => selectCamera(e.target.value)}>
-              {cams.map(cam => <option key={cam.value} value={cam.value}>{cam.label}</option>)}
-            </select>
-          </label>
+          <div className="cam-selects">
+            <label className="cam-junction-field">Nút giao lộ
+              <select
+                aria-label="Lọc camera theo nút giao lộ"
+                value={junctionFilter}
+                onChange={e => selectJunction(e.target.value)}
+              >
+                <option value="">Tất cả nút giao ({totalCameraCount})</option>
+                {groups.map(group => (
+                  <option key={group.junction} value={group.junction}>
+                    {group.junction} ({group.items.length})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="cam-select-field">Camera giao lộ
+              <select value={cameraId} onChange={e => selectCamera(e.target.value)}>
+                {visibleGroups.map(group => (
+                  <optgroup key={group.junction} label={`${group.junction} (${group.items.length})`}>
+                    {group.items.map(cam => (
+                      <option key={cam.value} value={cam.value}>
+                        {cam.direction ? `${cam.value} · ${cam.direction}` : cam.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
 
         <div className={`cam-grid cam-grid-${gridState.items.length === 1 ? 1 : gridSize}`}>
@@ -279,7 +332,10 @@ export function ViolationsTab({ api, tick, streamTicks, onChanged, onVisibleCame
                   <span className="cam-fs-hint" aria-hidden="true">{isFs ? 'Thu nhỏ' : '⛶ Toàn màn hình'}</span>
                 </button>
                 <figcaption className="cam-cap">
-                  <span className="cam-cap-label" title={cam.label}>{cam.label}</span>
+                  <div className="cam-cap-text" title={cam.label}>
+                    <span className="cam-cap-junction">{cam.junction}</span>
+                    {cam.direction && <span className="cam-cap-dir">{cam.direction}</span>}
+                  </div>
                   <button
                     type="button"
                     className="ghost cam-fs-btn"

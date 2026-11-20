@@ -145,7 +145,9 @@ button.danger { background: var(--danger); }
 .cam-pager { display: inline-flex; align-items: center; gap: 6px; }
 .cam-pager button { padding: 4px 10px; min-height: 34px; font-weight: 700; }
 .cam-page-info { font-size: 12px; color: var(--muted); white-space: nowrap; }
-.cam-select-field { min-width: min(360px, 100%); flex: 1 1 280px; max-width: 480px; }
+.cam-selects { display: flex; flex-wrap: wrap; gap: 10px; flex: 1 1 420px; justify-content: flex-end; }
+.cam-junction-field { min-width: min(260px, 100%); flex: 1 1 220px; max-width: 320px; }
+.cam-select-field { min-width: min(280px, 100%); flex: 1 1 240px; max-width: 360px; }
 
 .cam-grid { display: grid; gap: 10px; }
 .cam-grid-1 { grid-template-columns: minmax(0, 680px); }
@@ -232,7 +234,11 @@ button.danger { background: var(--danger); }
   color: var(--ink);
   font-size: 12px;
 }
-.cam-cap-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cam-cap-text { min-width: 0; display: grid; gap: 1px; }
+.cam-cap-junction { font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cam-cap-dir { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cam-tile:fullscreen .cam-cap-junction { color: #f8fafc; }
+.cam-tile:fullscreen .cam-cap-dir { color: #94a3b8; }
 .cam-fs-btn { flex: none; padding: 3px 8px; font-size: 12px; min-height: 28px; }
 .cam-filter-bar { margin-bottom: 0; padding-top: 4px; border-top: 1px solid var(--line); }
 
@@ -241,7 +247,8 @@ button.danger { background: var(--danger); }
 }
 @media (max-width: 640px) {
   .cam-grid-4, .cam-grid-9 { grid-template-columns: minmax(0, 1fr); }
-  .cam-select-field { min-width: 0; max-width: none; width: 100%; }
+  .cam-selects { flex-basis: 100%; }
+  .cam-junction-field, .cam-select-field { min-width: 0; max-width: none; width: 100%; flex-basis: 100%; }
 }
 
 .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
