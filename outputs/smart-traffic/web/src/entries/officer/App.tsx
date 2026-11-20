@@ -2,7 +2,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 're
 import { Api, ApiError, errorMessage, login, loadToken, makeApi, saveToken } from '../../lib/api';
 import { OFFICER_TAB_LABELS, OfficerTab, canControl, officerTabs } from '../../lib/access';
 import { roleLabel } from '../../lib/labels';
-import { connectSmartWs, WsMessage } from '../../lib/ws';
+import { connectSmartWs, WsMessage, WsStatus } from '../../lib/ws';
 import { createMultiStreamThrottle, createReloadScheduler, MultiStreamThrottle } from '../../lib/refresh';
 import type { Kpi, Me } from '../../lib/types';
 import type { HeatView } from '../../lib/heat';
@@ -28,6 +28,7 @@ export function App() {
   const [notice, setNotice] = useState('');
   const [heatLive, setHeatLive] = useState<HeatView | null>(null);
   const [alertNotice, setAlertNotice] = useState('');
+  const [wsStatus, setWsStatus] = useState<WsStatus>('polling');
   const [streamTicks, setStreamTicks] = useState<Record<string, number>>({});   // đổi src ảnh từng camera theo stream.updated
   const [visibleCameras, setVisibleCameras] = useState<string[]>([CAMERA_ID]);
 
@@ -38,6 +39,7 @@ export function App() {
     setKpi({});
     setHeatLive(null);
     setAlertNotice('');
+    setWsStatus('polling');
     setNotice(message);
   }, []);
 
@@ -92,7 +94,7 @@ export function App() {
       else if (msg.event === 'alert.congestion' && msg.data) setAlertNotice(`Cảnh báo kẹt mới trên ${msg.data.name}: ${alertDetail(msg.data)}.`);
       else if (['violation.created', 'violation.updated', 'complaint.updated'].includes(msg.event)) scheduler.schedule();
       else if (msg.event === 'stream.updated') throttle.onStreamUpdated(msg.data);
-    });
+    }, setWsStatus);
     const timer = setInterval(() => scheduler.schedule(), 15000);
     const onVisibility = () => { if (isVisible()) scheduler.onVisible(); };
     document.addEventListener('visibilitychange', onVisibility);
@@ -142,7 +144,20 @@ export function App() {
           <h1>{TITLE}</h1>
           <p className="who">{me.display_name || me.username} · {roleLabel(me.role)}</p>
         </div>
-        <button type="button" className="ghost" onClick={() => signOut('')}>Đăng xuất</button>
+        <div className="topbar-actions">
+          <span
+            className={`live-pill live-${wsStatus}`}
+            role="status"
+            aria-live="polite"
+            title={wsStatus === 'live'
+              ? 'Đang nhận cập nhật thời gian thực qua WebSocket'
+              : 'Mất kết nối trực tiếp, đang tự tải lại định kỳ mỗi 15 giây'}
+          >
+            <span className="live-dot" aria-hidden="true" />
+            {wsStatus === 'live' ? 'Đang trực tiếp' : 'Đang tải lại định kỳ'}
+          </span>
+          <button type="button" className="ghost" onClick={() => signOut('')}>Đăng xuất</button>
+        </div>
       </header>
 
       <section className="kpi" aria-label="Chỉ số hệ thống">
