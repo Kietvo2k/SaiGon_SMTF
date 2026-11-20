@@ -141,9 +141,12 @@ export function sanitizeSmartDom32(root) {
 
 // M5b-1 — hành vi xe phạm lỗi của app smart (truyền vào createTraffic31 → sim): nút cấm rẽ trái theo dữ liệu, và các nút
 // đỗ sai = nút có camera (lỗi nằm trong khung ghi hình). Chỉ số nút theo graph.nodes; không có nút thì mảng rỗng.
+// demo-v2 (P1-10): yellowDecision — xe đang chạy quyết định đi tiếp trong pha vàng theo tốc độ + khoảng cách vạch;
+// motoCreep — xe máy len lối về mép làn khi đứng chờ đèn. Mặc định tắt ở luồng cổ điển (hash hồi quy không đổi).
 export function smartBehavior32({ graph, nodeMap, cameras = null }) {
   // M5b-1b: vùng cấm đỗ/điểm đo tốc độ/tuyến ngược chiều dựng từ camera registry (violation-zones-32.js), không từ nút.
-  return { restrictedNodes: restrictedNodeIndices32(graph, nodeMap), cameras, zoneSpec: ZONE_SPEC_32 };
+  return { restrictedNodes: restrictedNodeIndices32(graph, nodeMap), cameras, zoneSpec: ZONE_SPEC_32,
+    yellowDecision: true, motoCreep: true };
 }
 
 export async function prepareSmart32({ graph, config = null }) {

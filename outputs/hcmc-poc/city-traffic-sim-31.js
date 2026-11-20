@@ -18,6 +18,17 @@ export const TRAFFIC_31_VERSION = 'traffic-31D';
 export const SEED = 31031;
 export const STEP = 1 / 10;   // s, bước cố định 10 Hz (vẽ nội suy giữa hai bước)
 export const MAX_STEPS_PER_FRAME = 5;
+// demo-v2 (P1-10): quyết định khi VÀNG — hàm thuần để test tất định; xe đang chạy (v ≥ 1) đi tiếp nếu
+// chạy nhanh (≥ YELLOW_GO_V_32 m/s) HOẶC phanh an toàn (3 m/s²) không kịp vạch trong pha vàng còn lại.
+export const YELLOW_GO_V_32 = 6;
+export const YELLOW_BRAKE_32 = 3.0;
+export function yellowGoDecision32(v, toLine, remainS) {
+  const v0 = Math.max(0, Number(v) || 0), dist = Number(toLine), remain = Math.max(0, Number(remainS) || 0);
+  if (v0 < 1) return false;                       // đang đứng chờ: không khởi động chạy vàng
+  if (!(dist > 0)) return true;                   // đầu xe đã ở vạch
+  const brakeDist = (v0 * v0) / (2 * YELLOW_BRAKE_32);
+  return v0 >= YELLOW_GO_V_32 || dist < brakeDist + v0 * remain * 0.35;
+}
 const POOL_TARGET = 3600;
 const PN = 4, LK = 5;   // PN: số làn lập sẵn lộ trình = số nút tối đa xin khóa một lượt (cụm nút kề nhau); LK: chỗ giữ khóa (thêm 1 cho nút vừa qua chưa nhả)
 
@@ -373,7 +384,10 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     parkS0: behavior.parkS0 || null, parkS1: behavior.parkS1 || null,
     sampleNodes: signalPlan && signalPlan.signalNodes ? [...signalPlan.signalNodes] : [],
     redOn: new Float64Array(net.NN * 2).fill(-1e9), wasRed: new Uint8Array(net.NN * 2),
-    redIv: new Map()   // M5b-1b: khoảng đỏ của từng nhóm (k = nút*2+nhóm) [{on, off}], để perception nội suy lúc vượt vạch
+    redIv: new Map(),   // M5b-1b: khoảng đỏ của từng nhóm (k = nút*2+nhóm) [{on, off}], để perception nội suy lúc vượt vạch
+    // demo-v2 (P1-10): cờ hành vi lái mới (mặc định false → hash cổ điển giữ nguyên).
+    yellowDecision: behavior.yellowDecision === true,
+    motoCreep: behavior.motoCreep === true
   } : null;
   // M4b1: routeBias(edge, carIndex) → hệ số 0..1 nhân vào trọng số rẽ vào cạnh `edge` (không truyền / trả về ≥ 1 = y nguyên;
   // không rút thêm số ngẫu nhiên nên hash cổ điển giữ nguyên).
@@ -606,6 +620,39 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const t = (counters.t + signalOffset[node]) % SIGNAL_CYCLE, g = arriveGroup[st];
     return g === 0 ? t < 22 : t >= 25 && t < 41;
   }
+  // demo-v2 (P1-10): quyết định khi VÀNG theo tốc độ + khoảng cách vạch — chỉ bật khi beh.yellowDecision.
+  // Xe đang chạy (v ≥ 1 m/s) được đi tiếp trong pha vàng nếu: chạy nhanh (≥ YELLOW_GO_V_32) HOẶC phanh an toàn
+  // không đủ kịp vạch. Xe đang ĐỨNG chờ không tự chạy vàng (không tạo lỗi ảo từ đầu hàng).
+  const YELLOW_GO_V_32 = 6, YELLOW_BRAKE_32 = 3.0;
+  let yellowCache = null, yellowStep = -1;
+  const yellowStateOf = (node, group) => {
+    if (counters.step !== yellowStep) { yellowStep = counters.step; yellowCache = new Map(); }
+    const key = node * 2 + group;
+    let rec = yellowCache.get(key);
+    if (rec !== undefined) return rec;
+    rec = -1;
+    if (controller && controller.stateOf && signalPlan && signalPlan.signalNodes.includes(node)) {
+      const state = controller.stateOf(node, counters.t);
+      const phase = state.phases.find(p => p.group === group);
+      if (phase && phase.phase === 'yellow') rec = phase.countdown_s;
+    } else if (signal[node]) {
+      const t = (counters.t + signalOffset[node]) % SIGNAL_CYCLE;
+      const window = group === 0 ? [22, 25] : [41, 44];   // 31A: vàng 3 s cuối mỗi nhóm
+      if (t >= window[0] && t < window[1]) rec = window[1] - t;
+    }
+    yellowCache.set(key, rec);
+    return rec;
+  };
+  const yellowMayGo = (i, inL) => {
+    if (!beh || !beh.yellowDecision) return false;
+    if (v[i] < 1) return false;   // đang đứng chờ: không khởi động chạy vàng
+    const node = lanes.to[inL], st = lanes.st[inL];
+    const remain = yellowStateOf(node, arriveGroup[st]);
+    if (remain < 0) return false;
+    const toLine = lanes.length[inL] - Rz[node] - s[i] - len[i] / 2;
+    if (toLine <= 0) return true;   // đầu xe đã ở vạch: đi tiếp là an toàn duy nhất
+    return yellowGoDecision32(v[i], toLine, remain);
+  };
   const firstRear = (l, i, shiftJit, pred = 0) => { const a = laneCars[l]; if (!a) return Infinity; for (const j of a) { if (j === i) continue; if (!shiftJit || blocks(i, j)) return s[j] - len[j] / 2 + v[j] * pred; } return Infinity; };
   const sigHeld = (i, plan) => { for (const p of plan) if (signal[p.node]) return true; for (let k = 0; k < LK; k++) { const n = lockNode[i * LK + k]; if (n >= 0 && signal[n]) return true; } return false; };
   // Thử lấy khóa cho chuyển động (inL → outL) tại nút cuối inL, kèm chuỗi nút kế nếu làn ra quá ngắn để dừng.
@@ -618,7 +665,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     // Đèn chỉ chặn ở nút có đèn đầu tiên trên chuỗi khóa: chuỗi nút kề nhau (liên kết ngắn) có đèn lệch nhóm (xanh nhóm 0 / nhóm 1 không bao giờ trùng)
     // sẽ không bao giờ có đủ xanh cùng lúc → xe đứng vĩnh viễn; xe đã giữ/đang xin một nút có đèn coi cả cụm là một giao lộ.
     const mayRunRed = !isEmergencyCar(i) && ((controller && controller.runsRed(i, node, st, counters.t)) || redRunOk(i, node, st));
-    if (!(ignorePriority && !isEmergencyCar(i)) && !green(node, st) && !sigHeld(i, plan) && !mayRunRed) return false;
+    if (!(ignorePriority && !isEmergencyCar(i)) && !green(node, st) && !sigHeld(i, plan) && !mayRunRed && !yellowMayGo(i, inL)) return false;
     const hs = holders.get(node) || [];
     for (const h of hs) if (h.car !== i && !compatible(inL, outL, h, i)) return false;
     for (const p of plan) if (p.node === node && !(p.inL === inL) && !compatible(inL, outL, { car: i, inL: p.inL, outL: p.outL, straight: straightMove(p.inL, p.outL) }, i)) return false;
@@ -1053,6 +1100,14 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       stopT[i] += STEP; if (stopT[i] > counters.maxStopS) counters.maxStopS = stopT[i];
       if (!holding && !waiting[i]) { waiting[i] = 1; counters.waitsTotal++; }
       if (stopT[i] > breakerS) respawn(i, true);
+      // demo-v2 (P1-10): xe máy len lối khi đứng chờ đèn — jit trượt dần về mép làn (kẹp ±0,95 m),
+      // chỉ đổi vị trí ngang; thứ tự hàng chờ IDM (s) và khóa nút không đổi.
+      if (beh && beh.motoCreep && kind[i] === 0 && !isEmergencyCar(i) && holding === false) {
+        const MOTO_CREEP_CAP_32 = 0.95, MOTO_CREEP_RATE_32 = 0.012;
+        const dir = jit[i] >= 0 ? 1 : -1;
+        jit[i] = Math.max(-MOTO_CREEP_CAP_32, Math.min(MOTO_CREEP_CAP_32, jit[i] + dir * MOTO_CREEP_RATE_32));
+        lat[i] = lanes.offset[l] + jit[i];
+      }
     } else { stopT[i] = 0; waiting[i] = 0; }
   }
 
