@@ -3,6 +3,6 @@
   "framework": null,
   "outputDirectory": "dist/public-demo/vercel",
   "functions": {
-    "api/demo/*.mjs": { "maxDuration": 10 }
+    "api/**/*.mjs": { "maxDuration": 10 }
   }
 }
