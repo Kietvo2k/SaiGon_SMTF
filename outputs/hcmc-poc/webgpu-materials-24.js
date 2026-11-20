@@ -1335,6 +1335,29 @@ if(smartApp){
   try{
     smartApp.registerSmartModule32('testLab',smartMod.mountTestLab32(host,{spawnNpc:count=>traffic.spawnTestNpc(count),clearNpcs:()=>traffic.clearTestNpcs(),npcCount:()=>traffic.sim.testNpcCount()}));
   }catch(e){console.warn('testLab32:',e);}
+  // demo-v2 (P2-8): bàn cưỡng chế — ghim đèn ngẫu nhiên / bơm xe / triệu hồi xe công vụ / tạo tai nạn (P2-7),
+  // mỗi thao tác có hoàn tác; sự cố phát tín hiệu 'smtf-submit-events' cho web cán bộ.
+  try{
+    const heatMod=smartApp.modules.heat;
+    const enforcement=smartMod.createEnforcement32({traffic,controller:smartApp.controller,
+      nodeMap:smartPrep.nodeMap,emergency:smartApp.modules.emergency||null,
+      routing:smartRoute,vms:smartApp.vms,boards:heatMod&&heatMod.boards?heatMod.boards:[]});
+    smartApp.registerSmartModule32('enforcement',enforcement);
+    const enfPanel=smartMod.mountEnforcementPanel32(host,{
+      onPin:()=>enforcement.pinSignal(),
+      onSpawnCars:count=>enforcement.spawnCars(count),
+      onService:kind=>enforcement.spawnService(kind),
+      onIncident:()=>enforcement.createIncident(),
+      onUndo:id=>enforcement.undo(id),
+      onUndoAll:()=>enforcement.undoAll()
+    });
+    if(enfPanel){
+      let lastCount=-1;
+      const timer=setInterval(()=>{const n=enforcement.count();if(n!==lastCount){lastCount=n;enfPanel.render(enforcement.actions());}},1000);
+      enfPanel.render(enforcement.actions());
+      smartApp.registerSmartModule32('enforcementPanel',{dispose(){clearInterval(timer);enfPanel.dispose();}});
+    }
+  }catch(e){console.warn('enforcement32:',e);}
 }
 await renderer.compileAsync(scene,camera);
 // Bước H: biên dịch sẵn pipeline cho từng khu (camera Toàn vùng, che sau màn nạp) — đổi khu lần đầu không bị khựng do dựng pipeline.

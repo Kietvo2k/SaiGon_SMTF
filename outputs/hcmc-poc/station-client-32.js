@@ -491,7 +491,7 @@ export function createCommandRouter32({ scenarios = null, vms = null, log = defa
 // Vòng trạm: quét vi phạm 0,5 s → chụp bằng chứng → gửi (có bằng chứng kèm); ảnh "trước vạch" ~1 fps
 // cho camera không stream; khung stream ≤ 2 fps cho camera đang mở (mặc định camera đầu registry).
 export function startStationLoop32(app, { perception, capture, transport, cameras = [], scanMs = 500, beforeMs = 1000,
-  openCamera = null, streamAll = false, rotGapMs = 0, log = defaultLog32 } = {}) {
+  openCamera = null, streamAll = false, rotGapMs = 0, onViolation = null, log = defaultLog32 } = {}) {
   if (!perception || !capture || !transport) throw new TypeError('startStationLoop32 cần perception, capture, transport');
   const camIds = cameras.map(c => c.camera_id);
   const frameGapMs = 1000 / FRAME_FPS_32 - 50;   // chừa biên để nhịp 0,5 s không bỏ mất khung
@@ -559,6 +559,10 @@ export function startStationLoop32(app, { perception, capture, transport, camera
       .filter(p => p && p.jpeg)
       .map(p => ({ kind: p.kind, dataUrl: p.jpeg }));
     await transport.sendViolation(rec, items);
+    // demo-v2: phát tín hiệu khung nhận diện cho web cán bộ (kênh BroadcastChannel chỉ truyền tín hiệu).
+    if (typeof onViolation === 'function') {
+      try { onViolation(rec); } catch (e) { log(`[station] phát tín hiệu vi phạm lỗi: ${e && e.message}`); }
+    }
   };
 
   const tick = async () => {

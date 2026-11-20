@@ -29,6 +29,8 @@ import { createHeatScene32, mountHeatPanel32 } from './heat-scene-32.js?v=32a';
 import { createScenarios32, mountScenarioPanel32, createBlockProps32 } from './scenarios-32.js?v=32a';
 import { createEmergency32, createEmergencyVisual32 } from './emergency-32.js?v=32a';
 import { createCommandRouter32 } from './station-client-32.js?v=32a';
+// demo-v2 (P2-8): bàn cưỡng chế — ghim đèn / bơm xe / triệu hồi xe công vụ / tạo tai nạn, có hoàn tác.
+export { createEnforcement32, mountEnforcementPanel32, ENFORCEMENT_32_VERSION, ENFORCEMENT_PIN_S_32 } from './enforcement-32.js?v=32c';
 export { createRouteBias32, createVmsBus32, vmsDisplay32 } from './heat-live-32.js?v=32a';
 export { createScenarios32, findLaneBlock32, findFloodEdges32, SCENARIO_KEYS_32, SCENARIO_LABELS_32 } from './scenarios-32.js?v=32a';
 export { createCommandRouter32 } from './station-client-32.js?v=32a';
@@ -324,10 +326,21 @@ export function installStation32(app, { cameras = [], nodeMap = [], search = (ty
   hud = installHud32(app, { transport });
   bridge.start().catch(error => console.warn('[station] không nối được trạm:', error.message));
   transport.start();
+  // demo-v2: phát vi phạm lên kênh 'smtf-submit-events' cho web cán bộ banner "khung nhận diện tự động".
+  let violationChannel = null;
+  const emitViolation = rec => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    if (!violationChannel) violationChannel = new BroadcastChannel('smtf-submit-events');
+    violationChannel.postMessage({
+      type: 'violation', code: rec.violation_code, label: rec.violation_label || rec.summary || '',
+      plate: rec.plate, cameraId: rec.camera_id, confidence: Number.isFinite(rec.confidence) ? rec.confidence : null,
+      at: Date.now()
+    });
+  };
   // streamAll: luân phiên khung MỌI camera (~15 khung/phút/camera) cho web công an xem được 10 camera
   // (chế độ Docker/local). Bản public chỉ đẩy camera đang xem (submit-frame-32 lo /api/demo/frame 1 khung/3 s).
   const streamAllOn = streamAll == null ? mode !== 'public' : !!streamAll;
-  const loop = startStationLoop32(app, { perception, capture, transport, cameras, streamAll: streamAllOn });
+  const loop = startStationLoop32(app, { perception, capture, transport, cameras, streamAll: streamAllOn, onViolation: emitViolation });
   transport.dispose = () => { loop.stop(); transport.stop(); return bridge.stop(); };
   app.registerSmartModule32('perception', perception);
   app.registerSmartModule32('transport', transport);
