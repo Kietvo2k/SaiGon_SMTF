@@ -1,0 +1,309 @@
+{
+  "base": "https://saigon-smtf-submit-b0hwqv9ts-louiskiet2009-1881s-projects.vercel.app",
+  "startedAt": "2026-11-20T15:07:03.106Z",
+  "checks": {
+    "nav": {
+      "landingStatus": 200,
+      "title": "SaiGon SMTF · Điều phối giao thông khu Bắc",
+      "officerStatus": 200,
+      "goBackLanding": true
+    },
+    "data": {
+      "kpis": [
+        "Nguồn chỉ sốDữ liệu mẫu",
+        "Chờ trung bình18 giây",
+        "Hàng chờ lớn nhất9 xe",
+        "Lưu lượng mỗi nút24 xe/phút"
+      ],
+      "records": [
+        "51K-123.45Vi phạm tín hiệu (mẫu)confirmed"
+      ],
+      "cameraOptions": 15,
+      "kpiOk": true,
+      "recordOk": true
+    },
+    "cam": {
+      "src": "/api/demo/media?cameraId=CAM-BAC-002&frameId=sample-CAM-BAC-002",
+      "natural": [
+        1280,
+        720,
+        true
+      ],
+      "stage": [
+        779,
+        438
+      ],
+      "meta": "Ảnh mẫuẢnh mẫu · không có giờ chụpBac-02 · CAM-BAC-002",
+      "sourceBadge": "Ảnh mẫu",
+      "selectValue": "CAM-BAC-002",
+      "buttons": [
+        [
+          "Toàn màn hình",
+          "Mở camera toàn màn hình"
+        ]
+      ],
+      "fullscreen": {
+        "fullscreen": true,
+        "stage": [
+          1440,
+          900
+        ],
+        "imgVisible": true
+      },
+      "switchToHX001": {
+        "src": "?cameraId=CAM-HX-001&frameId=sample-CAM-HX-001",
+        "meta": "Ảnh mẫuẢnh mẫu · không có giờ chụpHX-C1 · CAM-HX-001"
+      }
+    },
+    "citizen": {
+      "plateContinuous": [
+        "51K-123.45Vi phạm tín hiệu (mẫu)confirmed"
+      ],
+      "plateDashed": [
+        "51K-123.45Vi phạm tín hiệu (mẫu)confirmed"
+      ],
+      "validEmpty": {
+        "message": "Biển số hợp lệ, chưa có hồ sơ trong dữ liệu demo.",
+        "error": null
+      },
+      "invalidPlate": {
+        "error": "Biển số chưa đúng định dạng. Kiểm tra và thử lại."
+      }
+    },
+    "scene": {
+      "backend": "webgl2",
+      "region": "bac",
+      "mode": "lite",
+      "forecast": true,
+      "junctions": 11,
+      "buildId": "6cac2b7419ecd75b37f79ebf1790bedaf27f96a5",
+      "keys": {
+        "app": [
+          "controller",
+          "traffic",
+          "scene",
+          "camera",
+          "renderer",
+          "status",
+          "root",
+          "modules",
+          "vms",
+          "registerSmartModule32",
+          "dispose",
+          "focusTraffic32",
+          "focusJunction32",
+          "metricsExtra32"
+        ],
+        "modules": [
+          "signals",
+          "capture",
+          "hud",
+          "heat",
+          "forecast",
+          "clock",
+          "emergency",
+          "scenarios",
+          "signalInspector",
+          "testLab"
+        ]
+      }
+    },
+    "hud1440": {
+      "rect": {
+        "x": 12,
+        "y": 834,
+        "w": 482,
+        "h": 54
+      },
+      "options": 11,
+      "optionValues": [
+        "",
+        "HX-C1",
+        "HX-C2",
+        "HX-C3",
+        "HX-C4",
+        "HX-C5",
+        "Bac-01",
+        "Bac-02",
+        "Bac-03",
+        "Bac-04",
+        "Bac-05"
+      ],
+      "viewport": [
+        1440,
+        900
+      ]
+    },
+    "hud768": {
+      "rect": {
+        "x": 350,
+        "y": 901,
+        "w": 139,
+        "h": 44
+      },
+      "panel": {
+        "x": 12,
+        "y": 834,
+        "w": 482,
+        "h": 54
+      },
+      "viewport": [
+        768,
+        900
+      ],
+      "scrollY": 0,
+      "visible": false,
+      "options": 11
+    },
+    "hud390": {
+      "rect": {
+        "x": 17,
+        "y": 845,
+        "w": 139,
+        "h": 44
+      },
+      "panel": {
+        "x": 12,
+        "y": 730,
+        "w": 366,
+        "h": 102
+      },
+      "viewport": [
+        390,
+        844
+      ],
+      "scrollY": 0,
+      "visible": false,
+      "options": 11
+    },
+    "hudFlow": {
+      "before": {
+        "value": "",
+        "status": ""
+      },
+      "afterSelect": {
+        "status": "",
+        "cameraInfo": "Ung Văn Khiêm × Nguyễn Gia Trí · góc quan sát Bắc · CAM-BAC-002"
+      },
+      "afterStandard": {
+        "status": "Đang quan sát từ góc chuẩn"
+      },
+      "appKeys": {
+        "sim": true,
+        "controller": true,
+        "trafficKeys": [
+          "zones",
+          "ghosts",
+          "auxMeshes",
+          "poseOf",
+          "drawFor",
+          "version",
+          "group",
+          "meshes",
+          "kinds",
+          "total",
+          "sim",
+          "net",
+          "setBoundingBoxes",
+          "boundingBoxes",
+          "update",
+          "recordCpu",
+          "lightLevel",
+          "cpuSamples",
+          "drawn",
+          "snapshot",
+          "lanes",
+          "poses",
+          "surfaceAbove",
+          "instances",
+          "stats",
+          "stateHash",
+          "reset",
+          "advance",
+          "setVisibleFraction",
+          "spawnTestNpc",
+          "clearTestNpcs",
+          "setRegion",
+          "setRestrictions",
+          "restrictionCounts",
+          "getRegion",
+          "setTimeScale",
+          "getTimeScale",
+          "fastForward",
+          "ffRemaining",
+          "setDensity",
+          "controller",
+          "signalState",
+          "attachController",
+          "setSignalMode",
+          "overridePhase",
+          "counts"
+        ]
+      }
+    },
+    "signal": {
+      "found": true,
+      "params": {
+        "yellowS": 3,
+        "allRedS": 2,
+        "minGreenS": 8,
+        "maxGreenS": 45
+      },
+      "cycle_s": 44,
+      "phaseDurations0": [
+        [
+          "green",
+          0.2
+        ],
+        [
+          "red",
+          22
+        ],
+        [
+          "green",
+          22.1
+        ]
+      ],
+      "phaseDurations1": [
+        [
+          "red",
+          3.2
+        ],
+        [
+          "green",
+          16
+        ],
+        [
+          "red",
+          28.1
+        ]
+      ],
+      "yellowS": [],
+      "greenS": [
+        0.2,
+        22.1,
+        16
+      ],
+      "allRedS": [
+        3
+      ],
+      "status": "FAIL"
+    },
+    "fps": {
+      "medianFPS": 120,
+      "p95FrameMs": 9
+    },
+    "net": {
+      "total": 112,
+      "bad": [],
+      "failures": [],
+      "errors": [],
+      "workers": [
+        "https://saigon-smtf-submit-b0hwqv9ts-louiskiet2009-1881s-projects.vercel.app/hcmc-poc/forecast-worker-32.js?v=32a"
+      ],
+      "forecastWorker": true
+    }
+  },
+  "pass": false,
+  "finishedAt": "2026-11-20T15:08:51.295Z"
+}
