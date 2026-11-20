@@ -2,7 +2,7 @@ import base64
 import io
 
 from tests.test_station import officer_headers, station_headers, violation_body
-from tests.public_demo_helpers import apply_command, claim_station
+from tests.public_demo_helpers import apply_command, capability_headers, claim_station
 
 PNG = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')
 
@@ -13,7 +13,9 @@ def commander_headers(client):
 
 
 def make_violation(client, h, **over):
-    return client.post('/api/v1/station/violations', headers=h, json=violation_body(**over)).json()['id']
+    response = client.post('/api/v1/station/violations', headers=h, json=violation_body(**over))
+    assert response.status_code == 200, response.text
+    return response.json()['id']
 
 
 # ---------- Item 1: vòng đời M1 ----------
@@ -144,9 +146,10 @@ def test_page_size_bounds(client):
 def test_audit_log_written_for_review_and_signals(client):
     h, oh, ch = station_headers(client), officer_headers(client), commander_headers(client)
     lease = claim_station(client, h)
-    vid = make_violation(client, h, vehicle_id='V-A001', cycle_id=301)
-    client.post(f'/api/v1/officer/violations/{vid}/needs-review', headers=oh, json={'note': 'a'})
-    client.post(f'/api/v1/officer/violations/{vid}/confirm', headers=oh, json={'note': 'b'})
+    vid = make_violation(client, capability_headers(lease), vehicle_id='V-A001', cycle_id=301)
+    for action, note in (('needs-review', 'a'), ('confirm', 'b')):
+        review = client.post(f'/api/v1/officer/violations/{vid}/{action}', headers=oh, json={'note': note})
+        assert review.status_code == 200, review.text
     mode = client.post('/api/v1/officer/controls/signal-mode', headers=ch, json={'mode': 'smart'})
     apply_command(client, mode, lease)
     override = client.post('/api/v1/officer/controls/signal-override', headers=ch, json={'node_id': 'HX-01', 'group': 1, 'duration_s': 60, 'reason': 'ưu tiên'})

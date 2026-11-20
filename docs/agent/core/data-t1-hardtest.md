@@ -225,3 +225,30 @@ Probe pytest trên bản sửa chưa commit đạt 65/65 ca gồm hai tệp hồ
 6 ca bổ sung. Hai ca WS hồi quy cũng đạt 3 lượt chạy liên tiếp trên sản phẩm
 nền, mỗi lượt 2/2 và exit 0. Log: `data-t1-r1-py-draft-probe.log` và
 `data-t1-r1-ws-repeat-base.log`.
+
+## CORE-DATA-T1-TEST-02, vòng sửa 2/2
+
+Nền sản phẩm `d2bf791c9f41e52673cdb221fff66859cfac8a58`. Phạm vi chỉ gồm
+test và tài liệu; không đổi hợp đồng, fixture, cổng CI hay timeout của cổng.
+
+| Requirement | Ca kiểm | Điều kiện phân biệt |
+|---|---|---|
+| DATA-01, USER-01, DOCKER-01 | `test_ws.py` | Dùng chung portal, đợi server xử lý auth. Không auth phải nhận close 4401; hết hạn chờ không được tính là close. Officer nhận heartbeat và envelope, trạm không nhận lại gói. Các gói ngoài allowlist được xử lý trước heartbeat hợp lệ; test đọc bản tin đầu tiên và kiểm không có bản tin dư. |
+| DATA-01, USER-01 | `test_audit_log_written_for_review_and_signals` | Capability hiện hành tạo vi phạm và phải nhận HTTP 200 trước khi đọc ID. Giữ cả hai trạng thái audit của lần duyệt, audit mode/override sau ACK và kết quả 403/200 theo vai trò. |
+| DATA-01, USER-01 | `test_ws_heat_update_only_to_officers_and_alert_to_both` | Cả hai observer đã auth trước POST. Đọc nguyên thứ tự qua WS: officer nhận update và cảnh báo, công dân chỉ nhận cảnh báo rút gọn. POST dưới ngưỡng 0,6 vẫn có update và không có cảnh báo dư. |
+| DATA-01 | `DATA-T1-R4` Node và `test_r4_local_fallback_camera_to_logic_cluster` | Đối chiếu đủ 10 camera duy nhất bằng phép nối `cameras.json` và `node_map.json`; Node kiểm thêm cụm tồn tại trong snapshot. Hoán đổi liên kết hai camera thuộc hai cụm trong cấu hình runtime và SQLite riêng của pytest. Tập cụm vẫn như cũ nhưng mapping phải đổi đúng theo camera. |
+
+Log và script đối chứng ở `work/smtf-agent/logs/` của worktree hardtest:
+
+| Log | Kết quả |
+|---|---|
+| `data-t1-r2-ws-base-red.json` | Nền: watchdog 75 giây, exit ngoài 124, stack dừng tại `test_ws.py:24` khi nhận heartbeat. Ca không auth đã qua trước ca treo. |
+| `data-t1-r2-audit-base-red.json` | Nền: exit 1, `KeyError: 'id'` khi helper đọc kết quả tạo vi phạm. Review độc lập đã kiểm JWT legacy bị 403 sau claim và capability hiện hành tạo được ID. |
+| `data-t1-r2-missing_heartbeat-red.log` | Bỏ heartbeat tại biên ASGI trong tiến trình riêng. Exit 1 tại assertion “WS không nhận được event trong 2 giây”. |
+| `data-t1-r2-stale_camera-red.log`, `data-t1-r2-camera-node-red.log` | Hai tiến trình trả mapping ban đầu ở biên đọc trong RAM. Exit 1 tại assertion “Mapping camera phải đổi theo node_id” sau hoán đổi. |
+| `data-t1-r2-ws-audit-targeted.xml` | Ba tệp WS, heat và audit: 39/39 đạt. |
+| `data-t1-r2-node-full.log` | Bộ Node chính và bổ sung: 23/23 đạt, không skip/cancel. |
+| `data-t1-r2-api-full.xml` | JUnit toàn bộ thư mục backend chạy không loại ca; số liệu và exit code trong JSON bàn giao. |
+
+Đối chứng trong RAM không ghi biến thể lên file sản phẩm hay thay dữ liệu nguồn.
+Điều phối viên giữ browser QA, kiểm chéo cảnh hiển thị và cổng trên SHA tích hợp.

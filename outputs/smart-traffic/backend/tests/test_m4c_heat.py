@@ -7,6 +7,8 @@ import pytest
 from app import heat
 from app.schemas import HeatIn
 from app.ws import _wanted
+from tests.m6_helpers import tok
+from tests.public_demo_helpers import receive_ws, station_socket, ws_event
 
 # Dữ liệu tên đường dùng chung với web (web/public/north-roads-32.json, xuất bởi scripts/export_north_roads_32.py).
 ROAD_FILE = Path(__file__).resolve().parents[2] / 'web' / 'public' / 'north-roads-32.json'
@@ -158,30 +160,34 @@ def test_unknown_edge_gets_default_name_and_survives_restart(client):
 
 
 def test_ws_heat_update_only_to_officers_and_alert_to_both(client):
-    st = token_headers(client, 'station-3d')
-    otok = client.post('/api/v1/auth/login', json={'username': 'officer1', 'password': 'SaiGon@2026'}).json()['access_token']
-    ctok = client.post('/api/v1/auth/login', json={'username': 'citizen1', 'password': 'SaiGon@2026'}).json()['access_token']
     edge, _ = named_edge()
-    with client.websocket_connect('/ws/v1') as officer:
-        officer.send_text(json.dumps({'type': 'auth', 'token': otok}))
-        with client.websocket_connect('/ws/v1') as citizen:
-            citizen.send_text(json.dumps({'type': 'auth', 'token': ctok}))
+    with client:
+        st = token_headers(client, 'station-3d')
+        otok = tok(client, 'officer1')
+        ctok = tok(client, 'citizen1')
+        with station_socket(client, otok) as (officer, _), station_socket(client, ctok) as (citizen, _):
             r = client.post('/api/v1/station/heat', headers=st,
                             json=heat_body(levels=[[edge, 0.9]], alerts=[alert(edge=edge, prob=0.8)]))
             assert r.status_code == 200, r.text
-            m1 = json.loads(officer.receive_text())
+            assert r.json()['new_alerts'] == 1
+            m1 = ws_event(officer)
             assert m1['event'] == 'heat.update' and m1['data']['levels'] == [[edge, 0.9]]
-            m2 = json.loads(officer.receive_text())
+            m2 = ws_event(officer)
             assert m2['event'] == 'alert.congestion' and m2['data']['prob'] == 0.8 and 'reliability' in m2['data']
             # Công dân: nhận cảnh báo công khai, KHÔNG nhận heat.update (gói đầu tiên của họ phải là alert.congestion).
-            c1 = json.loads(citizen.receive_text())
+            c1 = ws_event(citizen)
             assert c1['event'] == 'alert.congestion'
             assert set(c1['data']) == PUBLIC_KEYS
             # Cảnh báo dưới ngưỡng 0,6 không tạo alert.congestion; cán bộ chỉ nhận heat.update.
-            client.post('/api/v1/station/heat', headers=st,
-                        json=heat_body(levels=[[edge, 0.9]], alerts=[alert(edge=edge + 1, prob=0.5)]))
-            m3 = json.loads(officer.receive_text())
+            below = client.post('/api/v1/station/heat', headers=st,
+                                json=heat_body(t=6, levels=[[edge, 0.9]], alerts=[alert(edge=edge + 1, prob=0.5)]))
+            assert below.status_code == 200, below.text
+            assert below.json()['new_alerts'] == 0
+            m3 = ws_event(officer)
             assert m3['event'] == 'heat.update'
+            assert m3['data']['t_sim'] == 6
+            assert receive_ws(officer, timeout=0.25) is None, 'Cán bộ nhận cảnh báo dư dưới ngưỡng'
+            assert receive_ws(citizen, timeout=0.25) is None, 'Công dân nhận bản tin dưới ngưỡng'
 
 
 def test_ws_recipient_rule_excludes_station_and_citizen_for_heat_roles():

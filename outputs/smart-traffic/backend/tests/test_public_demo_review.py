@@ -241,16 +241,34 @@ def test_r3_uvicorn_command_id_round_trip_and_dedup(uvicorn_client):
 
 
 def test_r4_local_fallback_camera_to_logic_cluster(client):
-    snapshot = good(client.get(SNAPSHOT, headers=hdr(client, 'officer1')))
-    # Đối chiếu ID camera và cụm bằng cameras.json/node_map.json.
-    expected = {
-        'CAM-HX-001': 'HX-C1', 'CAM-HX-002': 'HX-C5', 'CAM-HX-003': 'HX-C1', 'CAM-HX-004': 'HX-C5',
-        'CAM-HX-005': 'HX-C2', 'CAM-HX-006': 'HX-C2', 'CAM-HX-007': 'HX-C3', 'CAM-HX-008': 'HX-C3',
-        'CAM-HX-009': 'HX-C4', 'CAM-HX-010': 'HX-C1',
-    }
-    assert snapshot['station']['status'] == 'missing'
-    assert len(snapshot['cameras']) == len(expected)
-    assert {c['camera_id']: c['junction_id'] for c in snapshot['cameras']} == expected
+    seed = Path(__file__).resolve().parents[1] / 'app' / 'seed'
+    nodes = json.loads((seed / 'node_map.json').read_text(encoding='utf-8'))
+    cameras = json.loads((seed / 'cameras.json').read_text(encoding='utf-8'))
+    clusters = {row['node_id']: row['cluster_id'] for row in nodes}
+    assert len(clusters) == len(nodes)
+    associations = {row['camera_id']: row['node_id'] for row in cameras}
+    assert len(cameras) == len(associations) == 10
+    officer = hdr(client, 'officer1')
+
+    def check(links, case):
+        snapshot = good(client.get(SNAPSHOT, headers=officer))
+        assert snapshot['station']['status'] == 'missing'
+        expected = {camera_id: clusters[node_id] for camera_id, node_id in links.items()}
+        assert all(expected.values()), expected
+        actual = {row['camera_id']: row['junction_id'] for row in snapshot['cameras']}
+        assert len(snapshot['cameras']) == len(actual) == 10
+        assert actual == expected, case
+
+    check(associations, 'Mapping camera theo nguồn')
+    first = next(iter(associations))
+    second = next(camera for camera, node in associations.items()
+                  if clusters[node] != clusters[associations[first]])
+    swapped = {**associations, first: associations[second], second: associations[first]}
+    # Đổi hai liên kết trong SQLite riêng của ca này. Tổng số camera và tập cụm không đổi.
+    with sqlite3.connect(os.environ['SMART_DB_PATH']) as conn:
+        conn.executemany('UPDATE cameras SET node_id=? WHERE camera_id=?',
+                         [(node, camera) for camera, node in swapped.items() if node != associations[camera]])
+    check(swapped, 'Mapping camera phải đổi theo node_id')
 
 
 def test_r7_local_frame_notifies_committed_snapshot_and_stream(client):

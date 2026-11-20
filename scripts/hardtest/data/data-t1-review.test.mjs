@@ -155,21 +155,20 @@ test('DATA-T1-R6 public: TTL 1 giây bắt đầu lúc ACK, trạng thái lệnh
   assert.equal(result.history.applied_t_sim, 50);
 });
 
-// Các ID đối chiếu trực tiếp cameras.json → node_map.json của cấu hình Hàng Xanh.
-const cameraJunctions = ['HX-C1', 'HX-C5', 'HX-C1', 'HX-C5', 'HX-C2', 'HX-C2', 'HX-C3', 'HX-C3', 'HX-C4', 'HX-C1'];
+const seedRoot = join(productRoot, 'outputs/smart-traffic/backend/app/seed');
+const readSeed = name => JSON.parse(readFileSync(join(seedRoot, name + '.json'), 'utf8'));
 
 let runtime;
 async function snapshotRuntime() {
   runtime ??= (async () => {
     const poc = join(productRoot, 'outputs/hcmc-poc');
-    const seedRoot = join(productRoot, 'outputs/smart-traffic/backend/app/seed');
     globalThis.window = globalThis;
     require(join(poc, 'data/road-graph-31.js'));
     require(join(poc, 'data/scene.js'));
     const graph = globalThis.ROAD_GRAPH_31;
     const { roads } = globalThis.CITY_DATA;
-    const nodeMap = JSON.parse(readFileSync(join(seedRoot, 'node_map.json'), 'utf8'));
-    const cameras = JSON.parse(readFileSync(join(seedRoot, 'cameras.json'), 'utf8'));
+    const nodeMap = readSeed('node_map');
+    const cameras = readSeed('cameras');
     const load = name => import(pathToFileURL(join(poc, name)).href);
     const { readStationSnapshot32 } = await load('smart-app-32.js');
     const { buildTrafficNetwork31, createTrafficSim31 } = await load('city-traffic-sim-31.js');
@@ -177,10 +176,10 @@ async function snapshotRuntime() {
     const { createSignalController32 } = await load('traffic-controller-32.js');
     const signalPlan = buildSignalPlan32({ graph, nodeMap });
     const net = buildTrafficNetwork31({ graph, roads, widthOf: () => 8, drawn: i => !roads[i].tunnel && graph.roads[i].skipRender !== 'hide', signalPlan });
-    return seed => {
+    return (seed, registry = cameras) => {
       const controller = createSignalController32({ net, mode: 'fixed' });
       const sim = createTrafficSim31(net, { controller, signalPlan, seed, poolTarget: 16 });
-      return readStationSnapshot32({ traffic: { net, sim }, controller }, cameras,
+      return readStationSnapshot32({ traffic: { net, sim }, controller }, registry,
         { frameMetadata: () => ({}) }, 'data-t1-review');
     };
   })();
@@ -188,13 +187,32 @@ async function snapshotRuntime() {
 }
 
 test('DATA-T1-R4 runtime: mười camera nối đúng cụm đèn logic', async () => {
-  const snapshot = (await snapshotRuntime())(71037);
-  const actual = Object.fromEntries(snapshot.cameras.map(c => [c.camera_id, c.junction_id]));
-  const expected = Object.fromEntries(cameraJunctions.map((junction, i) => ['CAM-HX-' + String(i + 1).padStart(3, '0'), junction]));
-  assert.equal(snapshot.cameras.length, cameraJunctions.length);
-  assert.deepEqual(actual, expected);
-  for (const junction of Object.values(expected)) {
-    assert.ok(snapshot.junctions.some(item => item.junction_id === junction));
+  const nodes = readSeed('node_map');
+  const cameras = readSeed('cameras');
+  const clusterFor = camera => {
+    const matches = nodes.filter(node => node.node_id === camera.node_id);
+    assert.equal(matches.length, 1, camera.node_id);
+    assert.ok(matches[0].cluster_id, camera.node_id);
+    return matches[0].cluster_id;
+  };
+  assert.equal(cameras.length, 10);
+  assert.equal(new Set(cameras.map(camera => camera.camera_id)).size, 10);
+  const first = cameras[0];
+  const second = cameras.find(camera => clusterFor(camera) !== clusterFor(first));
+  assert.ok(second, 'Cần hai camera ở hai cụm khác nhau để kiểm đổi liên kết');
+  const swapped = cameras.map(camera => camera === first ? { ...camera, node_id: second.node_id }
+    : camera === second ? { ...camera, node_id: first.node_id } : camera);
+  const readSnapshot = await snapshotRuntime();
+  for (const registry of [cameras, swapped]) {
+    const snapshot = readSnapshot(71037, registry);
+    assert.equal(snapshot.cameras.length, 10);
+    assert.equal(new Set(snapshot.cameras.map(camera => camera.camera_id)).size, 10);
+    const actual = Object.fromEntries(snapshot.cameras.map(camera => [camera.camera_id, camera.junction_id]));
+    const expected = Object.fromEntries(registry.map(camera => [camera.camera_id, clusterFor(camera)]));
+    assert.deepEqual(actual, expected, registry === swapped ? 'Mapping camera phải đổi theo node_id' : 'Mapping camera theo nguồn');
+    for (const junction of Object.values(expected)) {
+      assert.ok(snapshot.junctions.some(item => item.junction_id === junction), junction);
+    }
   }
 });
 
