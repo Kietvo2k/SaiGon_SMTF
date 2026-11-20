@@ -5,12 +5,12 @@ import { parseArgs } from 'node:util';
 const bucket = 'smtf-submit-20261120';
 const samples = new URL('../../supabase/samples/', import.meta.url);
 
-async function walk(dir, base = dir) {
+async function walk(dir, base) {
   const out = [];
   for (const entry of (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
-    const path = new URL(`${entry.name}/`, dir).href.replace(/\/$/, '');
+    const path = `${dir.replace(/[\\/]+$/, '')}/${entry.name}`;
     if (entry.isDirectory()) out.push(...await walk(path, base));
-    else if (entry.isFile() && entry.name.endsWith('.jpg')) out.push(new URL(entry.name, dir));
+    else if (entry.isFile() && entry.name.endsWith('.jpg')) out.push(path);
   }
   return out;
 }
@@ -19,7 +19,7 @@ async function walk(dir, base = dir) {
 function checkPath(rel) {
   const parts = rel.split('/');
   if (parts.length === 2 && parts[0] === 'sample' && /^CAM-(?:HX|BAC)-\d{3}\.jpg$/.test(parts[1])) return true;
-  if (parts.length === 3 && parts[0] === 'evidence' && /^evidence\/[0-9A-Za-z.\-]+\/(?:before|after|plate)\.jpg$/.test(rel)) return true;
+  if (parts.length === 3 && parts[0] === 'evidence' && /^evidence\/[0-9A-Za-z.\- ]+\/(?:before|after|plate)\.jpg$/.test(rel)) return true;
   return false;
 }
 
@@ -33,10 +33,11 @@ async function seed() {
   }
   const headers = { apikey: key };
   if (key.startsWith('eyJ')) headers.Authorization = `Bearer ${key}`;
-  const files = await walk(samples);
+  const root = new URL('../../supabase/samples/', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  const files = await walk(root);
   const seen = new Set();
   for (const file of files) {
-    const rel = decodeURIComponent(file.href.slice(samples.href.length));
+    const rel = decodeURIComponent(file.slice(root.length).replace(/\\/g, '/'));
     if (seen.has(rel)) throw new Error(`Trùng tên ảnh: ${rel}`);
     seen.add(rel);
     if (!checkPath(rel)) throw new Error(`Đường dẫn ảnh mẫu không hợp lệ: ${rel}`);
