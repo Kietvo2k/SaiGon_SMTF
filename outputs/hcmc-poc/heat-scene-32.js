@@ -1,4 +1,4 @@
-// heat-scene-32.js - lớp 3D M4b1: ribbon bản đồ nhiệt (1 mesh, màu theo đỉnh), 2–4 bảng VMS (canvas texture),
+﻿// heat-scene-32.js - lớp 3D M4b1: ribbon bản đồ nhiệt (1 mesh, màu theo đỉnh), 2–4 bảng VMS (canvas texture),
 // và phần DOM trong panel app smart (công tắc "Bản đồ nhiệt" mặc định tắt + danh sách cảnh báo).
 // Phần hình học (ribbonEdges32, buildRibbon32, paintRibbon32) là thuần JS để test Node; THREE chỉ nạp qua tham số.
 import { colorOf, HEAT_COLORS_32 } from './heat-32.js?v=32a';
@@ -96,6 +96,63 @@ export function paintVms32(ctx, msg, W = VMS_W_32, H = VMS_H_32) {
   return lines.length;
 }
 
+// ---- bản trình diễn v2 (P1-11): dòng xe theo chiều — mũi tên trên từng làn, hướng theo chiều xe chạy,
+// độ đậm + kích thước theo mật độ xe của CHIỀU đó (không dùng mức nhiệt hai chiều của ribbon).
+export const FLOW_ARROW_GAP_M_32 = 60;
+export const FLOW_ARROW_BASE_M_32 = 2.4;
+export const FLOW_LIFT_M_32 = 0.78;
+export const FLOW_DENSITY_CAP_32 = 8;
+
+// Danh sách mũi tên (thuần): mỗi làn ≥ tertiary trong khu một mũi mỗi FLOW_ARROW_GAP_M_32 mét.
+export function buildFlowArrows32({ net, sim, edges = null }) {
+  const list = [];
+  const inside = sim && typeof sim.insideLaneOf === 'function' ? sim.insideLaneOf : () => true;
+  const picked = edges ? new Set(edges) : null;
+  for (let l = 0; l < net.NL; l++) {
+    if (net.lanes.rank[l] < RIBBON_MIN_RANK_32) continue;
+    if (picked && !picked.has(net.lanes.edge[l])) continue;
+    if (!inside(l)) continue;
+    const L = net.lanes.length[l];
+    const n = Math.max(1, Math.ceil(L / FLOW_ARROW_GAP_M_32));
+    for (let k = 0; k < n; k++) list.push({ lane: l, s: Math.min(L - 2, Math.max(2, L * (k + 0.5) / n)) });
+  }
+  return list;
+}
+
+// Mật độ xe mỗi làn (đúng chiều làn — xe đang chạy trên làn đó), tính một lượt O(N).
+export function laneDensityOf32(sim, net) {
+  const density = new Float32Array(net.NL);
+  if (!sim || !sim.lane) return density;
+  for (let i = 0; i < sim.N; i++) {
+    if (!sim.active[i]) continue;
+    density[sim.lane[i]]++;
+  }
+  return density;
+}
+
+// Tô mũi tên: mỗi mũi 3 đỉnh (đầu theo chiều lane + 2 đuôi), màu theo mức nhiệt cạnh
+// và độ đậm theo mật độ CHIỀU (0–FLOW_DENSITY_CAP_32 xe → 0.3..1.0 độ sáng màu).
+export function paintFlowArrows32({ net, arrows, positions, colors, density, levelOf, lanePoint, palette, lift = FLOW_LIFT_M_32, base = FLOW_ARROW_BASE_M_32 }) {
+  let v = 0;
+  for (const arrow of arrows) {
+    const l = arrow.lane, e = net.lanes.edge[l];
+    const P = lanePoint(l, arrow.s, net.lanes.offset[l]);
+    const d = density ? Math.min(FLOW_DENSITY_CAP_32, density[l]) : 0;
+    const size = base * (1 + d * 0.09);
+    const bright = 0.3 + 0.7 * (d / FLOW_DENSITY_CAP_32);
+    const idx = Math.max(0, HEAT_COLORS_32.indexOf(colorOf(levelOf(e))));
+    const rgb = palette[idx].map(c => Math.max(0.05, c * bright));
+    // hướng mũi: đầu tiến theo (tx, tz); đuôi mở rộng hai bên vuông góc.
+    const tipX = P.x + P.tx * size, tipZ = P.z + P.tz * size;
+    const backX = P.x - P.tx * size * 0.55, backZ = P.z - P.tz * size * 0.55;
+    const px = -P.tz * size * 0.62, pz = P.tx * size * 0.62;
+    const y = P.y + lift;
+    const put = (x, z) => { positions[v * 3] = x; positions[v * 3 + 1] = y; positions[v * 3 + 2] = z; colors[v * 3] = rgb[0]; colors[v * 3 + 1] = rgb[1]; colors[v * 3 + 2] = rgb[2]; v++; };
+    put(tipX, tipZ); put(backX + px, backZ + pz); put(backX - px, backZ - pz);
+  }
+  return v / 3;
+}
+
 // Dựng lớp 3D. THREE được truyền vào (app không import three trong module này). Gọi update(tSim, live) mỗi nhịp.
 export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = [], edges = null, vmsBus = null }) {
   if (!THREE || !scene) throw new TypeError('createHeatScene32 cần THREE và scene');
@@ -134,6 +191,35 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
   mesh.frustumCulled = false;
   mesh.visible = false;
   scene.add(mesh);
+
+  // ---- bản trình diễn v2 (P1-11): lớp mũi tên dòng xe theo chiều (lớp riêng, mặc định tắt).
+  const arrows = buildFlowArrows32({ net, sim, edges: cand });
+  const flowPositions = new Float32Array(arrows.length * 3 * 3);
+  const flowColors = new Float32Array(arrows.length * 3 * 3);
+  const flowGeo = new THREE.BufferGeometry();
+  const flowPosAttr = new THREE.BufferAttribute(flowPositions, 3);
+  const flowColAttr = new THREE.BufferAttribute(flowColors, 3);
+  flowGeo.setAttribute('position', flowPosAttr);
+  flowGeo.setAttribute('color', flowColAttr);
+  const flowMat = new THREE.MeshBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.88, depthWrite: false, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -16
+  });
+  const flowMesh = new THREE.Mesh(flowGeo, flowMat);
+  flowMesh.name = 'heat-flow-arrows-32';
+  flowMesh.renderOrder = 5;
+  flowMesh.frustumCulled = false;
+  flowMesh.visible = false;
+  scene.add(flowMesh);
+  let flowOn = false, lastFlowPaint = -Infinity;
+  const lanePointOf = (l, s, offset) => { const P = {}; geo.lanePoint(l, s, offset, P); return P; };
+  const paintFlow = live => {
+    const density = laneDensityOf32(sim, net);
+    paintFlowArrows32({ net, arrows, positions: flowPositions, colors: flowColors, density,
+      levelOf: e => live.level(e), lanePoint: lanePointOf, palette });
+    flowPosAttr.needsUpdate = true;
+    flowColAttr.needsUpdate = true;
+  };
 
   let lastPaint = -Infinity;
   const paint = live => {
@@ -176,17 +262,22 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
 
   return {
     mesh,
+    flowMesh,
     setHeatVisible(on) { mesh.visible = !!on; if (on) lastPaint = -Infinity; },
+    setFlowVisible(on) { flowOn = !!on; flowMesh.visible = flowOn; if (flowOn) lastFlowPaint = -Infinity; },
     vmsStates(alerts = []) { return vms.map(entry => ({ id: entry.board.id, ...vmsDisplay32(entry.board, alerts, vmsBus) })); },
     // Gọi mỗi nhịp: tô lại ribbon mỗi RIBBON_PAINT_S_32 giây sim khi đang hiện; cập nhật bảng VMS theo cảnh báo hiện tại.
     update(tSim, live) {
       if (mesh.visible && tSim - lastPaint >= RIBBON_PAINT_S_32) { paint(live); lastPaint = tSim; }
+      if (flowOn && tSim - lastFlowPaint >= RIBBON_PAINT_S_32) { paintFlow(live); lastFlowPaint = tSim; }
       const alerts = live.alerts();
       for (const entry of vms) showVms(entry, vmsDisplay32(entry.board, alerts, vmsBus));
     },
     dispose() {
       scene.remove(mesh);
       bg.dispose(); mat.dispose();
+      scene.remove(flowMesh);
+      flowGeo.dispose(); flowMat.dispose();
       for (const entry of vms) {
         scene.remove(entry.group);
         for (const p of entry.parts) { p.geometry.dispose(); p.material.dispose(); }
@@ -207,7 +298,7 @@ const HEAT_CSS_32 = `
 `;
 
 // Phần DOM trong panel app smart. host = phần tử chứa (ví dụ #smartHud32). Dùng textContent cho dữ liệu cảnh báo.
-export function mountHeatPanel32(host, { onToggle = () => {} } = {}) {
+export function mountHeatPanel32(host, { onToggle = () => {}, onToggleFlow = () => {} } = {}) {
   const doc = host.ownerDocument;
   if (!doc.getElementById('heatCss32')) {
     const style = doc.createElement('style');
@@ -220,13 +311,17 @@ export function mountHeatPanel32(host, { onToggle = () => {} } = {}) {
   sec.setAttribute('aria-label', 'Bản đồ nhiệt và cảnh báo kẹt');
   sec.innerHTML = '<label class="hud-switch"><span>Bản đồ nhiệt</span>'
     + '<input type="checkbox" role="switch" id="heatToggle32" aria-label="Bản đồ nhiệt"></label>'
+    + '<label class="hud-switch"><span>Dòng xe theo chiều</span>'
+    + '<input type="checkbox" role="switch" id="flowToggle32" aria-label="Dòng xe theo chiều — mũi tên theo hướng xe chạy"></label>'
     + `<div class="heat-legend32" aria-hidden="true">${LEGEND_32.map((t, k) => `<span style="background:${HEAT_COLORS_32[k]}">${t}</span>`).join('')}</div>`
     + '<h3>Cảnh báo kẹt · dự báo 10–30 phút</h3>'
     + '<ul class="heat-alerts32" id="heatAlerts32" aria-live="polite"></ul>';
   host.append(sec);
   const toggle = sec.querySelector('#heatToggle32');
+  const flowToggle = sec.querySelector('#flowToggle32');
   const list = sec.querySelector('#heatAlerts32');
   toggle.addEventListener('change', () => onToggle(toggle.checked));
+  flowToggle.addEventListener('change', () => onToggleFlow(flowToggle.checked));
   const row = (text, small) => {
     const li = doc.createElement('li');
     li.textContent = text;

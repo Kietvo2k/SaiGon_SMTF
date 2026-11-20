@@ -420,7 +420,11 @@ export function installHeat32(app, { THREE, routing = null, nodeMap = [], root =
   const boards = chooseVmsBoards32({ net, nodeMap, max: 4 });
   const scene = createHeatScene32({ THREE, scene: app.scene, traffic, net, sim, boards, vmsBus: app.vms || null });
   const host = root && (root.querySelector ? root.querySelector('#smartHud32') : null);
-  const panel = host ? mountHeatPanel32(host, { onToggle: on => { scene.setHeatVisible(on); } }) : null;
+  // demo-v2 (P1-11): công tắc riêng cho lớp mũi tên dòng xe theo chiều.
+  const panel = host ? mountHeatPanel32(host, {
+    onToggle: on => { scene.setHeatVisible(on); },
+    onToggleFlow: on => { scene.setFlowVisible(on); }
+  }) : null;
   let shown = '';
   // PERF-2: khi tab ẩn, chậm nhịp heat (250 ms → 1 s) để bớt CPU; khi hiện lại quay về nhịp cũ.
   // Dùng chuỗi setTimeout tự lập lại (thay vì setInterval cố định) để nhịp đổi theo trạng thái tab.
