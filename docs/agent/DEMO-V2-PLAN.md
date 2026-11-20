@@ -73,6 +73,22 @@ soi mã nguồn artifact `fea7fb0`. Người dùng chốt hướng: **đi theo l
 - Ảnh minh họa **chụp từ chính build mới** (Playwright screenshot), không dùng ảnh bản khác.
 - Nội dung 5 mục theo mockup, chữ trung thực theo mục 2.
 
+## 3b. Chốt thêm của người dùng (21/11) — gộp vào P1/P2, mỗi mục một lát có cổng riêng
+
+| # | Người dùng yêu cầu | Mục | Cách làm + module có sẵn |
+|---|---|---|---|
+| 1 | Vi phạm chưa rõ; trích nghị định chưa đúng, phạt sai; thiếu bằng chứng, hình ảnh | **P2-6** | Kiểm đối bảng phạt trong `violation-rules-32.js` với NĐ 168/2024/NĐ-CP; mỗi mã lỗi ghi Điều/khoản/điểm trích dẫn vào tài liệu kỹ thuật (§5 DECISIONS; chưa xác minh được thì ghi rõ "cần xác minh" — không bịa). Chuyển tính phạt lên backend (trạm không tự gửi số tiền). Web cán bộ + người dân hiển thị: căn cứ, điểm trừ GPLX, ảnh bằng chứng trước/sau vạch + ảnh cắt biển số (backend đã nhận và lưu bằng chứng — chỉ cần hiển thị đủ). |
+| 2 | Xe cứu thương / cứu hỏa / công an; ưu tiên, hệ số ưu tiên, mở làn cho xe công vụ | **P1-7** | Chạy đúng lộ trình `docs/prompts/PRIORITY.md` (M5b-2 — prompt có sẵn từ trước, chưa từng chạy): làn sóng xanh theo tuyến; xe thường tạt lề / vượt đỏ để nhường — vi phạm lúc đó tự gắn cờ "nghi nhường xe ưu tiên" (§3 DECISIONS); hệ số ưu tiên cứu thương > cứu hỏa > công an ghi trong controller; VMS thông báo mở làn. |
+| 3 | Nhấp vào đèn thấy xanh/đỏ; thanh bên trái/phải hiện trạng thái đèn, xác suất, thời gian xanh dự kiến | **P1-8** | Thanh tra đèn dạng panel cạnh: nhấp cột đèn → pha hiện tại + đếm ngược, hàng chờ theo hướng, áp lực, **thời gian xanh kế hoạch** của `traffic-controller-32` (expose planned next green), xác suất kẹt từ `forecast-*-32`. |
+| 4 | Chế độ thủ công: countdown chưa đúng | **P1-9** | Khi `SignalOverrideIn` ghim pha: đếm ngược hiển thị đúng số giây còn lại của pha ghim; test tất định trong Node cho đủ các tổ hợp ghim. |
+| 5 | Xe đi "quá ngu"; chưa rõ hành pha vàng/đỏ; cần nhiều hành vi hơn | **P1-10** | Mở rộng behavior trong `city-traffic-sim-31.js`: quyết định dừng/đi khi vàng theo tốc độ + khoảng cách vạch, tuân thủ đỏ, nhường xe ưu tiên, đổi làn, xe máy len lối. Chạy KPI A/B nhiều seed chứng minh thông lượng không hỏng. |
+| 6 | Nhiệt theo làn/hướng: hướng nào xe đi nhiều càng đậm/to | **P1-11** | Mở rộng `heat-*-32`: dòng xe theo chiều — mũi tên trên từng đoạn, độ đậm/độ dày theo lưu lượng chiều đó; lớp riêng bật/tắt được. |
+| 7 | Xử lý hai xe tông nhau: cho đi làn phụ hoặc điều tiết qua đường khác; hiện tình trạng + phương án | **P2-7** | Detector xung đột trong sim → cảnh báo trên HUD + web cán bộ ("Va chạm hai xe tại nút X · làn Y") + phương án tự động: mở làn phụ, `routeBias` chuyển dòng qua đường khác, chỉnh đèn; hiển thị trạng thái trước/sau khi điều tiết. |
+| 8 | Nút bấm cưỡng ép: chọn 1 đèn random ghim cố định xem đèn khác phản ứng; spawn nhiều xe; spawn xe công vụ; spawn tai nạn | **P2-8** | Nâng cấp trạm kịch bản có sẵn (`scenarios-32`, M5a): ghim đèn qua `SignalOverrideIn`, bơm nhu cầu nhiều xe, triệu hồi xe ưu tiên (dùng P1-7), tạo tai nạn (kéo theo P2-7); mỗi thao tác có nhãn tiếng Việt + nút hoàn tác. |
+| 9 | Bỏ bớt nhà trắng không cần, làm nhẹ | **P1-12** | Gỡ lớp nhà decal ngoài vùng trọng điểm (giữ signature registry: Landmark 81, cầu…); giảm mesh/texture theo mode lite; đo lại FPS sau khi dọn — mắt người xem tập trung vào nút giao. |
+
+Nguyên tắc cho mục 3b: các lát vẫn phải qua đúng cổng nghiệm thu mục 4 (test tất định + browser QA + perf không tệ hơn); lát nào chạm hợp đồng `/api/demo` thì chỉ mở rộng ngược tương thích.
+
 ## 4. Nghiệm thu và vận hành
 
 - Mỗi lát: `node --test` (sim/luật), pytest backend (**venv Python 3.11** — Python 3.14 hệ thống làm hỏng pytest),

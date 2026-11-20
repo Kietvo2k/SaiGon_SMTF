@@ -53,6 +53,19 @@ Thực hiện theo `docs/agent/DEMO-V2-PLAN.md` mục 3 — tóm tắt để đ�
 - **P2 web làm việc:** bảng vi phạm đủ cột + duyệt kèm bằng chứng (cán bộ);
   hồ sơ + bằng chứng + timeline + phạt kèm căn cứ + khiếu nại (người dân).
 - **P3 landing theo mockup:** đúng cấu trúc mockup, ảnh chụp từ build mới, chữ trung thực.
+- **Chốt thêm 21/11 của người dùng — chi tiết từng mục ở DEMO-V2-PLAN.md mục 3b:**
+  P1-7 xe ưu tiên (chạy docs/prompts/PRIORITY.md: sóng xanh, hệ số cứu thương > cứu hỏa > công an,
+  xe nhường → vi phạm gắn cờ "nghi nhường xe ưu tiên") ·
+  P1-8 thanh tra đèn (nhấp đèn: pha + đếm ngược, hàng chờ, thời gian xanh kế hoạch, dự báo xác suất) ·
+  P1-9 countdown đúng khi ghim đèn thủ công ·
+  P1-10 hành vi lái mới (quyết định khi vàng theo tốc độ/khoảng cách, nhường, đổi làn, xe máy len lối) ·
+  P1-11 nhiệt theo hướng (mũi tên đậm/to theo lưu lượng từng chiều) ·
+  P1-12 bỏ bớt nhà decal làm nhẹ cảnh (giữ signature).
+  P2-6 bảng phạt đúng NĐ 168/2024 kèm trích dẫn Điều/khoản/điểm + bằng chứng ảnh trước/sau vạch
+  + ảnh biển số, tính phạt ở backend ·
+  P2-7 sự cố va chạm: hiện tình trạng + phương án điều tiết làn phụ / đường khác ·
+  P2-8 bàn cưỡng chế: ghim đèn ngẫu nhiên cố định xem các nút khác phản ứng, spawn nhiều xe,
+  spawn xe công vụ, spawn tai nạn — mỗi nút có hoàn tác.
 
 ## 4. Nghiệm thu mỗi lát và tổng
 
