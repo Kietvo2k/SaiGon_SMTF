@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "outputDirectory": "dist/public-demo/vercel"
+  "outputDirectory": "dist/public-demo/vercel",
+  "functions": {
+    "api/demo/*.mjs": { "maxDuration": 10 }
+  }
 }
