@@ -26,6 +26,7 @@ try {
   if (document.querySelector('script[data-submit-hud]')) {
     const { mountSubmitHud } = await import('../submit-hud.js');
     const { junctionRows32 } = await import('../signal-preview-32.js?v=32c');
+    const { installSubmitFrame32 } = await import('../submit-frame-32.js?v=32c');
     const app = window.__smartApp;
     const [nodeMap, cameras] = await Promise.all([config.nodeMapUrl, config.camerasUrl].map(async path => {
       const response = await fetch(path);
@@ -40,6 +41,11 @@ try {
       focusJunction: row => app.focusJunction32(row),
       showStandard: row => app.focusJunction32(row || junctions[0])
     });
+    // demo-v2: đẩy khung sống camera đang xem theo hợp đồng /api/demo/frame (1 khung/3 s, ≤256 KiB).
+    if (app.modules && app.modules.capture) {
+      window.__submitFrame32 = installSubmitFrame32({ app, capture: app.modules.capture, cameras });
+      window.__submitFrame32.start();
+    }
   }
 } catch (error) {
   console.error('CITY24_PUBLIC_DATA_ERROR', error);

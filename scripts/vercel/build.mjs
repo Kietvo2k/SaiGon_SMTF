@@ -85,12 +85,14 @@ try {
     'data/imagery-source.json', 'data/venice_sunset_1k.hdr', 'public-submit/entry.mjs']) {
     copy(`${city}/${file}`, `hcmc-poc/${file}`);
   }
+  // demo-v2: giữ NGUYÊN VẸN vỏ trạm smart (installStation32 + HUD + heat + forecast + scenarios + inspector).
+  // Trạm ở chế độ transport=public dùng kho IndexedDB same-origin (không cần backend);
+  // đẩy khung sống theo hợp đồng do submit-frame-32.js đảm nhiệm (POST /api/demo/frame, 1 khung/3 s).
   const runtimeFile = 'webgpu-materials-24.js';
   const runtime = read(`${city}/${runtimeFile}`).toString('utf8');
-  const station = 'smartMod.installStation32(smartApp,{cameras,nodeMap:smartPrep.nodeMap});';
-  if (runtime.split(station).length !== 2) throw new Error('Không tìm thấy điểm khởi tạo trạm cục bộ.');
-  // Bản nộp giữ bảng vận hành. Vòng trạm cục bộ chụp liên tục toàn bộ camera chỉ dùng trong Docker.
-  write(`hcmc-poc/${runtimeFile}`, runtime.replace(station, 'smartMod.installHud32(smartApp);'));
+  const stationCall = 'smartMod.installStation32(smartApp,{cameras,nodeMap:smartPrep.nodeMap});';
+  if (!runtime.includes(stationCall)) throw new Error('Không tìm thấy điểm khởi tạo trạm trong runtime.');
+  write(`hcmc-poc/${runtimeFile}`, runtime);
 
   const submitHud = ['submit-hud.css', 'submit-hud.js'].every(file => existsSync(join(root, city, file)));
   if (submitHud) {

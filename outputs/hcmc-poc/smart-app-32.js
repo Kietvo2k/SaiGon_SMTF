@@ -281,7 +281,7 @@ export function installStation32(app, { cameras = [], nodeMap = [], search = (ty
   storage = (typeof sessionStorage !== 'undefined' ? sessionStorage : null),
   mode = new URLSearchParams(search).get('transport') || globalThis.SMtfTransportMode ||
     (['localhost', '127.0.0.1', '[::1]'].includes(globalThis.location?.hostname) ? 'local' : 'public'),
-  buildId = globalThis.SMtfBuildId || 'public-demo-v1' } = {}) {
+  buildId = globalThis.SMtfBuildId || 'public-demo-v1', streamAll = null } = {}) {
   const capture = app.modules && app.modules.capture;
   if (!capture) throw new Error('installStation32 cần camera capture (gọi installCameraCapture32 trước)');
   const { baseUrl, wsUrl } = resolveApiBase32(search);
@@ -324,8 +324,10 @@ export function installStation32(app, { cameras = [], nodeMap = [], search = (ty
   hud = installHud32(app, { transport });
   bridge.start().catch(error => console.warn('[station] không nối được trạm:', error.message));
   transport.start();
-  // streamAll: gửi khung luân phiên MỌI camera (~15 khung/phút/camera) để web công an xem được 10 camera.
-  const loop = startStationLoop32(app, { perception, capture, transport, cameras, streamAll: true });
+  // streamAll: luân phiên khung MỌI camera (~15 khung/phút/camera) cho web công an xem được 10 camera
+  // (chế độ Docker/local). Bản public chỉ đẩy camera đang xem (submit-frame-32 lo /api/demo/frame 1 khung/3 s).
+  const streamAllOn = streamAll == null ? mode !== 'public' : !!streamAll;
+  const loop = startStationLoop32(app, { perception, capture, transport, cameras, streamAll: streamAllOn });
   transport.dispose = () => { loop.stop(); transport.stop(); return bridge.stop(); };
   app.registerSmartModule32('perception', perception);
   app.registerSmartModule32('transport', transport);

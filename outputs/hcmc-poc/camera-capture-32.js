@@ -313,7 +313,9 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras, beforeR
       if (!rig) return Promise.resolve(null);
       return renderTo(rig).then(frame => {
         rig.buffer = rig.latest;   // giữ khung kế-trước làm `before` cho vi phạm
-        rig.latest = { jpeg: frame.jpeg, seq: (rig.latest?.seq ?? 0) + 1, t: Date.now(), w: frame.w, h: frame.h };
+        // demo-v2: giữ canvas của khung mới nhất để submit-frame-32 nén blob JPEG ≤ 256 KiB
+        // (mỗi rig chỉ giữ 1 canvas — khung trước đã chuyển thành dataURL nên không giữ kép).
+        rig.latest = { jpeg: frame.jpeg, seq: (rig.latest?.seq ?? 0) + 1, t: Date.now(), w: frame.w, h: frame.h, canvas: frame.canvas };
         return rig.latest;
       });
     },
