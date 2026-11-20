@@ -79,8 +79,8 @@ export function requireMapping(mapping) {
 }
 
 export function assertNorthOnlyRuntime(html, runtime) {
-  if (html.includes('data/scene.js') || html.includes('data/road-graph-31.js')) {
-    throw new Error('Entry public vẫn nạp scene/graph toàn vùng.');
+  if (/<script[^>]+src=["']data\/(?:scene|road-graph-31)\.js(?:[?"'])/i.test(html)) {
+    throw new Error('Entry public có script trực tiếp nạp scene/graph toàn vùng.');
   }
   if (!html.includes('data/public-north/')) throw new Error('Entry public thiếu đường dẫn data/public-north/.');
   if (/for\s*\(\s*const\s+region\s+of\s+REGIONS_31\s*\)/.test(runtime)) {

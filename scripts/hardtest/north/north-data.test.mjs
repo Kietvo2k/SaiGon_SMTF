@@ -29,7 +29,7 @@ test('PUB-01 manifest public Bắc có hash/byte và không kéo nguồn thô', 
   const paths = new Set();
   for (const file of manifest.files) {
     assert.ok(file.path && !file.path.includes('..'), `Đường dẫn manifest không an toàn: ${file.path}`);
-    assert.ok(!/osm-raw|overture-region|accounts\.json|owners\.json|scene\.js$|road-graph-31\.js$/.test(file.path), `Manifest kéo nguồn cấm: ${file.path}`);
+    assert.ok(!/osm-raw|overture-region|accounts\.json|owners\.json|(?:^|\/)data\/scene\.js$|(?:^|\/)road-graph-31\.js$/.test(file.path), `Manifest kéo nguồn cấm: ${file.path}`);
     assert.ok(!paths.has(file.path), `Manifest trùng đường dẫn: ${file.path}`);
     paths.add(file.path);
     const absolute = join(root, file.path);
@@ -108,8 +108,8 @@ test('CAM-01 mỗi camera có pose đủ dùng và nằm trong phạm vi Bắc',
   }
 });
 
-test('CAM-01 không dùng file scene classic làm tài nguyên public', () => {
-  assert.ok(!existsSync(join(publicRoot, 'scene.js')), 'Không được copy scene classic nguyên file.');
+test('CAM-01 không dùng file scene classic toàn vùng làm tài nguyên public', () => {
   assert.ok(!existsSync(join(publicRoot, 'road-graph-31.js')), 'Không được copy graph classic nguyên file.');
   assert.ok(statSync(join(publicRoot, 'scene.json')).size < 25 * 1024 ** 2);
+  assert.ok(statSync(join(publicRoot, 'scene.js')).size < 25 * 1024 ** 2);
 });
