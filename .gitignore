@@ -69,3 +69,5 @@ work/hardtest/
 .vercel/
 .wrangler/
 /dist/public-demo/
+.vercel
+.env*
