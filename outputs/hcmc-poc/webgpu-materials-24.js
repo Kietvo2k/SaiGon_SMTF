@@ -133,11 +133,11 @@ const center=D.meta.center;
 const xyz=(lon,lat,y=0)=>new THREE.Vector3((lon-center[0])*111320*Math.cos(center[1]*Math.PI/180),y,(center[1]-lat)*110574);
 const hash01=id=>{let x=(Number(id)||1)>>>0;x^=x>>>16;x=Math.imul(x,0x7feb352d);x^=x>>>15;return(x>>>0)/4294967295;};
 const families={GENERIC:0,RESIDENTIAL:1,GLASS:2,CIVIC:3,INDUSTRIAL:4,CENTRAL:5,RELIGIOUS:6,MIXED:7};
-const marinaParts=new Map(Object.entries(CORRECTIONS.marinaCentral.parts).map(([id,value])=>[Number(id),value]));
+const marinaParts=new Map(Object.entries(CORRECTIONS.marinaCentral?.parts||{}).map(([id,value])=>[Number(id),value]));
 // Four large OSM construction footprints immediately north of Marina Central are stale low proxies.
 // Official project updates identify the built/high-rise Lake, Sea, Cove and Lagoon residential cluster.
 // Heights remain floor-count proxies until surveyed/BIM geometry is licensed; tower-name-to-footprint mapping is deliberately withheld.
-const grandMarinaHeightCorrections=new Map(Object.entries(CORRECTIONS.grandMarina.parts).map(([id,value])=>[Number(id),value]));
+const grandMarinaHeightCorrections=new Map(Object.entries(CORRECTIONS.grandMarina?.parts||{}).map(([id,value])=>[Number(id),value]));
 // Bước C 31A: bảng sửa lỗi công trình runtime (data/bridge-corrections-31.js). Mỗi mục có lý do: ẩn footprint xuyên mặt
 // cầu/nằm trong mặt đường, hoặc nâng đáy mái/hạ đỉnh. Không sửa CITY_DATA; công trình signature không có trong bảng.
 const BRIDGE_FIXES=new Map((window.BRIDGE_CORRECTIONS_31?.buildings||[]).map(entry=>[Number(entry.id),entry]));
@@ -236,10 +236,12 @@ function tri(a,b,c,ta,tb,tc,tint,surface,kind,seed,direct){
 // M2a — app smart: khóa 3 khu trung-tâm/ven-song/nam (chỉ giữ đường ≥ secondary) và dồn xe khu Bắc lên cạnh ≥ tertiary.
 // Chỉ chạy khi ?app=smart; chế độ classic không đổi. Bộ lọc thuần ở city-lock-32.js (test Node riêng).
 const signatureGate=createSignatureGate31({buildings:renderBuildings});
+const smartMod=isSmart32?await import('./smart-app-32.js?v=32c'):null;
+const smartPrep=smartMod?await smartMod.prepareSmart32({graph:window.ROAD_GRAPH_31,config:window.PUBLIC_NORTH_CONFIG_32}):null;
 let lock32=null,lockFactor32=null;   // lockFactor32: 1 ở khu khóa, 0 trong khu Bắc (mặt nạ tô xám đất/công viên/nước)
 if(isSmart32){
   const lockMod32=await import('./city-lock-32.js?v=32a');
-  const signalRows=(await import('./signal-plan-32.js?v=32c')).SIGNAL_PLAN_32;
+  const signalRows=smartPrep.signalPlan.rows;
   const registry32=(await import('./signature-registry-31.js?v=31a')).loadSignatureRegistry();
   const nodeById=new Map((window.ROAD_GRAPH_31?.nodes||[]).map(node=>[node.id,node]));
   const signalPoints=signalRows.map(row=>nodeById.get(row.osm_id)).filter(Boolean).map(node=>[node.x,node.z]);
@@ -596,9 +598,20 @@ function setFloodRain(amountMm){return setFloodScenario(amountMm,floodTideM);}
 
 // Ba Son bridge: WebGPU-native structural layer, anchored to the mapped bridge centerline.
 const BS=window.BA_SON_BRIDGE;
-if(!BS?.centerline?.length)throw new Error('BA_SON_BRIDGE không khả dụng');
+
 const bridgeGroup=new THREE.Group();bridgeGroup.name='Cầu Ba Son · kết cấu dây văng';scene.add(bridgeGroup);
-const bridgeDeckGroup=new THREE.Group(),bridgeSupportGroup=new THREE.Group(),bridgeCableGroup=new THREE.Group();
+let bridgeDeckGroup=null,bridgeSupportGroup=null,bridgeCableGroup=null;
+const baSonJoin={decision:'profile-match-box-top',rampSegments:0,piersSkipped:[],anchorsLowered:0,rampFit:'road-edges'};
+function bridgeBeam(a,b,radius,material,parent=bridgeSupportGroup,radial=8){
+  const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),vector=bv.clone().sub(av);
+  const mesh=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,vector.length(),radial),material);
+  mesh.position.copy(av).add(bv).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),vector.normalize());
+  mesh.castShadow=radius>.5;mesh.receiveShadow=radius>.5;parent.add(mesh);return mesh;
+}
+
+if(!isSmart32){
+if(!BS?.centerline?.length)throw new Error('BA_SON_BRIDGE không khả dụng');
+bridgeDeckGroup=new THREE.Group();bridgeSupportGroup=new THREE.Group();bridgeCableGroup=new THREE.Group();
 bridgeDeckGroup.name='Cầu Ba Son · mặt cầu';
 bridgeGroup.add(bridgeDeckGroup,bridgeSupportGroup,bridgeCableGroup);
 // Bước C 31A: hộp mặt cầu giữ nguyên (BoxGeometry 24×3,2 tại y=11,25, đỉnh 12,85) trên nhịp phẳng; ở hai cầu dẫn đỉnh hộp
@@ -614,7 +627,7 @@ function baSonDeckTop(x,z){
   }
   return Math.min(BA_SON_TOP,top);
 }
-const baSonJoin={decision:'profile-match-box-top',rampSegments:0,piersSkipped:[],anchorsLowered:0,rampFit:'road-edges'};
+
 // Bước G: cầu dẫn thu bề ngang theo hợp mặt đường hai way mapped (fitRampToRoads), nhịp phẳng giữ hộp 24 m.
 const baSonRampFit={roads:D.roads,mainRoad:baSonRoad,pairRoads:BS.mappedRoadIds.slice(1).map(id=>D.roads.findIndex(road=>road.id===id)).filter(i=>i>=0),
   halfWidthOf:i=>roadWidth31(D.roads[i],widths)/2+.9,boxTop:BA_SON_TOP,joints:baSonRoad<0?[]:flatJoints(BS.centerline,baSonDeckTop,BA_SON_TOP),groundY:window.ROAD_GRAPH_31.frame.groundY};
@@ -625,12 +638,6 @@ const bridgeGold=new THREE.MeshStandardNodeMaterial({color:'#d3a35a',roughness:.
 bridgeGold.emissiveNode=color('#2b1808').mul(.18);
 const bridgeCableMaterial=new THREE.MeshStandardNodeMaterial({color:'#ffd27d',roughness:.23,metalness:.65});
 bridgeCableMaterial.emissiveNode=color('#a9691d').mul(.48);
-function bridgeBeam(a,b,radius,material,parent=bridgeSupportGroup,radial=8){
-  const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),vector=bv.clone().sub(av);
-  const mesh=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,vector.length(),radial),material);
-  mesh.position.copy(av).add(bv).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),vector.normalize());
-  mesh.castShadow=radius>.5;mesh.receiveShadow=radius>.5;parent.add(mesh);return mesh;
-}
 function bridgeDeckSegment(a,b){
   const dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz),n=Math.max(1,Math.ceil(length/4)),strip=[];
   for(let k=0;k<=n;k++){const x=a[0]+dx*k/n,z=a[1]+dz*k/n,top=baSonDeckTop(x,z);strip.push({x,z,top,bottom:top-3.2});}
@@ -675,6 +682,8 @@ for(const side of [-1,1]){
   for(let i=0;i<5;i++){const anchor=bridgeAxis.clone().multiplyScalar(25+i*22),top=bridgeAxis.clone().multiplyScalar(5+12*(i/4));top.y=42+i*13;bridgeCable(anchor,top,side);}
 }
 
+}
+
 // Bước C 31A: kết cấu cầu thủ tục (bản mặt dày, trụ, lan can — minh họa) và Bạch Đằng dựng lại trong runtime WebGPU.
 materialStatus.bridges={};
 createBridges31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,water:D.water,bachDang:window.BACH_DANG_FOOTBRIDGE,footbridges:window.BRIDGE_CORRECTIONS_31,nightLevel,status:materialStatus.bridges});
@@ -683,6 +692,7 @@ materialStatus.bridges.baSon=baSonJoin;
 // Marina Central Tower: official 240 m / 55 floors, anchored to three current OSM building parts.
 // The bands visualize the documented terraced networking floors; they are schematic, not survey geometry.
 const marinaDetail=new THREE.Group();marinaDetail.name='Marina Central Tower · nhận diện 24B';scene.add(marinaDetail);
+if(!isSmart32){
 const marinaCenter=new THREE.Vector3(CORRECTIONS.marinaCentral.center[0],0,CORRECTIONS.marinaCentral.center[1]),marinaRotation=CORRECTIONS.marinaCentral.rotation;
 const marinaBandMaterial=new THREE.MeshStandardNodeMaterial({color:'#9eb6b5',roughness:.27,metalness:.26});
 marinaBandMaterial.emissiveNode=color('#183339').mul(.16);
@@ -701,12 +711,15 @@ const marinaCanopy=new THREE.Mesh(new THREE.BoxGeometry(55,1.2,9),marinaCanopyMa
 marinaCanopy.position.copy(marinaCenter).addScaledVector(marinaOut,MARINA_FACADE_M+4.5*Math.cos(marinaCanopyTilt)).setY(23);
 marinaCanopy.rotation.set(marinaCanopyTilt,marinaRotation,0,'YXZ');marinaCanopy.castShadow=true;marinaDetail.add(marinaCanopy);
 
+}
+
 // Grand Marina residential cluster: identity details sit on the corrected open footprints.
 const grandMarinaDetail=new THREE.Group();grandMarinaDetail.name='Grand Marina Residences · cụm 4 tháp hiện hữu';scene.add(grandMarinaDetail);
+const correctedGrandMarina=[];
+if(!isSmart32){
 const grandMarinaFrameMaterial=new THREE.MeshStandardNodeMaterial({color:'#a7b5aa',roughness:.31,metalness:.22});
 grandMarinaFrameMaterial.emissiveNode=color('#20382d').mul(.13);
 const grandMarinaCrownMaterial=new THREE.MeshStandardNodeMaterial({color:'#cbb98f',roughness:.46,metalness:.16});
-const correctedGrandMarina=[];
 for(const [id,correction] of grandMarinaHeightCorrections){
   const building=renderBuildings.find(item=>Number(item.id)===id);if(!building)continue;
   correctedGrandMarina.push(building);
@@ -726,6 +739,7 @@ for(const [id,correction] of grandMarinaHeightCorrections){
   }
 }
 
+}
 setProgress(73,'Đang gieo tán cây và chi tiết mái…');
 let randomState=2401;const random=()=>{randomState=(1664525*randomState+1013904223)>>>0;return randomState/4294967296;};
 function contains(point,ring){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){
@@ -835,12 +849,24 @@ function advanceUrbanMotion(now){
 materialStatus.motion={roadSource:'ROAD_GRAPH_31 (OSM centerlines)',vessels:vesselItems.length,vesselRoute:'illustrative Saigon River lane',vesselAuditSamples,vesselSamplesOutsideWater,vesselHeadingMismatches,classification:'giao thông và tàu minh họa (illustrative); không phải dữ liệu giao thông hay AIS thật'};
 materialStatus.traffic={};
 // isSmart32 đã khai báo trước vòng dựng công trình.
-let createTraffic=createTraffic31,smartMod=null;
-if(isSmart32){({createTraffic31:createTraffic}=await import('./city-traffic-31.js?v=32c'));smartMod=await import('./smart-app-32.js?v=32c');}
-const smartPrep=smartMod?await smartMod.prepareSmart32({graph:window.ROAD_GRAPH_31}):null;const smartSignalPlan=smartPrep?smartPrep.signalPlan:null;
+const createTraffic=createTraffic31;
+const smartSignalPlan=smartPrep?smartPrep.signalPlan:null;
 const smartRoute=smartMod?smartMod.createRouteBias32():null;const simWidthOf=index=>roadWidth31(D.roads[index],widths);const simDrawn=index=>!D.roads[index].tunnel&&window.ROAD_GRAPH_31.roads[index].skipRender!=='hide'&&!(lock32&&lock32.simHidden.has(index));const traffic=createTraffic({scene:trafficGroup,graph:window.ROAD_GRAPH_31,roads:D.roads,widthOf:simWidthOf,drawn:simDrawn,roadNetwork,nightLevel,camera,getLight:()=>activeLight,status:materialStatus.traffic,motionStatus:materialStatus.motion,signalPlan:smartSignalPlan,breakerS:smartMod?smartMod.SMART_BREAKER_S:undefined,routeBias:smartRoute?smartRoute.routeBias:null,demand:smartMod?smartMod.NORTH_DEMAND_32:null,behavior:smartMod&&smartPrep?smartMod.smartBehavior32({graph:window.ROAD_GRAPH_31,nodeMap:smartPrep.nodeMap,cameras:smartPrep.cameras}):null});
 const smartApp=smartMod?smartMod.initSmartApp32({scene,camera,renderer,traffic,status:materialStatus.traffic,root:document}):null;
-if(smartApp){const sq=new URLSearchParams(location.search);if(sq.get(REGION_URL_PARAM)!=='bac'){sq.set(REGION_URL_PARAM,'bac');history.replaceState(null,'',`?${sq}`);}try{localStorage.setItem(REGION_STORAGE_KEY,'bac');}catch{}const {regionTrafficPayload}=await import('./city-region-31.js?v=31a');traffic.setRegion(regionTrafficPayload('bac'));window.__smartApp=smartApp;try{const cameras=await fetch('../smart-traffic/backend/app/seed/cameras.json').then(r=>r.json());smartMod.installSignals32(smartApp,{nodeMap:smartPrep.nodeMap,cameras,THREE});smartMod.installCameraCapture32(smartApp,{cameras,THREE});try{smartMod.installStation32(smartApp,{cameras,nodeMap:smartPrep.nodeMap});}catch(e){console.warn('station32:',e);}try{smartMod.installHeat32(smartApp,{THREE,routing:smartRoute,nodeMap:smartPrep.nodeMap});}catch(e){console.warn('heat32:',e);}try{smartMod.installForecast32(smartApp,{G:window.ROAD_GRAPH_31,roads:D.roads,widths:D.roads.map((_,i)=>simWidthOf(i)),drawn:D.roads.map((_,i)=>simDrawn(i)),signalPlan:smartSignalPlan,stats:traffic.net.stats,demand:smartMod.NORTH_DEMAND_32});}catch(e){console.warn('forecast32:',e);}}catch(e){console.warn('signals32:',e);}}
+if(smartApp){
+  const sq=new URLSearchParams(location.search);if(sq.get(REGION_URL_PARAM)!=='bac'){sq.set(REGION_URL_PARAM,'bac');history.replaceState(null,'',`?${sq}`);}
+  try{localStorage.setItem(REGION_STORAGE_KEY,'bac');}catch{}
+  const {regionTrafficPayload}=await import('./city-region-31.js?v=31a');traffic.setRegion(regionTrafficPayload('bac'));
+  const cameras=smartPrep.cameras;
+  if(!traffic.net.stats.lanes||!traffic.net.stats.spawnLanes||smartSignalPlan.clusters.length!==10)throw new Error('Mạng public chưa có làn/cổng/cụm đèn hợp lệ');
+  smartMod.installSignals32(smartApp,{nodeMap:smartPrep.nodeMap,cameras,THREE});
+  smartMod.installCameraCapture32(smartApp,{cameras,THREE});
+  smartMod.installStation32(smartApp,{cameras,nodeMap:smartPrep.nodeMap});
+  smartMod.installHeat32(smartApp,{THREE,routing:smartRoute,nodeMap:smartPrep.nodeMap,history:smartPrep.heatHistory,historyUrl:smartPrep.config.heatHistoryUrl});
+  smartMod.installForecast32(smartApp,{G:window.ROAD_GRAPH_31,roads:D.roads,widths:D.roads.map((_,i)=>simWidthOf(i)),drawn:D.roads.map((_,i)=>simDrawn(i)),signalPlan:smartSignalPlan,stats:traffic.net.stats,demand:smartMod.NORTH_DEMAND_32});
+  window.__smartApp=smartApp;
+}
+
 document.body.dataset.motionVessels=String(vesselItems.length);document.body.dataset.motionVesselOutside=String(vesselSamplesOutsideWater);document.body.dataset.motionVesselHeadingMismatch=String(vesselHeadingMismatches);
 
 const fixtureMaterial=new THREE.MeshStandardNodeMaterial({color:'#6d7772',roughness:.68,metalness:.2});
@@ -852,17 +878,17 @@ materialStatus.heroDetail={};
 const dropBuilding32=building=>!!lock32&&(lock32.buildings.ordinaryIds.has(Number(building.id))||lock32.signatureHiddenIds.has(Number(building.id)));
 const cityDetailRuntime=createCityDetailRuntime({scene,buildings:renderBuildings.filter(building=>!heroEnvelopeIds.has(Number(building.id))&&!building.hiddenByCorrection&&!dropBuilding32(building)),roads:D.roads,widths,hash01,nightLevel,status:materialStatus.heroDetail});
 materialStatus.heroCorridor={};
-const heroCorridor=createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetwork,buildings:renderBuildings.filter(building=>!building.hiddenByCorrection&&!dropBuilding32(building)),status:materialStatus.heroCorridor});
+const heroCorridor=isSmart32?null:createHeroCorridor30({scene,roads:D.roads,nightLevel,roadNetwork,buildings:renderBuildings.filter(building=>!building.hiddenByCorrection&&!dropBuilding32(building)),status:materialStatus.heroCorridor});
 // Bước E2: cột đèn theo mép đường hợp nhất + vạch zebra (thay đèn đặt theo tim từng way của runtime 28).
 materialStatus.streetFurniture={};
 const streetFurniture=createStreetFurniture31({scene,roads:D.roads,graph:window.ROAD_GRAPH_31,roadNetwork,data:window.STREET_FURNITURE_31,widths,nightLevel,status:materialStatus.streetFurniture});
 materialStatus.identityFacades={};
-const identityFacades=createIdentityFacades30({scene,status:materialStatus.identityFacades,atlasUrl:modeTextures.atlas,maskUrl:modeTextures.mask,anisotropy:modePreset.id==='lite'?2:8});
+const identityFacades=isSmart32?null:createIdentityFacades30({scene,status:materialStatus.identityFacades,atlasUrl:modeTextures.atlas,maskUrl:modeTextures.mask,anisotropy:modePreset.id==='lite'?2:8});
 // Bước E/F 31A: "Mật độ chi tiết". Kết cấu signature được gộp (không ẩn) để bớt draw call cố định; cây, chi tiết
 // runtime 28 chia chunk lưới (cull theo ô), tán cây xa và thiết bị mái sắp lại tại chỗ; mọi bộ lọc đi qua signature registry.
 materialStatus.density={};
 materialStatus.region={};
-for(const group of [bridgeDeckGroup,bridgeSupportGroup,bridgeCableGroup,marinaDetail,grandMarinaDetail])mergeStaticMeshes31(group);
+for(const group of [bridgeDeckGroup,bridgeSupportGroup,bridgeCableGroup,marinaDetail,grandMarinaDetail].filter(Boolean))mergeStaticMeshes31(group);
 const bridgesApi=materialStatus.bridges.api;
 // M2c — module signature ngoài khu Bắc: Ba Sơn, Marina, Grand Marina, cầu đi bộ Bạch Đằng ẩn từng mesh (gộp tối thiểu
 // chỉ gộp mesh đang hiển thị nên không lấy lại); Hero Corridor và Identity Facades gỡ khỏi cảnh vì controller của chúng
@@ -877,9 +903,10 @@ if(lock32){
     lock32.moduleRefs[key]=objects;
     if(outsideCenter(boxCenter(objects))){for(const object of objects)object.traverse(node=>{node.visible=false;});lock32.hiddenModules.add(key);}
   }
-  if(allOutside(registryCenters('hero-corridor-'))){heroCorridor.root.removeFromParent();lock32.hiddenModules.add('hero-corridor-module');}
-  if(allOutside(registryCenters('identity-facade-'))){identityFacades.root.removeFromParent();lock32.hiddenModules.add('extra-identity-facades-module');}
-  lock32.moduleRefs['hero-corridor-module']=[heroCorridor.root];lock32.moduleRefs['extra-identity-facades-module']=[identityFacades.root];
+  if(heroCorridor&&allOutside(registryCenters('hero-corridor-'))){heroCorridor.root.removeFromParent();lock32.hiddenModules.add('hero-corridor-module');}
+  if(identityFacades&&allOutside(registryCenters('identity-facade-'))){identityFacades.root.removeFromParent();lock32.hiddenModules.add('extra-identity-facades-module');}
+  if(heroCorridor)lock32.moduleRefs['hero-corridor-module']=[heroCorridor.root];if(identityFacades)lock32.moduleRefs['extra-identity-facades-module']=[identityFacades.root];
+  if(isSmart32)for(const key of ['ba-son-bridge-structure','marina-central-detail','grand-marina-detail','bach-dang-footbridge-structure','hero-corridor-module','extra-identity-facades-module']){delete lock32.moduleRefs[key];lock32.hiddenModules.add(key);}
   materialStatus.lock32.modules=[...lock32.hiddenModules];
 }
 const TREE_NEAR_M=1100;   // cây trong bán kính này (tính tới ô 500 m gần nhất) vẽ đầy đủ; xa hơn vẽ khối tán xa
@@ -892,7 +919,7 @@ const cityDensity=createDensityController31({
   treeDensity:createInstanceDensity31({sources:[{mesh:trunks,key:'trunks'},{mesh:canopies,stride:3,key:'canopies'},{mesh:farCanopies,key:'farCanopies',far:true}],items:trees,isProtected:(x,z)=>signatureGate.protects(x,z,'tree'),cellSize:500,lod:{nearM:TREE_NEAR_M,protectM:2500,padM:30},label:'Cây 31E',regionOf}),
   detailDensity:(()=>{const list=[];cityDetailRuntime.root.traverse(o=>{if(o.isInstancedMesh)list.push(o);});return list.map(mesh=>createInstanceDensity31({sources:[{mesh}],items:instanceItems31(mesh),isProtected:(x,z)=>signatureGate.protects(x,z,'detail'),cellSize:1000,lod:{nearM:DETAIL_VISIBLE_M[mesh.name]??900,padM:60},regionOf}));})(),
   fixtureDensity:createInstanceDensity31({sources:[{mesh:fixtures,key:'roofFixtures'}],items:roofFixtures,isProtected:(x,z)=>signatureGate.protects(x,z,'detail'),regionOf}),
-  minimalMerges:[createMinimalMerge31(heroCorridor.architecture,{name:'Gộp Tối thiểu · kiến trúc hero'}),createMinimalMerge31(heroCorridor.publicRealm,{name:'Gộp Tối thiểu · không gian công cộng hero'}),createMinimalMerge31([bridgeGroup,marinaDetail,grandMarinaDetail,bridgesApi?.root],{name:'Gộp Tối thiểu · cầu và Marina',frame:scene})],
+  minimalMerges:[createMinimalMerge31(heroCorridor?.architecture||[],{name:'Gộp Tối thiểu · kiến trúc hero'}),createMinimalMerge31(heroCorridor?.publicRealm||[],{name:'Gộp Tối thiểu · không gian công cộng hero'}),createMinimalMerge31([bridgeGroup,marinaDetail,grandMarinaDetail,bridgesApi?.root],{name:'Gộp Tối thiểu · cầu và Marina',frame:scene})],
   structureRoots:[bridgeGroup,marinaDetail,grandMarinaDetail,...(bridgesApi?.meshes||[])],
   vesselDetail:[vesselCabins,vesselWindows,...vesselWakes],
   streetFurniture,traffic:{api:()=>materialStatus.traffic?.api??materialStatus.motion?.api,group:trafficGroup},vesselGroup,   // xe: API city-traffic-31 (bước D) gắn ở status hoặc motionStatus
@@ -900,7 +927,7 @@ const cityDensity=createDensityController31({
   audit:{
     extraBuildingIds:()=>[...heroEnvelopeIds].filter(id=>!(lock32&&lock32.signatureHiddenIds.has(id))),   // 3 hero envelope do hero corridor vẽ thay mesh công trình (M2c: trừ phần đã ẩn)
     ways:()=>D.roads.filter((road,index)=>roadNetwork.pieces(index).length).map(road=>road.id),
-    modules:Object.fromEntries(Object.entries({'ba-son-bridge-structure':bridgeGroup,'bach-dang-footbridge-structure':bridgesApi?.signature||[],'marina-central-detail':marinaDetail,'grand-marina-detail':grandMarinaDetail,'hero-corridor-module':heroCorridor.root,'extra-identity-facades-module':identityFacades.root}).filter(([key])=>!(lock32&&lock32.hiddenModules.has(key))))   // M2c: module đã ẩn không đếm là đang hiển thị
+    modules:Object.fromEntries(Object.entries({'ba-son-bridge-structure':bridgeGroup,'bach-dang-footbridge-structure':bridgesApi?.signature||[],'marina-central-detail':marinaDetail,'grand-marina-detail':grandMarinaDetail,'hero-corridor-module':heroCorridor?.root,'extra-identity-facades-module':identityFacades?.root}).filter(([key])=>!(lock32&&lock32.hiddenModules.has(key))))   // M2c: module đã ẩn không đếm là đang hiển thị
   },
   regionOf,regionStatus:materialStatus.region,onRegionChange:event=>onRegionChosen(event),
   defaultLevel:modePreset.density,
@@ -1261,8 +1288,8 @@ function render(now){
   shadowSystem.update(target,cameraDistance);
   cityDetailRuntime.update(cameraDistance,nightLevel.value);
   streetFurniture.update(cameraDistance,nightLevel.value);
-  heroCorridor.update(cameraDistance,nightLevel.value,activeView==='corridor');
-  identityFacades.update(cameraDistance,activeView);
+  heroCorridor?.update(cameraDistance,nightLevel.value,activeView==='corridor');
+  identityFacades?.update(cameraDistance,activeView);
   advanceUrbanMotion(now);
   if(now-lastLabel>120){lastLabel=now;updateLabels();}
   adaptiveQuality.update(dt,cameraDistance,pointerDown||!!desired);
@@ -1319,9 +1346,16 @@ await renderer.compileAsync(scene,camera);
     if (!isSmart32) cityDensity.prewarmRegions();
     const warm=camera.clone();warm.position.set(preset.target.x+preset.distance*Math.sin(preset.polar)*Math.sin(preset.az),preset.target.y+preset.distance*Math.cos(preset.polar),preset.target.z+preset.distance*Math.sin(preset.polar)*Math.cos(preset.az));warm.lookAt(preset.target);warm.updateMatrixWorld(true);
     for(const region of warmRegions){setProgress(97,`Đang nạp pipeline khu · ${region.short}…`);cityDensity.previewRegion(region.id);await renderer.compileAsync(scene,warm);}
-  }catch(error){console.warn('Khu mô phỏng: biên dịch sẵn thất bại',error);}
+  }catch(error){if(isSmart32)throw error;console.warn('Khu mô phỏng: biên dịch sẵn thất bại',error);}
   cityDensity.previewRegion(original,originalSource);
   materialStatus.region.warmMs=Math.round(performance.now()-started);
+}
+if(smartApp){
+  const forecast=smartApp.modules.forecast,deadline=performance.now()+30000;
+  while(!forecast.ready){
+    if(performance.now()>deadline)throw new Error('Forecast public không khởi tạo được với cùng graph trạm');
+    await new Promise(resolve=>setTimeout(resolve,50));
+  }
 }
 setProgress(100,'Sẵn sàng');
 window.dispatchEvent(new CustomEvent('citylab:renderer-ready',{detail:materialStatus}));

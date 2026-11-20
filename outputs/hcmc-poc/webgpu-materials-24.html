@@ -224,9 +224,11 @@
       if (!smart) document.write(`<script src="${prefix}scene.js?v=${version}"><\/script>`);
     })();
   </script>
-  <script src="data/semantic-materials-08.js?v=31a"></script>
-  <script src="data/ba-son-bridge-detail.js?v=31a"></script>
-  <script src="data/webgpu-corrections-24.js?v=31a"></script>
+  <script>
+    if (new URLSearchParams(location.search).get('app') !== 'smart') {
+      for (const file of ['semantic-materials-08', 'ba-son-bridge-detail', 'webgpu-corrections-24']) document.write(`<script src="data/${file}.js?v=31a"><\/script>`);
+    }
+  </script>
   <script>
     (() => {
       const smart = new URLSearchParams(location.search).get('app') === 'smart';
@@ -235,22 +237,28 @@
       if (!smart) document.write(`<script src="${prefix}road-graph-31.js?v=${version}"><\/script>`);
     })();
   </script>
-  <script src="data/bach-dang-footbridge.js?v=31a"></script>
-  <script src="data/bridge-corrections-31.js?v=31a"></script>
-  <script src="data/signature-registry-31.js?v=31a"></script>
-  <script src="data/street-furniture-31.js?v=31a"></script>
+  <script>
+    if (new URLSearchParams(location.search).get('app') !== 'smart') {
+      for (const file of ['bach-dang-footbridge', 'bridge-corrections-31', 'signature-registry-31', 'street-furniture-31']) document.write(`<script src="data/${file}.js?v=31a"><\/script>`);
+    }
+  </script>
   <script>window.addEventListener('error',event=>{console.error('CITY24_ERROR',event.message,event.filename,event.lineno,event.colno);const text=document.getElementById('loaderText');if(text)text.textContent=`Lỗi dựng cảnh · ${event.message} · dòng ${event.lineno||'?'}`;});</script>
   <script type="module">
     (async () => {
       const smart = new URLSearchParams(location.search).get('app') === 'smart';
       if (smart) {
-        const [sceneResponse, graphResponse] = await Promise.all([
+        const [sceneResponse, graphResponse, configResponse] = await Promise.all([
           fetch('data/public-north/scene.json?v=public-north-1'),
-          fetch('data/public-north/road-graph.json?v=public-north-1')
+          fetch('data/public-north/road-graph.json?v=public-north-1'),
+          fetch('data/public-north/runtime-sidecars.json?v=public-north-2')
         ]);
-        if (!sceneResponse.ok || !graphResponse.ok) throw new Error('Không tải được dữ liệu public khu Bắc.');
+        if (!sceneResponse.ok || !graphResponse.ok || !configResponse.ok) throw new Error('Không tải được dữ liệu public khu Bắc.');
         window.CITY_DATA = await sceneResponse.json();
         window.ROAD_GRAPH_31 = await graphResponse.json();
+        const config = await configResponse.json();
+        if (config.region !== 'bac' || !config.globals || !window.CITY_DATA.roads.length || window.CITY_DATA.roads.length !== window.ROAD_GRAPH_31.roads.length) throw new Error('Chỉ mục public Bắc không hợp lệ');
+        Object.assign(window, config.globals);
+        window.PUBLIC_NORTH_CONFIG_32 = config;
       }
       await import(smart ? './webgpu-materials-24.js?v=32c' : './webgpu-materials-24.js?v=31a');
     })().catch(error => {

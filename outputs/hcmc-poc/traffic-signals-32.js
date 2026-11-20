@@ -48,8 +48,8 @@ export function lightColorOf(phase) {
 }
 
 // Trục pha (độ) của nút theo kế hoạch đèn M1; nút không có trong kế hoạch dùng 0.
-function axisDegOf32(nodeId) {
-  const row = SIGNAL_PLAN_32.find(r => r.node_id === nodeId);
+function axisDegOf32(nodeId, rows = SIGNAL_PLAN_32) {
+  const row = rows.find(r => r.node_id === nodeId);
   return row ? row.group_axis_deg : 0;
 }
 
@@ -58,7 +58,7 @@ function axisDegOf32(nodeId) {
 // Vạch nằm ngang làn tại s = L − Rz (đúng vị trí dừng của xe trong mô phỏng); (ax, az) là vectơ theo bề ngang làn.
 export function stopLinesOf32(net, geo, nodeMap) {
   const { lanes, Rz } = net;
-  const y = net.G.frame.groundY + STOP_LINE_LIFT_32;
+  if (net.G.region === 'bac' && typeof geo.laneY !== 'function') throw new Error('Public cần cao độ làn thật');
   const out = [];
   for (const node of nodeMap) {
     if (!(node.index >= 0)) continue;
@@ -68,13 +68,13 @@ export function stopLinesOf32(net, geo, nodeMap) {
       const s = Math.max(0, lanes.length[l] - Rz[node.index]);
       const a = geo.lanePoint(l, s, lanes.offset[l] + lanes.width[l] / 2, {});
       const b = geo.lanePoint(l, s, lanes.offset[l] - lanes.width[l] / 2, {});
-      out.push({ node_id: node.node_id, lane: l, x: (a.x + b.x) / 2, y, z: (a.z + b.z) / 2, ax: a.x - b.x, az: a.z - b.z });
+      out.push({ node_id: node.node_id, lane: l, x: (a.x + b.x) / 2, y: (geo.laneY ? geo.laneY(l, s) : net.G.frame.groundY) + STOP_LINE_LIFT_32, z: (a.z + b.z) / 2, ax: a.x - b.x, az: a.z - b.z });
     }
   }
   return out;
 }
 
-export function createTrafficSignals32({ scene, THREE, controller, nodeMap, cameras, stopLines = [], approaches = null, camera = null, getViewportH = () => (typeof innerHeight === 'number' ? innerHeight : 900) }) {
+export function createTrafficSignals32({ scene, THREE, controller, nodeMap, cameras, stopLines = [], approaches = null, rows = SIGNAL_PLAN_32, publicMode = false, camera = null, getViewportH = () => (typeof innerHeight === 'number' ? innerHeight : 900) }) {
   if (!THREE) throw new TypeError('createTrafficSignals32 cần THREE (truyền từ app, không import tĩnh)');
   const group = new THREE.Group();
   group.name = 'traffic-signals-32';
@@ -114,9 +114,10 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
 
   // Đầu đèn dựng từ danh sách nhánh của giao lộ logic (mỗi nhánh một đầu), không nhân theo mã nút.
   const nodeById = new Map(nodeMap.map(n => [n.node_id, n]));
+  if (publicMode && (!Array.isArray(approaches) || !approaches.length)) throw new Error('Public cần làn tiếp cận thật để dựng đầu đèn');
   const placements = (Array.isArray(approaches) && approaches.length) ? approaches : nodeMap.flatMap(node => {
     // Fallback cho test/không có dữ liệu làn: 2 nhóm × 2 mặt đối nhau quanh nút.
-    const axis = axisDegOf32(node.node_id) * Math.PI / 180;
+    const axis = axisDegOf32(node.node_id, rows) * Math.PI / 180;
     return [0, 1].flatMap(g => {
       const theta = axis + g * Math.PI / 2, front = Math.atan2(Math.cos(theta), Math.sin(theta));
       return [front, front + Math.PI].map(yaw => ({ node_id: node.node_id, x: node.x + Math.sin(yaw) * 12, z: node.z + Math.cos(yaw) * 12, y: 0, groupIdx: g, yaw }));
@@ -301,11 +302,12 @@ export function installSignals32(app, { nodeMap = [], cameras = [], THREE = null
   // Giao lộ logic 3/4/5/6 hướng: mỗi nhánh một đầu đèn; nhánh hẻm bị bỏ khi đã đủ nhánh chính.
   const layout = buildJunctionLayout32({ net: traffic.net, nodeMap: indexed, geo });
   const approaches = junctionPlacements32(layout);
+  if (traffic.net.G.region === 'bac' && layout.some(j => !j.arms.some(a => a.incoming && a.head) || !j.arms.some(a => a.outgoing))) throw new Error('Cụm public thiếu làn vào/ra thật');
   const controlled = new Set(layout.flatMap(j => j.arms.filter(a => a.head).flatMap(a => a.laneIds)));
   const stopLines = stopLinesOf32(traffic.net, geo, indexed).filter(s => controlled.has(s.lane));
   const signals = createTrafficSignals32({
     scene: app.scene, THREE, controller: app.controller,
-    nodeMap: indexed, stopLines, approaches,
+    nodeMap: indexed, stopLines, approaches, rows: traffic.net.signalPlan?.rows || SIGNAL_PLAN_32, publicMode: traffic.net.G.region === 'bac',
     cameras, camera: app.camera, getViewportH: () => app.renderer?.domElement?.clientHeight || (typeof innerHeight === 'number' ? innerHeight : 900)
   });
   signals.layout = layout;

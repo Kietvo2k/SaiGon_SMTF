@@ -17,14 +17,14 @@ export const SIGNAL_PLAN_32 = [
   { node_id: 'HX-06', osm_id: 1497276515, group_axis_deg: 171.4, offset_s: 32, name: 'Hàng Xanh × Xô Viết Nghệ Tĩnh' }
 ];
 
-export function buildSignalPlan32({ graph, nodeMap }) {
+export function buildSignalPlan32({ graph, nodeMap, rows = SIGNAL_PLAN_32 }) {
   const index = new Map(graph.nodes.map((n, i) => [n.id, i]));
-  const rowByOsm = new Map(SIGNAL_PLAN_32.map(r => [r.osm_id, r]));
+  const rowByOsm = new Map(rows.map(r => [r.osm_id, r]));
   const metaByOsm = new Map(nodeMap.map(m => [m.osm_id, m]));
   const signalNodes = [], offset = new Map();
   // Cụm gom THEO node_map (cluster_id), không theo khoảng cách hình học.
   const clusters = [];
-  for (const row of SIGNAL_PLAN_32) {
+  for (const row of rows) {
     const meta = metaByOsm.get(row.osm_id);
     if (!meta) throw new Error(`node_map.json thiếu osm_id ${row.osm_id}`);
     let cluster = clusters.find(c => c.cluster_id === meta.cluster_id);
@@ -58,5 +58,5 @@ export function buildSignalPlan32({ graph, nodeMap }) {
   graph.edges.forEach((e,k)=>{
     if(clusterOf.has(e.from) && clusterOf.get(e.from)===clusterOf.get(e.to)) { internalSt.add(k*2); internalSt.add(k*2+1); }
   });
-  return { signalNodes, offset, arriveGroup, clusters, internalSt };
+  return { signalNodes, offset, arriveGroup, clusters, internalSt, rows };
 }

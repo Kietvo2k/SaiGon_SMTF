@@ -81,7 +81,7 @@ export function buildJunctionLayout32({ net, nodeMap = [], geo = null, mergeDeg 
     const i = Number.isInteger(m.index) ? m.index : net.G.nodes.findIndex(n => Number(n.id) === Number(m.osm_id));
     if (i >= 0) metaByIndex.set(i, m);
   }
-  const planByOsm = new Map(SIGNAL_PLAN_32.map(r => [Number(r.osm_id), r]));
+  const planByOsm = new Map((net.signalPlan.rows || SIGNAL_PLAN_32).map(r => [Number(r.osm_id), r]));
   const mergeRad = Math.max(0, Number(mergeDeg) || 0) * Math.PI / 180;
   const out = [];
 

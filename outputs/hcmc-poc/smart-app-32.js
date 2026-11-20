@@ -144,11 +144,22 @@ export function smartBehavior32({ graph, nodeMap, cameras = null }) {
   return { restrictedNodes: restrictedNodeIndices32(graph, nodeMap), cameras, zoneSpec: ZONE_SPEC_32 };
 }
 
-export async function prepareSmart32({ graph }) {
-  const res = await fetch('../smart-traffic/backend/app/seed/node_map.json');
-  const nodeMap = await res.json();
-  const cameras = await fetch('../smart-traffic/backend/app/seed/cameras.json').then(r => r.json());
-  return { signalPlan: buildSignalPlan32({ graph, nodeMap }), nodeMap, cameras };
+export async function prepareSmart32({ graph, config = null }) {
+  const load = async url => {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Không tải được cấu hình smart: ${url}`);
+    return response.json();
+  };
+  const publicConfig = config || (graph.region === 'bac' ? await load('data/public-north/runtime-sidecars.json') : null);
+  if (graph.region === 'bac' && (publicConfig?.region !== 'bac' || !Array.isArray(publicConfig.signalRows))) throw new Error('Cấu hình public Bắc không hợp lệ');
+  const [nodeMap, cameras] = await Promise.all([
+    load(publicConfig?.nodeMapUrl || '../smart-traffic/backend/app/seed/node_map.json'),
+    load(publicConfig?.camerasUrl || '../smart-traffic/backend/app/seed/cameras.json')
+  ]);
+  const signalPlan = buildSignalPlan32({ graph, nodeMap, ...(publicConfig ? { rows: publicConfig.signalRows } : {}) });
+  const heatHistory = publicConfig ? expandHeatHistory32(await load(publicConfig.heatHistoryUrl), graph.edges.length) : null;
+  if (publicConfig && !heatHistory) throw new Error('Chỉ mục lịch sử nhiệt public không khớp graph');
+  return { signalPlan, nodeMap, cameras, config: publicConfig, heatHistory };
 }
 
 // T9b — Panel "Tham quan" của app smart: 5 góc nhìn khu Bắc. Toạ độ suy từ node_map / signature registry / road graph,
@@ -369,7 +380,7 @@ export function readStationSnapshot32(app, cameras, transport, buildId) {
 // M4b1 — nối lớp nhiệt/dự báo/VMS vào app smart. Cần installStation32 trước (để gửi /station/heat qua transport).
 // routing = createRouteBias32() đã truyền cho createTraffic31 (routeBias), để cảnh báo đổi hướng xe thật.
 export function installHeat32(app, { THREE, routing = null, nodeMap = [], root = (typeof document !== 'undefined' ? document : null),
-  historyUrl = 'data/heat-history-32.json?v=32a' } = {}) {
+  historyUrl = 'data/heat-history-32.json?v=32a', history = null } = {}) {
   if (!THREE) throw new TypeError('installHeat32 cần THREE');
   const traffic = app.traffic, net = traffic.net, sim = traffic.sim;
   const transport = app.modules && app.modules.transport;
@@ -380,7 +391,8 @@ export function installHeat32(app, { THREE, routing = null, nodeMap = [], root =
     onPayload: payload => { if (transport && typeof transport.sendHeat === 'function') transport.sendHeat(payload); }
   });
   // Lịch sử offline (scripts/build-heat-history-32.mjs) làm nền cho dự báo thống kê ngay từ đầu. Lỗi tải → chỉ cảnh báo.
-  if (typeof fetch === 'function' && historyUrl) {
+  if (history) live.loadHistory(history);
+  else if (typeof fetch === 'function' && historyUrl) {
     fetch(historyUrl).then(r => (r.ok ? r.json() : null)).then(j => {
       const hist = j ? expandHeatHistory32(j, net.NE) : null;
       if (hist) live.loadHistory(hist);
