@@ -23,6 +23,7 @@ export function violationLabel(code: string): string {
 
 const VIOLATION_STATUS_LABELS: Record<string, string> = {
   new: 'Mới ghi nhận',
+  pending: 'Chờ xác nhận',
   needs_review: 'Cần xác minh',
   confirmed: 'Đã xác nhận',
   notified: 'Đã thông báo',
@@ -35,7 +36,26 @@ export function violationStatusLabel(status: string): string {
   return VIOLATION_STATUS_LABELS[status] ?? status;
 }
 
+// Màu badge theo trạng thái (dùng làm class submit-status-{tone} trong submit.css).
+export type StatusTone = 'ok' | 'warn' | 'info' | 'risk' | 'muted';
+
+const VIOLATION_STATUS_TONES: Record<string, StatusTone> = {
+  new: 'info',
+  pending: 'warn',
+  needs_review: 'warn',
+  confirmed: 'ok',
+  notified: 'info',
+  paid: 'ok',
+  disputed: 'risk',
+  dismissed: 'muted',
+};
+
+export function violationStatusTone(status: string): StatusTone {
+  return VIOLATION_STATUS_TONES[status] ?? 'muted';
+}
+
 export const COMPLAINT_KIND_LABELS: Record<string, string> = {
+  priority_yield: 'Nhường đường cho xe ưu tiên',
   priority_vehicle: 'Xe được ưu tiên đi trước',
   wrong_plate: 'Sai biển số, không phải xe của tôi',
   other: 'Lý do khác',
@@ -84,8 +104,9 @@ export function displayNodeLabel(label: string | null | undefined): string {
 
 export const EVIDENCE_KIND_LABELS: Record<string, string> = {
   before: 'Trước khi vượt vạch',
-  after: 'Sau khi vượt vạch',
+  after: 'Sau khi vượt vạch (khung nhận diện tự động)',
   plate_crop: 'Ảnh biển số',
+  plate: 'Ảnh cắt biển số',
 };
 
 export function evidenceKindLabel(kind: string): string {

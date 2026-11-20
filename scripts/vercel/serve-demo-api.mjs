@@ -16,7 +16,7 @@ const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 
 const server = createServer(async (req, res) => {
   try {
-    const url = new URL(req.url, `http://localhost:${port}`);
+    const url = new URL(req.url, `http://${req.headers.host || `127.0.0.1:${port}`}`);
     if (url.pathname === '/api/demo' || url.pathname.startsWith('/api/demo/')) {
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);

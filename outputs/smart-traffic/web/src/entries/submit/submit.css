@@ -59,5 +59,50 @@ html[data-smtf-demo=vercel] button:focus-visible,html[data-smtf-demo=vercel] a:f
 .submit-lookup-results{margin-top:16px;border-top:1px solid var(--submit-line)}.submit-lookup-results article{padding:16px 0;border-bottom:1px solid var(--submit-line)}
 .submit-lookup-results p{color:var(--submit-muted);font-size:13px}.submit-lookup-results span{font-size:11px;color:#315d4f}
 @media(max-width:780px){.submit-dashboard{grid-template-columns:minmax(0,1fr)}.submit-records{padding-top:6px}.submit-media-stage{min-height:210px}}
+
+/* demo-v2: bảng hồ sơ vi phạm, bằng chứng, dòng thời gian, banner sự kiện, khiếu nại. */
+.submit-records-table{overflow-x:auto}
+.submit-record-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.submit-record-table th,.submit-record-table td{padding:9px 10px 9px 0;border-bottom:1px solid var(--submit-line);text-align:left;vertical-align:top}
+.submit-record-table thead th{color:var(--submit-muted);font-size:10px;font-weight:700;border-bottom:1px solid #9db3aa}
+.submit-record-plate{padding:0;border:0;background:none;color:var(--submit-ink);font-size:13.5px;font-weight:750;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.submit-record-row-open .submit-record-plate{color:#0d534f}
+.submit-status{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:700}
+.submit-status-ok{background:#e0f0e4;color:#155c3a}
+.submit-status-warn{background:#f8ecd4;color:#8a5a12}
+.submit-status-info{background:#e2ecf2;color:#1d5570}
+.submit-status-risk{background:#f7e0da;color:#8d2f1c}
+.submit-status-muted{background:#e9e9e0;color:#5c615b}
+.submit-record-priority{display:block;margin-top:3px;color:#8a5a12;font-size:10.5px;font-weight:700}
+.submit-record-actions{display:inline-flex;flex-wrap:wrap;gap:5px}
+.submit-record-actions .submit-secondary{min-height:34px;font-size:10px}
+.submit-record-detail-row td{background:#fbfbf4}
+.submit-evidence{padding:12px 0}
+.submit-evidence-photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.submit-evidence-photos figure{margin:0}
+.submit-evidence-photos img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border:1px solid var(--submit-line);background:#10282b}
+.submit-evidence-photos figcaption{margin-top:5px;color:var(--submit-muted);font-size:10.5px}
+.submit-evidence-note{margin:9px 0 0;color:var(--submit-muted);font-size:11.5px;line-height:1.55}
+.submit-events{margin:18px 0 0;display:grid;gap:6px}
+.submit-event-incident{margin:0;padding:10px 13px;border:1px solid #c9822f;background:#fdf3e3;color:#6d3d0a;font-size:12px}
+.submit-event-incident-after{border-color:#2f7a4c;background:#eaf5ed;color:#12492c}
+.submit-event-violation{margin:0;padding:8px 13px;border:1px solid #9db3aa;background:#f4f7f1;color:#2b4a44;font-size:11.5px}
+.submit-record-detail{padding:18px 0;border-bottom:1px solid var(--submit-line)}
+.submit-record-detail-head{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.submit-record-detail-head h3{margin:0;font-size:18px;letter-spacing:-.02em}
+.submit-record-detail-head>span:first-of-type{color:var(--submit-muted);font-size:12px}
+.submit-record-summary{margin:8px 0 14px;color:var(--submit-muted);font-size:13px;line-height:1.55}
+.submit-penalty{display:grid;gap:3px;margin:14px 0;font-size:13px}
+.submit-penalty small{color:var(--submit-muted);font-size:11px;line-height:1.5}
+.submit-timeline{list-style:none;margin:14px 0 0;padding:0;border-top:1px dashed var(--submit-line)}
+.submit-timeline li{display:flex;gap:12px;padding:8px 0;border-bottom:1px dashed var(--submit-line);font-size:12px}
+.submit-timeline-time{flex:0 0 132px;color:var(--submit-muted);font-size:11px}
+.submit-timeline-label{line-height:1.5}
+.submit-timeline-label small{color:var(--submit-muted)}
+.submit-complaint-form{display:grid;gap:8px;max-width:420px;margin-top:14px;padding:14px;border:1px solid var(--submit-line);background:#f8f8f0}
+.submit-complaint-form label{font-size:11.5px;font-weight:700}
+.submit-complaint-form select,.submit-complaint-form textarea{width:100%;min-height:42px;border:1px solid #aebfb8;border-radius:3px;background:#fcfcf6;color:var(--submit-ink);padding:8px 10px;font:inherit;font-size:12.5px}
+.submit-complaint-actions{display:flex;gap:9px}
+.submit-complaint-actions button[type=submit]{min-height:44px;padding:0 16px;border:0;border-radius:3px;background:var(--submit-dark);color:#f4f4e9;cursor:pointer;font-weight:650}
 @media(max-width:520px){.submit-shell{padding-inline:17px}.submit-header{min-height:62px}.submit-wordmark{font-size:13px}.submit-wordmark span{font-size:8px}.submit-title{padding-top:30px}.submit-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.submit-kpi{min-height:89px;padding:13px 10px 12px 0}.submit-kpi+.submit-kpi{padding-left:11px}.submit-kpi:nth-child(3){border-left:0;padding-left:0;border-top:1px solid var(--submit-line)}.submit-kpi:nth-child(4){border-top:1px solid var(--submit-line)}.submit-camera-head{align-items:flex-start;flex-direction:column}.submit-media-stage{min-height:210px;aspect-ratio:4/3}.submit-lookup-input{grid-template-columns:minmax(0,1fr)}.submit-lookup-input button{width:100%}.submit-sample-plates>span{flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){html[data-smtf-demo=vercel] *,html[data-smtf-demo=vercel] *::before,html[data-smtf-demo=vercel] *::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}

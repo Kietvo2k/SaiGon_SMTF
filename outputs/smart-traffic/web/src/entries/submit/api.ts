@@ -4,7 +4,57 @@ export interface DemoRecord {
   plate: string;
   summary: string;
   status: string;
+  occurredAt?: string | null;
+  code?: string;
+  violationLabel?: string;
+  vehicleClass?: 'car' | 'motorbike' | null;
+  junctionId?: string;
+  cameraId?: string;
+  direction?: string;
+  penaltyAmountMin?: number;
+  penaltyAmountMax?: number;
+  penaltyPoints?: number;
+  penaltySource?: string;
+  priorityFlag?: boolean;
+  priorityReason?: string | null;
+  [key: string]: unknown;
 }
+
+export type DemoEvidenceKind = 'before' | 'after' | 'plate';
+
+export interface DemoEvidence {
+  kind: DemoEvidenceKind;
+  url: string;
+}
+
+export interface DemoRecordDetail extends DemoRecord {
+  evidence: DemoEvidence[];
+}
+
+export interface DemoTimelineAuditEntry {
+  action: 'confirm' | 'dismiss' | 'needs_review' | 'complaint';
+  note: string | null;
+  at: string;
+}
+
+export interface DemoTimelineComplaint {
+  id: number;
+  kind: 'priority_yield' | 'wrong_plate' | 'other';
+  note: string | null;
+  status: 'open' | 'accepted' | 'rejected';
+  created_at: string;
+}
+
+export interface DemoTimeline {
+  plate: string;
+  status: string;
+  occurredAt: string | null;
+  audit: DemoTimelineAuditEntry[];
+  complaints: DemoTimelineComplaint[];
+}
+
+export type DemoDecisionAction = 'confirm' | 'dismiss' | 'needs_review';
+export type DemoComplaintKind = 'priority_yield' | 'wrong_plate' | 'other';
 
 export interface DemoKpi {
   source: 'sample' | 'live';
@@ -98,6 +148,31 @@ export function requestCamera(camera: DemoCamera, fetcher: DemoFetch = fetch, si
       }
       return frame;
     });
+}
+
+// submit-v2: hồ sơ chi tiết (kèm đường dẫn bằng chứng), dòng thời gian, duyệt và khiếu nại.
+export function getRecordDetail(plate: string, fetcher: DemoFetch = fetch, signal?: AbortSignal): Promise<DemoRecordDetail> {
+  return jsonRequest(`/api/demo/record?plate=${encodeURIComponent(plate)}`, { method: 'GET', signal }, fetcher);
+}
+
+export function getTimeline(plate: string, fetcher: DemoFetch = fetch, signal?: AbortSignal): Promise<DemoTimeline> {
+  return jsonRequest(`/api/demo/timeline?plate=${encodeURIComponent(plate)}`, { method: 'GET', signal }, fetcher);
+}
+
+export function postDecision(plate: string, action: DemoDecisionAction, note: string, fetcher: DemoFetch = fetch): Promise<{ ok: true; plate: string; status: string }> {
+  return jsonRequest('/api/demo/decision', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ plate, action, note })
+  }, fetcher);
+}
+
+export function postComplaint(plate: string, kind: DemoComplaintKind, note: string, fetcher: DemoFetch = fetch): Promise<{ ok: true; plate: string; status: string }> {
+  return jsonRequest('/api/demo/complaint', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ plate, kind, note })
+  }, fetcher);
 }
 
 export function createRequestEpoch() {
