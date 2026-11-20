@@ -6,3 +6,6 @@ outputs/hcmc-poc/research/facades-15/snapshots/** -text
 outputs/hcmc-poc/research/visual-14/snapshots/** -text
 outputs/hcmc-poc/research/vibecode-16/source-snapshots/** -text
 research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/** -text
+
+outputs/hcmc-poc/data/public-north/** text eol=lf
+outputs/smart-traffic/backend/app/seed/public-north/** text eol=lf
