@@ -1314,9 +1314,11 @@ await renderer.compileAsync(scene,camera);
 {
   const started=performance.now(),original=cityDensity.region,originalSource=materialStatus.region.source,preset=presets.overview;
   try{
-    cityDensity.prewarmRegions();
+    // Smart public chỉ có dữ liệu khu Bắc; prewarm các khu classic sẽ làm loader vượt deadline.
+    const warmRegions = isSmart32 ? REGIONS_31.filter(region => region.id === 'bac') : REGIONS_31;
+    if (!isSmart32) cityDensity.prewarmRegions();
     const warm=camera.clone();warm.position.set(preset.target.x+preset.distance*Math.sin(preset.polar)*Math.sin(preset.az),preset.target.y+preset.distance*Math.cos(preset.polar),preset.target.z+preset.distance*Math.sin(preset.polar)*Math.cos(preset.az));warm.lookAt(preset.target);warm.updateMatrixWorld(true);
-    for(const region of REGIONS_31){setProgress(97,`Đang nạp pipeline khu · ${region.short}…`);cityDensity.previewRegion(region.id);await renderer.compileAsync(scene,warm);}
+    for(const region of warmRegions){setProgress(97,`Đang nạp pipeline khu · ${region.short}…`);cityDensity.previewRegion(region.id);await renderer.compileAsync(scene,warm);}
   }catch(error){console.warn('Khu mô phỏng: biên dịch sẵn thất bại',error);}
   cityDensity.previewRegion(original,originalSource);
   materialStatus.region.warmMs=Math.round(performance.now()-started);

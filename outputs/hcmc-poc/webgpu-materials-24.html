@@ -216,17 +216,49 @@
     </div>
   </main>
   <script src="vendor/earcut.min.js"></script>
-  <script src="data/scene.js?v=31a"></script>
+  <script>
+    (() => {
+      const smart = new URLSearchParams(location.search).get('app') === 'smart';
+      const prefix = smart ? 'data/public-north/' : 'data/';
+      const version = smart ? 'public-north-1' : '31a';
+      if (!smart) document.write(`<script src="${prefix}scene.js?v=${version}"><\/script>`);
+    })();
+  </script>
   <script src="data/semantic-materials-08.js?v=31a"></script>
   <script src="data/ba-son-bridge-detail.js?v=31a"></script>
   <script src="data/webgpu-corrections-24.js?v=31a"></script>
-  <script src="data/road-graph-31.js?v=31a"></script>
+  <script>
+    (() => {
+      const smart = new URLSearchParams(location.search).get('app') === 'smart';
+      const prefix = smart ? 'data/public-north/' : 'data/';
+      const version = smart ? 'public-north-1' : '31a';
+      if (!smart) document.write(`<script src="${prefix}road-graph-31.js?v=${version}"><\/script>`);
+    })();
+  </script>
   <script src="data/bach-dang-footbridge.js?v=31a"></script>
   <script src="data/bridge-corrections-31.js?v=31a"></script>
   <script src="data/signature-registry-31.js?v=31a"></script>
   <script src="data/street-furniture-31.js?v=31a"></script>
   <script>window.addEventListener('error',event=>{console.error('CITY24_ERROR',event.message,event.filename,event.lineno,event.colno);const text=document.getElementById('loaderText');if(text)text.textContent=`Lỗi dựng cảnh · ${event.message} · dòng ${event.lineno||'?'}`;});</script>
-  <script type="module">import(new URLSearchParams(location.search).get('app')==='smart'?'./webgpu-materials-24.js?v=32c':'./webgpu-materials-24.js?v=31a');</script>
+  <script type="module">
+    (async () => {
+      const smart = new URLSearchParams(location.search).get('app') === 'smart';
+      if (smart) {
+        const [sceneResponse, graphResponse] = await Promise.all([
+          fetch('data/public-north/scene.json?v=public-north-1'),
+          fetch('data/public-north/road-graph.json?v=public-north-1')
+        ]);
+        if (!sceneResponse.ok || !graphResponse.ok) throw new Error('Không tải được dữ liệu public khu Bắc.');
+        window.CITY_DATA = await sceneResponse.json();
+        window.ROAD_GRAPH_31 = await graphResponse.json();
+      }
+      await import(smart ? './webgpu-materials-24.js?v=32c' : './webgpu-materials-24.js?v=31a');
+    })().catch(error => {
+      console.error('CITY24_PUBLIC_DATA_ERROR', error);
+      const text = document.getElementById('loaderText');
+      if (text) text.textContent = `Lỗi nạp dữ liệu · ${error.message}`;
+    });
+  </script>
   <script type="module" src="flood-ui-25.js?v=31a"></script>
 </body>
 </html>
