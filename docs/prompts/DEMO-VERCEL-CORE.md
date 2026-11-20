@@ -1,0 +1,21 @@
+# Prompt điều phối lõi cho bản nộp Vercel
+
+Dán khối dưới đây vào CLI lõi hiện có. Tham chiếu chung gồm [đặc tả bản nộp](../agent/DEMO-VERCEL-SUPABASE.md), [prompt UI](DEMO-VERCEL-UI.md) và [skill phối hợp](../../.agents/skills/smtf-vercel-demo/SKILL.md).
+
+```text
+Bạn điều phối lõi và tích hợp Vercel cho bản nộp SaiGon SMTF trước 24h ngày 20/11/2026, giờ Việt Nam. Giữ React/Vite và entry 3D chung một origin. Supabase Postgres và Storage là nguồn dữ liệu chung của ba demo. Cán bộ demo chỉ xem dữ liệu mẫu.
+
+Dùng CLI lõi hiện có và worktree riêng trong brief. Mốc tham chiếu lõi b9bdd82 đã có bằng chứng Chromium. Xét riêng các phần có bằng chứng, giữ ứng viên cũ và số vòng tương ứng. ae04917 đang có lỗi forecast và chưa phải nền tích hợp. Xác minh worktree, nhánh, HEAD và SHA tài liệu chung điều phối viên gửi. Đọc AGENTS.md, docs/agent/RULES.md, docs/agent/HANDOFF.md, docs/agent/DEMO-VERCEL-SUPABASE.md và .agents/skills/smtf-vercel-demo/SKILL.md. Dùng be/db cho API, deploy và Supabase, tra tài liệu chính thức khi cần. Dùng Orca orchestration để nhận và bàn giao theo phụ thuộc.
+
+Liệt kê tệp được sửa trong writablePaths của brief. Sở hữu migration, seed, Supabase, Vercel Functions, entry 3D, capture, graph, cảnh, mô phỏng, build, manifest và deploy. Phần landing, view React, HUD và thao tác camera thuộc UI. Điều phối viên sở hữu hợp đồng, fixture chuẩn, cổng chung và nhánh tích hợp. Đưa đặc tả bản nộp vào requiredReads rồi chạy node scripts/agent/preflight.mjs --task <ID> --role <vai-trò>. Trả READY có ID yêu cầu, một ca biên và lệnh kiểm đầu tiên. Khi resume, đọc lại ledger và số vòng.
+
+Thứ tự bàn giao
+1. Song song hóa gói Vercel landing/3D và chuẩn bị Supabase. Dùng API dưới /api/demo, ID nút/camera, lỗi, seed và biến môi trường theo đặc tả chung. Bàn giao hợp đồng cho UI sớm. Tạo migration và seed chạy lặp được. Giữ khóa đặc quyền ở server, giới hạn quyền bảng/kho ảnh. Chuẩn bị code, SQL và build trong lúc chờ đăng nhập Supabase hoặc xác nhận dự án. Dùng Cloudflare cho asset tĩnh chỉ khi số đo chứng minh gói Vercel đã tối ưu vẫn vượt giới hạn.
+2. Dùng cookie ký cho phiên demo. Cấp ảnh mẫu có nhãn khi thiếu khung mới. Chỉ capture khi camera được xem, giới hạn tần suất và kích thước, ngừng cập nhật ảnh khi tab ẩn. Ánh xạ cameraId và junctionId ở API, lấy từ camera_id và junction_id của lõi nhất quán, giữ khung trực tiếp theo đúng phiên. Kiểm hai hồ sơ trình duyệt có cùng seed, ảnh trực tiếp của khách này không ghi đè khách khác. Kiểm tra một biển mẫu giữa tra cứu và dashboard trên Supabase thật.
+3. Sinh ô vuông 3,22 km với đúng 10 giao lộ và một danh mục đường, làn, đèn, camera. So đường đứt trong ô với đồ thị gốc, kiểm cổng qua biên theo chiều và cao độ. Giữ footprint nhà, đơn giản hóa hình khối. Sửa góc Bắc 02/03, kiểm đầu đèn, vạch dừng, vàng 3 giây và đỏ chung 2 giây. Tái hiện một điểm kẹt rồi đo trước/sau trên cùng kịch bản. Chuẩn bị vùng Bắc hiện có đã kiểm làm phương án dự phòng.
+4. Giữ xe đúng tỷ lệ, rõ thân, mui và bánh ở góc gần. Giảm bóng, vật liệu, DPR và chi tiết nhà trong Lite, giữ quyền đổi mức đồ họa và cùng tốc độ sim/pha đèn. Loại phần Story, Controls, Flood Lab cũ cùng asset chỉ chúng dùng khỏi gói public. Đo cùng seed, viewport và góc nhìn trước/sau, ghi thời gian scene sẵn sàng, dung lượng tải, median FPS và p95 frame time. Giữ bản cục bộ cho hồi quy.
+
+Mốc 21h có URL kiểm landing và 3D. Mốc 22h30 chốt ứng viên: nếu ô vuông chưa đạt, nhận vùng Bắc dự phòng đã kiểm cùng artifact; nếu camera live chưa đạt, nhận ảnh mẫu có nhãn và giữ lỗi trực tiếp mở. Mốc 23h điều phối viên kiểm trong trình duyệt sạch trên URL Vercel. Xác minh không có 404 asset, worker lỗi, kết nối localhost hoặc màn hình trắng. Nếu Supabase chưa kết nối, giữ URL 3D đã kiểm và ghi thiếu mốc đủ ba demo.
+
+Nếu kiểm đỏ, tái hiện nhỏ, phân loại và giao đúng chủ sở hữu. Tối đa hai lượt sửa sau vòng đầu cho mỗi lát. Sau đó nhờ một subagent độc lập tìm nguyên nhân, cô lập ứng viên, thử một thiết kế lại hẹp nếu có cơ chế khác, và tiếp tục các phần độc lập. Điều phối viên đối chiếu mỗi 20 phút. Bàn giao migration/seed, tên biến môi trường, SHA, manifest, URL, kiểm thô, bằng chứng trước/sau, ảnh/trace, phần mở và bước tiếp. Gửi JSON kết quả theo RULES để điều phối viên chạy preflight --verify. Chỉ ghi nhận bản nộp theo phạm vi đã kiểm. Cổng public-demo-v1 giữ tiêu chí nghiệm thu riêng.
+```

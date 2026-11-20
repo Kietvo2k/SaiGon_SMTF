@@ -12,3 +12,7 @@ Hai nhánh tách từ cùng commit `smtf-public-demo-handoff-v1`. Mở mỗi pro
 ## Tư liệu tháng 10/2026
 
 Các prompt [PERF](PERF.md), [DEMAND](DEMAND.md), [PRIORITY](PRIORITY.md), [A1](A1.md), [SMALL](SMALL.md) và [AUTO-RUN](AUTO-RUN.md) lưu logic, số liệu và đầu việc của các phiên trước. Thứ tự nghiệm thu của đợt đó xem `git show 3f8e31e:docs/prompts/README.md`. Để dùng lại một thí nghiệm, đối chiếu với đặc tả hiện hành rồi đưa vào brief mới.
+
+## Bản nộp Vercel và Supabase trước 24h
+
+Dùng [đặc tả và hợp đồng bản nộp](../agent/DEMO-VERCEL-SUPABASE.md), [prompt UI](DEMO-VERCEL-UI.md) và [prompt lõi](DEMO-VERCEL-CORE.md). Các prompt Public Demo v1 ở trên áp dụng khi nghiệm thu phạm vi đầy đủ.
