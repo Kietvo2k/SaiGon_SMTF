@@ -1,1 +1,215 @@
-{"schemaVersion":1,"region":"bac","build":"public-demo-v1","source":{"graph":"outputs/hcmc-poc/data/road-graph-31.json","graphSha256":"1da1f3d4cc8a0e9de2e050f21ee2bf4450cbe4fc9a23e16726f46ef03bdb6149","scene":"outputs/hcmc-poc/data/scene.json","sceneSha256":"50b89a3b8035ddc23c81ce20590f1274737d7443657fc791f3a6c069cf96dfa2","polygon":[[-3600,-3700],[1150,-3700],[1250,-3100],[1450,-2700],[1710,-2300],[1700,-1900],[1600,-1500],[1445,-1200],[1180,-1000],[700,-920],[60,-960],[-230,-975],[-380,-1130],[-520,-1330],[-770,-1480],[-1250,-1560],[-1900,-1760],[-2450,-1900],[-3050,-1960],[-3600,-2060]],"sourceBytesRule":"raw checkout bytes; no EOL normalization","inputs":[{"path":"outputs/hcmc-poc/data/road-graph-31.json","bytes":12283362,"sha256":"1da1f3d4cc8a0e9de2e050f21ee2bf4450cbe4fc9a23e16726f46ef03bdb6149"},{"path":"outputs/hcmc-poc/data/scene.json","bytes":30245943,"sha256":"50b89a3b8035ddc23c81ce20590f1274737d7443657fc791f3a6c069cf96dfa2"},{"path":"outputs/smart-traffic/backend/app/seed/node_map.json","bytes":1224,"sha256":"077dadb584628e2fb4b59668a451a6e3a6b6f978860a14c37aa521e192c53cfb"},{"path":"outputs/smart-traffic/backend/app/seed/cameras.json","bytes":3068,"sha256":"fa1e3848218215d48068aced204e2b18626ab08ea07d9c90c6f27ed37aa50e35"},{"path":"outputs/hcmc-poc/data/street-furniture-31.json","bytes":186068,"sha256":"f7d92a4e8e72169f3bfe782dce2a17b6dd990ab003b9638257f49f95b64e112d"},{"path":"outputs/hcmc-poc/data/bridge-corrections-31.json","bytes":72038,"sha256":"d22270408e711ae2fa9b5c1b08f5472ce6afa59e61ecdcc73b7038858bcf36e3"},{"path":"outputs/hcmc-poc/data/signature-registry-31.json","bytes":92383,"sha256":"b356c5f8d09dfe074e3192a93e44b23a9f775f0b28c74e2bc8c20ddcc8096f4e"},{"path":"outputs/hcmc-poc/data/heat-history-32.json","bytes":106550,"sha256":"94510c4febe3e0f850617b17abb4ba0166a313049aedf65ab5377c33c18c9486"},{"path":"outputs/hcmc-poc/data/ba-son-bridge-detail.json","bytes":2586,"sha256":"1ab67b32dd2b2124d78b415f0e0b3e42a859aafb02b6d73c83d2838e28d2c4f2"},{"path":"outputs/hcmc-poc/data/bach-dang-footbridge.json","bytes":5836,"sha256":"7f479bfc74e5b811d1dd1309a7916e398c0457d0a9584cce4b71a23594a61def"},{"path":"outputs/hcmc-poc/data/semantic-materials-08.js","bytes":5829,"sha256":"303bdac3015e8a4f3040e8cec08f0e472f6f7540022a0a1a4f7c69087427fb65"},{"path":"outputs/hcmc-poc/data/webgpu-corrections-24.js","bytes":1111,"sha256":"7f2ba39bd8ffff1caa16693b34ba6626b87d06e723ff3e20f41e880ea1f5d429"},{"path":"outputs/hcmc-poc/city-region-31.js","bytes":11279,"sha256":"66c3e1412b8dbd62fc2208aeca50bfbd0b1308824fd8d2eb70fec713a6e124a1"}]},"attribution":"© OpenStreetMap contributors, ODbL 1.0. Cao độ cầu là ước lượng minh họa, không khảo sát.","stats":{"roads":6819,"nodes":5458,"edges":6819,"buildings":23131,"sceneRoads":6819,"sourceRoads":12043,"sourceEdges":6815,"junctions":12,"cameras":17},"files":[{"path":"outputs/hcmc-poc/data/public-north/road-graph.json","bytes":8147204,"sha256":"2e5c107d69052596fb87fd887a91f220aa35e94c73cf33dcb5cbca8996f166cd"},{"path":"outputs/hcmc-poc/data/public-north/scene.json","bytes":15077592,"sha256":"2e13ab72cb4fb00368d660c6c4808f736af5d814280b097de23bf92b3d79930a"},{"path":"outputs/hcmc-poc/data/public-north/scene.js","bytes":15077657,"sha256":"62902545e0539cb2aec73ffa7aedf2754a90bc3e25b615516c70d1c059929b0f"},{"path":"outputs/hcmc-poc/data/public-north/mapping.json","bytes":5554397,"sha256":"60d69c895701d6854cceef3c2bd4669626f6b75fbfc1f88dca8717658786073c"},{"path":"outputs/hcmc-poc/data/public-north/runtime-sidecars.json","bytes":70018,"sha256":"b7f7c01fe587b1dd65b0237a5ff1502e79e89df912fd66c07e58af7bd1072d50"},{"path":"outputs/hcmc-poc/data/public-north/heat-history-32.json","bytes":90059,"sha256":"8b10c95879d7d9a2d2d14aea3b2106184dbd56634e44974ab5b6163277572a21"},{"path":"outputs/smart-traffic/backend/app/seed/public-north/node_map.json","bytes":7294,"sha256":"599468e1d793984ff1d1504b413edc0286729d849aee8b9a0867f8f65a51723e"},{"path":"outputs/smart-traffic/backend/app/seed/public-north/cameras.json","bytes":5735,"sha256":"5323dd72edcdce0b7d37b7d35576d02d8f6b306e28091262b8c1363ecc902d6d"}]}
+{
+  "schemaVersion": 1,
+  "region": "bac",
+  "build": "public-demo-v1",
+  "source": {
+    "graph": "outputs/hcmc-poc/data/road-graph-31.json",
+    "graphSha256": "1da1f3d4cc8a0e9de2e050f21ee2bf4450cbe4fc9a23e16726f46ef03bdb6149",
+    "scene": "outputs/hcmc-poc/data/scene.json",
+    "sceneSha256": "50b89a3b8035ddc23c81ce20590f1274737d7443657fc791f3a6c069cf96dfa2",
+    "polygon": [
+      [
+        -3600,
+        -3700
+      ],
+      [
+        1150,
+        -3700
+      ],
+      [
+        1250,
+        -3100
+      ],
+      [
+        1450,
+        -2700
+      ],
+      [
+        1710,
+        -2300
+      ],
+      [
+        1700,
+        -1900
+      ],
+      [
+        1600,
+        -1500
+      ],
+      [
+        1445,
+        -1200
+      ],
+      [
+        1180,
+        -1000
+      ],
+      [
+        700,
+        -920
+      ],
+      [
+        60,
+        -960
+      ],
+      [
+        -230,
+        -975
+      ],
+      [
+        -380,
+        -1130
+      ],
+      [
+        -520,
+        -1330
+      ],
+      [
+        -770,
+        -1480
+      ],
+      [
+        -1250,
+        -1560
+      ],
+      [
+        -1900,
+        -1760
+      ],
+      [
+        -2450,
+        -1900
+      ],
+      [
+        -3050,
+        -1960
+      ],
+      [
+        -3600,
+        -2060
+      ]
+    ],
+    "sourceBytesRule": "raw checkout bytes; no EOL normalization",
+    "inputs": [
+      {
+        "path": "outputs/hcmc-poc/data/road-graph-31.json",
+        "bytes": 12283362,
+        "sha256": "1da1f3d4cc8a0e9de2e050f21ee2bf4450cbe4fc9a23e16726f46ef03bdb6149"
+      },
+      {
+        "path": "outputs/hcmc-poc/data/scene.json",
+        "bytes": 30245943,
+        "sha256": "50b89a3b8035ddc23c81ce20590f1274737d7443657fc791f3a6c069cf96dfa2"
+      },
+      {
+        "path": "outputs/smart-traffic/backend/app/seed/node_map.json",
+        "bytes": 1224,
+        "sha256": "077dadb584628e2fb4b59668a451a6e3a6b6f978860a14c37aa521e192c53cfb"
+      },
+      {
+        "path": "outputs/smart-traffic/backend/app/seed/cameras.json",
+        "bytes": 3068,
+        "sha256": "fa1e3848218215d48068aced204e2b18626ab08ea07d9c90c6f27ed37aa50e35"
+      },
+      {
+        "path": "outputs/hcmc-poc/data/street-furniture-31.json",
+        "bytes": 186068,
+        "sha256": "f7d92a4e8e72169f3bfe782dce2a17b6dd990ab003b9638257f49f95b64e112d"
+      },
+      {
+        "path": "outputs/hcmc-poc/data/bridge-corrections-31.json",
+        "bytes": 72038,
+        "sha256": "d22270408e711ae2fa9b5c1b08f5472ce6afa59e61ecdcc73b7038858bcf36e3"
+      },
+      {
+        "path": "outputs/hcmc-poc/data/signature-registry-31.json",
+        "bytes": 92383,
+        "sha256": "b356c5f8d09dfe074e3192a93e44b23a9f775f0b28c74e2bc8c20ddcc8096f4e"
+      },
+      {
+        "path": "outputs/hcmc-poc/data/heat-history-32.json",
+        "bytes": 106550,
+        "sha256": "94510c4febe3e0f850617b17abb4ba0166a313049aedf65ab5377c33c18c9486"
+      },
+      {
+        "path": "outputs/hcmc-poc/data/ba-son-bridge-detail.json",
+        "bytes": 2586,
+        "sha256": "1ab67b32dd2b2124d78b415f0e0b3e42a859aafb02b6d73c83d2838e28d2c4f2"
+      },
+      {
+        "path": "outputs/hcmc-poc/data/bach-dang-footbridge.json",
+        "bytes": 5836,
+        "sha256": "7f479bfc74e5b811d1dd1309a7916e398c0457d0a9584cce4b71a23594a61def"
+      },
+      {
+        "path": "outputs/hcmc-poc/data/semantic-materials-08.js",
+        "bytes": 5829,
+        "sha256": "303bdac3015e8a4f3040e8cec08f0e472f6f7540022a0a1a4f7c69087427fb65"
+      },
+      {
+        "path": "outputs/hcmc-poc/data/webgpu-corrections-24.js",
+        "bytes": 1111,
+        "sha256": "7f2ba39bd8ffff1caa16693b34ba6626b87d06e723ff3e20f41e880ea1f5d429"
+      },
+      {
+        "path": "outputs/hcmc-poc/city-region-31.js",
+        "bytes": 11279,
+        "sha256": "66c3e1412b8dbd62fc2208aeca50bfbd0b1308824fd8d2eb70fec713a6e124a1"
+      }
+    ]
+  },
+  "attribution": "© OpenStreetMap contributors, ODbL 1.0. Cao độ cầu là ước lượng minh họa, không khảo sát.",
+  "stats": {
+    "roads": 6819,
+    "nodes": 5458,
+    "edges": 6819,
+    "buildings": 23131,
+    "sceneRoads": 6819,
+    "sourceRoads": 12043,
+    "sourceEdges": 6815,
+    "junctions": 12,
+    "cameras": 17
+  },
+  "files": [
+    {
+      "path": "outputs/hcmc-poc/data/public-north/road-graph.json",
+      "bytes": 8147204,
+      "sha256": "2e5c107d69052596fb87fd887a91f220aa35e94c73cf33dcb5cbca8996f166cd"
+    },
+    {
+      "path": "outputs/hcmc-poc/data/public-north/scene.json",
+      "bytes": 15077592,
+      "sha256": "2e13ab72cb4fb00368d660c6c4808f736af5d814280b097de23bf92b3d79930a"
+    },
+    {
+      "path": "outputs/hcmc-poc/data/public-north/scene.js",
+      "bytes": 15077657,
+      "sha256": "62902545e0539cb2aec73ffa7aedf2754a90bc3e25b615516c70d1c059929b0f"
+    },
+    {
+      "path": "outputs/hcmc-poc/data/public-north/mapping.json",
+      "bytes": 5554397,
+      "sha256": "60d69c895701d6854cceef3c2bd4669626f6b75fbfc1f88dca8717658786073c"
+    },
+    {
+      "path": "outputs/hcmc-poc/data/public-north/runtime-sidecars.json",
+      "bytes": 70018,
+      "sha256": "b7f7c01fe587b1dd65b0237a5ff1502e79e89df912fd66c07e58af7bd1072d50"
+    },
+    {
+      "path": "outputs/hcmc-poc/data/public-north/heat-history-32.json",
+      "bytes": 90059,
+      "sha256": "8b10c95879d7d9a2d2d14aea3b2106184dbd56634e44974ab5b6163277572a21"
+    },
+    {
+      "path": "outputs/smart-traffic/backend/app/seed/public-north/node_map.json",
+      "bytes": 2571,
+      "sha256": "0523ca05700922173f361cbb557a1fb1c1edc927e79c822f4150ecfcfd924739"
+    },
+    {
+      "path": "outputs/smart-traffic/backend/app/seed/public-north/cameras.json",
+      "bytes": 4870,
+      "sha256": "315303fc15be294c25338f64dc182a059416c3336a293f268ac74bd969fee151"
+    }
+  ]
+}
