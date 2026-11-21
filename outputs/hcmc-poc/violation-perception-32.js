@@ -235,11 +235,14 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
     const node = (code === 'PARK' || code === 'WRONG-TURN') ? node0 : (camNodeIdx.get(cam.node_id) ?? node0);
     const { slot, gen, kindName, rec0 } = veh;
     const ocr = ocrNoise32(rec0.plate, distance, cam.range_m, tSim, slot, gen);
+    // Biển gốc được gán lúc sinh xe là nguồn đúng; OCR chỉ là metadata/độ tin cậy.
+    // Không dùng chuỗi OCR đã nhiễu làm plate lưu DB (tránh S9/59, O/0 làm hỏng tra cứu).
+    const plateTrue = rec0.plate;
     const cycle_id = cycleOf(node, tSim);
     const key = `${slot}|${gen}|${node}|${code}`;
     if (seenB.has(key)) return;
     seenB.add(key);
-    const plateOk = plateFormatOk32(ocr.plate_read, rec0.plate_format);
+    const plateOk = plateFormatOk32(plateTrue, rec0.plate_format);
     // Độ tin cậy: OCR + khoảng cách + góc nhìn + kích thước xe trong khung + che khuất (confidenceOf32).
     const vehPx = vehicleHeightPx32(KIND_HEIGHT_32.get(kindName) ?? 1.5, distance, cam);
     const viewCos = pose ? viewCosAngle32(pose.x, pose.z, cam) : 1;
@@ -253,7 +256,8 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
       violation_label: CODE_LABEL_32[code],
       status: confidence >= CONF_STATUS_MIN_32 && ocr.ocr_confidence >= OCR_STATUS_MIN_32 && plateOk ? 'new' : 'needs_review',
       priority_flag: false, priority_reason: null,
-      plate: ocr.plate_read, plate_format: rec0.plate_format, vehicle_class: kindName,
+      plate: plateTrue, plate_format: rec0.plate_format, vehicle_class: kindName,
+      ocr_plate_read: ocr.plate_read,
       vehicle_color: rec0.color, vehicle_id: `V-${String(slot).padStart(6, '0')}`,
       owner_name: rec0.owner_name, owner_phone: rec0.owner_phone, is_scenario_plate: rec0.is_scenario,
       occurred_at: null, node_id: metaN?.node_id ?? String(G.nodes[node].id),
@@ -293,9 +297,11 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
     const dedupe = `${slot}|${meta?.node_id ?? node}|${cycle_id}`;
     if (seen.has(dedupe)) return;
     seen.add(dedupe);
-    const ocr = ocrNoise32(rec0Of(i).plate, distance, cam.range_m, tc, slot, gen);
     const rec0 = rec0Of(i);
-    const plateOk = plateFormatOk32(ocr.plate_read, rec0.plate_format);
+    const ocr = ocrNoise32(rec0.plate, distance, cam.range_m, tc, slot, gen);
+    // Biển gốc lúc sinh xe là nguồn đúng; OCR chỉ là metadata.
+    const plateTrue = rec0.plate;
+    const plateOk = plateFormatOk32(plateTrue, rec0.plate_format);
     // STATION-b: tin cậy theo OCR + khoảng cách + góc nhìn + kích thước xe (px) + bị che (như pushRecord).
     const p = poseOf(i, l);
     const vehPx = vehicleHeightPx32(KIND_HEIGHT_32.get(kindName) ?? 1.5, distance, cam);
@@ -309,7 +315,8 @@ export function createPerception32({ net, sim, controller, nodeMap, cameras, see
       violation_label: CODE_LABEL_32['RED-LIGHT'],
       status: confidence >= CONF_STATUS_MIN_32 && ocr.ocr_confidence >= OCR_STATUS_MIN_32 && plateOk ? 'new' : 'needs_review',
       priority_flag: false, priority_reason: null,
-      plate: ocr.plate_read, plate_format: rec0.plate_format, vehicle_class: kindName,
+      plate: plateTrue, plate_format: rec0.plate_format, vehicle_class: kindName,
+      ocr_plate_read: ocr.plate_read,
       vehicle_color: rec0.color, vehicle_id: `V-${String(slot).padStart(6, '0')}`,
       owner_name: rec0.owner_name, owner_phone: rec0.owner_phone, is_scenario_plate: rec0.is_scenario,
       occurred_at: null, node_id: meta?.node_id ?? String(G.nodes[node].id),
