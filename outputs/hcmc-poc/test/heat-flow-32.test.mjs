@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildFlowArrows32, laneDensityOf32, paintFlowArrows32, buildRibbon32, ribbonBandsOf32,
-  queueByEdgeDir32, heatQueueClass32, paintRibbon32,
+  queueByEdgeDir32, flowByEdgeDir32, heatQueueClass32, paintRibbon32,
   FLOW_ARROW_GAP_M_32, FLOW_DENSITY_CAP_32, HEAT_QUEUE_COLORS_32, HEAT_QUEUE_LABELS_32
 } from '../heat-scene-32.js?v=32a';
 import { HEAT_COLORS_32 } from '../heat-32.js?v=32a';
@@ -99,6 +99,11 @@ test('hàng chờ theo cạnh+chiều: xe dừng hoặc trong 25 m tới vạch 
   assert.equal(q[3], 1, 'cạnh 1 chiều − có 1 xe chờ');
   assert.equal(q[1], 0, 'chiều ngược lại không bị cộng nhầm');
   assert.equal(q[2], 0);
+  // lưu lượng theo làn để phân biệt free-flow với đoạn không có dữ liệu
+  const f = flowByEdgeDir32(sim, net);
+  assert.equal(f[0], 2, 'hai xe đang chạy trên cạnh 0 chiều +');
+  assert.equal(f[3], 1, 'một xe trên cạnh 1 chiều −');
+  assert.equal(f[1] + f[2], 0);
 });
 
 test('ribbon dùng offset làn/chiều và cắt Rz: tâm dải = tâm cụm làn, không tràn nút', () => {
