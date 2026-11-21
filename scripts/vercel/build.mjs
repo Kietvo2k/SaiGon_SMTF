@@ -70,7 +70,7 @@ try {
     ...['road-graph.json', 'scene.json', 'runtime-sidecars.json', 'heat-history-32.json'].map(file => [`${north}/${file}`, `hcmc-poc/data/public-north/${file}`]),
     ...['node_map.json', 'cameras.json'].map(file => [`${northSeed}/${file}`, `smart-traffic/backend/app/seed/public-north/${file}`])
   ];
-  if (northManifest.region !== 'bac' || northManifest.stats.junctions !== 10) throw new Error('Manifest Bắc không có đúng 10 giao lộ.');
+  if (northManifest.region !== 'bac' || northManifest.stats.junctions !== 12) throw new Error('Manifest Bắc không có đúng 12 giao lộ.');
   for (const [source, target] of pinnedRuntime) {
     const bytes = read(source);
     const pin = northManifest.files.find(file => file.path === source);

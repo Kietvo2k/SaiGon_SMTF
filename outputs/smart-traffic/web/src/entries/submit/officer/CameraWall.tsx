@@ -91,7 +91,7 @@ function CameraStage({ camera, frame, busy, error, onRetry }: {
       </div>
       {missing
         ? <div className="ops-stage-empty" role={error || imageError ? 'alert' : 'status'}>
-            <strong>{imageError || error ? 'Không tải được camera này' : frame ? 'Camera đang mất nguồn' : 'Đang tải khung hình'}</strong>
+            <strong>{imageError || error ? 'Không tải được camera này' : !frame ? 'Đang tải khung hình' : frame.source === 'missing' ? 'Camera đang mất nguồn' : 'Chưa có ảnh cho camera này'}</strong>
             <span>{camera.cameraId} · {error || (imageError ? 'Ảnh trả về lỗi. Thử tải lại khung.' : frame?.source === 'missing' ? 'Nguồn không có khung. Không thay bằng ảnh của camera khác.' : frame?.source === 'sample' ? 'Nguồn báo có tệp nhưng chưa trả ảnh.' : 'Đang chờ khung đầu tiên từ nguồn camera.')}</span>
             <button type="button" className="ops-button" onClick={retry}>Tải lại khung</button>
           </div>
@@ -127,6 +127,9 @@ function WallThumb({ camera, frame, active, onSelect }: {
   const status = failed
     ? (hasUrl ? 'Lỗi ảnh' : frame?.source === 'missing' ? 'Mất nguồn' : 'Chưa có ảnh')
     : !frame ? 'Đang tải' : !hasUrl ? (frame.source === 'missing' ? 'Mất nguồn' : 'Chưa có ảnh') : null;
+  const placeholderText = failed || !frame || !hasUrl
+    ? status
+    : imageState === 'pending' ? 'Đang tải ảnh' : frameSourceLabel(frame);
 
   return <button type="button" className={`ops-wall-item${active ? ' is-active' : ''}`}
     aria-pressed={active}
@@ -135,10 +138,10 @@ function WallThumb({ camera, frame, active, onSelect }: {
     <span className={`ops-wall-thumb${showImage ? '' : ' is-empty'}`} aria-busy={!frame || imageState === 'pending'}>
       {showImage && <img ref={imgRef} src={frame!.imageUrl!} alt="" decoding="async"
         onLoad={() => setImageState('ready')} onError={() => setImageState('error')} />}
-      {(!showImage || imageState !== 'ready') && <span className={`ops-wall-placeholder${failed ? ' is-missing' : ''}`}>
+      <span className={`ops-wall-placeholder${failed ? ' is-missing' : ''}`} aria-hidden="true">
         <b>{camera.cameraId}</b>
-        <small>{status ?? 'Đang tải ảnh'}</small>
-      </span>}
+        <small>{placeholderText}</small>
+      </span>
       <span className={`ops-wall-source ops-source-${failed ? 'missing' : frame?.source ?? 'pending'}`}>{status ?? frameSourceLabel(frame)}</span>
       {active && <span className="ops-wall-selected">Đang xem</span>}
     </span>
