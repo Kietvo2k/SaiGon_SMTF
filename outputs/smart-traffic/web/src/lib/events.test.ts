@@ -16,12 +16,25 @@ describe('parseStationEvent', () => {
     expect((none as ViolationEvent).confidence).toBeNull();
   });
 
+  it('chấp nhận tin điều khiển từ bàn cưỡng chế: ghim đèn, bơm xe, xe ưu tiên', () => {
+    expect(parseStationEvent({ type: 'pin', node: 'HX-C1', group: 'A', seconds: 60 }, 7))
+      .toEqual({ type: 'pin', node: 'HX-C1', group: 'A', seconds: 60, at: 7 });
+    expect(parseStationEvent({ type: 'spawn', count: 12 }, 8))
+      .toEqual({ type: 'spawn', count: 12, at: 8 });
+    expect(parseStationEvent({ type: 'ambulance', kind: 'fire', at: 9 }))
+      .toEqual({ type: 'ambulance', kind: 'fire', at: 9 });
+  });
+
   it('từ chối tin thiếu trường hoặc kiểu lạ', () => {
     expect(parseStationEvent(null)).toBeNull();
     expect(parseStationEvent('x')).toBeNull();
     expect(parseStationEvent({ type: 'incident', node: '', lane: 'l', plan: 'p', status: 'before' })).toBeNull();
     expect(parseStationEvent({ type: 'incident', node: 'n', lane: 'l', plan: 'p', status: 'during' })).toBeNull();
     expect(parseStationEvent({ type: 'violation', code: 'RED-LIGHT', label: 'Vượt đèn đỏ', plate: '', cameraId: 'CAM-BAC-002' })).toBeNull();
+    expect(parseStationEvent({ type: 'pin', node: '', group: 'A', seconds: 60 })).toBeNull();
+    expect(parseStationEvent({ type: 'pin', node: 'HX-C1', group: 'A', seconds: 0 })).toBeNull();
+    expect(parseStationEvent({ type: 'spawn', count: 0 })).toBeNull();
+    expect(parseStationEvent({ type: 'ambulance', kind: 'plane' })).toBeNull();
     expect(parseStationEvent({ type: 'other' })).toBeNull();
   });
 

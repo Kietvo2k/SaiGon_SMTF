@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url';
 
 const root = resolve(new URL('../../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
 const dist = join(root, 'dist', 'public-demo', 'vercel');
+const sampleRoot = join(root, 'supabase', 'samples');
 const port = Number(process.argv[2] || 8890);
 
 const { default: api } = await import(pathToFileURL(join(root, 'api', 'demo', '[route].mjs')).href);
@@ -17,6 +18,33 @@ const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || `127.0.0.1:${port}`}`);
+    // QA cục bộ: đọc ảnh camera mới trong supabase/samples trước khi seed lên Storage.
+    if (process.env.SMTF_LOCAL_SAMPLES === '1' && url.pathname === '/api/demo/media') {
+      const cameraId = url.searchParams.get('cameraId') || '';
+      if (/^CAM-(?:HX|BAC)-\d{3}$/.test(cameraId)) {
+        const file = join(sampleRoot, 'sample', `${cameraId}.jpg`);
+        if (existsSync(file)) {
+          res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'no-store' });
+          if (req.method === 'HEAD') { res.end(); return; }
+          createReadStream(file).pipe(res);
+          return;
+        }
+      }
+    }
+    // QA cục bộ: đọc ảnh bằng chứng mới trong supabase/samples trước khi seed lên Storage.
+    if (process.env.SMTF_LOCAL_SAMPLES === '1' && url.pathname === '/api/demo/record-media') {
+      const plate = (url.searchParams.get('plate') || '').trim();
+      const kind = url.searchParams.get('kind') || 'before';
+      if (/^[0-9A-Za-z.\- ]{1,24}$/.test(plate) && ['before', 'after', 'plate'].includes(kind)) {
+        const file = join(sampleRoot, 'evidence', plate, `${kind}.jpg`);
+        if (existsSync(file)) {
+          res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'no-store' });
+          if (req.method === 'HEAD') { res.end(); return; }
+          createReadStream(file).pipe(res);
+          return;
+        }
+      }
+    }
     if (url.pathname === '/api/demo' || url.pathname.startsWith('/api/demo/')) {
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);

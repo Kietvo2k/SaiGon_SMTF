@@ -8,7 +8,7 @@ html[data-smtf-demo=vercel] *,html[data-smtf-demo=vercel] *::before,html[data-sm
 html[data-smtf-demo=vercel],html[data-smtf-demo=vercel] body,html[data-smtf-demo=vercel] #root{min-height:100%;margin:0;overflow-x:clip}
 html[data-smtf-demo=vercel] body{font-size:15px;font-family:var(--submit-font);color:var(--submit-ink);background:var(--submit-bg)}
 html[data-smtf-demo=vercel] button,html[data-smtf-demo=vercel] input,html[data-smtf-demo=vercel] select{font:inherit}
-html[data-smtf-demo=vercel] button:focus-visible,html[data-smtf-demo=vercel] a:focus-visible,html[data-smtf-demo=vercel] input:focus-visible,html[data-smtf-demo=vercel] select:focus-visible{outline:3px solid #196c66;outline-offset:3px}
+html[data-smtf-demo=vercel] .submit-shell :is(button, a, input, select):focus-visible { outline:3px solid #196c66; outline-offset:3px; }
 .submit-shell{max-width:1360px;min-height:100vh;margin:auto;padding:0 clamp(18px,5.5vw,76px) 52px}
 .submit-header{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--submit-line)}
 .submit-wordmark{display:flex;gap:10px;align-items:center;color:var(--submit-ink);text-decoration:none;font-weight:800;letter-spacing:-.04em}
@@ -20,11 +20,14 @@ html[data-smtf-demo=vercel] button:focus-visible,html[data-smtf-demo=vercel] a:f
 .submit-title>p:last-child,.submit-lookup>p:not(.submit-eyebrow){margin:9px 0;color:var(--submit-muted);line-height:1.6}
 .submit-eyebrow{margin:0;color:#537470;font-size:10px;font-weight:750;letter-spacing:.16em}
 .submit-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--submit-line);border-bottom:1px solid var(--submit-line)}
-.submit-kpi{display:flex;min-width:0;flex-direction:column;gap:12px;padding:16px 15px 17px 0}
+.submit-kpi{display:flex;min-width:0;flex-direction:column;gap:8px;padding:16px 15px 15px 0}
 .submit-kpi+.submit-kpi{border-left:1px solid var(--submit-line);padding-left:16px}
-.submit-kpi span{color:var(--submit-muted);font-size:11px;line-height:1.45}
+.submit-kpi>span{color:var(--submit-muted);font-size:11px;line-height:1.45}
 .submit-kpi strong{font-size:clamp(16px,2vw,22px);font-weight:700;letter-spacing:-.035em;overflow-wrap:anywhere}
-.submit-dashboard{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(240px,.75fr);gap:clamp(24px,4vw,52px);padding-top:24px}
+.submit-kpi-foot{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin-top:auto;color:var(--submit-muted);font-size:10px;line-height:1.35}
+.submit-kpi-foot em{font-style:normal;font-weight:750}
+.submit-kpi-trend-good{color:#15734b}.submit-kpi-trend-bad{color:#8d2f1c}.submit-kpi-trend-flat{color:#3c6b64}
+.submit-camera-deck{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.9fr);gap:clamp(20px,3vw,38px);padding-top:24px;align-items:start}
 .submit-camera-column,.submit-records{min-width:0}
 .submit-select-label{display:grid;max-width:400px;gap:8px;margin-bottom:15px;color:var(--submit-muted);font-size:12px;font-weight:600}
 .submit-select-label select,.submit-lookup-input input{width:100%;min-height:46px;border:1px solid #aebfb8;border-radius:3px;background:#fcfcf6;color:var(--submit-ink);padding:0 12px}
@@ -40,6 +43,25 @@ html[data-smtf-demo=vercel] button:focus-visible,html[data-smtf-demo=vercel] a:f
 .submit-media-loading{position:absolute;inset:12px auto auto 12px;padding:8px 10px;background:#0c2227;color:#f4f4e9;font-size:11px}
 .submit-media-meta{display:flex;flex-wrap:wrap;gap:8px 17px;padding:11px 0;border-bottom:1px solid var(--submit-line);color:var(--submit-muted);font-size:10px}
 .submit-source{font-weight:750;color:#275e49}.submit-source-live{color:#176b68}.submit-source-missing{color:#92522d}
+.submit-camera-wall{min-width:0}
+.submit-wall-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:0 0 9px;border-bottom:1px solid var(--submit-line)}
+.submit-wall-head h2{margin:4px 0 0;font-size:16px;font-weight:650;letter-spacing:-.025em}
+.submit-wall-head>span{color:var(--submit-muted);font-size:10px;white-space:nowrap}
+.submit-wall-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding-top:9px;max-height:470px;overflow:auto}
+.submit-wall-item{display:grid;min-width:0;gap:4px;padding:0;border:0;background:none;color:inherit;text-align:left;cursor:pointer}
+.submit-wall-item:focus-visible{outline:3px solid #196c66;outline-offset:2px}
+.submit-wall-thumb{position:relative;display:grid;aspect-ratio:16/9;place-items:center;overflow:hidden;border:1px solid var(--submit-line);background:#10282b}
+.submit-wall-thumb img{width:100%;height:100%;object-fit:cover}
+.submit-wall-item-active .submit-wall-thumb{border-color:#0d534f;box-shadow:0 0 0 2px #0d534f}
+.submit-wall-pending{color:#c8d8d2;font-size:9px}
+.submit-wall-source{position:absolute;left:4px;bottom:4px;padding:1px 4px;background:rgba(12,34,39,.86);color:#eaf6f1;font-size:8px;font-weight:750}
+.submit-wall-source-live{color:#9ff0ca}
+.submit-wall-meta{display:grid;gap:1px;min-width:0}
+.submit-wall-meta b{font-size:10px;font-weight:750}
+.submit-wall-meta small{overflow:hidden;color:var(--submit-muted);font-size:8.5px;line-height:1.3;text-overflow:ellipsis;white-space:nowrap}
+.submit-status-summary{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0 2px}
+.submit-status-summary .submit-status{white-space:nowrap}
+.submit-status-summary b{font-size:11px}
 .submit-section-head{align-items:flex-end;padding:0 0 12px;border-bottom:1px solid var(--submit-line)}
 .submit-section-head>span{color:var(--submit-muted);font-size:10px;white-space:nowrap}
 .submit-records ul{list-style:none;margin:0;padding:0}
@@ -58,13 +80,15 @@ html[data-smtf-demo=vercel] button:focus-visible,html[data-smtf-demo=vercel] a:f
 .submit-sample-plates button:hover{background:#e4eee6}.submit-lookup-message{margin-top:21px;color:#345c4c;font-size:13px}
 .submit-lookup-results{margin-top:16px;border-top:1px solid var(--submit-line)}.submit-lookup-results article{padding:16px 0;border-bottom:1px solid var(--submit-line)}
 .submit-lookup-results p{color:var(--submit-muted);font-size:13px}.submit-lookup-results span{font-size:11px;color:#315d4f}
-@media(max-width:780px){.submit-dashboard{grid-template-columns:minmax(0,1fr)}.submit-records{padding-top:6px}.submit-media-stage{min-height:210px}}
+@media(max-width:780px){.submit-camera-deck{grid-template-columns:minmax(0,1fr)}.submit-records{padding-top:22px}.submit-media-stage{min-height:210px}}
 
 /* demo-v2: bảng hồ sơ vi phạm, bằng chứng, dòng thời gian, banner sự kiện, khiếu nại. */
+.submit-records{padding-top:28px}
 .submit-records-table{overflow-x:auto}
 .submit-record-table{width:100%;border-collapse:collapse;font-size:12.5px}
 .submit-record-table th,.submit-record-table td{padding:9px 10px 9px 0;border-bottom:1px solid var(--submit-line);text-align:left;vertical-align:top}
 .submit-record-table thead th{color:var(--submit-muted);font-size:10px;font-weight:700;border-bottom:1px solid #9db3aa}
+.submit-record-table td[data-label="Giờ ghi nhận"]{white-space:nowrap}
 .submit-record-plate{padding:0;border:0;background:none;color:var(--submit-ink);font-size:13.5px;font-weight:750;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .submit-record-row-open .submit-record-plate{color:#0d534f}
 .submit-status{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:700}
@@ -92,8 +116,27 @@ html[data-smtf-demo=vercel] button:focus-visible,html[data-smtf-demo=vercel] a:f
 .submit-record-detail-head h3{margin:0;font-size:18px;letter-spacing:-.02em}
 .submit-record-detail-head>span:first-of-type{color:var(--submit-muted);font-size:12px}
 .submit-record-summary{margin:8px 0 14px;color:var(--submit-muted);font-size:13px;line-height:1.55}
-.submit-penalty{display:grid;gap:3px;margin:14px 0;font-size:13px}
+.submit-case-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin:0 0 16px;border:1px solid var(--submit-line);background:var(--submit-line)}
+.submit-case-facts>div{display:grid;gap:3px;padding:12px 14px;background:#fbfbf4}
+.submit-case-facts span{color:var(--submit-muted);font-size:10px;font-weight:700;letter-spacing:.04em}
+.submit-case-facts strong{font-size:14px;line-height:1.35}
+.submit-case-facts small{color:var(--submit-muted);font-size:10px}
+.submit-evidence-block{margin:0 0 14px}
+.submit-evidence-title{margin:0 0 8px;color:var(--submit-muted);font-size:10px;font-weight:750;letter-spacing:.1em}
+.submit-penalty{display:grid;gap:2px;margin:0 0 14px;padding:12px 14px;border-left:3px solid #a4d8c9;background:#eef4e9;font-size:13px}
+.submit-penalty-label{color:#3f6d62;font-size:10px;font-weight:750;letter-spacing:.06em}
+.submit-penalty strong{font-size:13px;line-height:1.45}
 .submit-penalty small{color:var(--submit-muted);font-size:11px;line-height:1.5}
+.submit-complaint-zone{display:grid;justify-items:start;gap:8px;margin-top:14px}
+.submit-complaint-hint{max-width:620px;margin:0;color:var(--submit-muted);font-size:12px;line-height:1.55}
+.submit-case-progress{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;list-style:none;margin:16px 0 4px;padding:0;position:relative}
+.submit-case-progress::before{content:"";position:absolute;top:13px;left:8%;right:8%;height:2px;background:var(--submit-line)}
+.submit-case-progress li{position:relative;display:grid;justify-items:center;gap:5px;color:var(--submit-muted);font-size:10px;text-align:center}
+.submit-case-progress li>span{display:grid;width:28px;height:28px;place-items:center;border:2px solid var(--submit-line);border-radius:50%;background:var(--submit-bg);font-size:11px;font-weight:800}
+.submit-case-progress li.is-done>span{border-color:#56867a;background:#56867a;color:#f7fbf3}
+.submit-case-progress li.is-active>span{border-color:#0d534f;background:#0d534f;color:#f7fbf3;box-shadow:0 0 0 4px rgba(13,83,79,.12)}
+.submit-case-progress li.is-active b{color:var(--submit-ink)}
+.submit-case-progress b{font-size:10px;font-weight:700}
 .submit-timeline{list-style:none;margin:14px 0 0;padding:0;border-top:1px dashed var(--submit-line)}
 .submit-timeline li{display:flex;gap:12px;padding:8px 0;border-bottom:1px dashed var(--submit-line);font-size:12px}
 .submit-timeline-time{flex:0 0 132px;color:var(--submit-muted);font-size:11px}
@@ -104,5 +147,26 @@ html[data-smtf-demo=vercel] button:focus-visible,html[data-smtf-demo=vercel] a:f
 .submit-complaint-form select,.submit-complaint-form textarea{width:100%;min-height:42px;border:1px solid #aebfb8;border-radius:3px;background:#fcfcf6;color:var(--submit-ink);padding:8px 10px;font:inherit;font-size:12.5px}
 .submit-complaint-actions{display:flex;gap:9px}
 .submit-complaint-actions button[type=submit]{min-height:44px;padding:0 16px;border:0;border-radius:3px;background:var(--submit-dark);color:#f4f4e9;cursor:pointer;font-weight:650}
-@media(max-width:520px){.submit-shell{padding-inline:17px}.submit-header{min-height:62px}.submit-wordmark{font-size:13px}.submit-wordmark span{font-size:8px}.submit-title{padding-top:30px}.submit-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.submit-kpi{min-height:89px;padding:13px 10px 12px 0}.submit-kpi+.submit-kpi{padding-left:11px}.submit-kpi:nth-child(3){border-left:0;padding-left:0;border-top:1px solid var(--submit-line)}.submit-kpi:nth-child(4){border-top:1px solid var(--submit-line)}.submit-camera-head{align-items:flex-start;flex-direction:column}.submit-media-stage{min-height:210px;aspect-ratio:4/3}.submit-lookup-input{grid-template-columns:minmax(0,1fr)}.submit-lookup-input button{width:100%}.submit-sample-plates>span{flex-basis:100%}}
+@media(max-width:980px){
+  .submit-camera-deck{grid-template-columns:minmax(0,1fr)}
+  .submit-wall-grid{grid-template-columns:repeat(4,minmax(0,1fr));max-height:none}
+  .submit-records{padding-top:26px}
+  .submit-records-table{overflow:visible}
+  .submit-record-table{display:block}
+  .submit-record-table thead{display:none}
+  .submit-record-table tbody{display:grid;gap:12px}
+  .submit-record-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px 14px;padding:13px;border:1px solid var(--submit-line);background:#fbfbf4}
+  .submit-record-row>th{grid-column:1/-1;padding:0 0 4px;border:0;font-size:15px}
+  .submit-record-row>td{display:grid;grid-template-columns:92px minmax(0,1fr);gap:6px;padding:3px 0;border:0;font-size:12px;line-height:1.45}
+  .submit-record-row>td::before{content:attr(data-label);color:var(--submit-muted);font-size:9px;font-weight:750;letter-spacing:.05em;text-transform:uppercase}
+  .submit-record-row>td .submit-status{justify-self:start;align-self:center;width:max-content;max-width:100%}
+  .submit-record-row>td:last-child{grid-column:1/-1;grid-template-columns:minmax(0,1fr)}
+  .submit-record-row>td:last-child::before{display:none}
+  .submit-record-actions{width:100%}
+  .submit-record-actions .submit-secondary{min-height:38px;flex:1;font-size:10.5px}
+  .submit-record-detail-row{display:block}
+  .submit-record-detail-row td{display:block;padding:0 13px 13px;border:1px solid var(--submit-line);border-top:0;background:#f6f6ee}
+  .submit-record-detail-row td::before{display:none}
+}
+@media(max-width:520px){.submit-record-row{grid-template-columns:minmax(0,1fr)}.submit-record-row>td,.submit-record-row>td[data-label="Trạng thái"]{grid-column:1/-1}.submit-record-row>td{grid-template-columns:84px minmax(0,1fr)}.submit-shell{padding-inline:17px}.submit-header{min-height:62px}.submit-wordmark{font-size:13px}.submit-wordmark span{font-size:8px}.submit-title{padding-top:30px}.submit-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.submit-kpi{min-height:89px;padding:13px 10px 12px 0}.submit-kpi+.submit-kpi{padding-left:11px}.submit-kpi:nth-child(3){border-left:0;padding-left:0;border-top:1px solid var(--submit-line)}.submit-kpi:nth-child(4){border-top:1px solid var(--submit-line)}.submit-camera-head{align-items:flex-start;flex-direction:column}.submit-media-stage{min-height:210px;aspect-ratio:4/3}.submit-wall-grid{grid-auto-flow:column;grid-template-columns:unset;grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-columns:128px;overflow-x:auto;max-height:none;padding-bottom:8px}.submit-kpi-foot{font-size:9px}.submit-case-facts{grid-template-columns:minmax(0,1fr)}.submit-lookup-input{grid-template-columns:minmax(0,1fr)}.submit-lookup-input button{width:100%}.submit-sample-plates>span{flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){html[data-smtf-demo=vercel] *,html[data-smtf-demo=vercel] *::before,html[data-smtf-demo=vercel] *::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}

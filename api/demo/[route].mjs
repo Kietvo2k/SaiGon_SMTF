@@ -304,14 +304,34 @@ async function applyDecision(plate, action, note) {
 }
 
 const complaintKinds = new Set(['priority_yield', 'wrong_plate', 'other']);
+// Chỉ hồ sơ còn mở mới nhận khiếu nại; khớp whitelist COMPLAINABLE_STATUSES của citizenApi.ts.
+const complainableStatuses = new Set(['new', 'pending', 'needs_review', 'confirmed', 'notified']);
+
+export function validateComplaintKind(kind) {
+  if (!complaintKinds.has(kind)) throw invalid();
+}
+
+// Hàm thuần: note bắt buộc 1–500 ký tự sau trim; hồ sơ phải còn mở.
+export function validateComplaintInput(status, note) {
+  const text = typeof note === 'string' ? note.trim().slice(0, 500) : '';
+  if (!text) throw new DemoError(400, 'NOTE_REQUIRED', 'Vui lòng ghi rõ lý do hoặc thông tin để cán bộ đối chiếu.');
+  if (!complainableStatuses.has(status)) {
+    throw new DemoError(409, 'STATE_CONFLICT', status === 'disputed'
+      ? 'Hồ sơ đã có khiếu nại đang chờ xử lý.'
+      : status === 'dismissed' || status === 'paid'
+        ? 'Hồ sơ đã kết thúc, không thể gửi khiếu nại mới.'
+        : 'Hồ sơ không còn ở trạng thái nhận khiếu nại.');
+  }
+  return text;
+}
 
 async function createComplaint(plate, kind, note) {
-  if (!complaintKinds.has(kind)) throw invalid();
+  validateComplaintKind(kind);
   const [row] = await data(`smtf_submit_records?select=plate,status&plate=eq.${encodeURIComponent(plate)}&limit=1`);
   if (!row) throw notFound();
-  if (row.status === 'disputed') throw new DemoError(409, 'STATE_CONFLICT', 'Hồ sơ đã có khiếu nại đang chờ xử lý.');
+  const text = validateComplaintInput(row.status, note);
   const created = await rpc('smtf_submit_complaint', {
-    p_plate: row.plate, p_kind: kind, p_note: typeof note === 'string' && note.trim() ? note.trim().slice(0, 500) : null
+    p_plate: row.plate, p_kind: kind, p_note: text
   });
   if (created !== true) throw unavailable();
   return json({ ok: true, plate: row.plate, status: 'disputed' });

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Smart Traffic">
+  <title>Smart Traffic</title>
+  <defs>
+    <linearGradient id="st-road" x1="0" y1="15" x2="0" y2="31" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2381ff"/>
+      <stop offset=".45" stop-color="#1c6cf4"/>
+      <stop offset=".66" stop-color="#4c8ff0"/>
+      <stop offset=".8" stop-color="#cfe7f8"/>
+      <stop offset="1" stop-color="#f6fdff"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="13" fill="#001a4b"/>
+  <rect x=".6" y=".6" width="62.8" height="62.8" rx="12.4" fill="none" stroke="#9fd8e2" stroke-opacity=".18"/>
+  <path d="M45.6 15H27.8C21.7 15 16.9 19.2 16.9 25.4v.8c0 3.7 2 6.5 5.5 7.4" fill="none" stroke="url(#st-road)" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="46.8" cy="14.9" r="3.7" fill="#1f79f7"/>
+  <path d="M43 29.6c2.9 2.5 3.9 5.2 3.9 9.4 0 5.2-3.3 8.7-8.7 10.9H19.3" fill="none" stroke="#f5fdff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="17.2" cy="49.7" r="3.7" fill="#f5fdff"/>
+  <circle cx="32" cy="24.2" r="3.6" fill="#e21b3c"/>
+  <circle cx="32" cy="33.1" r="3.6" fill="#e3b707"/>
+  <circle cx="32" cy="42" r="3.6" fill="#03a13a"/>
+</svg>

@@ -1,6 +1,7 @@
 // submit-v2 — parse/validate tin BroadcastChannel 'smtf-submit-events' từ trạm 3D.
 // Kênh chỉ truyền tín hiệu sống (không mang dữ liệu nghiệp vụ) — đúng hợp đồng bản nộp Vercel.
-// Trạm phát 2 loại: incident (va chạm + phương án điều tiết) và violation (khung nhận diện tự động).
+// Trạm phát: incident (va chạm + phương án), violation (khung nhận diện), pin (ghim đèn),
+// spawn (bơm xe) và ambulance (triệu hồi xe ưu tiên từ bàn cưỡng chế).
 
 export interface IncidentEvent {
   type: 'incident';
@@ -21,7 +22,27 @@ export interface ViolationEvent {
   at: number;
 }
 
-export type StationEvent = IncidentEvent | ViolationEvent;
+export interface PinEvent {
+  type: 'pin';
+  node: string;
+  group: string;
+  seconds: number;
+  at: number;
+}
+
+export interface SpawnEvent {
+  type: 'spawn';
+  count: number;
+  at: number;
+}
+
+export interface AmbulanceEvent {
+  type: 'ambulance';
+  kind: 'ambulance' | 'fire' | 'police';
+  at: number;
+}
+
+export type StationEvent = IncidentEvent | ViolationEvent | PinEvent | SpawnEvent | AmbulanceEvent;
 
 const EVENT_CHANNEL = 'smtf-submit-events';
 const str = (value: unknown, max = 160): string | null => {
@@ -34,6 +55,8 @@ const num = (value: unknown): number | null => {
   const n = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(n) ? n : null;
 };
+
+const EMERGENCY_KINDS = new Set(['ambulance', 'fire', 'police']);
 
 export function parseStationEvent(raw: unknown, now = Date.now()): StationEvent | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -55,6 +78,23 @@ export function parseStationEvent(raw: unknown, now = Date.now()): StationEvent 
     if (!code || !label || !plate || !cameraId) return null;
     const confidence = num(data.confidence);
     return { type: 'violation', code, label, plate, cameraId, confidence: confidence === null ? null : Math.min(1, Math.max(0, confidence)), at };
+  }
+  if (data.type === 'pin') {
+    const node = str(data.node, 40);
+    const group = str(data.group, 8);
+    const seconds = num(data.seconds);
+    if (!node || !group || seconds == null || seconds <= 0) return null;
+    return { type: 'pin', node, group, seconds, at };
+  }
+  if (data.type === 'spawn') {
+    const count = num(data.count);
+    if (count == null || count < 1) return null;
+    return { type: 'spawn', count: Math.trunc(count), at };
+  }
+  if (data.type === 'ambulance') {
+    const kind = typeof data.kind === 'string' && EMERGENCY_KINDS.has(data.kind) ? data.kind as AmbulanceEvent['kind'] : null;
+    if (!kind) return null;
+    return { type: 'ambulance', kind, at };
   }
   return null;
 }

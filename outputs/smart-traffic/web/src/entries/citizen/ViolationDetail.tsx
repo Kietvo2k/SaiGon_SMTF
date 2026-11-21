@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Api, errorMessage, mediaUrl } from '../../lib/api';
-import { formatDateTime, formatPenalty, penaltyContext } from '../../lib/format';
+import { formatDateTime, formatPenalty } from '../../lib/format';
 import {
   complaintKindLabel,
   complaintStatusLabel,
@@ -9,6 +9,7 @@ import {
   violationStatusLabel,
 } from '../../lib/labels';
 import type { CitizenComplaintDetail, CitizenViolationDetail } from '../../lib/types';
+import { citizenPenaltyContext } from './penalty';
 
 type Kind = 'priority_vehicle' | 'wrong_plate' | 'other';
 const KIND_OPTIONS: Kind[] = ['priority_vehicle', 'wrong_plate', 'other'];
@@ -115,7 +116,7 @@ export function ViolationDetail({ api, id, tick, onBack, onChanged }: Props) {
             <dt>Thời gian</dt><dd>{formatDateTime(detail.occurred_at)}</dd>
             <dt>Nút giao</dt><dd>{detail.node_label || '–'}</dd>
             <dt>Trạng thái</dt><dd><span className={`badge s-${detail.status}`}>{violationStatusLabel(detail.status)}</span></dd>
-            <dt>Mức phạt</dt><dd>{formatPenalty(detail.penalty)}<small className="penalty-context">{penaltyContext(detail.penalty)}</small></dd>
+            <dt>Mức phạt</dt><dd>{formatPenalty(detail.penalty)}<small className="penalty-context">{citizenPenaltyContext(detail.penalty)}</small></dd>
           </dl>
 
           <h3>Bằng chứng</h3>
