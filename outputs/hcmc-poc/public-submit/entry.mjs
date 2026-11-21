@@ -3,6 +3,7 @@ url.searchParams.set('app', 'smart');
 url.searchParams.set('region', 'bac');
 url.searchParams.set('transport', 'public');
 if (!url.searchParams.has('mode')) url.searchParams.set('mode', 'lite');
+if (!url.searchParams.has('density')) url.searchParams.set('density', 'balanced');
 if (!url.searchParams.has('view')) url.searchParams.set('view', 'bac');
 history.replaceState(null, '', url);
 
@@ -37,6 +38,7 @@ try {
     mountSubmitHud({
       junctions,
       cameras: cameras.map(({camera_id, junction_id, label}) => ({ cameraId: camera_id, junctionId: junction_id, label })),
+      app,
       showOverview: () => document.querySelector('#cityNav [data-view="bac"]')?.click(),
       focusJunction: row => app.focusJunction32(row),
       showStandard: row => app.focusJunction32(row || junctions[0])
@@ -45,6 +47,16 @@ try {
     if (app.modules && app.modules.capture) {
       window.__submitFrame32 = installSubmitFrame32({ app, capture: app.modules.capture, cameras });
       window.__submitFrame32.start();
+    }
+    // Kịch bản tự động: 30 s một xe công vụ, 5 phút một tai nạn; ?autoFast=1 nén nhịp để kiểm thử.
+    try {
+      const { mountAutoScenarios32 } = await import('../auto-scenarios-32.js?v=32c');
+      window.__autoScenarios32 = mountAutoScenarios32({
+        app, documentRef: document, session: sessionStorage, search: location.search, nodeMap,
+        log: (...args) => console.info(...args)
+      });
+    } catch (error) {
+      console.warn('AUTO_SCENARIOS_32_MOUNT', error);
     }
   }
 } catch (error) {

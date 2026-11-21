@@ -323,12 +323,20 @@ export function createAdaptiveQuality(renderer, options = {}) {
   let cooldown = 0;
   let fps = 60;
 
+  // updateStyle = true: canvas CSS phải khớp viewport. Bản 30b truyền `false` nên buffer đổi
+  // nhưng style inline giữ 1440×900 sau resize (canvas tràn/đè trên 768 và 390).
+  const sizeToViewport = () => {
+    const width = Math.max(1, Math.round(innerWidth || 1));
+    const height = Math.max(1, Math.round(innerHeight || 1));
+    renderer.setSize(width, height, true);
+  };
+
   const apply = next => {
     const rounded = Math.round(THREE.MathUtils.clamp(next, minRatio, nativeRatio) * 20) / 20;
     if (Math.abs(rounded - ratio) < .025) return;
     ratio = rounded;
     renderer.setPixelRatio(ratio);
-    renderer.setSize(innerWidth, innerHeight, false);
+    sizeToViewport();
   };
 
   return {
@@ -349,7 +357,7 @@ export function createAdaptiveQuality(renderer, options = {}) {
     },
     resize() {
       renderer.setPixelRatio(ratio);
-      renderer.setSize(innerWidth, innerHeight, false);
+      sizeToViewport();
     }
   };
 }

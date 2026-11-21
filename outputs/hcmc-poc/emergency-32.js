@@ -53,24 +53,88 @@ export function createEmergency32({ sim, net, controller, nodeMap = [], visual =
     trip = null; release(); clearVms(); if (visual) visual.hide();
     return status();
   }
-  function start({ kind = 'ambulance' } = {}) {
+  // Vị trí tâm làn theo hình học thật (net.geo) — dùng để xếp hạng xe gần trạm/điểm sự cố.
+  function laneCentre(l, s, out) {
+    const edge = net.lanes.edge[l], len = net.lanes.length[l] || 1, dir = net.lanes.dir[l];
+    const off = net.geo?.off?.[edge], n = net.E?.[edge]?.c ? net.E[edge].c.length / 2 : 0;
+    if (off != null && n > 1 && net.geo?.s && net.geo?.x && net.geo?.z) {
+      const along = Math.max(0, Math.min(len, dir > 0 ? s : len - s));
+      const planar = along * (net.geo.planar?.[edge] || len) / len;
+      let lo = 0, hi = n - 1;
+      while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (net.geo.s[off + mid] <= planar) lo = mid; else hi = mid; }
+      const span = Math.max(1e-6, net.geo.s[off + hi] - net.geo.s[off + lo]);
+      const t = Math.max(0, Math.min(1, (planar - net.geo.s[off + lo]) / span));
+      out.x = net.geo.x[off + lo] + (net.geo.x[off + hi] - net.geo.x[off + lo]) * t;
+      out.z = net.geo.z[off + lo] + (net.geo.z[off + hi] - net.geo.z[off + lo]) * t;
+      return out;
+    }
+    const from = net.G.nodes[net.lanes.from[l]], to = net.G.nodes[net.lanes.to[l]];
+    const t = Math.max(0, Math.min(1, (dir > 0 ? s : len - s) / len));
+    out.x = from.x + (to.x - from.x) * t;
+    out.z = from.z + (to.z - from.z) * t;
+    return out;
+  }
+  function start({ kind = 'ambulance', origin = null, target = null } = {}) {
     if (!Object.hasOwn(EMERGENCY_KINDS_32, kind)) throw new RangeError('Loại xe khẩn cấp không hợp lệ');
     sim.finishStep();
     // Tận dụng pool xe, chọn xe trước vạch đủ xa; không đổi lộ trình hoặc kích thước trong mô hình va chạm.
-    const candidates = [];
+    const ox = origin && Number.isFinite(origin.x) ? origin.x : null;
+    const oz = origin && Number.isFinite(origin.z) ? origin.z : null;
+    const radius = origin && Number.isFinite(origin.radius) ? Math.max(0, origin.radius) : 450;
+    const tx = target && Number.isFinite(target.x) ? target.x : null;
+    const tz = target && Number.isFinite(target.z) ? target.z : null;
+    const at = {}, probe = {}, candidates = [];
     for (let i = 0; i < sim.N; i++) {
       if (sim.kind[i] !== 1 || (!sim.active[i] && (!sim.activateEmergencyVehicle || !sim.isEligible(i)))) continue;
+      // Điểm cần tới ở mặt đất: không điều xe đang trên cầu vượt/hầm sang hiện trường.
+      if (target && target.ground !== false && net.bridgeEdge && net.bridgeEdge[net.lanes.edge[sim.lane[i]]]) continue;
       const next = upcoming(i);
-      if (next && next.distance >= 40)
-        candidates.push({i, score: (!sim.active[i] ? 300 : (sim.v?.[i] ?? 1) < 0.5 ? 500 : 0) + (controlled.get(next.n) === 'HX-01' ? 0 : 50) + next.distance});
+      const reachable = next ? next.distance >= 40 : false;
+      // Xe gần trạm nhưng chưa tới nút có đèn trong 4 làn vẫn được điều (chạy theo dòng, không ưu tiên).
+      if (reachable || ox !== null) {
+        const base = (!sim.active[i] ? 300 : (sim.v?.[i] ?? 1) < 0.5 ? 500 : 0)
+          + (next ? (controlled.get(next.n) === 'HX-01' ? 0 : 50) + next.distance : 900);
+        // Có trạm: chỉ nhận xe trong bán kính trạm (không lấy xe ở tít ngoài làm "xe từ trạm").
+        let od = 0, score = base;
+        if (ox !== null) {
+          laneCentre(sim.lane[i], sim.s[i], at);
+          od = Math.hypot(at.x - ox, at.z - oz);
+          if (od > radius) continue;
+          score += Math.min(2000, od);
+        }
+        // Có điểm cần tới (tai nạn): chỉ nhận xe có tuyến đi qua gần điểm đó (đo theo hình học làn).
+        if (tx !== null) {
+          const targetEdge = Number.isInteger(target.lane) ? net.lanes.edge[target.lane] : null;
+          const route = [sim.lane[i], ...Array.from(sim.path.slice(i * 4, i * 4 + 4)).filter(x => x >= 0)];
+          if (target.ground !== false && net.bridgeEdge && route.some(lane => net.bridgeEdge[net.lanes.edge[lane]])) continue;
+          if (targetEdge !== null && net.lanes.edge[sim.lane[i]] === targetEdge && Number.isFinite(target.s) && sim.s[i] > target.s + 15) continue;
+          let near = Infinity;
+          for (const lane of route) {
+            const len = net.lanes.length[lane];
+            for (const s of (lane === sim.lane[i] ? [sim.s[i], len] : [0, len / 2, len])) {
+              laneCentre(lane, s, probe);
+              const d = Math.hypot(probe.x - tx, probe.z - tz);
+              if (d < near) near = d;
+            }
+          }
+          if (!Number.isFinite(near) || (Number.isFinite(target.maxM) && near > target.maxM)) continue;
+          // Xe cùng làn bị chặn có thể dừng sau hàng chờ; ưu tiên làn song song/đối diện sẽ đi ngang hiện trường.
+          if (Number.isInteger(target.lane) && route.includes(target.lane)) score += 600;
+          score += Math.min(2000, near) * 10;
+        }
+        candidates.push({i, score, nearOrigin: ox === null || od <= radius, od});
+      }
     }
-    candidates.sort((a,b) => a.score - b.score || a.i - b.i);
-    if (!candidates.length) throw new Error('Không có xe ô tô phù hợp trước nút; tăng mật độ hoặc chờ xe tới rồi thử lại');
+    candidates.sort((a,b) => (a.nearOrigin === b.nearOrigin ? 0 : a.nearOrigin ? -1 : 1) || a.score - b.score || a.i - b.i);
+    if (!candidates.length) throw new Error(ox !== null
+      ? 'Không có xe phù hợp trong bán kính trạm; chờ xe tới rồi thử lại'
+      : 'Không có xe ô tô phù hợp trước nút; tăng mật độ hoặc chờ xe tới rồi thử lại');
     stop(); yielded.clear();
     const picked = candidates.find(c => sim.active[c.i] || sim.activateEmergencyVehicle(c.i));
     if (!picked) throw new Error('Chưa có chỗ trống an toàn để điều xe; chờ giao lộ thông rồi thử lại');
     const slot = picked.i;
-    trip = { slot, kind, gen: sim.gen[slot], started: sim.counters.t, lane: sim.lane[slot], s: sim.s[slot], distance: 0, passed: 0, blocked: false };
+    trip = { slot, kind, gen: sim.gen[slot], started: sim.counters.t, lane: sim.lane[slot], s: sim.s[slot], distance: 0, passed: 0, blocked: false,
+      origin: origin ? { id: origin.id || null, label: origin.label || null, x: ox, z: oz, lane: Number.isInteger(origin.lane) ? origin.lane : null } : null };
     lastRequest = -Infinity; beforeStep(sim.counters.t); return status();
   }
   function beforeStep(t) {
@@ -116,7 +180,8 @@ export function createEmergency32({ sim, net, controller, nodeMap = [], visual =
     return trip ? { active: true, slot: trip.slot, vehicle_id: `V-${String(trip.slot + 1).padStart(6,'0')}`, kind: trip.kind,
       weight: priorityWeightOf32(trip.kind), hold_s: priorityHoldSOf32(trip.kind),
       label: EMERGENCY_KINDS_32[trip.kind], distance_m: Math.round(trip.distance), passed: trip.passed,
-      yielded: yielded.size, yield_lanes: gates.size, node_id: reserved === null ? null : controlled.get(reserved), blocked: trip.blocked } : { ...last };
+      yielded: yielded.size, yield_lanes: gates.size, node_id: reserved === null ? null : controlled.get(reserved), blocked: trip.blocked,
+      origin: trip.origin ? { ...trip.origin } : null } : { ...last };
   }
   function reviewContext(rec) {
     const match = /^V-(\d+)$/.exec(rec.vehicle_id || '');
@@ -147,6 +212,27 @@ export function createEmergencyVisual32({ THREE, scene, traffic }) {
   for (const z of [-.862,.862]) {
     medical.push(box([1.05,.24,.035],[-.8,1.12,z],0xe43e40), box([.24,.8,.035],[-.8,1.12,z],0xe43e40));
   }
+  // Nhãn nổi để người xem biết đây là xe ưu tiên, không lẫn với xe tải đỏ trên làn.
+  const labelCanvas = document.createElement('canvas'); labelCanvas.width = 512; labelCanvas.height = 128;
+  const labelTexture = new THREE.CanvasTexture(labelCanvas);
+  const labelSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture, transparent: true, depthTest: false, depthWrite: false }));
+  labelSprite.position.set(0, 4.6, 0); labelSprite.scale.set(7.4, 1.85, 1); labelSprite.renderOrder = 18; labelSprite.name = 'emergency-label-32';
+  group.add(labelSprite);
+  let labelKind = '';
+  const drawLabel = kind => {
+    if (kind === labelKind) return;
+    labelKind = kind;
+    const ctx = labelCanvas.getContext('2d'), w = labelCanvas.width, h = labelCanvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const text = kind === 'fire' ? 'CỨU HỎA' : kind === 'police' ? 'CÔNG AN' : 'CỨU THƯƠNG';
+    const accent = kind === 'fire' ? '#ff6b5e' : kind === 'police' ? '#6ea8ff' : '#ffd23f';
+    ctx.fillStyle = 'rgba(8,26,32,.94)'; ctx.strokeStyle = accent; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(8, 8, w - 16, h - 16, 24) : ctx.rect(8, 8, w - 16, h - 16);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = accent; ctx.font = '800 44px system-ui,Segoe UI,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, w / 2, h / 2 + 2);
+    labelTexture.needsUpdate = true;
+  };
   const pose = {};
   return { hide(){group.visible=false;},
     draw(slot,kind,t) {
@@ -154,7 +240,8 @@ export function createEmergencyVisual32({ THREE, scene, traffic }) {
       group.rotation.set(0,-Math.atan2(pose.tz,pose.tx),0); group.visible=true;
       body.material.color.setHex(kind==='fire'?0xd63832:kind==='police'?0x194f86:0xf4f6f7);
       stripe.visible=kind!=='ambulance'; for(const part of medical)part.visible=kind==='ambulance';
+      drawLabel(kind);
       red.material.emissive.setHex(Math.floor(t*4)%2?0xff2424:0x000000);
       blue.material.emissive.setHex(Math.floor(t*4)%2?0x000000:0x247eff);
-    }, dispose(){group.removeFromParent(); for(const m of mats)m.dispose(); for(const g of geometries)g.dispose();} };
+    }, dispose(){group.removeFromParent(); for(const m of mats)m.dispose(); for(const g of geometries)g.dispose(); labelTexture.dispose(); labelSprite.material.dispose();} };
 }

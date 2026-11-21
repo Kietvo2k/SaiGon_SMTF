@@ -48,6 +48,8 @@ const roadScore32 = road => {
 };
 
 // Đầu đèn: đặt bên phải vạch dừng của làn vào ngoài cùng, mặt quay về xe đang tới.
+// 3,5 m ngoài mép làn để cột nằm trên vỉa hè, không đứng giữa mặt đường.
+export const HEAD_CURB_OFFSET_32 = 3.5;
 function headOfArm32(net, geo, arm) {
   if (!geo || !arm.incomingLanes.length) return null;
   const best = arm.incomingLanes.slice().sort((a, b) => {
@@ -57,7 +59,7 @@ function headOfArm32(net, geo, arm) {
   })[0];
   const l = best.lane, nodeIndex = best.nodeIndex;
   const stop = Math.max(0, (net.lanes.length[l] || 0) - (net.Rz?.[nodeIndex] || 0));
-  const lat = (net.lanes.offset[l] || 0) + (net.lanes.width[l] || 0) / 2 + 0.8;
+  const lat = (net.lanes.offset[l] || 0) + (net.lanes.width[l] || 0) / 2 + HEAD_CURB_OFFSET_32;
   const p = geo.lanePoint(l, stop, lat, {});
   const y = typeof geo.laneY === 'function' ? geo.laneY(l, stop) : 0;
   return {

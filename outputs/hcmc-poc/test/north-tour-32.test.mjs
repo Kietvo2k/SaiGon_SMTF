@@ -32,14 +32,15 @@ const nodeMap = [
   { node_id: 'HX-06', x: -20, z: -2420 }
 ];
 
-test('NORTH_TOUR_32 đúng 5 góc khu Bắc, đúng thứ tự', () => {
-  assert.deepEqual(NORTH_TOUR_32.map(t => t.key), ['hx', 'l81', 'csg', 'ctn', 'bac']);
-  assert.deepEqual(NORTH_TOUR_32.map(t => t.label), ['Ngã tư Hàng Xanh', 'Landmark 81', 'Cầu Sài Gòn', 'Cầu Thị Nghè', 'Toàn khu Bắc']);
+test('NORTH_TOUR_32 bỏ 2 góc cầu, còn 3 góc khu Bắc đúng thứ tự', () => {
+  assert.deepEqual(NORTH_TOUR_32.map(t => t.key), ['hx', 'l81', 'bac']);
+  assert.deepEqual(NORTH_TOUR_32.map(t => t.label), ['Ngã tư Hàng Xanh', 'Landmark 81', 'Toàn khu Bắc']);
 });
 
-test('buildNorthViews32 sinh 5 góc, tọa độ lấy từ dữ liệu và nằm trong khu bắc', () => {
+test('buildNorthViews32 vẫn sinh đủ 5 view, tour chỉ còn 3 góc', () => {
   const { views, tour } = buildNorthViews32({ graph, nodeMap, registry });
-  assert.equal(tour.length, 5);
+  assert.equal(tour.length, 3);
+  assert.ok(views.csg && views.ctn, 'view cầu vẫn giữ để mở trực tiếp bằng URL');
   for (const t of tour) {
     const v = views[t.key];
     assert.ok(v, `thiếu view ${t.key}`);

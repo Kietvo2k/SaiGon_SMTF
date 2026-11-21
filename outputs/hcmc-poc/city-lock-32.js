@@ -27,17 +27,27 @@ export const NORTH_KEEP_BUILDING_MAX_M_32 = 40;
 export const NORTH_KEEP_BUILDING_LITE_M_32 = 26;
 // Bản trình diễn v2 (P1-5): bounding-box hộp nhà thụt vào trong mỗi phía chừng này (m) để không
 // đè lên corridor mặt đường — hộp là bbox của footprint nên mép bbox thường vượt ra mép nhà thật.
-export const NORTH_BOX_INSET_M_32 = 2.5;
+// Road-fix A: hạ từ 4,5 m xuống 1,2 m; phần thiếu được bù bằng fitNorthBox32 (đo hình chữ nhật–corridor
+// thật) nên hộp sát đường vẫn thụt đủ, còn hộp xa đường không bị teo oan (giữ mật độ nhà).
+export const NORTH_BOX_INSET_M_32 = 1.2;
+// Khe tối thiểu từ MÉP hộp nhà tới MÉP làn (m) cho mọi đường được vẽ, kể cả tertiary/residential/service.
+export const NORTH_BOX_GAP_M_32 = 0.5;
+// Hộp nhà nhỏ hơn cạnh này sau khi thụt thì bỏ (không còn đọc ra khối nhà).
+// 3,5 m: giữ các hộp nhà nhỏ (4–6 m) — hạ từ 6 m để không xóa hàng loạt so với bản 32a.
+export const NORTH_BOX_MIN_SIDE_M_32 = 3.5;
+// Hộp lớn hơn cạnh này là nhà kho/công trình lớn, không còn là "nhà hộp" ven đường.
+export const NORTH_BOX_MAX_SIDE_M_32 = 40;
 export const NORTH_SIGNAL_RADIUS_M_32 = 80;
 export const NORTH_MIN_SIM_RANK_32 = 2;      // tertiary
 export const LOCKED_MIN_RENDER_RANK_32 = 3;  // secondary
 export const CAMERA_MARGIN_M_32 = 400;
-export const CAMERA_MIN_DISTANCE_32 = 150;
+export const CAMERA_MIN_DISTANCE_32 = 50;
 export const CAMERA_MAX_DISTANCE_32 = 5600;  // đủ thấy trọn khu Bắc (preset "Toàn khu Bắc" = 5000)
 
 // Xếp hạng cấp đường; khớp DRIVE_RANK của city-traffic-sim-31.js để camera ẩn/hiện và sim nhất quán.
 const RANK = { trunk: 5, primary: 4, secondary: 3, tertiary: 2, residential: 1, unclassified: 1, living_street: 1, service: 1, road: 1 };
 const MINOR = new Set(['residential', 'service', 'living_street', 'unclassified', 'footway', 'path', 'pedestrian', 'cycleway', 'steps', 'track', 'platform', 'bridleway', 'corridor']);
+const WALK = new Set(['footway', 'path', 'pedestrian', 'cycleway', 'steps', 'track', 'platform', 'bridleway', 'corridor']);
 const MAJOR_RANKS = [3, 4, 5];
 
 export function normalizeRoadClass32(type) {
@@ -48,6 +58,10 @@ export function roadClassRank32(type) {
 }
 export function isMinorRoadClass32(type) {
   return MINOR.has(normalizeRoadClass32(type));
+}
+// Đường đi bộ/vỉa hè: không phải làn xe, không dùng làm corridor bắt hộp nhà thụt (giữ mật độ).
+export function isWalkRoadClass32(type) {
+  return WALK.has(normalizeRoadClass32(type));
 }
 // Cạnh sim được dùng khi khóa khu Bắc: ≥ tertiary.
 export function simKeepsRoad32(type) {
@@ -77,6 +91,91 @@ export function segmentDistance32(px, pz, [ax, az, bx, bz]) {
   const sx = bx - ax, sz = bz - az, l = sx * sx + sz * sz;
   const t = l ? Math.max(0, Math.min(1, ((px - ax) * sx + (pz - az) * sz) / l)) : 0;
   return Math.hypot(ax + sx * t - px, az + sz * t - pz);
+}
+// Khoảng cách hai đoạn thẳng 2D (0 nếu cắt nhau) — dùng cho khoảng cách hình chữ nhật–tim đường.
+function segmentSegmentDistance32(px, pz, qx, qz, rx, rz, sx, sz) {
+  const d1x = qx - px, d1z = qz - pz, d2x = sx - rx, d2z = sz - rz, ox = px - rx, oz = pz - rz;
+  const a = d1x * d1x + d1z * d1z, e = d2x * d2x + d2z * d2z, f = d2x * ox + d2z * oz;
+  let s, t;
+  if (a <= 1e-12 && e <= 1e-12) return Math.hypot(px - rx, pz - rz);
+  if (a <= 1e-12) { s = 0; t = Math.max(0, Math.min(1, f / e)); }
+  else {
+    const c = d1x * ox + d1z * oz;
+    if (e <= 1e-12) { t = 0; s = Math.max(0, Math.min(1, -c / a)); }
+    else {
+      const b = d1x * d2x + d1z * d2z, den = a * e - b * b;
+      s = den !== 0 ? Math.max(0, Math.min(1, (b * f - c * e) / den)) : 0;
+      t = (b * s + f) / e;
+      if (t < 0) { t = 0; s = Math.max(0, Math.min(1, -c / a)); }
+      else if (t > 1) { t = 1; s = Math.max(0, Math.min(1, (b - c) / a)); }
+    }
+  }
+  return Math.hypot(px + d1x * s - (rx + d2x * t), pz + d1z * s - (rz + d2z * t));
+}
+// Khoảng cách hình chữ nhật trục song song [minX,minZ,maxX,maxZ] tới đoạn tim đường (0 nếu chạm/cắt).
+export function rectSegmentDistance32(minX, minZ, maxX, maxZ, [ax, az, bx, bz]) {
+  const inside = (x, z) => x >= minX && x <= maxX && z >= minZ && z <= maxZ;
+  if (inside(ax, az) || inside(bx, bz)) return 0;
+  const edges = [[minX, minZ, maxX, minZ], [maxX, minZ, maxX, maxZ], [maxX, maxZ, minX, maxZ], [minX, maxZ, minX, minZ]];
+  let best = Infinity;
+  for (const [rx, rz, sx, sz] of edges) { const d = segmentSegmentDistance32(ax, az, bx, bz, rx, rz, sx, sz); if (d < best) best = d; }
+  return best;
+}
+/*
+ * Lưới corridor cho lọc hộp nhà: mỗi đoạn tim đường mang nửa bề rộng mặt đường; truy vấn theo
+ * hình chữ nhật trả khe nhỏ nhất từ MÉP hộp tới MÉP làn (âm = hộp lấn làn).
+ * Nhận cả đường nhỏ (tertiary/residential/service) — bản 32a chỉ có MAJOR_RANKS nên bỏ sót H-01/H-04.
+ */
+export function buildCorridorGrid32(roads, { halfWidthOf = () => 4, cellM = 32, filter = null } = {}) {
+  const cells = new Map(), key = (i, j) => i + ':' + j;
+  const insert = (i, j, seg) => { const k = key(i, j); let list = cells.get(k); if (!list) cells.set(k, list = []); list.push(seg); };
+  for (let index = 0; index < roads.length; index++) {
+    const road = roads[index];
+    if (filter && !filter(road, index)) continue;
+    const hw = Math.max(0.5, Number(halfWidthOf(road, index)) || 4);
+    for (const [ax, az, bx, bz] of roadSegments32(road)) {
+      const seg = { ax, az, bx, bz, hw, index }, pad = hw + cellM;
+      const i0 = Math.floor((Math.min(ax, bx) - pad) / cellM), i1 = Math.floor((Math.max(ax, bx) + pad) / cellM);
+      const j0 = Math.floor((Math.min(az, bz) - pad) / cellM), j1 = Math.floor((Math.max(az, bz) + pad) / cellM);
+      for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) insert(i, j, seg);
+    }
+  }
+  return {
+    cellM,
+    // Khe nhỏ nhất (m) từ mép hình chữ nhật tới mép làn; Infinity nếu không có đường trong vùng tra.
+    nearestGap(minX, minZ, maxX, maxZ, searchM = cellM) {
+      let best = Infinity;
+      const seen = new Set();
+      const i0 = Math.floor((minX - searchM) / cellM), i1 = Math.floor((maxX + searchM) / cellM);
+      const j0 = Math.floor((minZ - searchM) / cellM), j1 = Math.floor((maxZ + searchM) / cellM);
+      for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+        const list = cells.get(key(i, j));
+        if (!list) continue;
+        for (const seg of list) {
+          if (seen.has(seg)) continue;
+          seen.add(seg);
+          const gap = rectSegmentDistance32(minX, minZ, maxX, maxZ, [seg.ax, seg.az, seg.bx, seg.bz]) - seg.hw;
+          if (gap < best) best = gap;
+        }
+      }
+      return best;
+    }
+  };
+}
+/*
+ * Thụt hộp nhà vừa đủ để mép hộp cách mép làn ≥ gapM, giữ tâm hộp.
+ * Thụt đều 4 phía; dừng khi cạnh < minSideM (bỏ hộp) hoặc hết maxPasses.
+ */
+export function fitNorthBox32({ minX, minZ, maxX, maxZ }, grid, { inset = NORTH_BOX_INSET_M_32, gapM = NORTH_BOX_GAP_M_32, minSideM = NORTH_BOX_MIN_SIDE_M_32, maxPasses = 8 } = {}) {
+  let used = Math.max(0, inset), box = null, gap = Infinity;
+  for (let pass = 0; pass < maxPasses; pass++) {
+    box = { minX: minX + used, minZ: minZ + used, maxX: maxX - used, maxZ: maxZ - used };
+    if (box.maxX - box.minX < minSideM || box.maxZ - box.minZ < minSideM) return { fitted: false, reason: 'min-side', inset: used, gap: null };
+    gap = grid.nearestGap(box.minX, box.minZ, box.maxX, box.maxZ);
+    if (!(gap < gapM)) return { fitted: true, reason: 'ok', inset: used, gap, ...box };
+    used += Math.max(0.1, gapM - gap + 0.05);
+  }
+  return { fitted: false, reason: 'clearance', inset: used, gap };
 }
 // Điểm dùng để xét khu/khoảng cách: đỉnh đường + trung điểm đoạn (đủ dày cho đoạn cong dài).
 function roadSamples32(road) {
@@ -252,5 +351,6 @@ export function lockMaskGrid32(regionOf, { x0 = LOCK_MASK_32.x0, z0 = LOCK_MASK_
 export const CITY_LOCK_PURE_32 = Object.freeze({
   version: CITY_LOCK_32_VERSION,
   selectNorthBuildings32, lockRoadFilter32, northCameraLimits32, clampNorthCamera32, lockRegionLabels32,
-  signatureHidden32, bridgeHidden32, lockMaskGrid32, roadPoints32
+  signatureHidden32, bridgeHidden32, lockMaskGrid32, roadPoints32,
+  rectSegmentDistance32, buildCorridorGrid32, fitNorthBox32
 });

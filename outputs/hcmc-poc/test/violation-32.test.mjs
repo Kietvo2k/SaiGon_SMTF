@@ -82,7 +82,8 @@ test('luật tất định: cùng (xe, thế hệ, seed) → cùng mã; tỉ l�
     assert.ok(c1 === null || ALL_CODES_32.includes(c1));
     assert.ok(m === null || ['SPEED', 'PARK', 'WRONG-TURN', 'NO-HELMET', 'OVERLOAD', 'PHONE'].includes(m));
   }
-  assert.ok(Math.abs(counts.motorbike['NO-HELMET'] / N - 0.02) < 0.005, JSON.stringify(counts.motorbike));
+  // NO-HELMET xe máy 6 % (M5b-v3: tăng từ 2 % để nhìn thấy trên đường; renderer ẩn mũ theo cùng bảng).
+  assert.ok(Math.abs(counts.motorbike['NO-HELMET'] / N - 0.06) < 0.01, JSON.stringify(counts.motorbike));
   assert.ok(Math.abs(counts.car['SPEED'] / N - 0.03) < 0.006, JSON.stringify(counts.car));
   assert.ok(Math.abs(counts.car['LANE'] / N - 0.3) < 0.02, 'LANE là lỗi xe con nhiều nhất trong bảng');
   assert.equal(counts.car['NO-HELMET'], undefined, 'ô tô không có lỗi mũ bảo hiểm');

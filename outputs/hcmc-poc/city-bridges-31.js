@@ -112,6 +112,88 @@ export function flatJoints(centerline, topAt, boxTop) {
   return out;
 }
 
+// Road-fix A · nối hai dải mặt cầu song song (hai chiều của cùng một cầu) bằng bản bê tông tại cao độ
+// mặt cầu. Bản 31J dựng deck theo từng elevated piece nên giữa hai chiều lộ nước (B-01, B-02).
+// pieces: [{ road, center: [x,y,z,…], halfWidth, bottoms: [y…] }] — hàm thuần, test Node được.
+export const DECK_LINK_MAX_GAP_M = 6;      // khe tối đa giữa hai mép deck còn nối
+export const DECK_LINK_MIN_GAP_M = 0.2;    // deck chồng nhau thì không cần bản nối
+export const DECK_LINK_MAX_DY_M = 1.2;     // hai deck phải gần cùng cao độ
+export const DECK_LINK_MIN_COS = 0.85;     // và gần song song
+export const DECK_LINK_MIN_LIFT_M = 3.5;   // chỉ nối deck cầu thật (không nối dải phân cách dốc dẫn mặt đất)
+
+function stationTangent(center, k, n) {
+  const a = k > 0 ? k - 1 : k, b = k + 1 < n ? k + 1 : k;
+  let tx = center[b * 3] - center[a * 3], tz = center[b * 3 + 2] - center[a * 3 + 2];
+  const L = Math.hypot(tx, tz) || 1;
+  return [tx / L, tz / L];
+}
+
+export function planDeckLinks31(pieces, { maxGapM = DECK_LINK_MAX_GAP_M, minGapM = DECK_LINK_MIN_GAP_M, maxDyM = DECK_LINK_MAX_DY_M, minCos = DECK_LINK_MIN_COS, maxDistanceM = 40, groundY = 0, minLiftM = DECK_LINK_MIN_LIFT_M } = {}) {
+  const links = [];
+  for (let a = 0; a < pieces.length; a++) for (let b = a + 1; b < pieces.length; b++) {
+    const A = pieces[a], B = pieces[b];
+    if (!A?.center || !B?.center || A.road === B.road) continue;
+    const nA = A.center.length / 3, nB = B.center.length / 3;
+    if (nA < 2 || nB < 2) continue;
+    for (let k = 0; k < nA; k++) {
+      const ax = A.center[k * 3], ay = A.center[k * 3 + 1], az = A.center[k * 3 + 2];
+      const [tax, taz] = stationTangent(A.center, k, nA), nax = -taz, naz = tax;
+      let best = null;
+      for (let m = 0; m < nB; m++) {
+        const bx = B.center[m * 3], bz = B.center[m * 3 + 2];
+        const d = Math.hypot(bx - ax, bz - az);
+        if (d > maxDistanceM || (best && d >= best.d)) continue;
+        const [tbx, tbz] = stationTangent(B.center, m, nB);
+        best = { m, d, bx, by: B.center[m * 3 + 1], bz, cos: tbx * tax + tbz * taz };
+      }
+      if (!best || Math.abs(best.cos) < minCos) continue;
+      if (Math.abs(best.by - ay) > maxDyM) continue;
+      if (Math.min(ay, best.by) - groundY < minLiftM) continue;   // bỏ dải phân cách/dốc dẫn mặt đất
+      const bo = (best.bx - ax) * nax + (best.bz - az) * naz;
+      const gap = Math.abs(bo) - A.halfWidth - B.halfWidth;
+      if (gap < minGapM || gap > maxGapM) continue;
+      const sideA = bo >= 0 ? 1 : -1;
+      // Chồng 0,4 m vào mỗi deck: mép bản nối nằm dưới mặt đường, không hở mí tại đầu mút.
+      const lap = Math.min(0.4, A.halfWidth * 0.2);
+      const edgeAx = ax + nax * sideA * (A.halfWidth - lap), edgeAz = az + naz * sideA * (A.halfWidth - lap);
+      const [tbx, tbz] = stationTangent(B.center, best.m, nB), nbx = -tbz, nbz = tbx;
+      const sideB = (edgeAx - best.bx) * nbx + (edgeAz - best.bz) * nbz >= 0 ? 1 : -1;
+      const bottomA = A.bottoms?.[k] ?? ay - 1.2, bottomB = B.bottoms?.[best.m] ?? best.by - 1.2;
+      const top = Math.min(ay, best.by) - 0.01;
+      links.push({
+        a: A.road, b: B.road, ak: k, bm: best.m, gap: +gap.toFixed(2), dirx: tax, dirz: taz,
+        ax: edgeAx, az: edgeAz, bx: best.bx + nbx * sideB * (B.halfWidth - Math.min(0.4, B.halfWidth * 0.2)), bz: best.bz + nbz * sideB * (B.halfWidth - Math.min(0.4, B.halfWidth * 0.2)),
+        top, bottom: Math.max(Math.max(bottomA, bottomB), top - 3)
+      });
+    }
+  }
+  return links;
+}
+
+// Road-fix A · mố (abutment) ở đầu deck cụt: đầu không còn mặt đường nối cùng cao độ thì đổ khối
+// bê tông từ đáy deck xuống nền, thay vì để vách deck cắt giữa không trung.
+export function planDeckAbutments31(pieces, { surfaceAt = () => [], groundY = 0, baseY = null, minLiftM = 1.2, lengthM = 5, probeM = 2, allowedAt = null } = {}) {
+  const out = [];
+  for (const p of pieces) {
+    const n = p?.center ? p.center.length / 3 : 0;
+    if (n < 2 || !p.bottoms) continue;
+    for (const end of [0, 1]) {
+      const k = end ? n - 1 : 0, k2 = end ? n - 2 : 1;
+      const x = p.center[k * 3], y = p.center[k * 3 + 1], z = p.center[k * 3 + 2];
+      const bottom = p.bottoms[k];
+      if (!(bottom - groundY > minLiftM)) continue;
+      let ux = x - p.center[k2 * 3], uz = z - p.center[k2 * 3 + 2];
+      const L = Math.hypot(ux, uz) || 1; ux /= L; uz /= L;
+      const bx = x - ux * lengthM, bz = z - uz * lengthM;
+      if (allowedAt && (!allowedAt(x, z) || !allowedAt(bx, bz))) continue;
+      const ys = surfaceAt(x + ux * probeM, z + uz * probeM);
+      if (ys && ys.some(v => Math.abs(v - y) < 1.2)) continue;
+      out.push({ road: p.road, end, ax: x, az: z, bx, bz, top: bottom, bottom: baseY ?? (groundY - 0.05), halfWidth: p.halfWidth });
+    }
+  }
+  return out;
+}
+
 // Bước G · cầu vượt đi bộ (BRIDGE_CORRECTIONS_31.footbridges, build_bridge_corrections_31.py): footway bridge=yes lớp
 // skip mà tim nằm trên lòng đường xe mặt đất. mode 'elevated' → ẩn ribbon phẳng, dựng bản mặt ở deckTopY (tĩnh không xe
 // + bản mặt), lan can, cột ở hai đầu và ở dải phân cách (chỗ không có mặt đường), cầu thang bậc theo polyline way steps
@@ -302,6 +384,7 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
   // 1) Bản mặt: vách hai mép + mặt dưới của mọi mảnh nâng (không vẽ mặt trên: đó là mặt đường).
   const deck = [];
   let deckPieces = 0, embankmentVertices = 0;
+  const bridgePieces = [];
   for (const piece of net.elevatedPieces()) {
     const i = piece.road, thick = thicknessOf(i), bridge = isBridge(i), n = piece.center.length / 3;
     if (n < 2) continue;
@@ -313,6 +396,7 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
       if (bridge ? bottom < groundY + 0.3 : (lift < EMBANKMENT_MAX_LIFT_M && !below(x, z, bottom) && !onWater(x, z))) { bottom = VISIBLE_GROUND_Y; embankmentVertices++; }
       bottoms[k] = bottom;
     }
+    if (bridge) bridgePieces.push({ road: i, center: piece.center, halfWidth: piece.halfWidth, bottoms });
     let any = false;
     for (let k = 0; k + 1 < n; k++) {
       if (lifts[k] < 0.05 && lifts[k + 1] < 0.05) continue;
@@ -338,6 +422,50 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
     for (let k = 1; k + 1 < poly.length; k++) deck.push(poly[0][0], bottom, poly[0][2], poly[k + 1][0], bottom, poly[k + 1][2], poly[k][0], bottom, poly[k][2]);
     junctionUndersides++;
   }
+  // Road-fix A: nối hai dải deck song song (bản 31J để lộ nước giữa hai chiều B-01/B-02) và
+  // đổ mố ở đầu deck cụt trên đất (B-03). Tất cả là minh họa, suy từ hình học deck đang dựng.
+  const deckLinks = planDeckLinks31(bridgePieces, { groundY });
+  let deckLinkQuads = 0, deckLinkMaxGap = 0;
+  const linksByPair = new Map();
+  for (const link of deckLinks) {
+    deckLinkMaxGap = Math.max(deckLinkMaxGap, link.gap);
+    const key = `${link.a}:${link.b}`;
+    if (!linksByPair.has(key)) linksByPair.set(key, []);
+    linksByPair.get(key).push(link);
+  }
+  const LINK_END_EXTEND_M = 3;   // kéo bản nối quá đầu deck 3 m để không hở mí với dải phân cách đường dẫn
+  const advanceLink = (r, d) => ({ ...r, ax: r.ax + r.dirx * d, az: r.az + r.dirz * d, bx: r.bx + r.dirx * d, bz: r.bz + r.dirz * d });
+  const linkQuad = (p, q) => {
+    deck.push(p.ax, p.top, p.az, q.ax, q.top, q.az, q.bx, q.top, q.bz,
+      p.ax, p.top, p.az, q.bx, q.top, q.bz, p.bx, p.top, p.bz);                         // mặt trên
+    deck.push(p.ax, p.bottom, p.az, p.bx, p.bottom, p.bz, q.bx, q.bottom, q.bz,
+      p.ax, p.bottom, p.az, q.bx, q.bottom, q.bz, q.ax, q.bottom, q.az);                 // mặt dưới
+    deckLinkQuads++;
+  };
+  const linkCap = p => deck.push(p.ax, p.top, p.az, p.ax, p.bottom, p.az, p.bx, p.bottom, p.bz,
+    p.ax, p.top, p.az, p.bx, p.bottom, p.bz, p.bx, p.top, p.bz);
+  for (const list of linksByPair.values()) {
+    list.sort((p, q) => p.ak - q.ak);
+    let first = null, prev = null;
+    for (const r of list) {
+      if (!first) first = r;
+      if (prev && r.ak === prev.ak + 1) linkQuad(prev, r);
+      else if (prev) linkCap(prev);
+      prev = r;
+    }
+    if (prev) {
+      linkCap(prev);
+      const end = advanceLink(prev, LINK_END_EXTEND_M);
+      linkQuad(prev, end); linkCap(end);
+      const start = advanceLink(first, -LINK_END_EXTEND_M);
+      linkQuad(start, first); linkCap(start);
+    }
+  }
+  const abutments = planDeckAbutments31(bridgePieces, {
+    surfaceAt: (x, z) => net.surfaceYs(x, z), groundY, baseY: VISIBLE_GROUND_Y,
+    allowedAt: (x, z) => !onWater(x, z)
+  });
+  for (const a of abutments) deck.push(...loftStrip([{ x: a.ax, z: a.az, top: a.top, bottom: a.bottom }, { x: a.bx, z: a.bz, top: a.top, bottom: a.bottom }], a.halfWidth * 2));
   status.footbridges = buildFootbridges({ table: footbridges, roads, net, groundY, deckThick: FOOT_THICKNESS_M, out: deck });
   const deckMesh = new THREE.Mesh(geometryOf(deck), concrete);
   deckMesh.name = 'Cầu 31C · bản mặt và dầm (thủ tục)'; deckMesh.castShadow = true; deckMesh.receiveShadow = true;
@@ -355,7 +483,7 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
       for (let k = 0; k + 1 < n; k++) {
         const ax = pc[k * 3], ay = pc[k * 3 + 1], az = pc[k * 3 + 2], bx = pc[k * 3 + 3], by = pc[k * 3 + 4], bz = pc[k * 3 + 5], L = Math.hypot(bx - ax, bz - az);
         while (L > 0 && next <= acc + L) {
-          const u = (next - acc) / L, x = ax + (bx - ax) * u, z = az + (bz - az) * u, y = ay + (by - ay) * u, top = y - thick;
+          const u = (next - acc) / L, x = ax + (bx - ax) * u, z = az + (bz - az) * u, y = ay + (by - ay) * u, top = y - thick + 0.25;   // cắm 0,25 m vào đáy deck: không còn trụ hở mí
           next += spacing;
           if (top - groundY < PIER_MIN_CLEAR_M) continue;
           // M2b: đoạn sông/rạch qua đất (dốc dẫn, đoạn cao trên đất) cũng đặt trụ xuống đất; trước đây chỉ trụ trên nước
@@ -506,7 +634,9 @@ export function createBridges31({ scene, roads, graph, roadNetwork, water, bachD
   const api = { version: BRIDGES_31_VERSION, root, meshes, procedural, signature: bd ? bd.meshes : [], piers, rails: rails.length, lamps, thicknessOf, deckY, tilt };
   Object.assign(status, {
     state: 'ready', classification: 'illustrative', label: BRIDGE_LABEL,
-    stats: { deckPieces, junctionUndersides, embankmentVertices, piers: piers.length, piersOnWater: piers.filter(p => p.water).length, parapets: rails.length, lamps: lamps.length, triangles, meshes: meshes.length, buildMs: Math.round(performance.now() - started) },
+    stats: { deckPieces, junctionUndersides, embankmentVertices, piers: piers.length, piersOnWater: piers.filter(p => p.water).length, parapets: rails.length, lamps: lamps.length,
+      deckLinks: deckLinks.length, deckLinkRuns: linksByPair.size, deckLinkQuads, deckLinkMaxGapM: +deckLinkMaxGap.toFixed(2), abutments: abutments.length,
+      triangles, meshes: meshes.length, buildMs: Math.round(performance.now() - started) },
     meshes: meshes.map(m => ({ name: m.name, instanced: !!m.isInstancedMesh, count: m.isInstancedMesh ? m.count : 1, triangles: m.geometry.attributes.position.count / 3 * (m.isInstancedMesh ? m.count : 1) })),
     thicknessM: { ...THICKNESS, footway: FOOT_THICKNESS_M, ramp: RAMP_THICKNESS_M },
     bachDang: bd ? { built: true, meshes: bd.meshes.length, ends: bd.ends, abutments: bd.abutments, source: 'data/bach-dang-footbridge.json',

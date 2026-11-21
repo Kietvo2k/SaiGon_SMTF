@@ -167,13 +167,13 @@ export async function prepareSmart32({ graph, config = null }) {
   return { signalPlan, nodeMap, cameras, config: publicConfig, heatHistory };
 }
 
-// T9b — Panel "Tham quan" của app smart: 5 góc nhìn khu Bắc. Toạ độ suy từ node_map / signature registry / road graph,
+// T9b — Panel "Tham quan" của app smart: các góc nhìn khu Bắc. Toạ độ suy từ node_map / signature registry / road graph,
 // không đoán tay. Trả về toạ độ mảng [x,y,z] để webgpu-materials-24.js tự bọc THREE.Vector3 (file này chạy được Node).
+// Bỏ Cầu Sài Gòn/Cầu Thị Nghè khỏi tour: khung cầu dài bị cắt và các hộp nhà ven cầu che mặt cầu,
+// nhìn như kẹt cứng — không đáng đưa vào luồng tham quan. Hai view vẫn giữ để mở trực tiếp bằng URL.
 export const NORTH_TOUR_32 = [
   { key: 'hx', label: 'Ngã tư Hàng Xanh' },
   { key: 'l81', label: 'Landmark 81' },
-  { key: 'csg', label: 'Cầu Sài Gòn' },
-  { key: 'ctn', label: 'Cầu Thị Nghè' },
   { key: 'bac', label: 'Toàn khu Bắc' }
 ];
 export const NORTH_CONE_KEY_32 = 'hx';   // góc cận cảnh: bật "Vùng quan sát camera" mặc định
@@ -425,6 +425,11 @@ export function installHeat32(app, { THREE, routing = null, nodeMap = [], root =
     onToggle: on => { scene.setHeatVisible(on); },
     onToggleFlow: on => { scene.setFlowVisible(on); }
   }) : null;
+  // demo-v2: nhiệt và dòng xe là hai lớp kể chuyện chính của trạm — bật sẵn để giám khảo thấy ngay.
+  scene.setHeatVisible(true);
+  scene.setFlowVisible(true);
+  panel?.setOn?.(true);
+  panel?.setFlowOn?.(true);
   let shown = '';
   // PERF-2: khi tab ẩn, chậm nhịp heat (250 ms → 1 s) để bớt CPU; khi hiện lại quay về nhịp cũ.
   // Dùng chuỗi setTimeout tự lập lại (thay vì setInterval cố định) để nhịp đổi theo trạng thái tab.

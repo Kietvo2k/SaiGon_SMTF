@@ -23,7 +23,7 @@ test('P1-11: buildFlowArrows32 — mỗi làn đủ hạng một mũi mỗi FLOW
   const arrows = buildFlowArrows32({ net, sim });
   const lane0 = arrows.filter(a => a.lane === 0), lane1 = arrows.filter(a => a.lane === 1);
   assert.equal(lane0.length, Math.ceil(130 / FLOW_ARROW_GAP_M_32), 'lane 130 m → 3 mũi');
-  assert.equal(lane1.length, 1, 'lane 40 m → 1 mũi');
+  assert.equal(lane1.length, Math.ceil(40 / FLOW_ARROW_GAP_M_32), 'lane 40 m đúng số mũi theo khoảng cách cấu hình');
   // làn hạng thấp bị loại
   const low = fixture({ rank: [1, 1] });
   assert.equal(buildFlowArrows32({ net: low.net, sim: low.sim }).length, 0, 'hạng < tertiary không vẽ');

@@ -6,7 +6,9 @@ import {
   CITY_LOCK_32_VERSION, LOCKED_REGION_IDS_32, LOCK_LABEL_32,
   normalizeRoadClass32, roadClassRank32, isMinorRoadClass32, segmentDistance32,
   selectNorthBuildings32, lockRoadFilter32, northCameraLimits32, clampNorthCamera32, lockRegionLabels32,
-  NORTH_KEEP_BUILDING_MAX_M_32, NORTH_SIGNAL_RADIUS_M_32, NORTH_MIN_SIM_RANK_32, LOCKED_MIN_RENDER_RANK_32
+  NORTH_KEEP_BUILDING_MAX_M_32, NORTH_SIGNAL_RADIUS_M_32, NORTH_MIN_SIM_RANK_32, LOCKED_MIN_RENDER_RANK_32,
+  rectSegmentDistance32, buildCorridorGrid32, fitNorthBox32,
+  NORTH_BOX_INSET_M_32, NORTH_BOX_GAP_M_32, NORTH_BOX_MIN_SIDE_M_32
 } from '../city-lock-32.js?v=32a';
 
 const road = (id, type, ...pts) => ({ id, type, c: pts });
@@ -38,6 +40,72 @@ test('segmentDistance32 = khoảng cách điểm tới đoạn', () => {
   assert.equal(Math.round(segmentDistance32(0, 5, [0, 0, 10, 0])), 5);
   assert.equal(Math.round(segmentDistance32(-3, 0, [0, 0, 10, 0])), 3);
   assert.equal(Math.round(segmentDistance32(5, 0, [0, 0, 10, 0])), 0);
+});
+
+// Road-fix A · H-01…H-04: khoảng cách phải đo theo HÌNH CHỮ NHẬT (footprint hộp) tới tim/mép đường,
+// không phải tâm hộp; corridor gồm cả tertiary/residential/service.
+test('rectSegmentDistance32 = khoảng cách hình chữ nhật tới đoạn, 0 khi chạm/cắt', () => {
+  // Hộp [0..10]×[0..10]; đoạn thẳng đứng x=20 → 10 m.
+  assert.equal(rectSegmentDistance32(0, 0, 10, 10, [20, -5, 20, 15]), 10);
+  // Đoạn chạy xuyên hộp → 0.
+  assert.equal(rectSegmentDistance32(0, 0, 10, 10, [-5, 5, 15, 5]), 0);
+  // Đoạn nằm trọn trong hộp → 0.
+  assert.equal(rectSegmentDistance32(0, 0, 10, 10, [2, 2, 8, 8]), 0);
+  // Đoạn chéo ngoài, gần góc (10,10): cách góc 2√2.
+  const d = rectSegmentDistance32(0, 0, 10, 10, [12, 12, 20, 20]);
+  assert.ok(Math.abs(d - Math.hypot(2, 2)) < 1e-9, `góc ${d}`);
+  // Đoạn song song trên cao hơn hộp 3 m.
+  assert.equal(rectSegmentDistance32(0, 0, 10, 10, [0, 13, 10, 13]), 3);
+});
+
+test('buildCorridorGrid32 nhận đường tertiary và trả khe mép hộp → mép làn', () => {
+  const roads = [
+    { id: 1, type: 'tertiary', c: [[0, 0], [100, 0]] },   // nửa làn 4 m
+    { id: 2, type: 'primary', c: [[0, 500], [100, 500]] }
+  ];
+  const grid = buildCorridorGrid32(roads, { halfWidthOf: r => (r.type === 'primary' ? 7 : 4), cellM: 32 });
+  // Hộp cách tim tertiary 8 m → mép hộp cách tim 8, khe tới mép làn = 8 − 4 = 4.
+  assert.equal(Math.round(grid.nearestGap(20, 8, 30, 18) * 100) / 100, 4);
+  // Hộp đè tim → khe âm bằng −4.
+  assert.equal(grid.nearestGap(20, -5, 30, 5), -4);
+  // Xa mọi đường → Infinity.
+  assert.equal(grid.nearestGap(500, 500, 510, 510), Infinity);
+});
+
+test('fitNorthBox32: hộp 19,8×21,1 lấn 4,0 m thụt vừa đủ tới khe ≥ 0,5 m, giữ tâm', () => {
+  const roads = [{ id: 9, type: 'tertiary', c: [[-600, -1489.8], [-400, -1489.8]] }];   // tim trục X, nửa làn 4
+  const grid = buildCorridorGrid32(roads, { halfWidthOf: () => 4, cellM: 32 });
+  // Hộp 19,8 × 21,1 m, mép dưới nằm trong làn (tim −1489,8; mép làn −1485,8).
+  const box = { minX: -525.37, minZ: -1487.0, maxX: -505.57, maxZ: -1465.9 };
+  const fit = fitNorthBox32(box, grid);
+  assert.equal(fit.fitted, true, JSON.stringify(fit));
+  assert.ok(fit.gap >= NORTH_BOX_GAP_M_32 - 1e-9, `khe ${fit.gap}`);
+  assert.ok(fit.maxX - fit.minX >= NORTH_BOX_MIN_SIDE_M_32);
+  assert.ok(fit.maxZ - fit.minZ >= NORTH_BOX_MIN_SIDE_M_32);
+  // Tâm không đổi.
+  assert.ok(Math.abs((fit.minX + fit.maxX) / 2 - (box.minX + box.maxX) / 2) < 1e-9);
+  assert.ok(fit.inset > NORTH_BOX_INSET_M_32);
+});
+
+test('fitNorthBox32: hộp có tâm nằm trên tim đường không thể cứu bằng thụt → bỏ (H-01)', () => {
+  const roads = [{ id: 9, type: 'tertiary', c: [[-600, -1489.8], [-400, -1489.8]] }];
+  const grid = buildCorridorGrid32(roads, { halfWidthOf: () => 4, cellM: 32 });
+  const box = { minX: -525.37, minZ: -1500.37, maxX: -505.57, maxZ: -1479.27 };
+  const fit = fitNorthBox32(box, grid);
+  assert.equal(fit.fitted, false);
+  assert.equal(fit.reason, 'min-side');
+});
+
+test('fitNorthBox32: hộp quá nhỏ sau khi thụt thì bỏ, hộp xa đường giữ nguyên inset', () => {
+  const roads = [{ id: 9, type: 'primary', c: [[0, 0], [100, 0]] }];
+  const grid = buildCorridorGrid32(roads, { halfWidthOf: () => 7, cellM: 32 });
+  const tiny = fitNorthBox32({ minX: 10, minZ: 6, maxX: 16, maxZ: 12 }, grid);
+  assert.equal(tiny.fitted, false);
+  assert.equal(tiny.reason, 'min-side');
+  const far = fitNorthBox32({ minX: 10, minZ: 40, maxX: 26, maxZ: 56 }, grid);
+  assert.equal(far.fitted, true);
+  assert.equal(far.inset, NORTH_BOX_INSET_M_32);
+  assert.ok(far.gap >= 26, `khe xa ${far.gap}`);
 });
 
 test('selectNorthBuildings32: giữ nhà khu Bắc ≤ 40 m tới tim đường lớn, giữ 100 % signature, bỏ nhà khu khác', () => {

@@ -323,30 +323,22 @@ for(let bi=0;bi<renderBuildings.length;bi++){
 
 // M2a — nhà thường khu Bắc giữ lại (tâm ≤ 40 m tim trunk/primary/secondary; chế độ lite ≤ 26 m) vẽ bằng
 // MỘT InstancedMesh hộp xám: mái phẳng, không texture, 1 draw call; chi tiết facet của nhóm này đã bỏ ở vòng lặp trên.
-// Bản trình diễn v2 (P1-5): bounding-box thụt vào mỗi phía NORTH_BOX_INSET_M_32 — hết đè corridor mặt đường.
+// Road-fix A: hộp nhà khu Bắc được thụt vừa đủ để MÉP hộp cách MÉP làn ≥ 0,5 m trên MỌI đường
+// được vẽ (kể cả tertiary/residential/service). Bản 32a chỉ so tâm hộp với đường lớn nên 8 hộp
+// vẫn đè làn (H-01…H-04). Hộp sát đường bị thu nhỏ, hộp xa đường giữ nguyên cỡ (không xóa hàng loạt).
 if(lock32&&lock32.boxes.length){
   const lockBoxMaterial=new THREE.MeshStandardNodeMaterial({color:'#a9aaa3',roughness:.96,metalness:.01});
   const boxDummy=new THREE.Object3D();
-  const inset=lock32.mod.NORTH_BOX_INSET_M_32;
-  // Lọc lại lần cuối: hộp nhà nào sau khi thụt vẫn chạm corridor đường lớn thì bỏ hẳn.
-  // Trước đây các hộp 20–60 m nằm đè lên mặt nhựa, che mất làn xe và dải nhiệt.
+  const insetBase=lock32.mod.NORTH_BOX_INSET_M_32,gapTarget=lock32.mod.NORTH_BOX_GAP_M_32,minSide=lock32.mod.NORTH_BOX_MIN_SIDE_M_32,maxSide=lock32.mod.NORTH_BOX_MAX_SIDE_M_32;
   const visibleBoxes=[];
   const signalNodes=(smartPrep&&Array.isArray(smartPrep.nodeMap)?smartPrep.nodeMap:[]).map(node=>({x:node.x,z:node.z}));
-  // Quanh CẢ 10 nút đèn (không chỉ Bac-02): so hộp với mọi đoạn đường gần nút, kể cả đường nhỏ.
-  // Trước đây chỉ lọc quanh Bac-02 nên hộp nhà vẫn nằm trên làn ở Hàng Xanh/Cầu Thị Nghè.
   // Bảng bề rộng cục bộ: biến `widths` toàn cục khởi tạo sau khối dựng hộp nhà.
   const boxWidths={motorway:16,trunk:15,primary:14,secondary:11,tertiary:8,residential:5,living_street:4,service:3.5,unclassified:5,footway:2.5,pedestrian:12,cycleway:2,path:1.5};
-  const localSegments=[];
-  for(let i=0;i<D.roads.length;i++){
-    if(D.roads[i].tunnel)continue;
-    const halfRoad=roadWidth31(D.roads[i],boxWidths)/2;
-    for(const seg of lock32.mod.roadSegments32(D.roads[i])){
-      // Chỉ giữ đoạn có ít nhất một nút đèn trong 300 m; đoạn cắt qua vùng nút vẫn được giữ.
-      const near=signalNodes.some(node=>lock32.mod.segmentDistance32(node.x,node.z,seg)<300);
-      if(near)localSegments.push([seg[0],seg[1],seg[2],seg[3],halfRoad]);
-    }
-  }
-  const nearSignal=(cx,cz)=>signalNodes.some(node=>Math.hypot(cx-node.x,cz-node.z)<300);
+  // Corridor của mọi đường XE THẬT SỰ được vẽ (bỏ tunnel, skipRender=hide, road bị khóa khu và
+  // footway/path/vỉa hè — đường đi bộ không phải làn xe, không bắt hộp nhà thụt theo).
+  const corridor=lock32.mod.buildCorridorGrid32(D.roads,{cellM:32,
+    halfWidthOf:road=>roadWidth31(road,boxWidths)/2,
+    filter:(road,index)=>!road.tunnel&&!lock32.mod.isWalkRoadClass32(road.type)&&window.ROAD_GRAPH_31.roads[index]?.skipRender!=='hide'&&!(lock32.hidden&&lock32.hidden.has(index))});
   // Không dựng hộp nhà trên mặt cầu: các hộp trắng nằm trên Cầu Thị Nghè/Cầu Sài Gòn
   // trông như "kẹt" và che mặt cầu. Lọc theo elevationClass của graph.
   const bridgeSegments=[];
@@ -358,24 +350,24 @@ if(lock32&&lock32.boxes.length){
     for(const seg of lock32.mod.roadSegments32(D.roads[i]))bridgeSegments.push([seg[0],seg[1],seg[2],seg[3],halfRoad]);
   }
   const touchesBridge=(cx,cz,radius)=>bridgeSegments.some(seg=>lock32.mod.segmentDistance32(cx,cz,seg)<seg[4]+radius+1.2);
+  let shrunk=0,droppedMinSide=0,droppedHuge=0,droppedClear=0,droppedBridge=0,droppedCenter=0;
   for(const building of lock32.boxes){
     let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
     for(const point of building.r[0]){if(point[0]<minX)minX=point[0];if(point[0]>maxX)maxX=point[0];if(point[1]<minZ)minZ=point[1];if(point[1]>maxZ)maxZ=point[1];}
-    const halfX=Math.max(1,(maxX-minX-inset*2)/2),halfZ=Math.max(1,(maxZ-minZ-inset*2)/2);
     const cx=(minX+maxX)/2,cz=(minZ+maxZ)/2;
     // Giữ khoảng mở ngắn quanh nút đèn để camera trạm thấy mặt đường và xe.
-    if(signalNodes.some(node=>Math.hypot(cx-node.x,cz-node.z)<45))continue;
-    // Hộp > 32 m mỗi phía là nhà kho/công trình lớn, không còn là "nhà hộp" ven đường.
-    if(Math.max(halfX,halfZ)>16)continue;
+    if(signalNodes.some(node=>Math.hypot(cx-node.x,cz-node.z)<45)){droppedCenter++;continue;}
+    // Quanh nút đèn (≤150 m) giữ thêm 2,5 m thay vì 0,5 m để không che tầm nhìn trạm.
+    const nearSignal=signalNodes.some(node=>Math.hypot(cx-node.x,cz-node.z)<150);
+    const fit=lock32.mod.fitNorthBox32({minX,minZ,maxX,maxZ},corridor,{inset:insetBase,gapM:nearSignal?Math.max(gapTarget,2.5):gapTarget,minSideM:minSide,maxPasses:8});
+    if(!fit.fitted){if(fit.reason==='min-side')droppedMinSide++;else droppedClear++;continue;}
+    const halfX=(fit.maxX-fit.minX)/2,halfZ=(fit.maxZ-fit.minZ)/2;
+    // Hộp > 40 m là nhà kho/công trình lớn, không còn là "nhà hộp" ven đường (đo sau khi fit).
+    if(Math.max(halfX,halfZ)>maxSide/2){droppedHuge++;continue;}
     const radius=Math.hypot(halfX,halfZ);
-    if(touchesBridge(cx,cz,radius))continue;
-    if(nearSignal(cx,cz)){
-      if(localSegments.some(seg=>lock32.mod.segmentDistance32(cx,cz,seg)<seg[4]+radius+4))continue;
-    }else{
-      const nearest=lock32.grid&&typeof lock32.grid.nearest==='function'?lock32.grid.nearest(cx,cz):Infinity;
-      if(nearest<12+Math.min(halfX,halfZ)*.5)continue;
-    }
-    visibleBoxes.push({minX,minZ,maxX,maxZ,min:building.min,h:building.h,cx,cz});
+    if(touchesBridge(cx,cz,radius)){droppedBridge++;continue;}
+    if(fit.inset>insetBase+0.05)shrunk++;
+    visibleBoxes.push({minX:fit.minX,minZ:fit.minZ,maxX:fit.maxX,maxZ:fit.maxZ,min:building.min,h:building.h,cx,cz});
   }
   const lockBoxes32=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),lockBoxMaterial,Math.max(1,visibleBoxes.length));
   visibleBoxes.forEach((building,i)=>{
@@ -383,13 +375,13 @@ if(lock32&&lock32.boxes.length){
     const boxBase=building.min+1.5,boxTop=Math.max(boxBase+2,Math.min(building.h,24)+1.5);
     boxDummy.position.set(building.cx,(boxBase+boxTop)/2,building.cz);
     boxDummy.rotation.set(0,0,0);
-    boxDummy.scale.set(Math.max(2,building.maxX-building.minX-inset*2),boxTop-boxBase,Math.max(2,building.maxZ-building.minZ-inset*2));
+    boxDummy.scale.set(Math.max(2,building.maxX-building.minX),boxTop-boxBase,Math.max(2,building.maxZ-building.minZ));
     boxDummy.updateMatrix();lockBoxes32.setMatrixAt(i,boxDummy.matrix);
   });
   lockBoxes32.count=visibleBoxes.length;
   lockBoxes32.name='M2a · hộp nhà tối giản khu Bắc';lockBoxes32.receiveShadow=true;scene.add(lockBoxes32);
   lock32.boxMesh=lockBoxes32;
-  materialStatus.lock32.boxes={count:visibleBoxes.length,skipped:lock32.boxes.length-visibleBoxes.length,drawCalls:1};
+  materialStatus.lock32.boxes={count:visibleBoxes.length,skipped:lock32.boxes.length-visibleBoxes.length,drawCalls:1,shrunk,droppedMinSide,droppedHuge,droppedClear,droppedBridge,droppedCenter,insetM:insetBase,gapM:gapTarget,maxSideM:maxSide};
 }
 
 // M2c — không còn tấm phủ polygon 3 khu khóa: nó nằm trên mặt nước (y=0.7) nên che mất sông. Đất, công viên và nước khu khóa

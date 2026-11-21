@@ -183,7 +183,7 @@ test('đầu đèn bên phải vạch dừng, gom làn cùng hướng và dùng 
   const geo={lanePoint:(l,s,lat)=>({x:lat,z:s,tx:0,tz:1}),laneY:()=>1.2};
   const placements=signalApproachesOf32(net,geo,[{node_id:'HX-01',index:5}]);
   assert.equal(placements.length,2,'không nhân đầu đèn theo số làn');
-  assert.equal(placements[0].x,7.8); assert.equal(placements[0].z,70);
+  assert.equal(placements[0].x,10.5); assert.equal(placements[0].z,70);
   assert.equal(placements[0].groupIdx,1); assert.equal(placements[1].groupIdx,0);
   assert.ok(Math.abs(Math.cos(placements[0].yaw)+1)<1e-9,'mặt đèn quay về xe đang tới');
   assert.equal(placements[0].y,1.2,'theo cao độ đường');

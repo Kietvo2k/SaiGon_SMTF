@@ -98,8 +98,8 @@ export function paintVms32(ctx, msg, W = VMS_W_32, H = VMS_H_32) {
 
 // ---- bản trình diễn v2 (P1-11): dòng xe theo chiều — mũi tên trên từng làn, hướng theo chiều xe chạy,
 // độ đậm + kích thước theo mật độ xe của CHIỀU đó (không dùng mức nhiệt hai chiều của ribbon).
-export const FLOW_ARROW_GAP_M_32 = 60;
-export const FLOW_ARROW_BASE_M_32 = 2.4;
+export const FLOW_ARROW_GAP_M_32 = 36;
+export const FLOW_ARROW_BASE_M_32 = 1.7;
 export const FLOW_LIFT_M_32 = 0.78;
 export const FLOW_DENSITY_CAP_32 = 8;
 
@@ -140,8 +140,8 @@ export function paintFlowArrows32({ net, arrows, positions, colors, density, lev
     const d = density ? Math.min(FLOW_DENSITY_CAP_32, density[l]) : 0;
     const size = base * (1 + d * 0.09);
     const bright = 0.3 + 0.7 * (d / FLOW_DENSITY_CAP_32);
-    const idx = Math.max(0, HEAT_COLORS_32.indexOf(colorOf(levelOf(e))));
-    const rgb = palette[idx].map(c => Math.max(0.05, c * bright));
+    // Mũi tên dùng màu kem tương phản với dải nhiệt xanh/đỏ để hướng xe đọc được ở mọi mức.
+    const rgb = [1, 0.87, 0.38].map(c => Math.max(0.42, c * (0.55 + 0.45 * bright)));
     // hướng mũi: đầu tiến theo (tx, tz); đuôi mở rộng hai bên vuông góc.
     const tipX = P.x + P.tx * size, tipZ = P.z + P.tz * size;
     const backX = P.x - P.tx * size * 0.55, backZ = P.z - P.tz * size * 0.55;
@@ -182,7 +182,7 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
   bg.setIndex(new THREE.BufferAttribute(built.indices, 1));
   bg.computeBoundingSphere();
   const mat = new THREE.MeshBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.62, depthWrite: false, side: THREE.DoubleSide,
+    vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide,
     polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -16
   });
   const mesh = new THREE.Mesh(bg, mat);
@@ -202,7 +202,7 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
   flowGeo.setAttribute('position', flowPosAttr);
   flowGeo.setAttribute('color', flowColAttr);
   const flowMat = new THREE.MeshBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.88, depthWrite: false, side: THREE.DoubleSide,
+    vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide,
     polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -16
   });
   const flowMesh = new THREE.Mesh(flowGeo, flowMat);
@@ -212,7 +212,8 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
   flowMesh.visible = false;
   scene.add(flowMesh);
   let flowOn = false, lastFlowPaint = -Infinity;
-  const lanePointOf = (l, s, offset) => { const P = {}; geo.lanePoint(l, s, offset, P); return P; };
+  // lanePoint chỉ trả x/z/hướng; mũi tên cần thêm cao độ mặt làn, nếu thiếu y sẽ thành NaN và cả lớp biến mất.
+  const lanePointOf = (l, s, offset) => { const P = {}; geo.lanePoint(l, s, offset, P); P.y = geo.laneY(l, s); return P; };
   const paintFlow = live => {
     const density = laneDensityOf32(sim, net);
     paintFlowArrows32({ net, arrows, positions: flowPositions, colors: flowColors, density,
@@ -331,6 +332,7 @@ export function mountHeatPanel32(host, { onToggle = () => {}, onToggleFlow = () 
   return {
     toggleEl: toggle,
     setOn(on) { toggle.checked = !!on; },
+    setFlowOn(on) { flowToggle.checked = !!on; },
     setAlerts(alerts) {
       list.textContent = '';
       if (!alerts || !alerts.length) { list.append(row('Chưa có cảnh báo kẹt')); return 0; }

@@ -1,5 +1,134 @@
-html[data-submit-hud] :is(#cityNav, #story, #controls, #floodLab, [data-open-flood], #smartHud32) {
+html[data-submit-hud] :is(header.topbar, #cityNav, #story, #controls, #floodLab, [data-open-flood], #densitySuggest, #regionNotice, #resourceSaveChip32, .hud, .lock-label, .region-notice) {
   display: none !important;
+}
+/* Thanh KPI rời đã bỏ: người xem chỉ cần bản đồ ghim, panel và nav. */
+#submit-kpi-bar { display: none !important; }
+
+/* Trạm điều khiển: giữ panel tab hiện có (#smartHud32) nhưng đặt gọn bên phải.
+   Trước đây panel bị ẩn cùng HUD cũ nên thanh tra đèn và bàn cưỡng chế không bao giờ tới được mắt người xem. */
+#smartHud32 {
+  top: 64px !important;
+  right: 14px !important;
+  width: min(360px, calc(100vw - 28px)) !important;
+  /* Chừa đúng chiều cao #submit-hud + lề dưới + 8 px khe (submit-hud.js đo và ghi biến).
+     Trước đây trừ cứng 154 px nên 22 px cuối panel nằm sau thanh điều hướng ở 768/390. */
+  max-height: calc(100dvh - 64px - var(--submit-hud-reserve, 122px)) !important;
+  overflow-y: auto !important;
+  padding: 12px 14px !important;
+  border: 1px solid rgba(137, 216, 223, .32) !important;
+  border-radius: 14px !important;
+  background: rgba(9, 25, 31, .93) !important;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, .42) !important;
+  backdrop-filter: blur(9px);
+  scrollbar-width: thin;
+}
+
+#smartHud32.is-closed { display: none !important; }
+
+#smartHud32 .tl-tabs32 {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #0d252b !important;
+}
+
+#smartHud32 .si32__overview {
+  max-height: 216px;
+  overflow-y: auto;
+}
+
+#smartHud32 .enf32 {
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid rgba(245, 166, 82, .35);
+  border-radius: 12px;
+  background: rgba(74, 45, 8, .24);
+}
+
+#submit-kpi-bar {
+  position: fixed;
+  z-index: 19;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  max-width: calc(100vw - 500px);
+  min-height: 38px;
+  padding: 3px 5px;
+  border: 1px solid rgba(137, 216, 223, .3);
+  border-radius: 10px;
+  background: rgba(9, 25, 31, .9);
+  color: #f2f8f3;
+  font: 600 11px/1.2 system-ui, sans-serif;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .3);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+#submit-kpi-bar .kpi-item {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+
+#submit-kpi-bar .kpi-item + .kpi-item {
+  border-left: 1px solid rgba(137, 216, 223, .2);
+}
+
+#submit-kpi-bar b {
+  color: #ffd23f;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+#submit-kpi-bar small {
+  color: #9db8bf;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+#submit-kpi-bar .kpi-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: rgba(88, 201, 165, .12);
+  color: #b8f0d8;
+}
+
+#submit-kpi-bar .kpi-mode i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #58c9a5;
+  box-shadow: 0 0 0 3px rgba(88, 201, 165, .16);
+}
+
+#submit-hud [data-panel] {
+  background: #2c4a35;
+  color: #f3f8e9;
+}
+
+@media (max-width: 1100px) {
+  #smartHud32 { display: none !important; top: 112px !important; bottom: var(--submit-hud-reserve, 122px) !important; max-height: none !important; }
+  #smartHud32.is-open { display: block !important; }
+  #submit-kpi-bar { top: 62px; left: 10px; right: 10px; max-width: none; transform: none; }
+  #submit-kpi-bar .kpi-item { padding: 4px 6px; }
+  #submit-kpi-bar b { font-size: 12px; }
+}
+
+@media (max-width: 620px) {
+  #submit-kpi-bar { gap: 0; overflow-x: auto; }
+  #submit-kpi-bar .kpi-item { padding: 4px 6px; }
+  #submit-kpi-bar b { font-size: 11px; }
+  #submit-kpi-bar small { font-size: 7.5px; }
+  #submit-kpi-bar .kpi-mode { font-size: 8px; padding: 4px 6px; }
+  #smartHud32 { top: 108px !important; right: 8px !important; width: calc(100vw - 16px) !important; }
 }
 
 #submit-hud {

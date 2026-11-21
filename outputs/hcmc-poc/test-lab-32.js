@@ -13,9 +13,9 @@ export const NPC_CHOICES_32 = Object.freeze([1, 10, 50]);   // số xe thử ch�
 export const NPC_MAX_EXTRA_32 = 200;                       // trần xe thử được thêm cùng lúc
 
 export const TEST_LAB_TABS_32 = Object.freeze([
-  Object.freeze({ key: 'op', label: 'Vận hành' }),
-  Object.freeze({ key: 'signals', label: 'Đèn & dự báo' }),
-  Object.freeze({ key: 'test', label: 'Thử & spawn' })
+  Object.freeze({ key: 'op', label: 'Điều khiển' }),
+  Object.freeze({ key: 'signals', label: 'Đèn giao thông' }),
+  Object.freeze({ key: 'test', label: 'Thử nghiệm' })
 ]);
 
 // ---- CSS cục bộ: tối gọn, nền tối, không vỡ trên màn hình hẹp ----
@@ -168,8 +168,8 @@ export function mountTestLab32(host, { spawnNpc = null, clearNpcs = null, npcCou
   const note = doc.createElement('p');
   note.className = 'tl-note32';
   note.textContent = `Thêm ô tô và xe máy vào chỗ trống an toàn, tối đa ${NPC_MAX_EXTRA_32} xe thử. `
-    + `Nếu đã đầy, giảm mật độ trong tab Vận hành rồi thử lại. Dọn NPC không xóa vi phạm đã lưu. `
-    + `Bật “Khung bao xe” ở tab Đèn & dự báo để nhìn khung từng xe. `
+    + `Nếu đã đầy, giảm mật độ trong tab Điều khiển rồi thử lại. Dọn NPC không xóa vi phạm đã lưu. `
+    + `Bật “Hiện khung nhận diện xe” trong Chi tiết kỹ thuật của tab Đèn giao thông để nhìn khung từng xe. `
     + `Xe cứu thương dùng mục Kịch bản bên dưới; phần này đang ở mức thử, chưa mở rộng thêm.`;
 
   const count = doc.createElement('p');

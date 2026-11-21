@@ -231,9 +231,16 @@ export function createCameraCapture32({ renderer, scene, THREE, cameras, beforeR
   // Trạng thái cũ được lưu để khôi phục nguyên vẹn, vì update() của đèn đặt lại visible mỗi khung.
   const hideForCapture = rig => {
     const { hud, heads } = targetsOf();
-    const all = [...hud, ...heads];
+    // Lớp chỉ đường (nhiệt, mũi tên, VMS, ghim cụm đèn) không thuộc cảnh camera;
+    // ẩn khi chụp để ảnh bằng chứng/khung camera chỉ còn xe, đường và tín hiệu thật.
+    const overlays = [];
+    scene.traverse(o => {
+      if (o.name && (o.name === 'heat-ribbon-32' || o.name === 'heat-flow-arrows-32' || o.name === 'signal-pin-32' || o.name === 'signal-area-pin-32' || o.name === 'signal-timing-32' || o.name === 'emergency-label-32' || o.name === 'incident-label-32' || /^vms-32-/.test(o.name))) overlays.push(o);
+    });
+    const all = [...hud, ...heads, ...overlays];
     const saved = all.map(o => o.visible);
     for (const o of hud) o.visible = false;
+    for (const o of overlays) o.visible = false;
     const keep = pickCaptureHeads32(rig.cam, headDescriptors());
     heads.forEach((o, i) => { o.visible = i === keep; });
     return { all, saved };

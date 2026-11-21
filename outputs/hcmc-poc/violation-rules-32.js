@@ -8,7 +8,10 @@
 // Tỉ lệ (M5b-1b): đo trên 8 phút sim cao điểm ×10 để RED-LIGHT và LANE nổi bật; NO-HELMET/OVERLOAD/PHONE ít hơn.
 export const VIOLATION_RULES_32_VERSION = 'violation-rules-32b';
 
-export const RED_RATE_32 = 0.8;             // xác suất chủ động vượt đỏ trong một chu kỳ (spec §7.2)
+// M5b-v3: hạ từ 0,8 → 0,04. Tỉ lệ cũ khiến 80 % xe "được phép" vượt đỏ mỗi chu kỳ nên vượt đỏ
+// trông như mặc định (đo 10 seed: 16 % lượt qua vạch là đỏ). Thực tế chỉ 2–5 % tài xế cố ý vượt;
+// 0,04 cho đúng dải đó và để các ca vượt đỏ còn lại là ngoại lệ nhìn thấy được.
+export const RED_RATE_32 = 0.04;            // xác suất chủ động vượt đỏ trong một chu kỳ (spec §7.2)
 export const RED_WINDOW_S_32 = 3;           // s: chỉ vượt trong 0–3 s đầu của đỏ
 export const SPEED_MUL_32 = 1.5;            // hệ số tốc độ mong muốn của xe chạy quá tốc độ
 export const SPEED_OVER_KMH_32 = 5;         // ngưỡng vượt (km/h) so với giới hạn đoạn (điểm đo tốc độ ghi khi vượt)
@@ -51,10 +54,10 @@ const unitOf = (seed, slot, gen, salt) =>
   hash32_32((seed ^ Math.imul(slot, 0x9e3779b1) ^ Math.imul(gen + 1, 0x85ebca77) ^ salt) >>> 0) / 4294967296;
 
 // Bảng lỗi theo loại xe: [mã, xác suất] — cộng dồn, một xe tối đa một lỗi trạng thái/hành vi trong một thế hệ.
-// M5b-1b so với M5b-1: LANE ô tô 1,5 % → 30 %; RED_RATE 3 % → 80 %; NO-HELMET xe máy 4 % → 2 %; OVERLOAD 2 % → 1,2 %;
-// PHONE ô tô 1,5 % → 1,2 %, xe máy 1 % → 0,6 %; OVERLOAD xe máy 2 % → 1,8 %; SPEED/PARK xe máy 3 %/0,8 % → 12 %/12 % (đoạn đo và vùng cấm đỗ nằm trên làn xe máy).
+// M5b-v3: NO-HELMET xe máy 2 % → 6 % để nhìn thấy trên đường (renderer ẩn mũ theo cùng bảng),
+// vẫn tất định theo (seed, slot, gen). RED_RATE 80 % → 4 % (xem trên).
 const TABLE_CAR = [['LANE', 0.3], ['SPEED', 0.03], ['PARK', 0.008], ['WRONG-TURN', 0.015], ['PHONE', 0.012], ['NO-SEATBELT', 0.05]];
-const TABLE_MOTO = [['SPEED', 0.12], ['PARK', 0.12], ['WRONG-TURN', 0.015], ['NO-HELMET', 0.02], ['OVERLOAD', 0.018], ['PHONE', 0.006]];
+const TABLE_MOTO = [['SPEED', 0.12], ['PARK', 0.12], ['WRONG-TURN', 0.015], ['NO-HELMET', 0.06], ['OVERLOAD', 0.018], ['PHONE', 0.006]];
 const TABLE_HEAVY = [['SPEED', 0.02]];
 
 // Mã lỗi (hành vi hoặc trạng thái) gắn với xe (slot = chỉ số xe + 1, gen = thế hệ sau respawn), hoặc null.

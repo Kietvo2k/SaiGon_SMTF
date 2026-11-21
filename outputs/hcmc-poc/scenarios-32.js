@@ -277,6 +277,23 @@ export function createBlockProps32({ THREE, scene, traffic, net }) {
     cones.push(cone, base);
   }
   group.add(car, ...cones);
+  // Nhãn nổi để sự cố không bị lẫn với hàng xe đang chạy trên làn.
+  // Canvas rộng 512: chuỗi "SỰ CỐ · CHẶN LÀN" ở 44 px đo được ~410 px, canvas 384 cũ bị cắt chữ.
+  const labelCanvas = document.createElement('canvas'); labelCanvas.width = 512; labelCanvas.height = 128;
+  const labelTexture = new THREE.CanvasTexture(labelCanvas);
+  const labelSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture, transparent: true, depthTest: false, depthWrite: false }));
+  labelSprite.position.set(0, 4.4, 0); labelSprite.scale.set(6.4, 1.6, 1); labelSprite.renderOrder = 18; labelSprite.name = 'incident-label-32';
+  group.add(labelSprite);
+  {
+    const ctx = labelCanvas.getContext('2d'), w = labelCanvas.width, h = labelCanvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(70,12,12,.95)'; ctx.strokeStyle = '#ff6b5e'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(8, 8, w - 16, h - 16, 24) : ctx.rect(8, 8, w - 16, h - 16);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ffd9d3'; ctx.font = '800 44px system-ui,Segoe UI,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('SỰ CỐ · CHẶN LÀN', w / 2, h / 2 + 2);
+    labelTexture.needsUpdate = true;
+  }
   let spotNow = null;
   // Đa giác phẳng (x,z) → mặt tam giác quạt từ tâm; y = mặt đường tại điểm tham chiếu + 0,25 m.
   function showFlood(poly, yRef) {

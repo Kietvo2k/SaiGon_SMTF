@@ -23,7 +23,8 @@ function setup(behavior = null) {
   const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
   const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
   const controller = createSignalController32({ net, sim: null, mode: 'fixed' });
-  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: Infinity, seed: SEED, behavior });
+  // Test này đo cờ P1-10 (vàng + len lối), không đo lõi behaviorV3: tắt V3 để so sánh đúng một biến.
+  const sim = createTrafficSim31(net, { signalPlan, controller, breakerS: Infinity, seed: SEED, behavior: behavior ? { ...behavior, behaviorV3: false } : null });
   controller.attachSim(sim);
   return { net, sim, controller, signalPlan };
 }

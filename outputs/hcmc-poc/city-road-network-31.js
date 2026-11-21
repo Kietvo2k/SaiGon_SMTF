@@ -229,7 +229,7 @@ export async function buildRoadNetwork31({roads,graph,widths,hiddenRoads=null,bu
 
   // 1) Giao lộ: cắt ngắn từng nhánh tới giao điểm mép với nhánh kề, rồi lấy bao lồi các đầu mép.
   const junctions=[],armTrim=new Map();
-  let junctionCandidates=0;
+  let junctionCandidates=0,curbAprons=0;
   for(const node of graph.nodes){
     for(const group of ['asphalt','pedestrian']){
       const adj=groupArms(node,group);if(adj.length<3)continue;
@@ -265,6 +265,19 @@ export async function buildRoadNetwork31({roads,graph,widths,hiddenRoads=null,bu
       const elevated=polygon.some(q=>isElevated(q[1]));
       const target=buckets[bucketKey(group,elevated)];
       for(let k=1;k<polygon.length-1;k++)pushTri(target,polygon[0],polygon[k+1],polygon[k]);
+      // Road-fix A (R-02/R-03): vành vỉa hè quanh nút. Cùng bao lồi miệng nhánh nhưng rộng thêm
+      // CURB_EXTRA_M/2 mỗi phía, vẽ ở lớp bó vỉa (dưới asphalt) để lấp dải vỉa hè bị khoét ở nhánh dốc
+      // và góc nút. Asphalt của nút (lớp dưới) vẫn phủ kín lòng nút nên không đổi hình dạng mặt đường.
+      if(group==='asphalt'){
+        const curbCorners=[[node.x,node.y,node.z]];
+        for(const arm of arms){
+          const p=pointOnArm(arm.geo,arm.end,arm.t),w=arm.hw+CURB_EXTRA_M/2,nx=-p.tz*w,nz=p.tx*w;
+          curbCorners.push([p.x+nx,p.y,p.z+nz],[p.x-nx,p.y,p.z-nz]);
+        }
+        const curbPolygon=convexHull(curbCorners),edgeTarget=buckets[bucketKey('edge',elevated)];
+        for(let k=1;k<curbPolygon.length-1;k++)pushTri(edgeTarget,curbPolygon[0],curbPolygon[k+1],curbPolygon[k]);
+        curbAprons++;
+      }
       junctions.push({node:node.id,group,x:node.x,y:node.y,z:node.z,elevated,polygon,arms:arms.map(arm=>({edge:arm.edge,end:arm.end,t:arm.t}))});
     }
   }
@@ -450,7 +463,7 @@ export async function buildRoadNetwork31({roads,graph,widths,hiddenRoads=null,bu
   return {
     groundY,buckets,junctions,piecesByRoad,markingPieces,vertexY,roadY,
     stats:{
-      roadsDrawn:piecesByRoad.filter(list=>list.length).length,pieces:pieceCount,curbChains,junctionCandidates,junctionPolygons:junctions.length,
+      roadsDrawn:piecesByRoad.filter(list=>list.length).length,pieces:pieceCount,curbChains,junctionCandidates,junctionPolygons:junctions.length,curbAprons,
       medianQuads,medianPairs:medianPairs.size,medianHoles:holes.filled,medianHoleCells:holes.cells,medianHoleTailCells:holes.tailCells,medianHoleRejected:holes.rejected,medianHoleMs:holesMs,elevatedRoads,markingPieces:markingPieces.length,
       triangles,totalTriangles:Object.values(triangles).reduce((sum,value)=>sum+value,0),buildMs:Math.round(performance.now()-started)
     }

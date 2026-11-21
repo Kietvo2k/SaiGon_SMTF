@@ -45,7 +45,13 @@ export function createSignalController32({ net, sim = null, mode = 'fixed', para
   let simRef = sim;
   const osmToIndex = new Map(net.G.nodes.map((n, i) => [Number(n.id), i]));
   const indexToNodeId = new Map();
-  for (const row of SIGNAL_PLAN_32) { const idx = osmToIndex.get(row.osm_id); if (idx !== undefined) indexToNodeId.set(idx, row.node_id); }
+  // Public north dùng signalRows riêng (10 cụm Bắc), không phải 6 dòng HX mặc định.
+  // Trước đây map chỉ có HX nên normNode('Bac-02') trả -1 → rơi về chu kỳ 31A và mất "Xanh kế hoạch".
+  const planRows = Array.isArray(net.signalPlan?.rows) && net.signalPlan.rows.length ? net.signalPlan.rows : SIGNAL_PLAN_32;
+  for (const row of planRows) {
+    const idx = osmToIndex.get(Number(row.osm_id)) ?? osmToIndex.get(row.osm_id);
+    if (idx !== undefined) indexToNodeId.set(idx, row.node_id);
+  }
   const nodeIdToIndex = new Map([...indexToNodeId].map(([i, nid]) => [nid, i]));
   const normNode = node => (typeof node === 'string'
     ? (nodeIdToIndex.get(node) ?? net.G.nodes.findIndex(x => String(x.id) === node))
