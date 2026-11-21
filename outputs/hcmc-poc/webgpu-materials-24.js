@@ -266,7 +266,7 @@ if(isSmart32){
   const buildingsFilter=lockMod32.selectNorthBuildings32({buildings:renderBuildings,roads:D.roads,regionOf,isSignature:id=>signatureGate.isSignatureBuilding(id),
     maxM:modePreset.id==='lite'?lockMod32.NORTH_KEEP_BUILDING_LITE_M_32:lockMod32.NORTH_KEEP_BUILDING_MAX_M_32});
   const cameraLimits=lockMod32.northCameraLimits32(REGIONS_31.find(region=>region.id===lockMod32.NORTH_REGION_ID_32).bbox);
-  lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints,buildings:buildingsFilter,boxes:[],cameraLimits,
+  lock32={mod:lockMod32,hidden:roadsFilter.hidden,simHidden,stats:roadsFilter.stats,signalPoints,buildings:buildingsFilter,grid:buildingsFilter.grid,boxes:[],cameraLimits,
     signatureHiddenIdx:sigIdx,signatureHiddenIds:sigIds,bridgeHiddenIdx:bridgeHide,bridgeKeptIdx:bridgeKeep,bldCenter,registry:registry32,hiddenModules:new Set(),moduleRefs:{}};
   // M2c — mặt nạ khu khóa 1024² (≈6,6 m/ô) lấy mẫu bằng texture: nền đất, công viên, nước khu khóa đổi màu, sông vẫn thấy.
   const maskCfg=lockMod32.LOCK_MASK_32;
@@ -326,21 +326,70 @@ for(let bi=0;bi<renderBuildings.length;bi++){
 // Bản trình diễn v2 (P1-5): bounding-box thụt vào mỗi phía NORTH_BOX_INSET_M_32 — hết đè corridor mặt đường.
 if(lock32&&lock32.boxes.length){
   const lockBoxMaterial=new THREE.MeshStandardNodeMaterial({color:'#a9aaa3',roughness:.96,metalness:.01});
-  const lockBoxes32=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),lockBoxMaterial,lock32.boxes.length);
   const boxDummy=new THREE.Object3D();
   const inset=lock32.mod.NORTH_BOX_INSET_M_32;
-  lock32.boxes.forEach((building,i)=>{
+  // Lọc lại lần cuối: hộp nhà nào sau khi thụt vẫn chạm corridor đường lớn thì bỏ hẳn.
+  // Trước đây các hộp 20–60 m nằm đè lên mặt nhựa, che mất làn xe và dải nhiệt.
+  const visibleBoxes=[];
+  const signalNodes=(smartPrep&&Array.isArray(smartPrep.nodeMap)?smartPrep.nodeMap:[]).map(node=>({x:node.x,z:node.z}));
+  // Quanh CẢ 10 nút đèn (không chỉ Bac-02): so hộp với mọi đoạn đường gần nút, kể cả đường nhỏ.
+  // Trước đây chỉ lọc quanh Bac-02 nên hộp nhà vẫn nằm trên làn ở Hàng Xanh/Cầu Thị Nghè.
+  // Bảng bề rộng cục bộ: biến `widths` toàn cục khởi tạo sau khối dựng hộp nhà.
+  const boxWidths={motorway:16,trunk:15,primary:14,secondary:11,tertiary:8,residential:5,living_street:4,service:3.5,unclassified:5,footway:2.5,pedestrian:12,cycleway:2,path:1.5};
+  const localSegments=[];
+  for(let i=0;i<D.roads.length;i++){
+    if(D.roads[i].tunnel)continue;
+    const halfRoad=roadWidth31(D.roads[i],boxWidths)/2;
+    for(const seg of lock32.mod.roadSegments32(D.roads[i])){
+      // Chỉ giữ đoạn có ít nhất một nút đèn trong 300 m; đoạn cắt qua vùng nút vẫn được giữ.
+      const near=signalNodes.some(node=>lock32.mod.segmentDistance32(node.x,node.z,seg)<300);
+      if(near)localSegments.push([seg[0],seg[1],seg[2],seg[3],halfRoad]);
+    }
+  }
+  const nearSignal=(cx,cz)=>signalNodes.some(node=>Math.hypot(cx-node.x,cz-node.z)<300);
+  // Không dựng hộp nhà trên mặt cầu: các hộp trắng nằm trên Cầu Thị Nghè/Cầu Sài Gòn
+  // trông như "kẹt" và che mặt cầu. Lọc theo elevationClass của graph.
+  const bridgeSegments=[];
+  const bridgeClasses=new Set(['river','canal','overpass','low']);
+  for(let i=0;i<D.roads.length;i++){
+    const elevation=window.ROAD_GRAPH_31.roads[i]&&window.ROAD_GRAPH_31.roads[i].elevationClass;
+    if(!bridgeClasses.has(elevation))continue;
+    const halfRoad=roadWidth31(D.roads[i],boxWidths)/2;
+    for(const seg of lock32.mod.roadSegments32(D.roads[i]))bridgeSegments.push([seg[0],seg[1],seg[2],seg[3],halfRoad]);
+  }
+  const touchesBridge=(cx,cz,radius)=>bridgeSegments.some(seg=>lock32.mod.segmentDistance32(cx,cz,seg)<seg[4]+radius+1.2);
+  for(const building of lock32.boxes){
     let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
     for(const point of building.r[0]){if(point[0]<minX)minX=point[0];if(point[0]>maxX)maxX=point[0];if(point[1]<minZ)minZ=point[1];if(point[1]>maxZ)maxZ=point[1];}
-    const boxBase=building.min+1.5,boxTop=Math.max(boxBase+2,building.h+1.5);
-    boxDummy.position.set((minX+maxX)/2,(boxBase+boxTop)/2,(minZ+maxZ)/2);
+    const halfX=Math.max(1,(maxX-minX-inset*2)/2),halfZ=Math.max(1,(maxZ-minZ-inset*2)/2);
+    const cx=(minX+maxX)/2,cz=(minZ+maxZ)/2;
+    // Giữ khoảng mở ngắn quanh nút đèn để camera trạm thấy mặt đường và xe.
+    if(signalNodes.some(node=>Math.hypot(cx-node.x,cz-node.z)<45))continue;
+    // Hộp > 32 m mỗi phía là nhà kho/công trình lớn, không còn là "nhà hộp" ven đường.
+    if(Math.max(halfX,halfZ)>16)continue;
+    const radius=Math.hypot(halfX,halfZ);
+    if(touchesBridge(cx,cz,radius))continue;
+    if(nearSignal(cx,cz)){
+      if(localSegments.some(seg=>lock32.mod.segmentDistance32(cx,cz,seg)<seg[4]+radius+4))continue;
+    }else{
+      const nearest=lock32.grid&&typeof lock32.grid.nearest==='function'?lock32.grid.nearest(cx,cz):Infinity;
+      if(nearest<12+Math.min(halfX,halfZ)*.5)continue;
+    }
+    visibleBoxes.push({minX,minZ,maxX,maxZ,min:building.min,h:building.h,cx,cz});
+  }
+  const lockBoxes32=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),lockBoxMaterial,Math.max(1,visibleBoxes.length));
+  visibleBoxes.forEach((building,i)=>{
+    // Nhà hộp phổ thông chỉ để tạo khối đô thị; chặn chiều cao để không dựng tường trắng che trọn nút giao.
+    const boxBase=building.min+1.5,boxTop=Math.max(boxBase+2,Math.min(building.h,24)+1.5);
+    boxDummy.position.set(building.cx,(boxBase+boxTop)/2,building.cz);
     boxDummy.rotation.set(0,0,0);
-    boxDummy.scale.set(Math.max(2,maxX-minX-inset*2),boxTop-boxBase,Math.max(2,maxZ-minZ-inset*2));
+    boxDummy.scale.set(Math.max(2,building.maxX-building.minX-inset*2),boxTop-boxBase,Math.max(2,building.maxZ-building.minZ-inset*2));
     boxDummy.updateMatrix();lockBoxes32.setMatrixAt(i,boxDummy.matrix);
   });
+  lockBoxes32.count=visibleBoxes.length;
   lockBoxes32.name='M2a · hộp nhà tối giản khu Bắc';lockBoxes32.receiveShadow=true;scene.add(lockBoxes32);
   lock32.boxMesh=lockBoxes32;
-  materialStatus.lock32.boxes={count:lock32.boxes.length,drawCalls:1};
+  materialStatus.lock32.boxes={count:visibleBoxes.length,skipped:lock32.boxes.length-visibleBoxes.length,drawCalls:1};
 }
 
 // M2c — không còn tấm phủ polygon 3 khu khóa: nó nằm trên mặt nước (y=0.7) nên che mất sông. Đất, công viên và nước khu khóa
@@ -993,6 +1042,7 @@ if(activeRegion!==REGION_ALL_ID&&resolveView(startKey,activeRegion).switchTo)sta
 const initial=resolveView(startKey,activeRegion).preset;
 let activeView=startKey;
 let target=initial.target.clone(),cameraDistance=initial.distance,azimuth=initial.az,polar=initial.polar,desired=null;
+let followSlot=-1,followUntil=0,followTarget=new THREE.Vector3();
 const transitionVelocity=new THREE.Vector3();
 const transitionState={distance:cameraDistance,azimuth,polar};
 function selectView(key){
@@ -1029,10 +1079,28 @@ if(isSmart32&&smartApp){
     transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
     $('#viewLabel').textContent='Xe khẩn cấp · cận cảnh';
   };
+  // Theo dõi xe ưu tiên sau khi triệu hồi: camera cập nhật target mỗi khung, người xem thấy xe chạy.
+  smartApp.followTraffic32=(slot,seconds=28)=>{
+    if(!(slot>=0)||!traffic.sim.active[slot])return false;
+    const p=traffic.poseOf(slot);
+    followSlot=slot;followUntil=performance.now()+Math.max(4,Number(seconds)||28)*1000;
+    followTarget.set(p.x,p.y,p.z);
+    const followAz=Math.atan2(-p.tx,-p.tz);
+    // Cắt cảnh tới xe ngay khi triệu hồi: xe có thể spawn ở nút xa, để camera
+    // bay từ từ sẽ mất 3–5 giây và người xem chỉ thấy một chấm nhỏ.
+    target.copy(followTarget);cameraDistance=64;azimuth=followAz;polar=1.0;
+    desired={target:followTarget,distance:64,az:followAz,polar:1.0,fov:42};
+    transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
+    transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
+    $('#viewLabel').textContent='Xe ưu tiên · theo dõi';
+    return true;
+  };
+  smartApp.stopFollow32=()=>{followSlot=-1;followUntil=0;};
   smartApp.focusJunction32=row=>{
     const limits=lock32?.cameraLimits;
-    const point=limits?lock32.mod.clampNorthCamera32({x:row.x,z:row.z,distance:170},limits):{...row,distance:170};
-    desired={target:new THREE.Vector3(point.x,0,point.z),distance:point.distance,az:Math.PI*.2,polar:1.05,fov:42};
+    const wantDistance=row.distance||170;
+    const point=limits?lock32.mod.clampNorthCamera32({x:row.x,z:row.z,distance:wantDistance},limits):{...row,distance:wantDistance};
+    desired={target:new THREE.Vector3(point.x,0,point.z),distance:point.distance,az:row.az??Math.PI*.2,polar:row.polar??1.12,fov:42};
     transitionState.distance=cameraDistance;transitionState.azimuth=azimuth;transitionState.polar=polar;
     transitionState.distanceVelocity=transitionState.azimuthVelocity=transitionState.polarVelocity=0;transitionVelocity.set(0,0,0);
     $('#viewLabel').textContent=row.label;
@@ -1189,14 +1257,50 @@ window.addEventListener('keydown',event=>{
   if(!['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','q','e','+','=','-','_'].includes(key))return;
   event.preventDefault();desired=null;const stride=Math.max(18,Math.min(240,cameraDistance*.055));
   const forward=new THREE.Vector3(target.x-camera.position.x,0,target.z-camera.position.z).normalize(),right=new THREE.Vector3(-forward.z,0,forward.x);
-  if(key==='arrowup'||key==='w')target.addScaledVector(forward,stride);else if(key==='arrowdown'||key==='s')target.addScaledVector(forward,-stride);else if(key==='arrowleft'||key==='a')target.addScaledVector(right,-stride);else if(key==='arrowright'||key==='d')target.addScaledVector(right,stride);else if(key==='q')azimuth-=.12;else if(key==='e')azimuth+=.12;else if(key==='+'||key==='=')cameraDistance=Math.max(180,cameraDistance*.88);else cameraDistance=Math.min(13000,cameraDistance*1.14);
+  if(key==='arrowup'||key==='w')target.addScaledVector(forward,stride);else if(key==='arrowdown'||key==='s')target.addScaledVector(forward,-stride);else if(key==='arrowleft'||key==='a')target.addScaledVector(right,-stride);else if(key==='arrowright'||key==='d')target.addScaledVector(right,stride);else if(key==='q')azimuth-=.12;else if(key==='e')azimuth+=.12;else if(key==='+'||key==='=')cameraDistance=Math.max(50,cameraDistance*.88);else cameraDistance=Math.min(13000,cameraDistance*1.14);
 });
 
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 // Chỉ số công trình (trong renderBuildings) tại điểm màn hình; null nếu không trúng công trình đang vẽ (QA dùng trực tiếp).
 function pickBuildingIndex(x,y){pointer.set(x/innerWidth*2-1,-y/innerHeight*2+1);raycaster.setFromCamera(pointer,camera);return cityChunks.pick(raycaster);}
 materialStatus.pickBuilding=(x,y)=>{const index=pickBuildingIndex(x,y);return index===null?null:{index,id:renderBuildings[index].id};};
+function pickSignalHead(x,y){
+  const signals=smartApp&&smartApp.modules&&smartApp.modules.signals;
+  if(!signals||typeof signals.pickHead!=='function')return false;
+  pointer.set(x/innerWidth*2-1,-y/innerHeight*2+1);raycaster.setFromCamera(pointer,camera);
+  // Ghim cụm đèn được ưu tiên trước đầu đèn nhỏ; cả hai đều trả cluster/node.
+  const hit=(typeof signals.pickPin==='function'&&signals.pickPin(raycaster))||signals.pickHead(raycaster);
+  if(!hit)return false;
+  // Ghim vùng Hàng Xanh ở mức "Toàn khu": chỉ bay vào 950 m để tách 5 ghim cụm,
+  // không mở thanh tra của một cụm đại diện.
+  if(hit.area){
+    smartApp.focusJunction32({x:hit.x,z:hit.z,distance:950,polar:1.1,az:.6,label:'Ngã tư Hàng Xanh · 5 nút giao'});
+    $('#selection').hidden=true;
+    return true;
+  }
+  // Bấm đầu đèn hoặc ghim cụm: nhãn thời gian "ĐỎ · 50s" / "A XANH · B ĐỎ" hiện ngay trên đèn.
+  if(typeof signals.showTiming==='function')signals.showTiming(hit);
+  const host=document.querySelector('#smartHud32');
+  if(host){
+    host.hidden=false;
+    host.classList.remove('is-closed');
+    if(innerWidth<=1100)host.classList.add('is-open');
+    const toggle=document.querySelector('#submit-hud [data-panel]');
+    if(toggle){toggle.setAttribute('aria-expanded','true');toggle.textContent='Ẩn bảng điều khiển';}
+  }
+  document.querySelector('#tl1Tabsignals32')?.click();
+  const inspector=smartApp.modules.signalInspector;
+  if(inspector&&typeof inspector.select==='function'){
+    // Chỉ chọn theo cluster id của panel; không fallback sang node OSM (dễ rơi về card đầu tiên).
+    inspector.select(hit.cluster||hit.node);
+  }
+  const node=(smartPrep.nodeMap||[]).find(item=>item.node_id===(hit.node||hit.cluster));
+  if(node)smartApp.focusJunction32({...node,id:node.node_id,distance:155,polar:1.16});
+  $('#selection').hidden=true;
+  return true;
+}
 function pick(x,y){
+  if(pickSignalHead(x,y))return;
   const low=pickBuildingIndex(x,y);if(low===null){$('#selection').hidden=true;return;}
   const building=renderBuildings[low],kind=classify(building),direct=SM.records[String(building.id)]||{};
   $('#selectedName').textContent=building.name||`Công trình ${building.id}`;
@@ -1233,7 +1337,7 @@ materialStatus.visualRuntime={
 let lastTime=performance.now(),frameCount=0,fpsTime=lastTime,lastLabel=0;
 // PERF-2: trần FPS khi app=smart — 30 FPS; không thao tác 60 s hoặc bật tiết kiệm tài nguyên → 15 FPS.
 // Logic thuần ở smartMod.smartFpsCap32 (Node-testable); vòng vẽ đọc idleMs/savePower qua đối tượng này.
-const smartFrame=(()=>{let lastInteraction=performance.now(),savePower=false,lastDraw=null;const mark=()=>{lastInteraction=performance.now();};if(isSmart32&&typeof window!=='undefined'&&window.addEventListener){window.addEventListener('pointerdown',mark,{passive:true});window.addEventListener('pointermove',mark,{passive:true});window.addEventListener('keydown',mark,{passive:true});window.addEventListener('wheel',mark,{passive:true});}return{lastInteraction:()=>lastInteraction,setSave:v=>{savePower=!!v;},isSave:()=>savePower,lastDraw:()=>lastDraw,setLastDraw:t=>{lastDraw=t;}};})();
+const smartFrame=(()=>{let lastInteraction=performance.now(),savePower=false,lastDraw=null;const mark=()=>{lastInteraction=performance.now();};const markStop=()=>{mark();followSlot=-1;followUntil=0;};if(isSmart32&&typeof window!=='undefined'&&window.addEventListener){window.addEventListener('pointerdown',markStop,{passive:true});window.addEventListener('pointermove',mark,{passive:true});window.addEventListener('keydown',markStop,{passive:true});window.addEventListener('wheel',markStop,{passive:true});}return{lastInteraction:()=>lastInteraction,setSave:v=>{savePower=!!v;},isSave:()=>savePower,lastDraw:()=>lastDraw,setLastDraw:t=>{lastDraw=t;}};})();
 const overlaps=(a,b,padding=6)=>a.left-padding<b.right&&a.right+padding>b.left&&a.top-padding<b.bottom&&a.bottom+padding>b.top;
 // Nhãn địa danh ngoài khu ẩn (trừ nhãn gắn với vùng signature và nhãn cảnh báo ngập có cờ active).
 function labelInRegion(label){
@@ -1274,6 +1378,14 @@ function render(now){
     const sdt=smartMod.smartFrameDt32(now,smartFrame.lastDraw());
     smartFrame.setLastDraw(now);lastTime=now;dt=sdt.dt;
   }
+  if(followSlot>=0){
+    if(!traffic.sim.active[followSlot]||performance.now()>followUntil){followSlot=-1;}
+    else{
+      const p=traffic.poseOf(followSlot);
+      followTarget.set(p.x,p.y,p.z);
+      desired={target:followTarget,distance:64,az:Math.atan2(-p.tx,-p.tz),polar:1.0,fov:42};
+    }
+  }
   if(desired){
     smoothDampVector(target,transitionVelocity,desired.target,.68,dt);
     cameraDistance=smoothDampScalar(transitionState,'distance',desired.distance,.72,dt);
@@ -1281,7 +1393,7 @@ function render(now){
     polar=smoothDampScalar(transitionState,'polar',desired.polar,.72,dt);
     if(Math.abs(cameraDistance-desired.distance)<.35&&target.distanceTo(desired.target)<.18){target.copy(desired.target);cameraDistance=desired.distance;azimuth=desired.az;polar=desired.polar;desired=null;}
   }else if(!pointerDown){
-    azimuth+=orbitVelocity;polar=THREE.MathUtils.clamp(polar+polarVelocity,.16,1.43);target.add(panVelocity);cameraDistance=THREE.MathUtils.clamp(cameraDistance*Math.exp(zoomVelocity),180,13000);
+    azimuth+=orbitVelocity;polar=THREE.MathUtils.clamp(polar+polarVelocity,.16,1.43);target.add(panVelocity);cameraDistance=THREE.MathUtils.clamp(cameraDistance*Math.exp(zoomVelocity),50,13000);
     const orbitDecay=Math.exp(-dt*8.5),panDecay=Math.exp(-dt*9.5),zoomDecay=Math.exp(-dt*10.5);orbitVelocity*=orbitDecay;polarVelocity*=orbitDecay;panVelocity.multiplyScalar(panDecay);zoomVelocity*=zoomDecay;
   }
   // M2a · A3 — kẹp tâm quay trong bbox khu Bắc + 400 m và khoảng cách ≤ mức thấy toàn khu, mỗi khung (đè cả khi kéo chuột).
@@ -1338,23 +1450,86 @@ if(smartApp){
   try{
     smartApp.registerSmartModule32('testLab',smartMod.mountTestLab32(host,{spawnNpc:count=>traffic.spawnTestNpc(count),clearNpcs:()=>traffic.clearTestNpcs(),npcCount:()=>traffic.sim.testNpcCount()}));
   }catch(e){console.warn('testLab32:',e);}
-  // demo-v2 (P2-8): bàn cưỡng chế — ghim đèn ngẫu nhiên / bơm xe / triệu hồi xe công vụ / tạo tai nạn (P2-7),
-  // mỗi thao tác có hoàn tác; sự cố phát tín hiệu 'smtf-submit-events' cho web cán bộ.
+  // demo-v2 (P2-8): điều khiển tình huống — ghim đèn ngẫu nhiên / bơm xe / triệu hồi xe công vụ / tạo tai nạn (P2-7),
+  // mỗi thao tác có định vị + hoàn tác; sự cố phát tín hiệu 'smtf-submit-events' cho web cán bộ.
   try{
     const heatMod=smartApp.modules.heat;
+    const scenarioProps=smartApp.modules.scenarios&&smartApp.modules.scenarios.props?smartApp.modules.scenarios.props:null;
     const enforcement=smartMod.createEnforcement32({traffic,controller:smartApp.controller,
       nodeMap:smartPrep.nodeMap,emergency:smartApp.modules.emergency||null,
-      routing:smartRoute,vms:smartApp.vms,boards:heatMod&&heatMod.boards?heatMod.boards:[]});
+      routing:smartRoute,vms:smartApp.vms,boards:heatMod&&heatMod.boards?heatMod.boards:[],
+      showIncident:spot=>{try{scenarioProps?.showBlock?.(spot);}catch{}},
+      hideIncident:()=>{
+        try{scenarioProps?.hideBlock?.();}catch{}
+        try{const h=smartApp.modules.heat;if(h){h.scene.setHeatVisible(true);h.scene.setFlowVisible(true);h.panel.setOn?.(true);h.panel.setFlowOn?.(true);}}catch{}
+      }});
     smartApp.registerSmartModule32('enforcement',enforcement);
+    // Vòng 7: nút ghim trên từng dòng thao tác. Đèn → focus cụm; bơm xe → khu Hàng Xanh;
+    // xe công vụ → theo xe; tai nạn → focus điểm sự cố. Lỗi ghi vào note của panel, không làm sập trạm.
+    const locateEnforcement32=item=>{
+      try{
+        const t=item&&item.target;
+        if(!t)throw new Error('Thao tác chưa có toạ độ định vị');
+        if(t.kind==='junction'){
+          const row=rows.find(r=>r.id===t.clusterId||(Array.isArray(r.indexes)&&r.indexes.includes(t.nodeId))||(Array.isArray(r.nodeIds)&&r.nodeIds.includes(t.nodeId)));
+          if(row){smartApp.focusJunction32({...row,distance:110,polar:1.15,label:'Đèn '+(row.id||row.label)});return;}
+          const node=smartPrep.nodeMap.find(m=>m.index===t.nodeId);
+          if(node){smartApp.focusJunction32({x:node.x,z:node.z,distance:110,polar:1.15,label:'Đèn '+(t.clusterId||node.node_id)});return;}
+          throw new Error('Không tìm thấy cụm đèn để định vị');
+        }
+        if(t.kind==='area'){
+          const hxRows=rows.filter(r=>String(r.id||'').startsWith('HX-'));
+          const points=hxRows.length?hxRows:smartPrep.nodeMap.filter(m=>String(m.node_id||'').startsWith('HX-'));
+          if(!points.length)throw new Error('Không có toạ độ khu Hàng Xanh');
+          const x=points.reduce((sum,p)=>sum+Number(p.x||0),0)/points.length;
+          const z=points.reduce((sum,p)=>sum+Number(p.z||0),0)/points.length;
+          smartApp.focusJunction32({x,z,distance:620,polar:1.1,az:.6,label:'Khu Hàng Xanh'});
+          return;
+        }
+        if(t.kind==='vehicle'){
+          if(Number.isInteger(t.slot)&&typeof smartApp.followTraffic32==='function'&&smartApp.followTraffic32(t.slot,30))return;
+          if(Number.isInteger(t.slot)&&traffic.sim.active&&traffic.sim.active[t.slot]){
+            const p=traffic.poseOf(t.slot);
+            if(p&&Number.isFinite(p.x)&&Number.isFinite(p.z)){smartApp.focusJunction32({x:p.x,z:p.z,distance:70,polar:1.05,az:Math.atan2(-p.tx,-p.tz),label:'Xe ưu tiên'});return;}
+          }
+          // Không lấy được vị trí hiện tại (xe đã kết thúc tuyến): im lặng, không báo lỗi.
+          return;
+        }
+        if(t.kind==='point'){
+          if(!Number.isFinite(t.x)||!Number.isFinite(t.z))throw new Error('Điểm sự cố thiếu toạ độ');
+          smartApp.focusJunction32({x:t.x,z:t.z,distance:50,polar:1.22,az:Math.atan2(-t.tx,-t.tz),label:'Sự cố · '+(t.road||'hiện trường')});
+          return;
+        }
+        throw new Error('Loại định vị chưa hỗ trợ');
+      }catch(e){const note=host.querySelector('.enf32__empty');if(note)note.textContent=String(e&&e.message||e);}
+    };
     const enfPanel=smartMod.mountEnforcementPanel32(host,{
       onPin:()=>enforcement.pinSignal(),
       onSpawnCars:count=>enforcement.spawnCars(count),
-      onService:kind=>enforcement.spawnService(kind),
-      onIncident:()=>enforcement.createIncident(),
+      onService:kind=>{
+        const result=enforcement.spawnService(kind);
+        // Camera theo xe ưu tiên để người xem thấy xe vừa triệu hồi chạy trên bản đồ.
+        if(result&&result.status&&Number.isInteger(result.status.slot))smartApp.followTraffic32(result.status.slot,30);
+        return result;
+      },
+      onIncident:()=>{
+        const result=enforcement.createIncident();
+        if(result&&Number.isFinite(result.x)){
+          // Tắt lớp nhiệt khi xem hiện trường để thấy xe hỏng + cọc phân luồng; hoàn tác sẽ bật lại.
+          try{const h=smartApp.modules.heat;if(h){h.scene.setHeatVisible(false);h.scene.setFlowVisible(false);h.panel.setOn?.(false);h.panel.setFlowOn?.(false);}}catch{}
+          smartApp.focusJunction32({x:result.x,z:result.z,distance:50,polar:1.22,az:Math.atan2(-result.tx,-result.tz),label:'Sự cố · '+(result.road||'hiện trường')});
+        }
+        return result;
+      },
       onUndo:id=>enforcement.undo(id),
-      onUndoAll:()=>enforcement.undoAll()
+      onUndoAll:()=>enforcement.undoAll(),
+      onLocate:locateEnforcement32
     });
     if(enfPanel){
+      // demo-v2: điều khiển tình huống phải thấy ngay trong tab Vận hành, không nằm ngoài khung tab.
+      const enfRoot=host.querySelector('.enf32');
+      const opPanel=document.querySelector('#tl1Panelop32');
+      if(enfRoot&&opPanel)opPanel.insertBefore(enfRoot,opPanel.querySelector('.heat-sec32')||null);
       let lastCount=-1;
       const timer=setInterval(()=>{const n=enforcement.count();if(n!==lastCount){lastCount=n;enfPanel.render(enforcement.actions());}},1000);
       enfPanel.render(enforcement.actions());
