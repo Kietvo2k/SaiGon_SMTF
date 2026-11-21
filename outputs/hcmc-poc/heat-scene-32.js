@@ -14,7 +14,7 @@ export const RIBBON_JUNCTION_GAP_M_32 = 1; // m: cắt thêm trước vạch d�
 export const HEAT_QUEUE_BINS_32 = [2, 5, 10];
 export const HEAT_QUEUE_COLORS_32 = ['#1f9d6b', '#d8e04a', '#f57c00', '#d32f2f', '#7b1fa2'];
 export const HEAT_QUEUE_LABELS_32 = ['0–2', '2–5', '5–10', '>10'];
-export const HEAT_QUEUE_TITLE_32 = 'Hàng chờ mỗi đoạn (xe)';
+export const HEAT_QUEUE_TITLE_32 = 'Hàng chờ mỗi làn (xe)';
 export const LEGEND_32 = HEAT_QUEUE_LABELS_32;
 export const QUEUE_STOP_SPEED_32 = 0.5;   // m/s: cùng ngưỡng dừng của heat-live/spec 6.1
 export const QUEUE_CHECK_M_32 = 25;       // m: xe trong đoạn này trước vạch cũng tính là hàng chờ
@@ -384,15 +384,16 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
     for (let i = 0; i < built.ranges.length; i++) {
       const r = built.ranges[i], idx = r.edge * 2 + (r.dir > 0 ? 0 : 1);
       const closed = !!(closedOf && closedOf(r.edge));
-      const hasData = closed || (r.lane >= 0 ? laneQueue[r.lane] > 0 || laneFlow[r.lane] > 0 : queue[idx] > 0);
+      const laneQ = r.lane >= 0 ? laneQueue[r.lane] : queue[idx];
+      const hasData = closed || (r.lane >= 0 ? laneQ > 0 || laneFlow[r.lane] > 0 : queue[idx] > 0);
       if (!hasData) { hiddenRanges++; continue; }
       visible[i] = 1;
-      const cls = heatQueueClass32(queue[idx], closed);
+      const cls = heatQueueClass32(laneQ, closed);
       bins[cls]++;
       if (closed) closedRanges++;
-      if (cls >= 2 && queue[idx] <= HEAT_QUEUE_BINS_32[0]) lowQueueHot++;   // cam/đỏ/tím ở hàng chờ ≤2 = sai màu
+      if (cls >= 2 && laneQ <= HEAT_QUEUE_BINS_32[0]) lowQueueHot++;   // cam/đỏ/tím ở hàng chờ ≤2 = sai màu
     }
-    paintRibbon32(built.colors, built.ranges, (e, dir) => heatQueueClass32(queue[e * 2 + (dir > 0 ? 0 : 1)], !!(closedOf && closedOf(e))), palette);
+    paintRibbon32(built.colors, built.ranges, (e, dir, lane) => heatQueueClass32(lane >= 0 ? laneQueue[lane] : queue[e * 2 + (dir > 0 ? 0 : 1)], !!(closedOf && closedOf(e))), palette);
     colorAttr.needsUpdate = true;
     // Ẩn hẳn dải không có queue/flow bằng cách thu các đỉnh về một điểm; hiện lại thì chép vị trí gốc.
     let dirty = false;
@@ -485,7 +486,7 @@ const HEAT_CSS_32 = `
 #smartHud32 .heat-alerts32{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:11px}
 #smartHud32 .heat-alerts32 li{padding:6px 8px;border-radius:10px;background:rgba(3,17,21,.28)}
 #smartHud32 .heat-alerts32 li small{display:block;font-size:10px;opacity:.8;margin-top:2px}
-#heatLegendFloat32{position:fixed;z-index:7;left:14px;bottom:calc(var(--submit-hud-reserve,92px) + 8px);display:flex;align-items:center;gap:6px;padding:5px 7px;border:1px solid rgba(137,216,223,.3);border-radius:10px;background:rgba(9,25,31,.86);color:#eaf6f7;font:700 10px/1.2 system-ui,"Segoe UI",sans-serif;backdrop-filter:blur(6px);pointer-events:none}
+#heatLegendFloat32{position:fixed;z-index:7;left:14px;bottom:max(calc(var(--submit-hud-reserve,92px) + 8px),92px);display:flex;align-items:center;gap:6px;padding:5px 7px;border:1px solid rgba(137,216,223,.3);border-radius:10px;background:rgba(9,25,31,.86);color:#eaf6f7;font:700 10px/1.2 system-ui,"Segoe UI",sans-serif;backdrop-filter:blur(6px);pointer-events:none}
 #heatLegendFloat32[hidden]{display:none}
 #heatLegendFloat32 b{font-size:10px;font-weight:700;white-space:nowrap;opacity:.9}
 #heatLegendFloat32 .heat-legend-row32{display:flex;gap:3px}
