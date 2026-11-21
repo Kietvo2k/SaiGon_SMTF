@@ -7,9 +7,9 @@ const frameTtl = 10_000;
 const bucket = 'smtf-submit-20261120';
 const cameraPattern = /^CAM-(?:HX|BAC)-[0-9]{3}$/;
 const framePattern = /^[A-Za-z0-9_-]{1,80}$/;
-// Vi phạm 3D gửi lên: 1 lần/10 s/phiên, tối đa 50 bản ghi/phiên, 1 ảnh ≤ 256 KiB.
-const liveGapMs = 10_000;
-const liveCap = 50;
+// Vi phạm 3D gửi lên: 1 lần/400 ms/phiên, tối đa 500 bản ghi/phiên, 1 ảnh ≤ 256 KiB.
+const liveGapMs = 400;
+const liveCap = 500;
 const liveMaxImage = 256 * 1024;
 const liveGate = new Map();   // session → { at, count } (theo instance serverless; sender cũng tự giãn nhịp)
 const liveCodeLabels = {
@@ -250,10 +250,10 @@ async function saveLiveViolation(request, session) {
   const verdict = liveViolationGate(liveGate, session, Date.now());
   if (verdict !== 'ok') {
     const message = verdict === 'quota'
-      ? 'Phiên này đã ghi đủ 50 vi phạm; tải lại trang để bắt đầu phiên mới.'
+      ? 'Phiên này đã ghi đủ 500 vi phạm; tải lại trang để bắt đầu phiên mới.'
       : 'Chờ ít nhất 10 giây giữa hai vi phạm.';
     return json({ error: { code: verdict === 'quota' ? 'SESSION_QUOTA' : 'RATE_LIMIT', message } }, 429,
-      verdict === 'quota' ? {} : { 'Retry-After': String(liveGapMs / 1000) });
+      verdict === 'quota' ? {} : { 'Retry-After': String(Math.ceil(liveGapMs / 1000)) });
   }
   const image = parseLiveImage(body?.image);
   // Hồ sơ seed là nguồn sự thật: không tạo bản ghi live trùng biển, cũng không sửa hồ sơ mẫu.

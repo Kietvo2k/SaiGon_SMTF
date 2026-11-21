@@ -133,16 +133,16 @@ test('validate: từ chối biển, mã, thời điểm, camera, tốc độ, đ
   }
 });
 
-test('gate: 1 lần/10 s/phiên và cap 50', () => {
+test('gate: 1 lần/400 ms/phiên và cap 500', () => {
   const store = new Map();
   assert.equal(api.liveViolationGate(store, 'a', 0), 'ok');
-  assert.equal(api.liveViolationGate(store, 'a', 9_999), 'rate');
-  assert.equal(api.liveViolationGate(store, 'a', 10_000), 'ok');
-  assert.equal(api.liveViolationGate(store, 'b', 10_000), 'ok', 'phiên khác không bị chặn');
+  assert.equal(api.liveViolationGate(store, 'a', 399), 'rate');
+  assert.equal(api.liveViolationGate(store, 'a', 400), 'ok');
+  assert.equal(api.liveViolationGate(store, 'b', 400), 'ok', 'phiên khác không bị chặn');
 
   const quota = new Map();
-  for (let i = 0; i < 50; i++) assert.equal(api.liveViolationGate(quota, 's', i * 10_000), 'ok');
-  assert.equal(api.liveViolationGate(quota, 's', 50 * 10_000), 'quota');
+  for (let i = 0; i < 500; i++) assert.equal(api.liveViolationGate(quota, 's', i * 400), 'ok');
+  assert.equal(api.liveViolationGate(quota, 's', 500 * 400), 'quota');
 });
 
 test('ảnh: không có → null; JPEG nhỏ hợp lệ; sai magic/quá lớn bị chặn', () => {
@@ -186,7 +186,7 @@ test('endpoint: lưu bảng live + dedup theo (plate, code, occurredAt)', async 
 
     const blocked = await postViolation(cookie, payload({ code: 'SPEED' }));
     await expectApiError(blocked, 429, 'RATE_LIMIT');
-    assert.equal(blocked.headers.get('retry-after'), '10');
+    assert.equal(blocked.headers.get('retry-after'), '1');
   });
 });
 
