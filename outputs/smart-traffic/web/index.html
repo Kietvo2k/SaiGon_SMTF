@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0c2227" />
+    <meta name="theme-color" content="#0b1c24" />
     <title>SaiGon SMTF · Điều phối giao thông khu Bắc</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,141 +13,146 @@
   </head>
   <body>
     <a class="skip-link" href="#flow">Bỏ qua phần giới thiệu</a>
-    <div class="landing-shell">
-      <header class="landing-header" aria-label="Đầu trang SaiGon SMTF">
-        <a class="landing-brand" href="/" aria-label="SaiGon SMTF · Trang chủ">
-          <span class="landing-mark" aria-hidden="true">SM</span>
-          <span><strong>SAIGON · SMART TRAFFIC</strong><small>ĐIỀU PHỐI GIAO THÔNG KHU BẮC TP.HCM</small></span>
-        </a>
-        <a class="landing-nav-cta" href="#entries">Ba lối vào <span aria-hidden="true">↘</span></a>
-      </header>
 
-      <main class="landing-main">
-        <section class="landing-hero" aria-labelledby="landing-title">
-          <div class="landing-copy">
-            <p class="landing-pill">Khu Bắc · Thị Nghè · Bình Thạnh</p>
-            <p class="landing-kicker">Điều khiển thích ứng · Nhận diện vi phạm · Tra cứu công khai</p>
-            <h1 id="landing-title">Thành phố chuyển động. <span>Tín hiệu đồng nhịp.</span></h1>
-            <p class="landing-intro">Một cổng vào, ba góc nhìn cùng một dòng dữ liệu: cảnh 3D là trạm điều khiển,
-              cán bộ điều hành nhận dữ liệu trực tiếp, người dân tra ra hồ sơ có bằng chứng.</p>
-            <div class="landing-actions">
-              <a class="landing-primary-cta" href="/hcmc-poc/?app=smart&amp;view=bac&amp;region=bac&amp;demo=vercel">Mở cảnh 3D <span aria-hidden="true">→</span></a>
-              <a class="landing-primary-cta landing-primary-cta-ghost" href="/index-officer.html">Mở trung tâm điều hành</a>
-            </div>
-            <p class="landing-data-note">Dữ liệu trình diễn được ghi nhãn rõ; phiên xem chỉ lưu trong trình duyệt.</p>
+    <header class="top-bar" aria-label="Đầu trang SaiGon SMTF">
+      <a class="brand" href="/" aria-label="SaiGon SMTF · Trang chủ">
+        <span class="brand-mark" aria-hidden="true">SM</span>
+        <span class="brand-text"><strong>Saigon · Smart Traffic</strong><small>Điều phối giao thông khu Bắc TP.HCM</small></span>
+      </a>
+      <a class="top-cta" href="#entries">Ba lối vào <span aria-hidden="true">↘</span></a>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <img class="hero-bg" src="/submit-city.jpg" alt="" aria-hidden="true" fetchpriority="high" width="1600" height="900" />
+        <div class="hero-veil" aria-hidden="true"></div>
+        <div class="hero-inner">
+          <p class="hero-pill">Khu Bắc · Thị Nghè · Bình Thạnh</p>
+          <h1 id="hero-title">Thành phố chuyển động.<br /><span>Tín hiệu đồng nhịp.</span></h1>
+          <p class="hero-sub">Một cổng vào, ba góc nhìn cùng một dòng dữ liệu: cảnh 3D là trạm điều khiển,
+            cán bộ điều hành nhận dữ liệu trực tiếp, người dân tra ra hồ sơ có bằng chứng.</p>
+          <div class="hero-actions">
+            <a class="btn btn-solid" href="/hcmc-poc/?app=smart&amp;view=bac&amp;region=bac&amp;demo=vercel">Mở cảnh 3D <span aria-hidden="true">→</span></a>
+            <a class="btn btn-line" href="/index-officer.html">Mở trung tâm điều hành</a>
+            <a class="btn btn-quiet" href="/index-citizen.html">Tra cứu biển số</a>
           </div>
-          <figure class="landing-scene">
-            <img src="/submit-city.jpg" alt="Cảnh khu Bắc trạm điều khiển: nút giao Ung Văn Khiêm × Nguyễn Gia Trí với bản đồ nhiệt và dòng xe theo chiều đang chạy" fetchpriority="high" width="1600" height="900" />
-            <figcaption>Trạm điều khiển khu Bắc · nút Ung Văn Khiêm × Nguyễn Gia Trí</figcaption>
-          </figure>
-        </section>
+          <p class="hero-note">Dữ liệu trình diễn được ghi nhãn rõ · phiên xem chỉ lưu trong trình duyệt</p>
+        </div>
+        <p class="hero-caption"><span>Trạm điều khiển khu Bắc</span><span>nút Ung Văn Khiêm × Nguyễn Gia Trí · bản đồ nhiệt + dòng xe theo chiều đang chạy</span></p>
+      </section>
 
-        <section class="landing-flow" id="flow" aria-labelledby="flow-title">
-          <p class="landing-pill">Luồng trình diễn</p>
+      <section class="band band-flow" id="flow" aria-labelledby="flow-title">
+        <div class="band-head">
+          <p class="eyebrow">Luồng trình diễn</p>
           <h2 id="flow-title">Chín mươi giây trước giám khảo</h2>
-          <ol class="flow-steps">
-            <li class="flow-step"><b>Mở cảnh 3D</b><small>Chọn nút giao gần nhất, máy quay về góc chuẩn.</small><span class="where">Màn: 3D</span></li>
-            <li class="flow-step"><b>Bật giờ cao điểm</b><small>Đèn thích ứng tự chia pha theo hàng chờ; so sánh A/B ngay trên KPI.</small><span class="where">Màn: 3D · panel Đèn</span></li>
-            <li class="flow-step"><b>Xem bản đồ nhiệt</b><small>Đoạn đỏ dần sáng lên, dự báo 10–30 phút cảnh báo kẹt tới.</small><span class="where">Màn: 3D · panel Nhiệt</span></li>
-            <li class="flow-step"><b>Camera bắt vi phạm</b><small>Xe vượt đèn đỏ bị đóng khung nhận diện, kèm biển số và ảnh bằng chứng.</small><span class="where">Màn: 3D → web cán bộ</span></li>
-            <li class="flow-step"><b>Cán bộ duyệt, dân tra cứu</b><small>Hồ sơ hiện ảnh bằng chứng, dòng thời gian; tra biển ra kết quả.</small><span class="where">Màn: Web cán bộ + người dân</span></li>
-          </ol>
-          <p class="flow-tip"><b>Mẹo trình diễn:</b> mở tab 3D và tab cán bộ cạnh nhau — camera trên web đổi trạng thái
-            <strong>Trực tiếp</strong> khi cảnh 3D đang chạy, quay về ảnh mẫu có nhãn khi tab 3D đóng.</p>
-        </section>
+        </div>
+        <ol class="steps">
+          <li><span class="step-dot" aria-hidden="true"></span><b>Mở cảnh 3D</b><small>Chọn nút giao gần nhất, máy quay về góc chuẩn.</small><i>Màn 3D</i></li>
+          <li><span class="step-dot" aria-hidden="true"></span><b>Bật giờ cao điểm</b><small>Đèn thích ứng tự chia pha theo hàng chờ; so sánh A/B ngay trên KPI.</small><i>Màn 3D · panel Đèn</i></li>
+          <li><span class="step-dot" aria-hidden="true"></span><b>Xem bản đồ nhiệt</b><small>Đoạn đỏ dần sáng, dự báo 10–30 phút cảnh báo kẹt tới.</small><i>Màn 3D · panel Nhiệt</i></li>
+          <li><span class="step-dot" aria-hidden="true"></span><b>Camera bắt vi phạm</b><small>Xe vượt đèn đỏ bị đóng khung nhận diện, kèm biển số và ảnh bằng chứng.</small><i>Màn 3D → web cán bộ</i></li>
+          <li><span class="step-dot" aria-hidden="true"></span><b>Cán bộ duyệt, dân tra cứu</b><small>Hồ sơ hiện ảnh bằng chứng, dòng thời gian; tra biển ra kết quả.</small><i>Màn web cán bộ + người dân</i></li>
+        </ol>
+        <p class="tip"><b>Mẹo trình diễn:</b> mở tab 3D và tab cán bộ <em>cạnh nhau</em> — camera trên web đổi trạng thái
+          <strong>Trực tiếp</strong> khi cảnh 3D đang chạy, quay về ảnh mẫu có nhãn khi tab 3D đóng.</p>
+      </section>
 
-        <section class="landing-core" aria-labelledby="core-title">
-          <p class="landing-pill">Công nghệ cốt lõi</p>
-          <p class="landing-kicker">Nhận diện · Thích ứng · Điều phối</p>
+      <section class="band band-core band-core-dark" aria-labelledby="core-title">
+        <div class="band-head">
+          <p class="eyebrow">Công nghệ cốt lõi</p>
           <h2 id="core-title">Đèn tự chia pha <span>theo mật độ từng làn</span></h2>
-          <div class="core-grid">
-            <ol class="core-list">
-              <li><b>Khung nhận diện tự động từng xe</b><small>Trong tầm camera: khung, loại xe, biển số, độ tin cậy — tin cậy thấp vào hàng chờ xác minh.</small></li>
-              <li><b>Làn đông xe được ưu tiên đèn xanh</b><small>Bộ điều khiển tối ưu áp lực hàng chờ, so sánh với đèn cố định bằng một công tắc A/B.</small></li>
-              <li><b>Giải tỏa xong thì cắt xanh, nhường pha khác</b><small>Hết hàng chờ là chuyển pha, không giữ xanh vô ích.</small></li>
-              <li><b>Mất nguồn dữ liệu thì về chu kỳ cố định</b><small>Đèn tự an toàn khi không nhận được số đo, không kẹt vì chờ tín hiệu.</small></li>
-              <li><b>Theo dõi lưu lượng trên web điều hành</b><small>Bảng vi phạm đầy đủ cột, trạng thái tiếng Việt, mức phạt kèm căn cứ điều khoản.</small></li>
-            </ol>
-            <div class="core-shot">
-              <img src="/submit-city.jpg" alt="Cảnh 3D khu Bắc: nhà lùi khỏi mép đường, xe có hình khối đúng làn, overlay khung nhận diện và dải bản đồ nhiệt đang chạy" loading="lazy" width="1600" height="900" />
-              <p class="core-caption">và mọi xe vượt đèn đều có bằng chứng kèm theo.</p>
-            </div>
-          </div>
-        </section>
+        </div>
+        <div class="core-grid">
+          <figure class="core-shot">
+            <img src="/submit-city.jpg" alt="Cảnh 3D khu Bắc: nhà lùi khỏi mép đường, xe có hình khối đúng làn, overlay khung nhận diện và dải bản đồ nhiệt đang chạy" loading="lazy" width="1600" height="900" />
+            <figcaption>và mọi xe vượt đèn đều có bằng chứng kèm theo.</figcaption>
+          </figure>
+          <ol class="core-list">
+            <li><b>Khung nhận diện tự động từng xe</b><small>Trong tầm camera: khung, loại xe, biển số, độ tin cậy — tin cậy thấp vào hàng chờ xác minh.</small></li>
+            <li><b>Làn đông xe được ưu tiên đèn xanh</b><small>Bộ điều khiển tối ưu áp lực hàng chờ, so sánh với đèn cố định bằng một công tắc A/B.</small></li>
+            <li><b>Giải tỏa xong thì cắt xanh, nhường pha khác</b><small>Hết hàng chờ là chuyển pha, không giữ xanh vô ích.</small></li>
+            <li><b>Mất nguồn dữ liệu thì về chu kỳ cố định</b><small>Đèn tự an toàn khi không nhận được số đo, không kẹt vì chờ tín hiệu.</small></li>
+            <li><b>Theo dõi lưu lượng trên web điều hành</b><small>Bảng vi phạm đầy đủ cột, trạng thái tiếng Việt, mức phạt kèm căn cứ điều khoản.</small></li>
+          </ol>
+        </div>
+      </section>
 
-        <section class="landing-views" id="entries" aria-labelledby="views-title">
-          <p class="landing-pill">Ba góc nhìn · Một dòng dữ liệu</p>
+      <section class="band band-views" id="entries" aria-labelledby="views-title">
+        <div class="band-head">
+          <p class="eyebrow">Ba góc nhìn · một dòng dữ liệu</p>
           <h2 id="views-title">Web phải làm được việc, không chỉ hiển thị</h2>
-          <div class="view-grid">
-            <article class="view view-3d">
-              <small>Trạm 3D</small>
-              <h3>Cảnh khu Bắc</h3>
-              <ul>
-                <li>Đèn thích ứng A/B + KPI sống</li>
-                <li>Bản đồ nhiệt + dự báo kẹt 10–30 phút</li>
-                <li>Overlay khung nhận diện theo camera</li>
-                <li>Kịch bản: cao điểm · chặn làn · ngập · xe ưu tiên</li>
-                <li>Đẩy khung hình thật lên web</li>
-              </ul>
-              <a class="entry-action" href="/hcmc-poc/?app=smart&amp;view=bac&amp;region=bac&amp;demo=vercel">Mở cảnh 3D <span aria-hidden="true">→</span></a>
-            </article>
-            <article class="view view-officer">
-              <small>Cán bộ</small>
-              <h3>Trung tâm điều hành</h3>
-              <ul>
-                <li>Camera trực tiếp theo nút đang xem</li>
-                <li>Bảng vi phạm: biển, loại, hướng, giờ, trạng thái</li>
-                <li>Duyệt / gỡ / chuyển cần xác minh kèm ảnh</li>
-                <li>KPI ghi rõ nguồn: Trực tiếp hay Dữ liệu mẫu</li>
-              </ul>
-              <a class="entry-action" href="/index-officer.html">Vào trung tâm điều hành <span aria-hidden="true">→</span></a>
-            </article>
-            <article class="view view-citizen">
-              <small>Người dân</small>
-              <h3>Tra cứu biển số</h3>
-              <ul>
-                <li>Kết quả có ảnh bằng chứng + địa điểm</li>
-                <li>Dòng thời gian trạng thái tiếng Việt</li>
-                <li>Mức phạt kèm căn cứ điều khoản</li>
-                <li>Khiếu nại một bước, theo dõi được</li>
-              </ul>
-              <a class="entry-action" href="/index-citizen.html">Tra cứu hồ sơ <span aria-hidden="true">→</span></a>
-            </article>
-          </div>
-        </section>
+        </div>
+        <div class="views">
+          <article class="view view-3d">
+            <p class="view-tag">Trạm 3D</p>
+            <h3>Cảnh khu Bắc</h3>
+            <ul>
+              <li>Đèn thích ứng A/B + KPI sống</li>
+              <li>Bản đồ nhiệt + dự báo kẹt 10–30 phút</li>
+              <li>Overlay khung nhận diện theo camera</li>
+              <li>Kịch bản: cao điểm · chặn làn · ngập · xe ưu tiên</li>
+              <li>Đẩy khung hình thật lên web</li>
+            </ul>
+            <a class="view-link" href="/hcmc-poc/?app=smart&amp;view=bac&amp;region=bac&amp;demo=vercel">Mở cảnh 3D <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="view view-officer">
+            <p class="view-tag">Cán bộ</p>
+            <h3>Trung tâm điều hành</h3>
+            <ul>
+              <li>Camera trực tiếp theo nút đang xem</li>
+              <li>Bảng vi phạm: biển, loại, hướng, giờ, trạng thái</li>
+              <li>Duyệt / gỡ / chuyển cần xác minh kèm ảnh</li>
+              <li>KPI ghi rõ nguồn: Trực tiếp hay Dữ liệu mẫu</li>
+            </ul>
+            <a class="view-link" href="/index-officer.html">Vào trung tâm điều hành <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="view view-citizen">
+            <p class="view-tag">Người dân</p>
+            <h3>Tra cứu biển số</h3>
+            <ul>
+              <li>Kết quả có ảnh bằng chứng + địa điểm</li>
+              <li>Dòng thời gian trạng thái tiếng Việt</li>
+              <li>Mức phạt kèm căn cứ điều khoản</li>
+              <li>Khiếu nại một bước, theo dõi được</li>
+            </ul>
+            <a class="view-link" href="/index-citizen.html">Tra cứu hồ sơ <span aria-hidden="true">→</span></a>
+          </article>
+        </div>
+      </section>
 
-        <section class="landing-console" aria-labelledby="console-title">
-          <p class="landing-pill">Bàn điều khiển trực tiếp</p>
+      <section class="band band-console band-core-dark" aria-labelledby="console-title">
+        <div class="band-head">
+          <p class="eyebrow">Bàn điều khiển trực tiếp</p>
           <h2 id="console-title">Chạm được vào đèn, xe và tình huống</h2>
-          <div class="console-grid">
-            <article class="console-card">
-              <small>Thanh tra đèn</small>
-              <h3>Nhấp cột đèn</h3>
-              <ul><li>Pha hiện tại + đếm ngược chính xác</li><li>Hàng chờ theo từng hướng</li><li>Thời gian xanh kế hoạch của bộ điều khiển</li><li>Dự báo kẹt theo xác suất</li></ul>
-            </article>
-            <article class="console-card">
-              <small>Cưỡng chế · kịch bản</small>
-              <h3>Ghim — bơm — triệu hồi</h3>
-              <ul><li>Ghim một đèn ngẫu nhiên, xem các nút khác phản ứng</li><li>Bơm thêm xe theo nhu cầu</li><li>Triệu hồi cứu thương / cứu hỏa / công an</li><li>Tạo tai nạn — có nút hoàn tác</li></ul>
-            </article>
-            <article class="console-card">
-              <small>Sự cố</small>
-              <h3>Va chạm &amp; điều tiết</h3>
-              <ul><li>Cảnh báo vị trí hai xe xung đột</li><li>Phương án: mở làn kề, chuyển dòng qua đường khác</li><li>Hiện trạng thái trước / sau trên HUD và web cán bộ</li></ul>
-            </article>
-            <article class="console-card">
-              <small>Nhiệt theo hướng</small>
-              <h3>Dòng xe từng chiều</h3>
-              <ul><li>Mũi tên trên từng làn, theo chiều xe chạy</li><li>Hướng càng đông càng đậm, càng to</li><li>Lớp riêng, bật / tắt được</li></ul>
-            </article>
-          </div>
-        </section>
-      </main>
+        </div>
+        <div class="console">
+          <article class="console-card">
+            <p class="console-tag">Thanh tra đèn</p>
+            <h3>Nhấp cột đèn</h3>
+            <ul><li>Pha hiện tại + đếm ngược chính xác</li><li>Hàng chờ theo từng hướng</li><li>Thời gian xanh kế hoạch của bộ điều khiển</li><li>Dự báo kẹt theo xác suất</li></ul>
+          </article>
+          <article class="console-card">
+            <p class="console-tag">Cưỡng chế · kịch bản</p>
+            <h3>Ghim — bơm — triệu hồi</h3>
+            <ul><li>Ghim một đèn ngẫu nhiên, xem các nút khác phản ứng</li><li>Bơm thêm xe theo nhu cầu</li><li>Triệu hồi cứu thương / cứu hỏa / công an</li><li>Tạo tai nạn — có nút hoàn tác</li></ul>
+          </article>
+          <article class="console-card">
+            <p class="console-tag">Sự cố</p>
+            <h3>Va chạm &amp; điều tiết</h3>
+            <ul><li>Cảnh báo vị trí hai xe xung đột</li><li>Phương án: mở làn kề, chuyển dòng qua đường khác</li><li>Hiện trạng thái trước / sau trên HUD và web cán bộ</li></ul>
+          </article>
+          <article class="console-card">
+            <p class="console-tag">Nhiệt theo hướng</p>
+            <h3>Dòng xe từng chiều</h3>
+            <ul><li>Mũi tên trên từng làn, theo chiều xe chạy</li><li>Hướng càng đông càng đậm, càng to</li><li>Lớp riêng, bật / tắt được</li></ul>
+          </article>
+        </div>
+      </section>
+    </main>
 
-      <footer class="landing-footer">
-        <span>SAIGON SMTF · TP. Hồ Chí Minh</span>
-        <span>Bản chất dữ liệu trình diễn được ghi trong tài liệu kỹ thuật · 2026</span>
-      </footer>
-    </div>
+    <footer class="foot">
+      <span>Saigon SMTF · TP. Hồ Chí Minh</span>
+      <span>Bản chất dữ liệu trình diễn được ghi trong tài liệu kỹ thuật · 2026</span>
+    </footer>
   </body>
 </html>
