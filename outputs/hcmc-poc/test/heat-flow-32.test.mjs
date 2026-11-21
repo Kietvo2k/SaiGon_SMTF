@@ -81,6 +81,10 @@ test('thang màu theo hàng chờ: 0/2 xe xanh, 5 vàng, 10 cam, 20 đỏ; tím 
   assert.equal(HEAT_QUEUE_COLORS_32.length, 5);
   assert.equal(HEAT_QUEUE_LABELS_32.length, 4, 'legend chỉ 4 nấc hàng chờ');
   assert.match(HEAT_QUEUE_COLORS_32[1], /^#[0-9a-f]{6}$/);
+  // Vàng nhiệt là lục-vàng, tách khỏi vàng đèn giao thông #f1c40f.
+  const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const a = rgb(HEAT_QUEUE_COLORS_32[1]), b = rgb('#f1c40f');
+  assert.ok(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) > 0.25, 'vàng heat khác vàng đèn');
 });
 
 test('hàng chờ theo cạnh+chiều: xe dừng hoặc trong 25 m tới vạch có đèn', () => {

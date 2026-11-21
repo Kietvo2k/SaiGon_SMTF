@@ -35,30 +35,17 @@ export function heatQueueColor32(queue, closed = false) {
   return HEAT_QUEUE_COLORS_32[heatQueueClass32(queue, closed)];
 }
 
-// Dải ribbon theo CHIỀU trên cạnh: tâm = trung bình offset làn (đã nhân dir), rộng = cả cụm làn.
-// Cạnh hai chiều cho hai dải ở hai bên tim; cạnh một chiều cho một dải.
+// Mỗi làn một dải: tâm = offset làn (đã nhân dir), rộng = 72 % bề ngang làn để chừa khe giữa các làn.
+// Nhờ vậy làn trống không bị tô màu và dải không phủ kín cả cụm làn.
 export function ribbonBandsOf32(net, e) {
   const lanes = net && net.lanes;
   if (!lanes || !lanes.edge) return null;
-  const groups = new Map();
+  const out = [];
   for (let l = 0; l < lanes.edge.length; l++) {
     if (lanes.edge[l] !== e) continue;
-    const d = lanes.dir[l] > 0 ? 1 : -1;
-    const o = lanes.offset[l], w2 = lanes.width[l] * 0.5;
-    let g = groups.get(d);
-    if (!g) { g = { dir: d, min: Infinity, max: -Infinity, sum: 0, n: 0 }; groups.set(d, g); }
-    g.min = Math.min(g.min, (o - w2) * d); g.max = Math.max(g.max, (o + w2) * d);
-    g.sum += o * d; g.n++;
-  }
-  const out = [];
-  for (const g of groups.values()) {
-    if (!Number.isFinite(g.min) || !Number.isFinite(g.max) || !g.n) continue;
-    out.push({
-      dir: g.dir,
-      offset: (g.min + g.max) / 2,
-      half: Math.max(0.25, (g.max - g.min) * 0.5 * 0.98),
-      laneOffset: g.sum / g.n
-    });
+    const d = lanes.dir[l] > 0 ? 1 : -1, off = lanes.offset[l] * d;
+    if (!Number.isFinite(off) || !Number.isFinite(lanes.width[l])) continue;
+    out.push({ dir: d, offset: off, half: Math.max(0.25, lanes.width[l] * 0.5 * 0.72), lane: l, laneOffset: off });
   }
   return out.length ? out : null;
 }
@@ -89,6 +76,18 @@ export function queueByEdgeDir32(sim, net) {
     if (!q) continue;
     const d = net.lanes.dir[l] > 0 ? 0 : 1;
     out[net.lanes.edge[l] * 2 + d] += q;
+  }
+  return out;
+}
+
+// Lưu lượng (xe đang chạy) theo cạnh + chiều — dùng để phân biệt free-flow với đoạn không có dữ liệu.
+export function flowByEdgeDir32(sim, net) {
+  const out = new Float32Array(net.NE * 2);
+  if (!sim || !sim.lane || !sim.active) return out;
+  for (let i = 0; i < sim.N; i++) {
+    if (!sim.active[i]) continue;
+    const l = sim.lane[i];
+    out[net.lanes.edge[l] * 2 + (net.lanes.dir[l] > 0 ? 0 : 1)]++;
   }
   return out;
 }
@@ -179,7 +178,7 @@ export function buildRibbon32({ net, edges, yOf, halfWidthOf, bandsOf = null, tr
     const cz = (positions[start * 3 + 2] + positions[start * 3 + 5]) / 2;
     const laneCx = p0.x + firstNx * s.band.laneOffset, laneCz = p0.z + firstNz * s.band.laneOffset;
     ranges.push({
-      edge: s.e, dir: s.band.dir, offset: s.band.offset, half: s.band.half, laneOffset: s.band.laneOffset,
+      edge: s.e, dir: s.band.dir, lane: s.band.lane, offset: s.band.offset, half: s.band.half, laneOffset: s.band.laneOffset,
       start, count, s0: p0.s, s1: pts[n - 1].s, total: s.total, trimFrom: s.trimFrom, trimTo: s.trimTo,
       cx, cz, laneCx, laneCz, delta: Math.hypot(cx - laneCx, cz - laneCz),
       trimOver: Math.max(0, s.trimFrom - p0.s, pts[n - 1].s - Math.max(0, s.total - s.trimTo))
@@ -191,7 +190,7 @@ export function buildRibbon32({ net, edges, yOf, halfWidthOf, bandsOf = null, tr
 // Tô màu đỉnh theo hạng hàng chờ của từng dải (classOf(edge, dir) → 0..3; 4 = làn đóng).
 export function paintRibbon32(colors, ranges, classOf, palette = HEAT_QUEUE_COLORS_32.map(hexToRgb01)) {
   for (const r of ranges) {
-    const raw = Number(classOf(r.edge, r.dir));
+    const raw = Number(classOf(r.edge, r.dir, r.lane));
     const idx = Number.isFinite(raw) ? Math.max(0, Math.min(palette.length - 1, Math.trunc(raw))) : 0;
     const rgb = palette[idx];
     for (let j = 0; j < r.count; j++) {
@@ -318,13 +317,15 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
   const palette = HEAT_QUEUE_COLORS_32.map(hex => { const c = new THREE.Color(hex); return [c.r, c.g, c.b]; });
 
   const bg = new THREE.BufferGeometry();
-  bg.setAttribute('position', new THREE.BufferAttribute(built.positions, 3));
+  const basePositions = built.positions.slice();
+  const posAttr = new THREE.BufferAttribute(built.positions, 3);
+  bg.setAttribute('position', posAttr);
   const colorAttr = new THREE.BufferAttribute(built.colors, 3);
   bg.setAttribute('color', colorAttr);
   bg.setIndex(new THREE.BufferAttribute(built.indices, 1));
   bg.computeBoundingSphere();
   const mat = new THREE.MeshBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide,
+    vertexColors: true, transparent: true, opacity: 0.46, depthWrite: false, side: THREE.DoubleSide,
     polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -16
   });
   const mesh = new THREE.Mesh(bg, mat);
@@ -372,21 +373,44 @@ export function createHeatScene32({ THREE, scene, traffic, net, sim, boards = []
   };
 
   let lastPaint = -Infinity, lastQueueStats = null;
+  const visibility = new Uint8Array(built.ranges.length).fill(1);
   const paint = () => {
-    const queue = queueByEdgeDir32(sim, net);
+    const laneQueue = queueByLane32(sim, net), laneFlow = laneDensityOf32(sim, net);
+    const queue = new Float32Array(net.NE * 2);
+    for (let l = 0; l < net.NL; l++) queue[net.lanes.edge[l] * 2 + (net.lanes.dir[l] > 0 ? 0 : 1)] += laneQueue[l];
     const bins = [0, 0, 0, 0, 0];
-    const classOf = (e, dir) => {
-      const q = queue[e * 2 + (dir > 0 ? 0 : 1)];
-      const closed = !!(closedOf && closedOf(e));
-      const cls = heatQueueClass32(q, closed);
+    let lowQueueHot = 0, closedRanges = 0, hiddenRanges = 0;
+    const visible = new Uint8Array(built.ranges.length);
+    for (let i = 0; i < built.ranges.length; i++) {
+      const r = built.ranges[i], idx = r.edge * 2 + (r.dir > 0 ? 0 : 1);
+      const closed = !!(closedOf && closedOf(r.edge));
+      const hasData = closed || (r.lane >= 0 ? laneQueue[r.lane] > 0 || laneFlow[r.lane] > 0 : queue[idx] > 0);
+      if (!hasData) { hiddenRanges++; continue; }
+      visible[i] = 1;
+      const cls = heatQueueClass32(queue[idx], closed);
       bins[cls]++;
-      return cls;
-    };
-    paintRibbon32(built.colors, built.ranges, classOf, palette);
+      if (closed) closedRanges++;
+      if (cls >= 2 && queue[idx] <= HEAT_QUEUE_BINS_32[0]) lowQueueHot++;   // cam/đỏ/tím ở hàng chờ ≤2 = sai màu
+    }
+    paintRibbon32(built.colors, built.ranges, (e, dir) => heatQueueClass32(queue[e * 2 + (dir > 0 ? 0 : 1)], !!(closedOf && closedOf(e))), palette);
     colorAttr.needsUpdate = true;
+    // Ẩn hẳn dải không có queue/flow bằng cách thu các đỉnh về một điểm; hiện lại thì chép vị trí gốc.
+    let dirty = false;
+    for (let i = 0; i < built.ranges.length; i++) {
+      const r = built.ranges[i], show = visible[i];
+      if (show === visibility[i]) continue;
+      visibility[i] = show;
+      for (let j = 0; j < r.count; j++) {
+        const o = (r.start + j) * 3;
+        if (show) { built.positions[o] = basePositions[o]; built.positions[o + 1] = basePositions[o + 1]; built.positions[o + 2] = basePositions[o + 2]; }
+        else { built.positions[o] = basePositions[r.start * 3]; built.positions[o + 1] = basePositions[r.start * 3 + 1]; built.positions[o + 2] = basePositions[r.start * 3 + 2]; }
+      }
+      dirty = true;
+    }
+    if (dirty) posAttr.needsUpdate = true;
     let queueMax = 0;
     for (let i = 0; i < queue.length; i++) if (queue[i] > queueMax) queueMax = queue[i];
-    lastQueueStats = { bins, ranges: built.ranges.length, queueMax };
+    lastQueueStats = { bins, ranges: built.ranges.length, visibleRanges: built.ranges.length - hiddenRanges, hiddenRanges, queueMax, lowQueueHot, closedRanges };
   };
 
   // ---- Bảng VMS: cột, khung, mặt bảng có canvas texture.
