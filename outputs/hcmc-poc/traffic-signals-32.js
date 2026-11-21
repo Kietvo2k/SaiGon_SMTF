@@ -65,7 +65,12 @@ export function stopLinesOf32(net, geo, nodeMap) {
     for (let l = 0; l < lanes.edge.length; l++) {
       if (lanes.to[l] !== node.index) continue;
       if(net.signalPlan?.internalSt?.has(lanes.st[l])) continue;
-      const s = Math.max(0, lanes.length[l] - Rz[node.index]);
+      // Cầu vượt/chân dốc: không vạch dừng (audit P1-A).
+      if(net.signalPlan?.noStopSt?.has(lanes.st[l])) continue;
+      const room = lanes.length[l] - Rz[node.index];
+      // Đoạn ngắn hơn vùng nút (L < Rz) thì vạch bị kẹp về s=0 giữa ngã tư — bỏ.
+      if (!(room > 1)) continue;
+      const s = room;
       const a = geo.lanePoint(l, s, lanes.offset[l] + lanes.width[l] / 2, {});
       const b = geo.lanePoint(l, s, lanes.offset[l] - lanes.width[l] / 2, {});
       out.push({ node_id: node.node_id, lane: l, x: (a.x + b.x) / 2, y: (geo.laneY ? geo.laneY(l, s) : net.G.frame.groundY) + STOP_LINE_LIFT_32, z: (a.z + b.z) / 2, ax: a.x - b.x, az: a.z - b.z });
@@ -74,8 +79,22 @@ export function stopLinesOf32(net, geo, nodeMap) {
   return out;
 }
 
-export function createTrafficSignals32({ scene, THREE, controller, nodeMap, cameras, stopLines = [], approaches = null, rows = SIGNAL_PLAN_32, publicMode = false, camera = null, readTiming = null, getViewportH = () => (typeof innerHeight === 'number' ? innerHeight : 900) }) {
+export function createTrafficSignals32({ scene, THREE, controller, nodeMap, cameras, stopLines = [], approaches = null, rows = SIGNAL_PLAN_32, publicMode = false, camera = null, readTiming = null, getViewportH = () => (typeof innerHeight === 'number' ? innerHeight : 900), flashingClusters = null }) {
   if (!THREE) throw new TypeError('createTrafficSignals32 cần THREE (truyền từ app, không import tĩnh)');
+  // Cụm "flashing": đèn vàng nhấp nháy 1 Hz, không chạy chu kỳ xanh/đỏ (audit P1-C).
+  const flashingSet = new Set(flashingClusters || []);
+  for (const row of rows || []) {
+    if (!row.flashing) continue;
+    const meta = nodeMap.find(m => Number(m.osm_id) === Number(row.osm_id));
+    if (meta) flashingSet.add(meta.cluster_id || meta.node_id);
+  }
+  // Tên cụm để vẽ nhãn ghim map (tên đường/nút mới thay chip mã cụm trơ).
+  const nameByCluster = new Map();
+  for (const row of rows || []) {
+    const meta = nodeMap.find(m => Number(m.osm_id) === Number(row.osm_id));
+    if (meta && !nameByCluster.has(meta.cluster_id)) nameByCluster.set(meta.cluster_id, row.name || meta.label || meta.cluster_id);
+  }
+  for (const meta of nodeMap) if (!nameByCluster.has(meta.cluster_id)) nameByCluster.set(meta.cluster_id, meta.label || meta.cluster_id);
   const group = new THREE.Group();
   group.name = 'traffic-signals-32';
   scene.add(group);
@@ -177,7 +196,7 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
     group.add(head);
     const ownNode = { ...node, x: px, z: pz };
     heads.push({ node: ownNode, groupIdx: g, cluster: placement.cluster || node.node_id, lamps: { green, yellow, red }, head });
-    countdowns.push({ node: ownNode, groupIdx: g, mesh, canvas, texture, x: px, z: pz });
+    countdowns.push({ node: ownNode, groupIdx: g, mesh, canvas, texture, x: px, z: pz, cluster: placement.cluster || node.node_id });
   }
 
   // Demo-v3: ghim tên từng cụm đèn trên bản đồ. Sprite luôn quay về camera, bấm được,
@@ -204,12 +223,18 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
     ctx.lineTo(6, 6 + r); ctx.quadraticCurveTo(6, 6, 6 + r, 6); ctx.closePath();
     ctx.fillStyle = 'rgba(8,26,32,.93)'; ctx.fill();
     ctx.strokeStyle = 'rgba(137,216,223,.55)'; ctx.lineWidth = 3; ctx.stroke();
-    ctx.font = '700 42px system-ui,Segoe UI,sans-serif'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#f1f8f5'; ctx.fillText(pin.id, 20, h / 2 + 1);
+    ctx.font = '700 36px system-ui,Segoe UI,sans-serif'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f1f8f5'; ctx.fillText(pin.id, 20, 38);
+    if (pin.name) {
+      const short = pin.name.length > 30 ? pin.name.slice(0, 29) + '…' : pin.name;
+      ctx.font = '500 17px system-ui,Segoe UI,sans-serif';
+      ctx.fillStyle = 'rgba(200,224,224,.9)';
+      ctx.fillText(short, 20, 84);
+    }
     const dot = { red: '#e74c3c', yellow: '#f1c40f', green: '#2ecc71' };
     const order = ['red', 'yellow', 'green'];
     for (let i = 0; i < 3; i++) {
-      const cx = w - 84 + i * 26, cy = h / 2;
+      const cx = w - 84 + i * 26, cy = 42;
       const on = order[i] === phase;
       if (on) { ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fill(); }
       ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2);
@@ -232,7 +257,7 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
     hit.position.copy(sprite.position); hit.name = 'signal-pin-hit-32';
     hit.userData.signalPin = sprite.userData.signalPin;
     group.add(hit); pinHits.push(hit);
-    pinSprites.push({ sprite, canvas, texture, hit, id: item.id, node: item.nodeIds[0] });
+    pinSprites.push({ sprite, canvas, texture, hit, id: item.id, node: item.nodeIds[0], name: nameByCluster.get(item.id) });
   }
   // Ở mức "Toàn khu", 5 nhãn Hàng Xanh chồng lên nhau. Gom thành một ghim vùng;
   // bấm ghim vùng sẽ bay vào 950 m rồi tách lại 5 ghim cụm.
@@ -384,11 +409,13 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
     group,
     update(tSim) {
       const camPos = camera && camera.position;
+      const blinkOn = Math.floor((Number(tSim) || 0) * 2) % 2 === 0;   // vàng nhấp nháy 1 Hz
       for (const head of heads) {
         const haloScale = 0.7;
-        const state = controller.stateOf(head.node.node_id, tSim);
-        const phaseInfo = state.phases.find(p => p.group === head.groupIdx) || {phase:'red'};
-        const lit = lightColorOf(phaseInfo.phase);
+        const flashing = flashingSet.has(head.cluster);
+        const state = flashing ? null : controller.stateOf(head.node.node_id, tSim);
+        const phaseInfo = state ? (state.phases.find(p => p.group === head.groupIdx) || {phase:'red'}) : { phase: blinkOn ? 'yellow' : 'off' };
+        const lit = flashing ? (blinkOn ? 'yellow' : 'off') : lightColorOf(phaseInfo.phase);
         for (const [name, pair] of Object.entries(head.lamps)) {
           const on = name === lit;
           pair.lamp.material.color.setHex(on ? PHASE_COLOR[name] : IDLE_COLOR);
@@ -400,6 +427,7 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
         }
       }
       for (const item of countdowns) {
+        if (flashingSet.has(item.cluster)) { item.mesh.visible = false; continue; }
         const dist = camPos ? Math.hypot(item.x - camPos.x, item.z - camPos.z) : 400;
         const wpp = worldPerPixel(dist);
         const state = controller.stateOf(item.node.node_id, tSim);
@@ -414,6 +442,7 @@ export function createTrafficSignals32({ scene, THREE, controller, nodeMap, came
       if (drawPin && tSim - lastPinPaint >= .45) {
         lastPinPaint = tSim;
         for (const pin of pinSprites) {
+          if (flashingSet.has(pin.id)) { drawPin(pin, blinkOn ? 'yellow' : 'off'); continue; }
           const state = controller.stateOf(pin.node, tSim);
           const green = state.phases.find(p => p.phase === 'green');
           const yellow = state.phases.find(p => p.phase === 'yellow');
@@ -581,11 +610,14 @@ export function installSignals32(app, { nodeMap = [], cameras = [], THREE = null
   const approaches = junctionPlacements32(layout);
   if (traffic.net.G.region === 'bac' && layout.some(j => !j.arms.some(a => a.incoming && a.head) || !j.arms.some(a => a.outgoing))) throw new Error('Cụm public thiếu làn vào/ra thật');
   const controlled = new Set(layout.flatMap(j => j.arms.filter(a => a.head).flatMap(a => a.laneIds)));
-  const stopLines = stopLinesOf32(traffic.net, geo, indexed).filter(s => controlled.has(s.lane));
+  const flashing = new Set((traffic.net.signalPlan?.clusters || []).filter(c => c.flashing).map(c => c.cluster_id));
+  // Cụm flashing không có vạch dừng: chỉ nhấp nháy vàng, nhường đường (audit P1-C).
+  const flashingLanes = new Set(layout.filter(j => flashing.has(j.id)).flatMap(j => j.arms.flatMap(a => a.laneIds)));
+  const stopLines = stopLinesOf32(traffic.net, geo, indexed).filter(s => controlled.has(s.lane) && !flashingLanes.has(s.lane));
   const signals = createTrafficSignals32({
     scene: app.scene, THREE, controller: app.controller,
     nodeMap: indexed, stopLines, approaches, rows: traffic.net.signalPlan?.rows || SIGNAL_PLAN_32, publicMode: traffic.net.G.region === 'bac',
-    cameras, camera: app.camera,
+    cameras, camera: app.camera, flashingClusters: flashing,
     // Dùng đúng snapshot của panel để nhãn thời gian khớp số đang hiển thị.
     readTiming: cluster => {
       const snap = app.modules && app.modules.signalInspector && app.modules.signalInspector.snapshot

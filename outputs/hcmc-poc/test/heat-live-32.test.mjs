@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
-import { buildTrafficNetwork31, createTrafficSim31, SEED } from '../city-traffic-sim-31.js?v=32a';
+import { buildTrafficNetwork31, createTrafficSim31, createTrafficGeometry31, SEED } from '../city-traffic-sim-31.js?v=32a';
 import { buildSignalPlan32 } from '../signal-plan-32.js?v=32a';
 import {
   createHeatLive32, createRouteBias32, chooseVmsBoards32, vmsMessage32, collectSamples32, complies32,
   speedLimitsOf32, roadNameOf32, COMPLY_SHARE_32, BIAS_FACTOR_32, ALERT_PROB_32
 } from '../heat-live-32.js?v=32a';
-import { ribbonEdges32, buildRibbon32, paintRibbon32, HEAT_SCENE_32_VERSION } from '../heat-scene-32.js?v=32a';
+import { ribbonEdges32, buildRibbon32, paintRibbon32, ribbonBandsOf32, HEAT_QUEUE_COLORS_32, HEAT_SCENE_32_VERSION } from '../heat-scene-32.js?v=32a';
 import { createTransport32 } from '../station-client-32.js?v=32a';
 import { createQueue32, createMemoryStore32 } from '../station-queue-32.js?v=32a';
 import { HEAT_COLORS_32, colorOf } from '../heat-32.js?v=32a';
@@ -30,7 +30,7 @@ const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
 const buildNet = () => buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
 
 test('phiên bản module M4b1, hằng số đúng đặc tả, mã mới không có chữ cấm', () => {
-  assert.equal(HEAT_SCENE_32_VERSION, 'heat-scene-32a');
+  assert.equal(HEAT_SCENE_32_VERSION, 'heat-scene-32b');
   assert.equal(SMART_APP_32_VERSION, 'smart-app-32a');
   assert.equal(HEAT_TICK_MS_32, 250);
   assert.equal(ALERT_PROB_32, 0.6);
@@ -229,7 +229,7 @@ test('thông điệp VMS: bình thường khi không có cảnh báo phía trư�
   for (const m of [normal, alert, noAlt]) for (const bad of BANNED_STRINGS) assert.ok(!m.text.toLowerCase().includes(bad));
 });
 
-test('dải nhiệt (hình học thuần): đỉnh 2 mỗi điểm, chỉ số tam giác hợp lệ, tô màu theo mức', () => {
+test('dải nhiệt (hình học thuần): đỉnh 2 mỗi điểm, chỉ số tam giác hợp lệ, tô màu theo hạng hàng chờ', () => {
   const fake = { E: [{ c: [0, 0, 10, 0, 20, 0], road: 0 }, { c: [0, 5, 0, 15], road: 0 }], NE: 2, NL: 0 };
   const built = buildRibbon32({ net: fake, edges: [0, 1], yOf: () => 3, halfWidthOf: () => 2, lift: 0.25 });
   assert.equal(built.positions.length, (6 + 4) * 3);
@@ -237,12 +237,13 @@ test('dải nhiệt (hình học thuần): đỉnh 2 mỗi điểm, chỉ số t
   for (const idx of built.indices) assert.ok(idx < 10);
   for (let k = 1; k < built.positions.length; k += 3) assert.equal(built.positions[k], 3.25);
   assert.deepEqual(built.ranges.map(r => [r.edge, r.start, r.count]), [[0, 0, 6], [1, 6, 4]]);
-  const palette = HEAT_COLORS_32.map((_, k) => [k / 10, 0, 0]);
-  const levels = [0.05, 0.9];
-  const painted = paintRibbon32(built.colors, built.ranges, e => levels[e], palette);
+  const palette = HEAT_QUEUE_COLORS_32.map((_, k) => [k / 10, 0, 0]);
+  const classes = [0, 3];
+  const painted = paintRibbon32(built.colors, built.ranges, e => classes[e], palette);
   assert.equal(painted, 2);
   assert.equal(built.colors[0], palette[0][0]);
-  assert.ok(Math.abs(built.colors[6 * 3] - palette[4][0]) < 1e-6);
+  assert.ok(Math.abs(built.colors[6 * 3] - palette[3][0]) < 1e-6);
+  // heat-32.js giữ nguyên thang mức nhiệt cho dự báo; heat-scene dùng thang hàng chờ riêng.
   assert.equal(colorOf(0.9), HEAT_COLORS_32[4]);
 });
 
@@ -255,6 +256,42 @@ test('ribbonEdges32 trên mạng thật: chỉ cạnh tertiary trở lên, có t
   const ranked = new Set();
   for (let l = 0; l < net.NL; l++) if (net.lanes.rank[l] >= 2) ranked.add(net.lanes.edge[l]);
   for (const e of edges) assert.ok(ranked.has(e));
+});
+
+test('ribbon trên mạng thật: tâm dải = tâm cụm làn (≤0,3 m), cắt trước Rz, không NaN', () => {
+  const net = buildNet();
+  const sim = createTrafficSim31(net, { signalPlan, breakerS: 180, seed: SEED });
+  const edges = ribbonEdges32(net, sim);
+  const geo = createTrafficGeometry31(net, { jit: [], len: [] });
+  const firstLane = new Int32Array(net.NE).fill(-1);
+  for (let l = 0; l < net.NL; l++) if (firstLane[net.lanes.edge[l]] < 0) firstLane[net.lanes.edge[l]] = l;
+  const yOf = (e, sPlane) => {
+    const l = firstLane[e], L = net.lanes.length[l], d = net.lanes.dir[l], planar = net.geo.planar[e];
+    const sC = Math.max(0, Math.min(planar, sPlane));
+    return geo.laneY(l, Math.max(0, Math.min(L, planar > 0 ? (d > 0 ? sC : planar - sC) * L / planar : 0)));
+  };
+  const nodeIdx = new Map(G.nodes.map((n, i) => [n.id, i]));
+  const nodeOf = id => (Number.isInteger(id) && id >= 0 && id < net.NN ? id : nodeIdx.get(id));
+  const trimOf = e => {
+    const ed = net.E[e], scale = ed.length > 0 ? net.geo.planar[e] / ed.length : 1;
+    return { from: (net.Rz[nodeOf(ed.from)] + 1) * scale, to: (net.Rz[nodeOf(ed.to)] + 1) * scale };
+  };
+  const built = buildRibbon32({ net, edges, yOf, bandsOf: e => ribbonBandsOf32(net, e), trimOf });
+  assert.ok(built.ranges.length > 0);
+  let maxDelta = 0, maxTrim = 0, twoWay = 0;
+  for (const r of built.ranges) {
+    maxDelta = Math.max(maxDelta, r.delta);
+    maxTrim = Math.max(maxTrim, r.trimOver);
+    if (r.dir < 0) twoWay++;
+    const ed = net.E[r.edge], scale = ed.length > 0 ? net.geo.planar[r.edge] / ed.length : 1;
+    assert.ok(r.s0 >= (net.Rz[nodeOf(ed.from)] + 1) * scale - 0.02, `cạnh ${r.edge} bắt đầu sau Rz: s0=${r.s0} want=${(net.Rz[nodeOf(ed.from)] + 1) * scale} total=${r.total}`);
+    assert.ok(r.s1 <= r.total - (net.Rz[nodeOf(ed.to)] + 1) * scale + 0.02, `cạnh ${r.edge} dừng trước Rz: s1=${r.s1}`);
+    assert.ok(Math.abs(r.offset - r.laneOffset) <= 0.3, `cạnh ${r.edge} lệch tâm ${Math.abs(r.offset - r.laneOffset)}`);
+  }
+  for (let i = 0; i < built.positions.length; i++) assert.ok(Number.isFinite(built.positions[i]), 'không có NaN');
+  assert.ok(maxDelta <= 0.3, `lệch tâm tối đa ${maxDelta} m`);
+  assert.ok(maxTrim <= 0.02, `tràn nút tối đa ${maxTrim} m`);
+  assert.ok(twoWay > 0, 'có dải chiều âm (cạnh hai chiều)');
 });
 
 test('gửi trạm: sendHeat POST đúng payload; 404 (backend chưa có endpoint) trả false, không vào dead-letter/hàng đợi', async () => {

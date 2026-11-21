@@ -902,7 +902,7 @@ if(smartApp){
   try{localStorage.setItem(REGION_STORAGE_KEY,'bac');}catch{}
   const {regionTrafficPayload}=await import('./city-region-31.js?v=31a');traffic.setRegion(regionTrafficPayload('bac'));
   const cameras=smartPrep.cameras;
-  if(!traffic.net.stats.lanes||!traffic.net.stats.spawnLanes||smartSignalPlan.clusters.length!==10)throw new Error('Mạng public chưa có làn/cổng/cụm đèn hợp lệ');
+  if(!traffic.net.stats.lanes||!traffic.net.stats.spawnLanes||smartSignalPlan.clusters.length<6)throw new Error('Mạng public chưa có làn/cổng/cụm đèn hợp lệ');
   smartMod.installSignals32(smartApp,{nodeMap:smartPrep.nodeMap,cameras,THREE});
   smartMod.installCameraCapture32(smartApp,{cameras,THREE});
   smartMod.installStation32(smartApp,{cameras,nodeMap:smartPrep.nodeMap});

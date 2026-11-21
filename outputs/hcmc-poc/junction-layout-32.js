@@ -52,7 +52,22 @@ const roadScore32 = road => {
 export const HEAD_CURB_OFFSET_32 = 3.5;
 function headOfArm32(net, geo, arm) {
   if (!geo || !arm.incomingLanes.length) return null;
-  const best = arm.incomingLanes.slice().sort((a, b) => {
+  // Không đặt đầu đèn cho làn cầu vượt/nhánh "no stop" hoặc đoạn quá ngắn (vạch sẽ bị kẹp về s=0).
+  const usable = arm.incomingLanes.filter(({ lane, nodeIndex }) => {
+    if (net.signalPlan?.noStopSt?.has(net.lanes.st[lane])) return false;
+    // Chỉ bản public mới loại làn quá ngắn (vạch kẹp s=0); classic giữ nguyên hành vi 12 đầu đèn.
+    if (net.G.region === 'bac') {
+      const room = (net.lanes.length[lane] || 0) - (net.Rz?.[nodeIndex] || 0);
+      if (!(room > 1)) return false;
+    }
+    return true;
+  });
+  if (!usable.length) return null;
+  const best = usable.slice().sort((a, b) => {
+    const ea = net.E?.[net.lanes.edge[a.lane]], eb = net.E?.[net.lanes.edge[b.lane]];
+    const ga = ea?.elevationClass && ea.elevationClass !== 'ground' ? 1 : 0;
+    const gb = eb?.elevationClass && eb.elevationClass !== 'ground' ? 1 : 0;
+    if (ga !== gb) return ga - gb;                     // ưu tiên làn mặt đất
     const oa = net.lanes.offset[a.lane] || 0, ob = net.lanes.offset[b.lane] || 0;
     if (ob !== oa) return ob - oa;
     return (net.lanes.width[b.lane] || 0) - (net.lanes.width[a.lane] || 0);
@@ -175,6 +190,8 @@ export function junctionPlacements32(layout) {
   for (const j of layout || []) {
     for (const arm of j.arms || []) {
       if (!arm.head) continue;
+      // Phòng thủ: không dựng đầu đèn cho nhánh cầu vượt/nhánh không được dừng.
+      if (arm.head.noStop) continue;
       out.push({
         ...arm.head,
         cluster: j.id, junction: j.name, junctionType: j.typeLabel,

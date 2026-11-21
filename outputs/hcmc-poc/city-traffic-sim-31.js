@@ -572,6 +572,14 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
   const lcTo = new Int32Array(N).fill(-1), lcT0 = new Float64Array(N), lcDo = new Float32Array(N), lcBase = new Float32Array(N), lcCd = new Float64Array(N);
   const fairUntil = new Map();   // nút priority → { car, until } token công bằng 1,5 s
   const redPass = new Float64Array(N), redPassNode = new Int32Array(N).fill(-1);   // vé vượt đỏ cố ý
+  const uTurnGen = new Int32Array(N).fill(-1);   // mỗi xe tối đa 1 lần quay đầu / thế hệ
+  const uTurnAt = new Map();                     // nút → thời điểm quay đầu gần nhất (giãn cách 20 s)
+  const uTurnCount = new Map();                  // nút → số lần quay đầu (QA)
+  // Nút gần đèn (< 150 m): KHÔNG cho quay đầu (tránh vòng lặp quanh nút có đèn như Bac-04/Bac-05).
+  const nearSignal = new Uint8Array(net.NN);
+  if (v3) for (let n = 0; n < net.NN; n++) if (signal[n]) {
+    for (let m = 0; m < net.NN; m++) if (!nearSignal[m] && Math.hypot(G.nodes[m].x - G.nodes[n].x, G.nodes[m].z - G.nodes[n].z) < 150) nearSignal[m] = 1;
+  }
   const lockNode = new Int32Array(N * LK), lockIn = new Int32Array(N * LK), lockOut = new Int32Array(N * LK), lockRemain = new Float32Array(N * LK);
   const rand = i => { let x = rng[i]; x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; rng[i] = x; return x / 4294967296; };
   const laneCars = new Array(NL); const laneActive = new Uint8Array(NL); let activeLanes = [];
@@ -830,17 +838,6 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     const hs = holders.get(node) || [];
     if (!redSneak) for (const h of hs) {
       if (h.car === i || compatible(inL, outL, h, i)) continue;
-      // M5b-v3: NHẬP LÀN (merge) — holder đi ra CÙNG làn/trạng thái với mình thì chỉ là nối đuôi,
-      // không phải cắt ngang: nhường theo chỗ trống ở làn ra (firstRear) thay vì khoá cả nút.
-      // Đây là sửa gốc cho nút chữ T/Y: nhánh phụ nhập vào dòng chính liên tục.
-      if (v3 && outL >= 0 && h.outL >= 0 && lanes.st[h.outL] === lanes.st[outL]) continue;
-      // Holder đang ĐỨNG YÊN và CHƯA vào hộp (xếp hàng sau vạch của nó) không chặn vật lý lối đi.
-      if (v3 && stopT[i] > 2 && v[h.car] < .2) {
-        const hl = lane[h.car];
-        const inside = lanes.to[hl] === node ? (s[h.car] + len[h.car] / 2 > lanes.length[hl] - Rz[node] + .3)
-          : (lanes.from[hl] === node ? (s[h.car] - len[h.car] / 2 < Rz[node]) : false);
-        if (!inside) continue;
-      }
       return false;
     }
     for (const p of plan) if (p.node === node && !(p.inL === inL) && !compatible(inL, outL, { car: i, inL: p.inL, outL: p.outL, straight: straightMove(p.inL, p.outL) }, i)) return false;
@@ -1063,9 +1060,10 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     // Làn mong muốn tại nút kế: rẽ phải → làn 0, rẽ trái → làn cuối, đi thẳng → giữ làn (research §8.3).
     let wantK = k;
     const nl = next[i];
-    if (nl >= 0 && L - s[i] < Math.min(V3.laneChangeLookaheadM, 80)) {
+    // Ưu tiên làn rẽ chỉ khi nút kế còn XA và làn hiện tại không phải làn rẽ (không dồn sớm vào làn đã tắc).
+    if (nl >= 0 && L - s[i] < 45) {
       const c = (nextSt[st] || []).find(x => x.st === lanes.st[nl]);
-      if (c) wantK = Math.abs(c.turn) < .6 ? Math.min(k, n - 1) : c.turn > 0 ? 0 : n - 1;
+      if (c && Math.abs(c.turn) >= .6) wantK = c.turn > 0 ? 0 : n - 1;
     }
     const cand = [];
     if (wantK !== k) cand.push(k + Math.sign(wantK - k));
@@ -1103,7 +1101,13 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     if (!active[i] || lcTo[i] >= 0) return false;
     if (kind[i] >= HEAVY || isEmergencyCar(i)) return false;
     if (v[i] > .3 || stopT[i] < V3.uTurnPatienceS) return false;
+    if (uTurnGen[i] === gen[i]) return false;                      // mỗi xe tối đa 1 lần / thế hệ
     const l = lane[i], L = lanes.length[l], node = lanes.to[l];
+    // Chỉ quay đầu ở nút KHÔNG đèn và cách xa mọi đèn ≥ 150 m: không tạo vòng lặp quanh nút có đèn
+    // (Bac-04, Bac-05) hay trên trục có đèn; không quay đầu trên cầu/cao tốc.
+    if (signal[node] || nearSignal[node]) return false;
+    const lastTurn = uTurnAt.get(node);
+    if (lastTurn !== undefined && counters.t - lastTurn < 20) return false;
     if (L - s[i] > Rz[node] + 5) return false;
     const e = lanes.edge[l], rank = lanes.rank[l];
     if (E[e].oneway !== 'no' || net.bridgeEdge[e] || rank < 2 || rank > 4 || L < 30) return false;
@@ -1131,6 +1135,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
       jit[i] = 0; lat[i] = lanes.offset[l2]; prevLane[i] = l;
       insertSorted(l2, i); fillPath(i);
       counters.uTurns++;
+      uTurnGen[i] = gen[i]; uTurnAt.set(node, counters.t); uTurnCount.set(node, (uTurnCount.get(node) || 0) + 1);
       return true;
     }
     return false;
@@ -1302,6 +1307,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     counters.perSecond.fill(0);
     if (beh) { beh.parkUntil.fill(0); beh.parkGen.fill(-1); beh.vcGen.fill(-1); beh.redOn.fill(-1e9); beh.wasRed.fill(0); }
     lcTo.fill(-1); lcT0.fill(0); lcDo.fill(0); lcBase.fill(0); lcCd.fill(0); fairUntil.clear(); redPass.fill(0); redPassNode.fill(-1);
+    uTurnGen.fill(-1); uTurnAt.clear(); uTurnCount.clear();
     lockNode.fill(-1); lockRemain.fill(Infinity); lastStep.fill(-1);
     for (let i = 0; i < N; i++) {
       const [l, si, k, seed] = spawnPlan[i];
@@ -1681,6 +1687,7 @@ export function createTrafficSim31(net, { centre = [0, 0], poolTarget = POOL_TAR
     behaviorV3: v3,
     // M5b-v3: thống kê miền khóa nút (union-find trong sim) — QA dùng để đối chiếu.
     lockDomains: () => ({ count: domainNodes.length, maxSize: domainNodes.reduce((m, a) => Math.max(m, a.length), 0), nodes: domainNodes.reduce((s, a) => s + a.length, 0) }),
+    uTurnsByNode: () => Object.fromEntries(uTurnCount),
     allCodeOf: i => (isEmergencyCar(i) || !beh) ? null : violatorOf32(i + 1, gen[i], TRAFFIC_KINDS[kind[i]].name, beh.seed),
     violationCounts() {
       const byCode = {}; let activeN = 0, motoN = 0;
