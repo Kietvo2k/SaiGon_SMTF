@@ -1,12 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildPublicTimeline,
   citizenCanComplain,
   complaintNoteError,
+  lookupCitizen,
   mapPublicItem,
   mapPublicRecord,
   sortEvidence,
 } from './citizenApi';
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('ánh xạ hồ sơ công khai sang kiểu chung', () => {
   it('giữ biển, trạng thái, địa điểm và mức phạt đã xác minh', () => {
@@ -115,5 +120,58 @@ describe('điều kiện gửi khiếu nại', () => {
     expect(complaintNoteError('')).not.toBe('');
     expect(complaintNoteError('   \n\t ')).not.toBe('');
     expect(complaintNoteError('Xe này không phải của tôi')).toBe('');
+  });
+});
+
+describe('tra cứu biển compact 9 ký tự', () => {
+  function mockLookup(recordsByPlate: Record<string, unknown[]>) {
+    const calls: string[] = [];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const plate = new URL(String(input), 'http://local').searchParams.get('plate') || '';
+      calls.push(plate);
+      return new Response(JSON.stringify({ plate, records: recordsByPlate[plate] ?? [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return calls;
+  }
+
+  it('fallback sang dạng ô tô khi dạng xe máy rỗng, tối đa 2 request', async () => {
+    const calls = mockLookup({
+      '59X1-234.56': [{ plate: '59X1-234.56', status: 'confirmed', code: 'NO-HELMET' }],
+    });
+    const result = await lookupCitizen('public', '59x123456');
+    expect(calls).toEqual(['59-X1 234.56', '59X1-234.56']);
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0].plate).toBe('59X1-234.56');
+  });
+
+  it('không fallback khi dạng xe máy đã có hồ sơ', async () => {
+    const calls = mockLookup({
+      '59-X1 234.56': [{ plate: '59-X1 234.56', status: 'needs_review', code: 'NO-HELMET' }],
+      '59X1-234.56': [{ plate: '59X1-234.56', status: 'confirmed', code: 'NO-HELMET' }],
+    });
+    const result = await lookupCitizen('public', '59X123456');
+    expect(calls).toEqual(['59-X1 234.56']);
+    expect(result.records[0].plate).toBe('59-X1 234.56');
+  });
+
+  it('cả hai dạng đều rỗng vẫn trả biển xe máy sau 2 request', async () => {
+    const calls = mockLookup({});
+    const result = await lookupCitizen('public', '59X123456');
+    expect(calls).toEqual(['59-X1 234.56', '59X1-234.56']);
+    expect(result.plate).toBe('59-X1 234.56');
+    expect(result.records).toHaveLength(0);
+  });
+
+  it('biển ô tô 8 ký tự chỉ phát một request', async () => {
+    const calls = mockLookup({
+      '51K-123.45': [{ plate: '51K-123.45', status: 'confirmed', code: 'RED-LIGHT' }],
+    });
+    const result = await lookupCitizen('public', '51k12345');
+    expect(calls).toEqual(['51K-123.45']);
+    expect(result.records[0].plate).toBe('51K-123.45');
   });
 });

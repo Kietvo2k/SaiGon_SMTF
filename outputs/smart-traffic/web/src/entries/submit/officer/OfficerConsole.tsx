@@ -7,6 +7,7 @@ import { subscribeStationEvents, type StationEvent } from '../../../lib/events';
 import { CameraPanel } from './CameraWall';
 import { EventFeed } from './EventFeed';
 import { ViolationDesk, type DecisionResult } from './ViolationDesk';
+import { ThemeToggle } from '../../../theme/ThemeToggle';
 import { useMediaQuery, useNow } from './hooks';
 import {
   eventKey, formatClock, formatDateTime, formatMetric, formatRelativeTime, openRecordCount,
@@ -43,8 +44,8 @@ const KPI_FIELDS = [
 function Sparkline({ values, label }: { values: number[]; label: string }) {
   const path = sparklinePath(values);
   const points = sparklinePoints(values);
-  return <svg className="ops-sparkline" viewBox="0 0 120 34" role="img" aria-label={`Xu hướng ${label}, ${values.length} mẫu`}>
-    <title>Xu hướng {label} qua {values.length} mẫu</title>
+  return <svg className="ops-sparkline" viewBox="0 0 120 34" role="img" aria-label={`Xu hướng ${label}, ${values.length} lần đo`}>
+    <title>Xu hướng {label} qua {values.length} lần đo</title>
     <line x1="3" y1="31" x2="117" y2="31" className="ops-sparkline-axis" />
     {path
       ? <>
@@ -67,14 +68,14 @@ function KpiCard({ label, value, unit, values, lowerIsBetter, loading }: {
   return <article className={`ops-kpi${loading ? ' is-loading' : ''}`}>
     <div className="ops-kpi-top">
       <h3>{label}</h3>
-      <span className="ops-kpi-samples">{values.length} mẫu</span>
+      <span className="ops-kpi-samples">{values.length} lần đo</span>
     </div>
     <div className="ops-kpi-value">{loading ? <span className="ops-skeleton ops-skeleton-value" /> : <><b>{formatMetric(value)}</b><small>{unit}</small></>}</div>
     <Sparkline values={values} label={label} />
     <div className="ops-kpi-foot">
       {values.length >= 2
-        ? <span className={`ops-trend ops-trend-${trend.tone}`}>{trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {trend.text} <small>so với mẫu đầu</small></span>
-        : <span className="ops-trend ops-trend-flat">Chờ mẫu kế tiếp (chu kỳ 12 giây)</span>}
+        ? <span className={`ops-trend ops-trend-${trend.tone}`}>{trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {trend.text} <small>so với lần đo đầu</small></span>
+        : <span className="ops-trend ops-trend-flat">Chờ lần đo kế tiếp (chu kỳ 12 giây)</span>}
     </div>
   </article>;
 }
@@ -136,6 +137,7 @@ function TopBar({ source, lastUpdated, refreshInfo, refreshing, bootState, onRef
       <small>{lastUpdated ? `cập nhật ${formatRelativeTime(lastUpdated, now)}` : refreshInfo.message || 'chưa nhận dữ liệu'}</small>
     </div>
     <div className="ops-topbar-actions">
+      <ThemeToggle />
       <span className={`ops-refresh-pill${refreshInfo.failures ? ' is-error' : ''}`} title={refreshInfo.failures ? refreshInfo.message : 'Tự động lấy dữ liệu mỗi 12 giây'}>
         {refreshInfo.failures
           ? (refreshInfo.httpStatus === 429 ? `429 · chờ ${seconds ?? 0}s` : `Lỗi · chờ ${seconds ?? 0}s`)

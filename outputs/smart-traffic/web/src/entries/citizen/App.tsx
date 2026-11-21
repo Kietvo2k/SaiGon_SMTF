@@ -4,6 +4,7 @@ import type { CitizenMode } from './citizenApi';
 import { CameraIcon, CheckIcon, ShieldIcon, UserIcon } from './icons';
 import { LookupPanel } from './LookupPanel';
 import { TrafficAlertsPanel } from './TrafficAlertsPanel';
+import { ThemeToggle } from '../../theme/ThemeToggle';
 
 const AccountWorkspace = lazy(() => import('./AccountWorkspace'));
 
@@ -60,10 +61,13 @@ export function App({ mode = 'local' }: Props) {
         </nav>
 
         <div className="cz-header-actions">
-          <button type="button" className="cz-btn cz-btn-outline" onClick={openAccount}>
-            <UserIcon width={17} height={17} />
-            <span>{mode === 'public' ? 'Tài khoản' : 'Đăng nhập'}</span>
-          </button>
+          <ThemeToggle />
+          {mode !== 'public' && (
+            <button type="button" className="cz-btn cz-btn-outline" onClick={openAccount}>
+              <UserIcon width={17} height={17} />
+              <span>Đăng nhập</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -109,7 +113,7 @@ export function App({ mode = 'local' }: Props) {
         <nav className="cz-footer-links" aria-label="Liên kết chân trang">
           <a href="index.html">Trang chủ</a>
           <a href="index-officer.html">Trung tâm điều hành</a>
-          <button type="button" className="cz-link" onClick={openAccount}>Tài khoản công dân</button>
+          {mode !== 'public' && <button type="button" className="cz-link" onClick={openAccount}>Tài khoản công dân</button>}
         </nav>
       </footer>
     </div>

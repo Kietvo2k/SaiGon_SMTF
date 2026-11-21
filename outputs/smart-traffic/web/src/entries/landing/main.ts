@@ -1,3 +1,7 @@
+import { initTheme } from '../../theme/theme';
+
+initTheme();
+
 const root = document.documentElement;
 root.classList.add('js');
 

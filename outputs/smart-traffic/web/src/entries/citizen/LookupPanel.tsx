@@ -1,7 +1,6 @@
 import { FormEvent, useEffect, useReducer, useRef, useState } from 'react';
 import { formatDateTime, formatPenalty } from '../../lib/format';
 import { violationStatusLabel, violationStatusTone } from '../../lib/labels';
-import { normalizeLookupPlate } from '../../lib/lookup';
 import {
   CitizenApiError,
   type CitizenMode,
@@ -9,7 +8,7 @@ import {
   lookupCitizen,
 } from './citizenApi';
 import { initialLookupState, lookupReducer } from './lookupState';
-import { formatPlateTyping, formatPlateValue, MAX_PLATE_LENGTH, setCaret } from './plate';
+import { formatPlateTyping, formatPlateValue, MAX_PLATE_LENGTH, normalizeCitizenPlate, setCaret } from './plate';
 import { RecordCard } from './RecordCard';
 import { ViolationDrawer } from './ViolationDrawer';
 import { AlertIcon, ArrowRightIcon, CheckIcon, ChevronRightIcon, LockIcon, SearchIcon, ShieldIcon } from './icons';
@@ -42,7 +41,7 @@ export function LookupPanel({ mode, seed, onRequireLogin }: Props) {
 
   const runLookup = async (raw: string) => {
     if (busyRef.current) return;
-    const normalized = normalizeLookupPlate(raw);
+    const normalized = normalizeCitizenPlate(raw);
     if (!normalized) {
       setFieldError('Biển số chưa đúng định dạng. Ví dụ: 51K-123.45 hoặc 59-X1 234.56.');
       dispatch({ type: 'reset' });
@@ -169,7 +168,7 @@ export function LookupPanel({ mode, seed, onRequireLogin }: Props) {
             </button>
           </div>
           <p id="plate-help" className="cz-help">
-            Ô tô hoặc xe máy. Nhập liền, có dấu chấm hay gạch đều được — hệ thống tự chuẩn hoá.
+            Ô tô hoặc xe máy. Nhập liền, có dấu chấm hay gạch đều được — 59X123456 tự thành 59-X1 234.56.
           </p>
           {fieldError && <p id="plate-error" className="cz-field-error" role="alert">{fieldError}</p>}
         </form>

@@ -206,7 +206,7 @@ export function trendFor(
   format: (value: number) => string = value => NUMBER.format(value),
 ): TrendInfo {
   const clean = values.map(Number).filter(Number.isFinite);
-  if (clean.length < 2) return { delta: null, text: 'chờ mẫu kế tiếp', tone: 'flat', direction: 'flat', samples: clean.length };
+  if (clean.length < 2) return { delta: null, text: 'chờ lần đo kế tiếp', tone: 'flat', direction: 'flat', samples: clean.length };
   const delta = clean[clean.length - 1] - clean[0];
   if (Math.abs(delta) < 1e-9) return { delta: 0, text: 'không đổi', tone: 'flat', direction: 'flat', samples: clean.length };
   const good = lowerIsBetter ? delta < 0 : delta > 0;

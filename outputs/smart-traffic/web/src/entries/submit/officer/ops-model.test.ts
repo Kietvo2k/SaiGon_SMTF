@@ -72,7 +72,7 @@ describe('ops-model · tìm và xếp hồ sơ', () => {
 });
 
 describe('ops-model · xu hướng và sparkline', () => {
-  it('chưa đủ 2 mẫu thì không bịa xu hướng', () => {
+  it('chưa đủ 2 lần đo thì không bịa xu hướng', () => {
     expect(trendFor([12], true, 'giây')).toMatchObject({ delta: null, tone: 'flat', samples: 1 });
   });
 

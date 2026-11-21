@@ -40,6 +40,9 @@ function junctionLabels(cameras: DemoCamera[], nodes: DemoNodeMapEntry[] | null)
   return labels;
 }
 
+// Thêm nonce khi thử lại để trình duyệt không dùng lại ảnh lỗi đã cache.
+const retryUrl = (url: string, tick: number) => tick ? `${url}${url.includes('?') ? '&' : '?'}retry=${tick}` : url;
+
 function CameraStage({ camera, frame, busy, error, onRetry }: {
   camera: DemoCamera | null;
   frame: DemoCameraFrame | null;
@@ -49,9 +52,10 @@ function CameraStage({ camera, frame, busy, error, onRetry }: {
 }) {
   const stage = useRef<HTMLDivElement>(null);
   const [imageError, setImageError] = useState(false);
+  const [retryTick, setRetryTick] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
 
-  useEffect(() => { setImageError(false); }, [frame?.frameId, frame?.imageUrl]);
+  useEffect(() => { setImageError(false); setRetryTick(0); }, [camera?.cameraId, frame?.frameId, frame?.imageUrl]);
   useEffect(() => {
     const onChange = () => setFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener('fullscreenchange', onChange);
@@ -60,19 +64,26 @@ function CameraStage({ camera, frame, busy, error, onRetry }: {
 
   const missing = !camera || !frame || frame.source === 'missing' || !frame.imageUrl || imageError;
   const stale = isFrameStale(frame);
+  const hasFile = Boolean(frame?.imageUrl) && frame?.source === 'sample' && !imageError;
   const toggleFullscreen = async () => {
     try {
       if (stage.current && !document.fullscreenElement) await stage.current.requestFullscreen();
       else if (document.fullscreenElement) await document.exitFullscreen();
     } catch { /* Trình duyệt từ chối fullscreen: giữ khung trong trang. */ }
   };
+  const retry = () => {
+    setImageError(false);
+    setRetryTick(value => value + 1);
+    onRetry();
+  };
+  const source = imageError ? 'missing' : frame?.source ?? 'pending';
 
-  return <div className={`ops-stage${missing ? ' ops-stage-missing' : ''}`} ref={stage} aria-busy={busy}>
+  return <div className={`ops-stage${missing ? ' ops-stage-missing' : ''}`} ref={stage} aria-busy={busy} data-camera={camera?.cameraId ?? ''}>
     {camera && <>
       <div className="ops-stage-top">
         <div className="ops-stage-id"><span>{camera.cameraId}</span><b>{displayNodeLabel(camera.label)}</b></div>
         <div className="ops-stage-actions">
-          <span className={`ops-source ops-source-${frame?.source ?? 'pending'}`}>{frameSourceLabel(frame ?? undefined)}</span>
+          <span className={`ops-source ops-source-${source}`}>{imageError ? 'Lỗi ảnh' : frameSourceLabel(frame ?? undefined)}</span>
           <button type="button" className="ops-icon-button" onClick={() => void toggleFullscreen()} disabled={missing} aria-pressed={fullscreen}>
             {fullscreen ? 'Thu nhỏ' : 'Toàn màn hình'}
           </button>
@@ -81,12 +92,12 @@ function CameraStage({ camera, frame, busy, error, onRetry }: {
       {missing
         ? <div className="ops-stage-empty" role={error || imageError ? 'alert' : 'status'}>
             <strong>{imageError || error ? 'Không tải được camera này' : frame ? 'Camera đang mất nguồn' : 'Đang tải khung hình'}</strong>
-            <span>{error || (imageError ? 'Ảnh trả về lỗi. Thử tải lại khung.' : frame?.source === 'missing' ? 'Nguồn không có khung. Không thay bằng ảnh của camera khác.' : 'Đang chờ khung đầu tiên từ nguồn camera.')}</span>
-            <button type="button" className="ops-button" onClick={() => { setImageError(false); onRetry(); }}>Tải lại khung</button>
+            <span>{camera.cameraId} · {error || (imageError ? 'Ảnh trả về lỗi. Thử tải lại khung.' : frame?.source === 'missing' ? 'Nguồn không có khung. Không thay bằng ảnh của camera khác.' : frame?.source === 'sample' ? 'Nguồn báo có tệp nhưng chưa trả ảnh.' : 'Đang chờ khung đầu tiên từ nguồn camera.')}</span>
+            <button type="button" className="ops-button" onClick={retry}>Tải lại khung</button>
           </div>
-        : <img key={frame.frameId} className="ops-stage-image" src={frame.imageUrl!} alt={`Khung hình camera ${camera.label}`} decoding="async" onError={() => setImageError(true)} />}
+        : <img key={`${frame.frameId}:${retryTick}`} className="ops-stage-image" src={retryUrl(frame.imageUrl!, retryTick)} alt={`Khung hình camera ${camera.label}`} decoding="async" onError={() => setImageError(true)} />}
       <div className="ops-stage-bottom">
-        <span>{frame?.capturedAt ? formatDateTime(frame.capturedAt) : frame?.source === 'sample' ? 'Tệp · không có giờ chụp' : 'Chưa có giờ chụp'}</span>
+        <span>{frame?.capturedAt ? formatDateTime(frame.capturedAt) : hasFile ? 'Tệp · không có giờ chụp' : 'Chưa có giờ chụp'}</span>
         <span>{camera.junctionId}</span>
         {stale && <span className="ops-stale">Khung cũ · quá 10 giây</span>}
         {busy && !missing && <span className="ops-refreshing">Đang làm mới…</span>}
@@ -94,6 +105,48 @@ function CameraStage({ camera, frame, busy, error, onRetry }: {
     </>}
     {!camera && <div className="ops-stage-empty" role="status"><strong>Chưa có camera được chọn</strong><span>Chọn một camera trong lưới bên dưới để xem khung lớn.</span></div>}
   </div>;
+}
+
+function WallThumb({ camera, frame, active, onSelect }: {
+  camera: DemoCamera;
+  frame: DemoCameraFrame | undefined;
+  active: boolean;
+  onSelect: () => void;
+}) {
+  const [imageState, setImageState] = useState<'pending' | 'ready' | 'error'>('pending');
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  useEffect(() => { setImageState(frame ? (frame.imageUrl ? 'pending' : 'error') : 'pending'); }, [frame]);
+  // Ảnh đã có trong cache có thể hoàn tất trước khi React gắn onLoad.
+  useEffect(() => {
+    if (imageState === 'pending' && imgRef.current?.complete && imgRef.current.naturalWidth > 0) setImageState('ready');
+  });
+
+  const hasUrl = Boolean(frame?.imageUrl);
+  const failed = imageState === 'error';
+  const showImage = hasUrl && !failed;
+  const status = failed
+    ? (hasUrl ? 'Lỗi ảnh' : frame?.source === 'missing' ? 'Mất nguồn' : 'Chưa có ảnh')
+    : !frame ? 'Đang tải' : !hasUrl ? (frame.source === 'missing' ? 'Mất nguồn' : 'Chưa có ảnh') : null;
+
+  return <button type="button" className={`ops-wall-item${active ? ' is-active' : ''}`}
+    aria-pressed={active}
+    aria-label={`Chọn ${camera.cameraId} · ${displayNodeLabel(camera.label)} · ${status ?? frameSourceLabel(frame)}`}
+    onClick={onSelect}>
+    <span className={`ops-wall-thumb${showImage ? '' : ' is-empty'}`} aria-busy={!frame || imageState === 'pending'}>
+      {showImage && <img ref={imgRef} src={frame!.imageUrl!} alt="" decoding="async"
+        onLoad={() => setImageState('ready')} onError={() => setImageState('error')} />}
+      {(!showImage || imageState !== 'ready') && <span className={`ops-wall-placeholder${failed ? ' is-missing' : ''}`}>
+        <b>{camera.cameraId}</b>
+        <small>{status ?? 'Đang tải ảnh'}</small>
+      </span>}
+      <span className={`ops-wall-source ops-source-${failed ? 'missing' : frame?.source ?? 'pending'}`}>{status ?? frameSourceLabel(frame)}</span>
+      {active && <span className="ops-wall-selected">Đang xem</span>}
+    </span>
+    <span className="ops-wall-meta">
+      <b>{camera.cameraId}</b>
+      <small>{camera.junctionId} · {displayNodeLabel(camera.label)}</small>
+    </span>
+  </button>;
 }
 
 const Roads = memo(function Roads({ roads }: { roads: MapRoadData }) {
@@ -208,7 +261,7 @@ export function CameraPanel({
   return <section className="ops-panel ops-camera-panel" aria-labelledby="ops-camera-title">
     <header className="ops-panel-head">
       <div>
-        <p className="ops-eyebrow">HIỆN TRƯỜNG · 15 CAMERA</p>
+        <p className="ops-eyebrow">HIỆN TRƯỜNG · {cameras.length} CAMERA</p>
         <h2 id="ops-camera-title">Camera &amp; sơ đồ khu Bắc</h2>
       </div>
       <div className="ops-segmented" role="tablist" aria-label="Chế độ xem hiện trường">
@@ -258,25 +311,13 @@ export function CameraPanel({
 
     {filtered.length
       ? <div className="ops-wall-grid">
-          {filtered.map(camera => {
-            const frame = frames[camera.cameraId];
-            const active = camera.cameraId === selectedId;
-            return <button key={camera.cameraId} type="button" className={`ops-wall-item${active ? ' is-active' : ''}`}
-              aria-pressed={active} aria-label={`Chọn ${camera.cameraId} · ${displayNodeLabel(camera.label)} · ${frameSourceLabel(frame)}`}
-              onClick={() => { setView('camera'); onSelect(camera.cameraId); }}>
-              <span className="ops-wall-thumb">
-                {frame?.imageUrl
-                  ? <img src={frame.imageUrl} alt="" loading="lazy" decoding="async" />
-                  : <span className={`ops-wall-placeholder${frame?.source === 'missing' ? ' is-missing' : ''}`}>{frame ? 'Mất nguồn' : 'Đang tải'}</span>}
-                <span className={`ops-wall-source ops-source-${frame?.source ?? 'pending'}`}>{frameSourceLabel(frame)}</span>
-                {active && <span className="ops-wall-selected">Đang xem</span>}
-              </span>
-              <span className="ops-wall-meta">
-                <b>{camera.cameraId}</b>
-                <small>{camera.junctionId} · {displayNodeLabel(camera.label)}</small>
-              </span>
-            </button>;
-          })}
+          {filtered.map(camera => <WallThumb
+            key={camera.cameraId}
+            camera={camera}
+            frame={frames[camera.cameraId]}
+            active={camera.cameraId === selectedId}
+            onSelect={() => { setView('camera'); onSelect(camera.cameraId); }}
+          />)}
         </div>
       : <div className="ops-empty ops-empty-inline" role="status">
           <strong>{cameras.length ? 'Không có camera khớp bộ lọc' : 'Chưa có camera trong nguồn dữ liệu'}</strong>

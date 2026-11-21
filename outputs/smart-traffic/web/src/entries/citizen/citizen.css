@@ -3157,3 +3157,77 @@ button.ghost:hover:not(:disabled) {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- dark theme ---------- */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --st-bg: #07171f;
+  --st-bg-soft: #0a1c24;
+  --st-surface: #0c2024;
+  --st-text: #eaf6f7;
+  --st-text-body: #c6dcdf;
+  --st-text-muted: #9db8bf;
+  --st-border: rgba(139, 224, 198, .2);
+  --st-border-strong: rgba(139, 224, 198, .32);
+  --st-navy: #eaf6f7;
+  --st-navy-2: #c6dcdf;
+  --st-teal: #8be0c6;
+  --st-teal-soft: rgba(79, 195, 164, .14);
+  --st-amber: #ffd23f;
+  --st-action-ink: #102027;
+  --st-danger: #ff8f7a;
+  --st-danger-soft: rgba(80, 27, 22, .45);
+  --st-ok: #7ee0a8;
+  --st-ok-soft: rgba(18, 64, 44, .35);
+  --st-warn: #f2b45f;
+  --st-warn-soft: rgba(80, 54, 15, .35);
+  --st-info: #8fc7ff;
+  --st-info-soft: rgba(20, 50, 80, .4);
+  --st-focus: #9fe8e0;
+  --st-focus-dark: #89d8df;
+  --st-shadow-1: 0 1px 2px rgba(0, 0, 0, .25), 0 10px 24px rgba(0, 0, 0, .25);
+  --st-shadow-2: 0 18px 44px rgba(0, 0, 0, .4);
+}
+
+html[data-theme="dark"] body { background: var(--st-bg); color: var(--st-text); }
+html[data-theme="dark"] .cz-header { background: rgba(7, 23, 31, .94); }
+html[data-theme="dark"] .cz-header::before {
+  background: linear-gradient(90deg, var(--st-teal) 0 72px, var(--st-amber) 72px 100%);
+}
+html[data-theme="dark"] .cz-console { background: #0a1c24; }
+html[data-theme="dark"] .cz-btn-primary {
+  background: var(--st-amber);
+  border-color: var(--st-amber);
+  color: var(--st-action-ink);
+}
+html[data-theme="dark"] .cz-btn-primary:hover:not(:disabled) {
+  background: #ffe28a;
+  border-color: #ffe28a;
+}
+html[data-theme="dark"] .cz-btn-outline { background: var(--st-surface); color: var(--st-text); }
+html[data-theme="dark"] .cz-btn-outline:hover:not(:disabled) { background: var(--st-bg-soft); color: var(--st-teal); }
+html[data-theme="dark"] .cz-skip-link { background: var(--st-amber); color: var(--st-action-ink); }
+html[data-theme="dark"] .cz-plate-field { background: #0a1c24; }
+html[data-theme="dark"] .cz-empty-plate { background: #0a1c24; }
+html[data-theme="dark"] .cz-violation:hover { background: rgba(139, 224, 198, .06); }
+html[data-theme="dark"] .cz-skeleton { background: #143039; }
+html[data-theme="dark"] .cz-skeleton-grid span { background: #123039; }
+html[data-theme="dark"] .item { background: var(--st-surface); }
+html[data-theme="dark"] .item.unread { background: rgba(79, 195, 164, .12); border-color: rgba(139, 224, 198, .38); }
+html[data-theme="dark"] .badge { background: #123039; color: var(--st-text); }
+html[data-theme="dark"] .badge.new { background: var(--st-amber); color: var(--st-action-ink); }
+html[data-theme="dark"] .cz-avatar { background: #123039; color: var(--st-text); }
+html[data-theme="dark"] .cz-track-step.is-current .cz-track-dot {
+  border-color: var(--st-amber);
+  background: var(--st-amber);
+  box-shadow: 0 0 0 4px rgba(255, 210, 63, .16);
+}
+html[data-theme="dark"] .cz-account-shell button:not(.ghost):not(.cz-btn):not(.cz-tab):not(.cz-icon-btn) {
+  background: #123039;
+  color: var(--st-text);
+}
+html[data-theme="dark"] .cz-account-shell .seg button.on {
+  background: var(--st-amber);
+  color: var(--st-action-ink);
+}
+

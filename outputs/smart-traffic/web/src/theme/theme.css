@@ -1,0 +1,32 @@
+/* Toggle sáng/tối dùng chung cho cả 3 trang. */
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid var(--st-border, rgba(137, 216, 223, .28));
+  border-radius: 12px;
+  background: var(--st-surface, rgba(10, 28, 36, .72));
+  color: var(--st-text, #eaf6f7);
+  cursor: pointer;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--st-teal, #8be0c6);
+  color: var(--st-teal, #8be0c6);
+}
+
+.theme-toggle:focus-visible {
+  outline: 3px solid var(--st-focus, #9fe8e0);
+  outline-offset: 2px;
+}
+
+.theme-icon { display: none; }
+
+html[data-theme="dark"] .theme-icon-sun { display: block; }
+html[data-theme="light"] .theme-icon-moon { display: block; }
+

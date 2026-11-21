@@ -6,8 +6,8 @@
 import { API_BASE, mediaUrl } from '../../lib/api';
 import { complaintKindLabel, complaintStatusLabel, violationLabel } from '../../lib/labels';
 import { displayNodeLabel } from '../../lib/labels';
-import { normalizeLookupPlate } from '../../lib/lookup';
 import type { Penalty } from '../../lib/types';
+import { normalizeCitizenPlate } from './plate';
 
 export type CitizenMode = 'public' | 'local';
 
@@ -353,7 +353,7 @@ async function lookupLocal(plate: string, vehicleClass: 'car' | 'motorbike'): Pr
 }
 
 export async function lookupCitizen(mode: CitizenMode, raw: string): Promise<CitizenLookup> {
-  const normalized = normalizeLookupPlate(raw);
+  const normalized = normalizeCitizenPlate(raw);
   if (!normalized) {
     throw new CitizenApiError(
       'Biển số chưa đúng định dạng. Ví dụ: 51K-123.45 hoặc 59-X1 234.56.',
@@ -361,7 +361,18 @@ export async function lookupCitizen(mode: CitizenMode, raw: string): Promise<Cit
       400,
     );
   }
-  return mode === 'public' ? lookupPublic(normalized.plate) : lookupLocal(normalized.plate, normalized.vehicleClass);
+  const run = (plate: string, vehicleClass: 'car' | 'motorbike') => (
+    mode === 'public' ? lookupPublic(plate) : lookupLocal(plate, vehicleClass)
+  );
+
+  const primary = await run(normalized.plate, normalized.vehicleClass);
+  // Chỉ biển compact 9 ký tự mới có hai cách hiểu. Nếu dạng xe máy rỗng,
+  // thử đúng một lần dạng ô tô; biển 8 ký tự thông thường không phát thêm request.
+  if (normalized.fallback && primary.records.length === 0) {
+    const fallback = await run(normalized.fallback.plate, normalized.fallback.vehicleClass);
+    if (fallback.records.length > 0) return fallback;
+  }
+  return primary;
 }
 
 async function loadPublicDetail(record: CitizenRecord, signal?: AbortSignal): Promise<CitizenDetail> {

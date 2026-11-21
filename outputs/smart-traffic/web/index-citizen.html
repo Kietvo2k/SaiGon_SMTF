@@ -2,6 +2,16 @@
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('smtf-theme');
+          document.documentElement.dataset.theme = saved === 'light' ? 'light' : 'dark';
+        } catch (error) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tra cứu vi phạm giao thông · Smart Traffic</title>
     <meta name="description" content="Tra cứu vi phạm giao thông theo biển số: hồ sơ, ảnh bằng chứng trước–sau vạch, mức phạt kèm căn cứ và khiếu nại. Cổng thông tin giao thông khu Bắc của SaiGon SMTF." />

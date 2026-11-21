@@ -2,6 +2,16 @@
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('smtf-theme');
+          document.documentElement.dataset.theme = saved === 'light' ? 'light' : 'dark';
+        } catch (error) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#07171f" />
     <title>SaiGon SMTF · Trung tâm điều hành giao thông khu Bắc</title>

@@ -1,6 +1,8 @@
 // Định dạng biển số ngay khi nhập, kiểu biển Việt Nam.
 // Ô tô: 51K-123.45 · Xe máy: 59-X1 234.56 · Giữ nguyên vị trí con trỏ.
 
+import { normalizeLookupPlate, type LookupPlate } from '../../lib/lookup';
+
 const ALNUM = /[^0-9A-Za-z]/g;
 const ALNUM_ONE = /[0-9A-Z]/;
 
@@ -46,7 +48,10 @@ export function formatPlateTyping(raw: string, caret: number = raw.length): Plat
 
   const province = compact.slice(0, 2);
   const rest = compact.slice(2);
-  const motorbike = wantsMotorbikeLayout(raw);
+  // Biển 9 ký tự có series chữ+số (59X1 23456) là xe máy; biển 8 ký tự
+  // 51K12345 vẫn là ô tô. Chỉ chốt khi đã đủ 9 ký tự để không phá biển ô tô.
+  const motorbike = wantsMotorbikeLayout(raw)
+    || (compact.length === 9 && /^[A-Z]\d$/.test(rest.slice(0, 2)));
 
   if (!rest) {
     // Giữ dấu "-" vừa gõ sau mã tỉnh để ý định biển xe máy không bị mất.
@@ -64,6 +69,31 @@ export function formatPlateTyping(raw: string, caret: number = raw.length): Plat
     : `${province}${series}${digits ? `-${groupDigits(digits)}` : ''}`;
 
   return { value, caret: caretAfterAlnum(value, alnumBefore) };
+}
+
+export interface CitizenPlateLookup extends LookupPlate {
+  fallback?: LookupPlate;
+}
+
+// Dùng chung cho ô nhập và lớp gọi API: biển compact 9 ký tự dạng 59X123456
+// được hiểu là xe máy 59-X1 234.56, kèm dạng ô tô để fallback nếu tra rỗng.
+export function normalizeCitizenPlate(raw: string): CitizenPlateLookup | null {
+  const base = normalizeLookupPlate(raw);
+  if (!base) return null;
+  const compact = plateCompact(raw);
+  if (compact.length !== 9 || !/^[A-Z]\d$/.test(compact.slice(2, 4))) return base;
+
+  const province = compact.slice(0, 2);
+  const series = compact.slice(2, 4);
+  const number = `${compact.slice(4, 7)}.${compact.slice(7, 9)}`;
+  return {
+    plate: `${province}-${series} ${number}`,
+    vehicleClass: 'motorbike',
+    fallback: {
+      plate: `${province}${series}-${number}`,
+      vehicleClass: 'car',
+    },
+  };
 }
 
 export function formatPlateValue(raw: string): string {
