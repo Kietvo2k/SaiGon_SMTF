@@ -607,12 +607,18 @@ export function installSignals32(app, { nodeMap = [], cameras = [], THREE = null
   const geo = createTrafficGeometry31(traffic.net, { jit: [] });
   // Giao lộ logic 3/4/5/6 hướng: mỗi nhánh một đầu đèn; nhánh hẻm bị bỏ khi đã đủ nhánh chính.
   const layout = buildJunctionLayout32({ net: traffic.net, nodeMap: indexed, geo });
-  const approaches = junctionPlacements32(layout);
-  if (traffic.net.G.region === 'bac' && layout.some(j => !j.arms.some(a => a.incoming && a.head) || !j.arms.some(a => a.outgoing))) throw new Error('Cụm public thiếu làn vào/ra thật');
-  const controlled = new Set(layout.flatMap(j => j.arms.filter(a => a.head).flatMap(a => a.laneIds)));
+  // Mỗi cụm chạy chu kỳ phải có ≥1 nhánh vào có đầu đèn và ≥1 nhánh ra thật. Cụm thiếu
+  // (dữ liệu OSM tách/lọc làn) bị BỎ khỏi phần dựng đèn + cảnh báo, không làm sập boot 3D.
+  const invalid = traffic.net.G.region === 'bac'
+    ? layout.filter(j => !j.yieldOnly && (!j.arms.some(a => a.incoming && a.head) || !j.arms.some(a => a.outgoing)))
+    : [];
+  if (invalid.length) console.warn('[signals] bỏ cụm thiếu làn vào/ra thật:', invalid.map(j => `${j.id}(${j.name})`).join(', '));
+  const usable = invalid.length ? layout.filter(j => !invalid.includes(j)) : layout;
+  const approaches = junctionPlacements32(usable);
+  const controlled = new Set(usable.flatMap(j => j.arms.filter(a => a.head).flatMap(a => a.laneIds)));
   const flashing = new Set((traffic.net.signalPlan?.clusters || []).filter(c => c.flashing).map(c => c.cluster_id));
   // Cụm flashing không có vạch dừng: chỉ nhấp nháy vàng, nhường đường (audit P1-C).
-  const flashingLanes = new Set(layout.filter(j => flashing.has(j.id)).flatMap(j => j.arms.flatMap(a => a.laneIds)));
+  const flashingLanes = new Set(usable.filter(j => flashing.has(j.id)).flatMap(j => j.arms.flatMap(a => a.laneIds)));
   const stopLines = stopLinesOf32(traffic.net, geo, indexed).filter(s => controlled.has(s.lane) && !flashingLanes.has(s.lane));
   const signals = createTrafficSignals32({
     scene: app.scene, THREE, controller: app.controller,

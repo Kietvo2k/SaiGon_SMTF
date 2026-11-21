@@ -17,6 +17,7 @@ import { createQueue32, createIndexedDbStore32, createMemoryStore32 } from './st
 import { createTransport32, startStationLoop32, resolveApiBase32, readStoredToken32, loginStation32, buildSignalStates32 } from './station-client-32.js?v=32a';
 import { createTrafficTransport } from '../shared/public-demo/traffic-transport.js';
 import { createStationBridge } from '../shared/public-demo/station-bridge.js';
+import { createLiveViolationSaver32 } from './live-violation-32.js?v=32a';
 import { installHud32 } from './kpi-panel-32.js?v=32a';
 export { installHud32 } from './kpi-panel-32.js?v=32a';
 export { mountTestLab32 } from './test-lab-32.js?v=32c';
@@ -330,8 +331,14 @@ export function installStation32(app, { cameras = [], nodeMap = [], search = (ty
   bridge.start().catch(error => console.warn('[station] không nối được trạm:', error.message));
   transport.start();
   // demo-v2: phát vi phạm lên kênh 'smtf-submit-events' cho web cán bộ banner "khung nhận diện tự động".
+  // Bản public gửi thêm 1 bản ghi/10 s lên /api/demo/violation (tắt bằng ?liveSave=0); bản local giữ nguyên.
+  const liveSaveOn = mode === 'public' && new URLSearchParams(search).get('liveSave') !== '0';
+  const liveSaver = liveSaveOn
+    ? createLiveViolationSaver32({ cameras, log: msg => console.warn(msg) })
+    : null;
   let violationChannel = null;
-  const emitViolation = rec => {
+  const emitViolation = (rec, items = []) => {
+    if (liveSaver) void liveSaver.submit(rec, items);
     if (typeof BroadcastChannel === 'undefined') return;
     if (!violationChannel) violationChannel = new BroadcastChannel('smtf-submit-events');
     violationChannel.postMessage({

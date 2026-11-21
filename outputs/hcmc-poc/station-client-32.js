@@ -559,9 +559,10 @@ export function startStationLoop32(app, { perception, capture, transport, camera
       .filter(p => p && p.jpeg)
       .map(p => ({ kind: p.kind, dataUrl: p.jpeg }));
     await transport.sendViolation(rec, items);
-    // demo-v2: phát tín hiệu khung nhận diện cho web cán bộ (kênh BroadcastChannel chỉ truyền tín hiệu).
+    // demo-v2: phát tín hiệu khung nhận diện cho web cán bộ (kênh BroadcastChannel chỉ truyền tín hiệu)
+    // và chuyển bằng chứng đã chụp cho nơi lưu vi phạm (nếu có) — sim không phụ thuộc vào việc lưu.
     if (typeof onViolation === 'function') {
-      try { onViolation(rec); } catch (e) { log(`[station] phát tín hiệu vi phạm lỗi: ${e && e.message}`); }
+      try { onViolation(rec, items); } catch (e) { log(`[station] phát tín hiệu vi phạm lỗi: ${e && e.message}`); }
     }
   };
 

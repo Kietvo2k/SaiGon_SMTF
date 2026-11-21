@@ -177,6 +177,8 @@ export function buildJunctionLayout32({ net, nodeMap = [], geo = null, mergeDeg 
       type: typ.type, typeLabel: typ.typeLabel, armCount: armRows.length,
       nodeIds: metas.map(m => m.node_id), indexes,
       x, z, arms: armRows,
+      // Vòng xuyến/yield: giữ cụm để panel biết, nhưng không dựng đầu đèn trên vành đai.
+      yieldOnly: !!cluster.yieldOnly,
       // Khi chưa truyền geo (panel chỉ đọc), vẫn đếm được nhánh có làn vào = số đầu đèn sẽ dựng.
       headCount: armRows.filter(a => a.head || a.incoming).length
     });
@@ -188,6 +190,7 @@ export function buildJunctionLayout32({ net, nodeMap = [], geo = null, mergeDeg 
 export function junctionPlacements32(layout) {
   const out = [];
   for (const j of layout || []) {
+    if (j.yieldOnly) continue;   // vòng xuyến: không đầu đèn, chỉ yield
     for (const arm of j.arms || []) {
       if (!arm.head) continue;
       // Phòng thủ: không dựng đầu đèn cho nhánh cầu vượt/nhánh không được dừng.

@@ -38,7 +38,10 @@ export const SIGNAL_PLAN_32 = [
   { node_id: 'HX-04-07', osm_id: 729523390, group_axis_deg: 93.4, offset_s: 24, name: 'Bạch Đằng × Xô Viết Nghệ Tĩnh', split: true, flashing: true },
   { node_id: 'HX-04-08', osm_id: 5733448390, group_axis_deg: 93.4, offset_s: 24, name: 'Bạch Đằng × Xô Viết Nghệ Tĩnh', split: true, flashing: true },
   { node_id: 'HX-05', osm_id: 701671562, group_axis_deg: 162.9, offset_s: 0, name: 'Ngã tư Hàng Xanh' },
-  { node_id: 'HX-06', osm_id: 1497276515, group_axis_deg: 171.4, offset_s: 32, name: 'Hàng Xanh × Xô Viết Nghệ Tĩnh', green0_s: 22, green1_s: 16 }
+  { node_id: 'HX-06', osm_id: 1497276515, group_axis_deg: 171.4, offset_s: 32, name: 'Hàng Xanh × Xô Viết Nghệ Tĩnh', green0_s: 22, green1_s: 16 },
+  // HX-C5: hai node tách sát nút (14–16 m) — gộp để vạch dừng nằm trước zebra, không lọt giữa hộp.
+  { node_id: 'HX-06-02', osm_id: 13441692401, group_axis_deg: 171.4, offset_s: 32, name: 'Hàng Xanh × Xô Viết Nghệ Tĩnh', split: true },
+  { node_id: 'HX-06-03', osm_id: 2403042654, group_axis_deg: 171.4, offset_s: 32, name: 'Hàng Xanh × Xô Viết Nghệ Tĩnh', split: true }
 ];
 
 // Cầu vượt Hàng Xanh: tuyệt đối không đặt vạch dừng/đầu đèn trên deck hoặc chân dốc.
@@ -65,7 +68,7 @@ export function buildSignalPlan32({ graph, nodeMap, rows = SIGNAL_PLAN_32 }) {
       clusters.push(cluster); clusterById.set(key, cluster);
     }
     if (row.flashing && isPublicNorth) cluster.flashing = true;
-    if (row.roundabout && isPublicNorth) cluster.roundabout = true;
+    if (row.roundabout && isPublicNorth) { cluster.roundabout = true; cluster.yieldOnly = true; }
     if (!cluster.nodeIds.includes(ni)) cluster.nodeIds.push(ni);
     accepted.push({ row, ni, cluster });
   }
