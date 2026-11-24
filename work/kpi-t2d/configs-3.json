@@ -1,0 +1,5 @@
+[
+  { "name": "E5_abs3_mg15_mr50", "algorithm": "max-pressure-abs", "params": { "switchAbs": 3, "minGreenS": 15, "maxRedS": 50 } },
+  { "name": "E6_abs3_mg10_mr40", "algorithm": "max-pressure-abs", "params": { "switchAbs": 3, "minGreenS": 10, "maxRedS": 40 } },
+  { "name": "E7_abs3_mg10_mr60", "algorithm": "max-pressure-abs", "params": { "switchAbs": 3, "minGreenS": 10, "maxRedS": 60 } }
+]

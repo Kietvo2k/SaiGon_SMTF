@@ -1,0 +1,1118 @@
+{
+  "task": "PERF-1",
+  "generated_at": "2026-10-17T19:38:46.718Z",
+  "finished_at": "2026-10-17T19:48:42.959Z",
+  "env": {
+    "app": "http://127.0.0.1:8841/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&view=overview&api=http://127.0.0.1:8940",
+    "officer": "http://127.0.0.1:5173/index-officer.html",
+    "api": "http://127.0.0.1:8940",
+    "var_dir": "F:\\File\\FileLapTrinhF\\SaiGon_SMTF\\outputs\\smart-traffic\\var",
+    "minutes_per_phase": 3,
+    "sample_ms": 30000,
+    "settle_ms": 5000,
+    "headless": true,
+    "chrome": "C:/Users/Admin/AppData/Local/ms-playwright/chromium-1243/chrome-win64/chrome.exe",
+    "viewport": "1600x900",
+    "phases": [
+      "A",
+      "B",
+      "C"
+    ],
+    "web_logged_in": true,
+    "app_modules": [
+      "signals",
+      "capture",
+      "hud",
+      "perception",
+      "transport",
+      "station-loop",
+      "heat",
+      "forecast",
+      "clock",
+      "scenarios"
+    ],
+    "open_camera": "CAM-HX-001",
+    "web_api_rebase": "http://127.0.0.1:8900 → http://127.0.0.1:8940"
+  },
+  "budgets": {
+    "cpu_pct": 10,
+    "ws_mb_per_hour": 50,
+    "disk_mb_per_hour": 50,
+    "req_per_min": 60
+  },
+  "phases": [
+    {
+      "id": "A",
+      "label": "tab app hiện, ×1",
+      "speed": 1,
+      "minutes": 3,
+      "started_at": "2026-10-17T19:39:27.501Z",
+      "ended_at": "2026-10-17T19:42:32.696Z",
+      "error": null,
+      "visibility": {
+        "app": "visible",
+        "web": "visible",
+        "speed": 1
+      },
+      "samples": [
+        {
+          "index": 0,
+          "t_s": 35.1,
+          "fps": 56,
+          "fps_reported": null,
+          "heap_mb": 191.04,
+          "cpu_pct": 96.1,
+          "cpu_ms_per_s": 960.8,
+          "req_total": 146,
+          "req_app": 130,
+          "req_web": 16,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/me": 1,
+            "/api/v1/officer/violations": 10,
+            "/api/v1/officer/kpi": 5,
+            "/api/v1/auth/login": 130
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 16
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 41.7,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 1,
+          "t_s": 65.2,
+          "fps": 54.4,
+          "fps_reported": null,
+          "heap_mb": 173.83,
+          "cpu_pct": 96.7,
+          "cpu_ms_per_s": 966.8,
+          "req_total": 73,
+          "req_app": 67,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 67,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 71.7,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 2,
+          "t_s": 95.2,
+          "fps": 55.5,
+          "fps_reported": null,
+          "heap_mb": 180.33,
+          "cpu_pct": 96,
+          "cpu_ms_per_s": 960.1,
+          "req_total": 73,
+          "req_app": 67,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 67,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 101.80000000000001,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 3,
+          "t_s": 125.3,
+          "fps": 54.7,
+          "fps_reported": null,
+          "heap_mb": 186.88,
+          "cpu_pct": 96.2,
+          "cpu_ms_per_s": 962.1,
+          "req_total": 70,
+          "req_app": 64,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 64,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 131.9,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 4,
+          "t_s": 155.4,
+          "fps": 55.8,
+          "fps_reported": null,
+          "heap_mb": 178.18,
+          "cpu_pct": 96.3,
+          "cpu_ms_per_s": 963.3,
+          "req_total": 71,
+          "req_app": 65,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2,
+            "/api/v1/auth/login": 65
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 162,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 5,
+          "t_s": 185.1,
+          "fps": 52,
+          "fps_reported": null,
+          "heap_mb": 154.81,
+          "cpu_pct": 95.8,
+          "cpu_ms_per_s": 957.5,
+          "req_total": 71,
+          "req_app": 65,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2,
+            "/api/v1/auth/login": 65
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 191.70000000000002,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        }
+      ],
+      "summary": {
+        "n": 6,
+        "mean": {
+          "fps": 54.73,
+          "fps_reported": null,
+          "heap_mb": 177.51,
+          "cpu_pct": 96.18,
+          "cpu_ms_per_s": 961.77,
+          "req_total": 84,
+          "req_app": 76.33,
+          "req_web": 7.67,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 116.8,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "peak": {
+          "fps": 56,
+          "fps_reported": null,
+          "heap_mb": 191.04,
+          "cpu_pct": 96.7,
+          "cpu_ms_per_s": 966.8,
+          "req_total": 146,
+          "req_app": 130,
+          "req_web": 16,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 191.7,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "first": {
+          "fps": 56,
+          "fps_reported": null,
+          "heap_mb": 191.04,
+          "cpu_pct": 96.1,
+          "cpu_ms_per_s": 960.8,
+          "req_total": 146,
+          "req_app": 130,
+          "req_web": 16,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 41.7,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "last": {
+          "fps": 52,
+          "fps_reported": null,
+          "heap_mb": 154.81,
+          "cpu_pct": 95.8,
+          "cpu_ms_per_s": 957.5,
+          "req_total": 71,
+          "req_app": 65,
+          "req_web": 6,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 191.70000000000002,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "per_hour": {
+          "heap_mb": -869.52,
+          "db_mb": 0,
+          "frames_mb": 0,
+          "ws_mb": 0,
+          "req": 12096,
+          "sim_s": 3600,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 0
+        },
+        "errors": [],
+        "req_by_path_total": {
+          "/api/v1/auth/me": 1,
+          "/api/v1/officer/violations": 30,
+          "/api/v1/officer/kpi": 15,
+          "/api/v1/auth/login": 458
+        },
+        "req_by_path_per_min": {
+          "/api/v1/auth/me": 0.4,
+          "/api/v1/officer/violations": 12,
+          "/api/v1/officer/kpi": 6,
+          "/api/v1/auth/login": 183.2
+        },
+        "ws_mb_per_hour": 0
+      }
+    },
+    {
+      "id": "B",
+      "label": "tab app ẩn (trang trống đè lên), ×1",
+      "speed": 1,
+      "minutes": 3,
+      "started_at": "2026-10-17T19:42:32.696Z",
+      "ended_at": "2026-10-17T19:45:37.784Z",
+      "error": null,
+      "visibility": {
+        "app": "visible",
+        "web": "visible",
+        "speed": 1
+      },
+      "samples": [
+        {
+          "index": 0,
+          "t_s": 35.1,
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 135.56,
+          "cpu_pct": 10.7,
+          "cpu_ms_per_s": 107.2,
+          "req_total": 89,
+          "req_app": 80,
+          "req_web": 9,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 80,
+            "/api/v1/officer/violations": 6,
+            "/api/v1/officer/kpi": 3
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 9
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 200.20000000000002,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 1,
+          "t_s": 65.1,
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 130.32,
+          "cpu_pct": 10.7,
+          "cpu_ms_per_s": 107,
+          "req_total": 72,
+          "req_app": 66,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 66,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 207.70000000000002,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 2,
+          "t_s": 95.1,
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 148.01,
+          "cpu_pct": 11,
+          "cpu_ms_per_s": 110,
+          "req_total": 73,
+          "req_app": 67,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 67,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 215.20000000000002,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 3,
+          "t_s": 125.1,
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 137.85,
+          "cpu_pct": 10.8,
+          "cpu_ms_per_s": 107.7,
+          "req_total": 73,
+          "req_app": 67,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 67,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 222.70000000000002,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 4,
+          "t_s": 155.2,
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 129.41,
+          "cpu_pct": 10.3,
+          "cpu_ms_per_s": 102.9,
+          "req_total": 73,
+          "req_app": 67,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 67,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 230.20000000000002,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 5,
+          "t_s": 185.1,
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 125.87,
+          "cpu_pct": 11,
+          "cpu_ms_per_s": 109.8,
+          "req_total": 72,
+          "req_app": 66,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 66,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 237.5,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        }
+      ],
+      "summary": {
+        "n": 6,
+        "mean": {
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 134.5,
+          "cpu_pct": 10.75,
+          "cpu_ms_per_s": 107.43,
+          "req_total": 75.33,
+          "req_app": 68.83,
+          "req_web": 6.5,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 218.92,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "peak": {
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 148.01,
+          "cpu_pct": 11,
+          "cpu_ms_per_s": 110,
+          "req_total": 89,
+          "req_app": 80,
+          "req_web": 9,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 237.5,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "first": {
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 135.56,
+          "cpu_pct": 10.7,
+          "cpu_ms_per_s": 107.2,
+          "req_total": 89,
+          "req_app": 80,
+          "req_web": 9,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 200.20000000000002,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "last": {
+          "fps": 1,
+          "fps_reported": null,
+          "heap_mb": 125.87,
+          "cpu_pct": 11,
+          "cpu_ms_per_s": 109.8,
+          "req_total": 72,
+          "req_app": 66,
+          "req_web": 6,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 237.5,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "per_hour": {
+          "heap_mb": -232.56,
+          "db_mb": 0,
+          "frames_mb": 0,
+          "ws_mb": 0,
+          "req": 10848,
+          "sim_s": 895.2,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 0
+        },
+        "errors": [],
+        "req_by_path_total": {
+          "/api/v1/auth/login": 413,
+          "/api/v1/officer/violations": 26,
+          "/api/v1/officer/kpi": 13
+        },
+        "req_by_path_per_min": {
+          "/api/v1/auth/login": 165.2,
+          "/api/v1/officer/violations": 10.4,
+          "/api/v1/officer/kpi": 5.2
+        },
+        "ws_mb_per_hour": 0
+      }
+    },
+    {
+      "id": "C",
+      "label": "tab app hiện, tua ×10",
+      "speed": 10,
+      "minutes": 3,
+      "started_at": "2026-10-17T19:45:37.784Z",
+      "ended_at": "2026-10-17T19:48:42.958Z",
+      "error": null,
+      "visibility": {
+        "app": "visible",
+        "web": "visible",
+        "speed": 10
+      },
+      "samples": [
+        {
+          "index": 0,
+          "t_s": 35.1,
+          "fps": 49.4,
+          "fps_reported": null,
+          "heap_mb": 125.92,
+          "cpu_pct": 97.3,
+          "cpu_ms_per_s": 973,
+          "req_total": 125,
+          "req_app": 119,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 119,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 587.9,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 1,
+          "t_s": 65.2,
+          "fps": 50.2,
+          "fps_reported": null,
+          "heap_mb": 136.1,
+          "cpu_pct": 97.6,
+          "cpu_ms_per_s": 976,
+          "req_total": 102,
+          "req_app": 96,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 96,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 888.4000000000001,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 2,
+          "t_s": 95.3,
+          "fps": 49.6,
+          "fps_reported": null,
+          "heap_mb": 154.1,
+          "cpu_pct": 97.5,
+          "cpu_ms_per_s": 974.9,
+          "req_total": 106,
+          "req_app": 100,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 100,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 1189,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 3,
+          "t_s": 125.4,
+          "fps": 50.1,
+          "fps_reported": null,
+          "heap_mb": 126.92,
+          "cpu_pct": 97.3,
+          "cpu_ms_per_s": 972.8,
+          "req_total": 103,
+          "req_app": 97,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 97,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 1489.5,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 4,
+          "t_s": 155.5,
+          "fps": 49.8,
+          "fps_reported": null,
+          "heap_mb": 131.79,
+          "cpu_pct": 97.4,
+          "cpu_ms_per_s": 973.8,
+          "req_total": 98,
+          "req_app": 92,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 92,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 1789.8000000000002,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        },
+        {
+          "index": 5,
+          "t_s": 185.1,
+          "fps": 49.8,
+          "fps_reported": null,
+          "heap_mb": 142.61,
+          "cpu_pct": 97.4,
+          "cpu_ms_per_s": 974.2,
+          "req_total": 98,
+          "req_app": 92,
+          "req_web": 6,
+          "req_preflight": 0,
+          "req_by_path": {
+            "/api/v1/auth/login": 92,
+            "/api/v1/officer/violations": 4,
+            "/api/v1/officer/kpi": 2
+          },
+          "status_429": 0,
+          "status_by_code": {
+            "200": 6
+          },
+          "error_by_path": {},
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "rows": {
+            "station_metrics": 0,
+            "signal_state_log": 0,
+            "kpi_samples": 0,
+            "violations": 269
+          },
+          "sim_t": 2084.6,
+          "app_visibility": "visible",
+          "web_visibility": "visible"
+        }
+      ],
+      "summary": {
+        "n": 6,
+        "mean": {
+          "fps": 49.82,
+          "fps_reported": null,
+          "heap_mb": 136.24,
+          "cpu_pct": 97.42,
+          "cpu_ms_per_s": 974.12,
+          "req_total": 105.33,
+          "req_app": 99.33,
+          "req_web": 6,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 1338.2,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "peak": {
+          "fps": 50.2,
+          "fps_reported": null,
+          "heap_mb": 154.1,
+          "cpu_pct": 97.6,
+          "cpu_ms_per_s": 976,
+          "req_total": 125,
+          "req_app": 119,
+          "req_web": 6,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 2084.6,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "first": {
+          "fps": 49.4,
+          "fps_reported": null,
+          "heap_mb": 125.92,
+          "cpu_pct": 97.3,
+          "cpu_ms_per_s": 973,
+          "req_total": 125,
+          "req_app": 119,
+          "req_web": 6,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 587.9,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "last": {
+          "fps": 49.8,
+          "fps_reported": null,
+          "heap_mb": 142.61,
+          "cpu_pct": 97.4,
+          "cpu_ms_per_s": 974.2,
+          "req_total": 98,
+          "req_app": 92,
+          "req_web": 6,
+          "ws_bytes": 0,
+          "ws_frames": 0,
+          "db_bytes": 3760128,
+          "frames_bytes": 48453624,
+          "sim_t": 2084.6,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 269
+        },
+        "per_hour": {
+          "heap_mb": 400.56,
+          "db_mb": 0,
+          "frames_mb": 0,
+          "ws_mb": 0,
+          "req": 15168,
+          "sim_s": 35920.8,
+          "rows_station_metrics": 0,
+          "rows_signal_state_log": 0,
+          "rows_kpi_samples": 0,
+          "rows_violations": 0
+        },
+        "errors": [],
+        "req_by_path_total": {
+          "/api/v1/auth/login": 596,
+          "/api/v1/officer/violations": 24,
+          "/api/v1/officer/kpi": 12
+        },
+        "req_by_path_per_min": {
+          "/api/v1/auth/login": 238.4,
+          "/api/v1/officer/violations": 9.6,
+          "/api/v1/officer/kpi": 4.8
+        },
+        "ws_mb_per_hour": 0
+      }
+    }
+  ],
+  "top_loads": [
+    {
+      "name": "Vòng vẽ 3D (rAF/WebGPU) không có trần FPS",
+      "unit": "cpu_pct",
+      "value": 96.18,
+      "detail": "FPS trung bình 54.73, CPU luồng chính 96.18 % một lõi",
+      "score": 9.618
+    },
+    {
+      "name": "Nhịp request trạm (metrics/heat/heartbeat/frames)",
+      "unit": "req_per_min",
+      "value": 201.6,
+      "detail": "201.6 request/phút",
+      "score": 3.36
+    },
+    {
+      "name": "Pha ẩn không giảm tải (rAF vẫn chạy)",
+      "unit": "cpu_pct",
+      "value": 10.75,
+      "detail": "pha B: FPS 1, CPU 10.75 %",
+      "score": 1.075
+    }
+  ],
+  "errors": [
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED",
+    "app console Access to fetch at 'http://127.0.0.1:8940/api/v1/auth/login' from origin 'http://127.0.0.1:8841' has been blocked by CORS policy: No 'Access-Control-Allow-Origi",
+    "app console Failed to load resource: net::ERR_FAILED"
+  ]
+}

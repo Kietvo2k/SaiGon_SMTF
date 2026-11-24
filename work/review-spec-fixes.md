@@ -1,0 +1,20 @@
+# Quyết định của điều phối viên sau check chéo đặc tả (Codex qwen-3.8-max, `work/cx-review-spec.out.md`)
+
+Áp dụng TẤT CẢ phát hiện trong `work/cx-review-spec.out.md`, theo các lựa chọn sau (khi review đưa nhiều phương án):
+
+1. Đèn Hàng Xanh: GIỮ M1 ở cụm Hàng Xanh. Thêm `outputs/hcmc-poc/signal-plan-32.js` sinh `signal/signalOffset/arriveGroup` cho các nút trong Phụ lục A (nhóm pha theo trục đường); `buildTrafficNetwork31`/`createTrafficSim31` nhận tham số tùy chọn `signalPlan` (không truyền = hành vi 31A y nguyên). Nút do controller quản bỏ nhánh nhường không đèn (`!signal && depth===0`, sim dòng ~511). Liệt `city-traffic-sim-31.js` và `city-traffic-31.js` là file SỬA, mô tả chính xác tham số mới (`{signalPlan, controller, breakerS}`) và các hàm `api` mới.
+2. Vai trò: `citizen, officer, commander, admin` (người) + `station` (kỹ thuật, chỉ trạm 3D). Bỏ hẳn tên `police`. Vai trò luôn suy từ JWT, không nhận từ client. WS xác thực bằng tin nhắn đầu `{type:"auth", token}` trong 5 s (không để token trong query).
+3. Đồng nhất tên sự kiện ở MỌI chỗ (sơ đồ §3.1 theo §4.6). Một shape `SignalState` duy nhất với `phases[].countdown_s`. KPI: `controller.metrics()` là superset; `POST /station/metrics` và `kpi.update` là subset được liệt kê trường rõ ràng.
+4. Bảng `violations` thêm `vehicle_id TEXT`, `cycle_id INTEGER` + index khớp UNIQUE. `road_index` = chỉ số `G.edges` (`lanes.edge[sim.lane[i]]`). `V-id` là slot-id tái sử dụng; định danh ổn định của "xe vật lý" = biển số (plate gắn theo `slot` + `gen`, ghi rõ).
+5. Override: `until_t_sim` (giây sim) + `until_at` (ISO-8601 UTC).
+6. Registry camera: `outputs/smart-traffic/backend/app/seed/cameras.json` (`camera_id, node_id, x, z, height_m, yaw_deg, pitch_deg, fov_deg, range_m, label`), dùng chung cho 3D, backend, web. Tập prefix vùng thống nhất: `HX, DBL, NHC, CSG, PDL, NBK, VS, TN` cho nút, camera, VMS.
+7. Sửa tên thuật toán `mulberry32`. Ví dụ chạy static: `PORT=8821 python outputs/hcmc-poc/serve.py` → `http://127.0.0.1:8821/hcmc-poc/`.
+8. KPI A/B headless thuần Node: `buildTrafficNetwork31` + `regionTrafficPayload('bac')` + `sim.setFraction(1)` (không dùng `setDensity`, không import three). A1 đo `wait_avg_s` trên TẬP NÚT ĐƯỢC ĐIỀU KHIỂN của cụm Hàng Xanh (`by_node`), chạy 5 seed khác nhau, cùng nhu cầu; đạt khi trung bình Δwait ≥ 15 % và không seed nào tệ hơn cố định. Quy tắc 3 nhánh chốt X giữ nguyên nhưng áp lên số này.
+9. A3 FPS: đo có hiển thị (headed) trên máy có GPU (máy dev), ghi GPU/driver, khởi động 10 s, trung vị 30 s, `region=bac` cổ điển vs `app=smart`, mức Cân bằng. Không đo FPS headless.
+10. M1 chỉ vòng đời `new → needs_review → confirmed | dismissed` + tra cứu bằng chứng. `notified/paid/disputed`, khiếu nại, nộp phạt, thông báo → M6 (đặc tả vẫn định nghĩa đủ 7 trạng thái cho M6, nhưng §5 và §9 của M1 chỉ dùng 4 trạng thái).
+11. Khóa cache: mọi file 3D bị SỬA hoặc TẠO trong app smart nạp với `?v=32a`; `index.html` chuyển hướng `v=32a&app=smart`.
+12. Độ trễ e2e: `occurred_at` = giờ server lúc ghi DB; vẫn lưu `t_sim` và `station_time` riêng; tiêu chí < 10 s đo `occurred_at → lúc web người dân thấy`.
+13. Chuỗi cấm: `smart-app-32.js` đổi nhãn khi `app=smart` (`regionTitle` "Khu mô phỏng" → "Khu vực"; "Chạy mô phỏng 1D/2D" → "Chạy tính toán 1D/2D"; `flood-ui-25.js` thông báo khóa; mọi `classification/label` trong `materialStatus` KHÔNG được in ra DOM). Không sửa chuỗi của chế độ cổ điển. QA quét `document.documentElement.textContent` (gồm nút ẩn) + `aria-label`, `title`, `placeholder`, `alt` trên cả trang 3D và hai web.
+14. Bảo mật: giới hạn đăng nhập 5 lần/phút/IP + khóa tạm 5 phút; CORS qua env `SMART_ALLOWED_ORIGINS` (mặc định `http://127.0.0.1:8821,http://localhost:8821,http://127.0.0.1:5173,http://localhost:5173`); không log JWT secret.
+15. Mức phạt: mỗi hàng Phụ lục B phải có văn bản + điều + khoản + điểm và URL; hàng nào thiếu điều/khoản/điểm cụ thể → `verified=false`, ghi "cần xác minh"; UI hiện "Mức phạt đang cập nhật" cho hàng chưa xác minh. Được tra web để bổ sung điều/khoản/điểm; không bịa.
+16. Danh sách "không commit" thêm `work/oc-*`, `work/tmp*`, `work/cx-*`.

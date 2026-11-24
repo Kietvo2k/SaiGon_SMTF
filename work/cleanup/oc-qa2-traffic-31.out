@@ -1,0 +1,415 @@
+{
+ "suite": "traffic-31 · D",
+ "passed": 36,
+ "failed": 0,
+ "checks": [
+  "mã nguồn: module city-traffic-31.js được nạp, vòng xe theo đoạn thẳng 26B đã bỏ",
+  "baseline CPU vòng cập nhật xe đã đo trước khi sửa",
+  "[webgl] API giao thông 31D (materialStatus.motion.api)",
+  "[webgl] [materials · 20 s] có xe được vẽ và lấy mẫu đủ khung",
+  "[webgl] [materials · 20 s] 0 teleport giữa đường theo ma trận đã vẽ (Δ ≤ vmax·Δt·1,6 + 0,3 m, trừ tái sinh có cờ)",
+  "[webgl] [materials · 20 s] 0 cặp xe xuyên nhau (OBB) trong các xe đã vẽ",
+  "[webgl] [materials · 20 s] 0 cặp xe xuyên nhau (OBB) trên toàn bộ xe đang chạy",
+  "[webgl] [materials · 20 s] đồ thị: 0 teleport/lùi, có chuyển cạnh, tái sinh chỉ có cờ",
+  "[webgl] [materials · 20 s] 0 xe ngược chiều oneway (làn ↔ tag) và mũi xe cùng hướng cạnh",
+  "[webgl] [materials · 20 s] đường hai chiều: xe đi bên phải tim đường",
+  "[webgl] [materials · 20 s] 0 cặp xe cùng làn gần hơn (L₁+L₂)/2 + 0.3 m, kể cả qua ranh giới cạnh",
+  "[webgl] [materials · 20 s] có xe trên cầu ở mọi khung",
+  "[webgl] [ba-son · 20 s] có xe được vẽ và lấy mẫu đủ khung",
+  "[webgl] [ba-son · 20 s] 0 teleport giữa đường theo ma trận đã vẽ (Δ ≤ vmax·Δt·1,6 + 0,3 m, trừ tái sinh có cờ)",
+  "[webgl] [ba-son · 20 s] 0 cặp xe xuyên nhau (OBB) trong các xe đã vẽ",
+  "[webgl] [ba-son · 20 s] 0 cặp xe xuyên nhau (OBB) trên toàn bộ xe đang chạy",
+  "[webgl] [ba-son · 20 s] đồ thị: 0 teleport/lùi, có chuyển cạnh, tái sinh chỉ có cờ",
+  "[webgl] [ba-son · 20 s] 0 xe ngược chiều oneway (làn ↔ tag) và mũi xe cùng hướng cạnh",
+  "[webgl] [ba-son · 20 s] đường hai chiều: xe đi bên phải tim đường",
+  "[webgl] [ba-son · 20 s] 0 cặp xe cùng làn gần hơn (L₁+L₂)/2 + 0.3 m, kể cả qua ranh giới cạnh",
+  "[webgl] [ba-son · 20 s] có xe trên cầu ở mọi khung",
+  "[webgl] xe đi qua cầu Ba Son được vẽ, y khớp mặt cầu vẽ (profile, nâng lên mặt chồng ≤ 0,5 m) ≤ 0.05 m",
+  "[webgl] tất định: reset + 20 s hai lần cùng hash",
+  "[webgl] không kẹt vĩnh viễn sau 180 s: dừng liên tục lâu nhất < 120 s, vẫn còn chuyển cạnh",
+  "[webgl] giao lộ: có đèn giả lập ở trục chính và xe dừng chờ",
+  "[webgl] mật độ theo thứ bậc: trục chính đông hơn đường nội bộ",
+  "[webgl] xe máy chiếm đa số, có ô tô, xe buýt và xe tải",
+  "[webgl] mật độ theo giờ: giờ vàng ≥ ngày > đêm, đêm xe phát sáng",
+  "[webgl] API bước H setRegion: xe ngoài khu tắt, có chuyển cạnh, 0 vi phạm gap/oneway/teleport, F áp lên xe trong khu, khôi phục setRegion(null), tất định",
+  "[webgl] sim dài 600 s: phá kẹt thưa, ít xe chờ, hồi đủ xe ngay khi về Đầy đủ, 0 vi phạm gap/oneway/teleport",
+  "[webgl] API bước E: setVisibleFraction thưa đều, xác định, giữ signature; setDensity khôi phục",
+  "[webgl] API bước E: F → thấp → F cũ khôi phục đúng tổng xe dù sim đã chạy 0–60 s",
+  "[webgl] hình xe: 4 loại tỉ lệ thật, tam giác hợp lý, InstancedMesh ít draw call",
+  "[webgl] CPU vòng cập nhật xe ≤ baseline (trung bình, p95)",
+  "[webgl] materialStatus.motion + dataset: số xe, chuyển cạnh, vi phạm = 0, xe trên cầu, CPU, nhãn minh họa",
+  "[webgl] console không có lỗi"
+ ],
+ "failures": [],
+ "summary": {
+  "webgl": {
+   "windows": {
+    "materials": {
+     "frames": 2075,
+     "drawnMax": 314,
+     "active": [
+      3059,
+      3059
+     ],
+     "matrixPairs": 61900,
+     "matrixJumps": 0,
+     "obbChecks": 287082,
+     "obbOverlaps": 0,
+     "allObbOverlaps": 0,
+     "graph": {
+      "steps": 200,
+      "sameLane": 604213,
+      "transitions": 7533,
+      "respawns": 54,
+      "teleports": 0,
+      "backwards": 0
+     },
+     "oneway": 0,
+     "heading": [
+      391543,
+      0
+     ],
+     "right": [
+      46113,
+      0
+     ],
+     "gap": {
+      "pairs": 2286614,
+      "cross": 945162,
+      "bad": 0
+     },
+     "bridge": {
+      "framesWith": 2075,
+      "maxCount": 294,
+      "ySamples": 57604,
+      "yWorst": 0.010004086086829567,
+      "drawnOn": 58083
+     }
+    },
+    "ba-son": {
+     "frames": 2054,
+     "drawnMax": 329,
+     "active": [
+      3059,
+      3059
+     ],
+     "matrixPairs": 64530,
+     "matrixJumps": 0,
+     "obbChecks": 330744,
+     "obbOverlaps": 0,
+     "allObbOverlaps": 0,
+     "graph": {
+      "steps": 201,
+      "sameLane": 607626,
+      "transitions": 7131,
+      "respawns": 102,
+      "teleports": 0,
+      "backwards": 0
+     },
+     "oneway": 0,
+     "heading": [
+      420764,
+      0
+     ],
+     "right": [
+      106298,
+      0
+     ],
+     "gap": {
+      "pairs": 2494190,
+      "cross": 929628,
+      "bad": 0
+     },
+     "bridge": {
+      "framesWith": 2054,
+      "maxCount": 260,
+      "ySamples": 56286,
+      "yWorst": 0.010003989614061126,
+      "drawnOn": 57041
+     }
+    }
+   },
+   "determinism": {
+    "h1": "cd83eb27",
+    "h2": "cd83eb27",
+    "t1": 20
+   },
+   "longRun": {
+    "t": 180,
+    "active": 3059,
+    "total": 3599,
+    "edgeTransitions": 64018,
+    "edgeTransitionsLast30s": 10438,
+    "gapViolations": 0,
+    "onewayViolations": 0,
+    "teleports": 0,
+    "onBridge": 204,
+    "respawns": 849,
+    "breakerRespawns": 236,
+    "waitingNow": 373,
+    "waitsTotal": 4295,
+    "maxStopS": 50.1,
+    "signals": 86,
+    "controlledNodes": 7179,
+    "holders": 1690
+   },
+   "densityPerLaneKm": {
+    "residential": 1.16,
+    "tertiary": 2.29,
+    "trunk": 4.54,
+    "secondary": 3.88,
+    "primary": 4.8,
+    "other": 1.6
+   },
+   "kindShares": {
+    "motorbike": 2391,
+    "truck": 108,
+    "car": 440,
+    "bus": 120
+   },
+   "light": {
+    "day": {
+     "active": 3059,
+     "emissive": 0.12
+    },
+    "golden": {
+     "active": 3599,
+     "emissive": 0.328
+    },
+    "night": {
+     "active": 1800,
+     "emissive": 2.72
+    }
+   },
+   "densityApi": {
+    "viaTraffic": true,
+    "returned": 3059,
+    "retHalf": 1530,
+    "countHalf": 1530,
+    "total": 3599,
+    "full": 3059,
+    "half": 1530,
+    "halfSame": true,
+    "sigTotal": 27,
+    "sigHalf": 27,
+    "zero": 27,
+    "restored": 3059,
+    "settled": 3059,
+    "emptied": 0,
+    "emptiedFull": 0,
+    "thinWorst": 0.25,
+    "hasSetDensity": true,
+    "instances": 3599,
+    "instanceKeys": [
+     "id",
+     "kind",
+     "signature"
+    ]
+   },
+   "kinds": [
+    {
+     "name": "motorbike",
+     "length": 1.9,
+     "width": 0.7,
+     "height": 1.62,
+     "triangles": 266
+    },
+    {
+     "name": "car",
+     "length": 4.5,
+     "width": 1.8,
+     "height": 1.48,
+     "triangles": 160
+    },
+    {
+     "name": "bus",
+     "length": 12,
+     "width": 2.5,
+     "height": 3.2,
+     "triangles": 244
+    },
+    {
+     "name": "truck",
+     "length": 7.4,
+     "width": 2.3,
+     "height": 3.05,
+     "triangles": 284
+    }
+   ],
+   "geo": [
+    {
+     "x": 1.81,
+     "y": 1.51,
+     "z": 0.64,
+     "colours": 11,
+     "emissiveVerts": 48,
+     "paintVerts": 180,
+     "triangles": 266,
+     "minY": 0.022
+    },
+    {
+     "x": 4.58,
+     "y": 1.39,
+     "z": 1.85,
+     "colours": 7,
+     "emissiveVerts": 24,
+     "paintVerts": 60,
+     "triangles": 160,
+     "minY": 0.026
+    },
+    {
+     "x": 12.14,
+     "y": 3.37,
+     "z": 2.92,
+     "colours": 10,
+     "emissiveVerts": 120,
+     "paintVerts": 30,
+     "triangles": 244,
+     "minY": 0
+    },
+    {
+     "x": 7.54,
+     "y": 3.05,
+     "z": 2.7,
+     "colours": 9,
+     "emissiveVerts": 24,
+     "paintVerts": 78,
+     "triangles": 284,
+     "minY": 0
+    }
+   ],
+   "kindPool": [
+    2812,
+    527,
+    136,
+    124
+   ],
+   "meshes": [
+    {
+     "name": "Traffic 31D · motorbike",
+     "count": 216,
+     "capacity": 2812,
+     "frustumCulled": false,
+     "triangles": 266,
+     "castShadow": false
+    },
+    {
+     "name": "Traffic 31D · car",
+     "count": 37,
+     "capacity": 527,
+     "frustumCulled": false,
+     "triangles": 160,
+     "castShadow": true
+    },
+    {
+     "name": "Traffic 31D · bus",
+     "count": 8,
+     "capacity": 136,
+     "frustumCulled": false,
+     "triangles": 244,
+     "castShadow": true
+    },
+    {
+     "name": "Traffic 31D · truck",
+     "count": 9,
+     "capacity": 124,
+     "frustumCulled": false,
+     "triangles": 284,
+     "castShadow": true
+    }
+   ],
+   "cpu": {
+    "mean": 0.32,
+    "p50": 0.20000000018626451,
+    "p95": 1.099999999627471,
+    "baseMean": 0.83,
+    "baseP95": 2.2
+   },
+   "motion": {
+    "roadSource": "ROAD_GRAPH_31 (OSM centerlines)",
+    "vessels": 22,
+    "vesselRoute": "illustrative Saigon River lane",
+    "vesselAuditSamples": 6005,
+    "vesselSamplesOutsideWater": 0,
+    "vesselHeadingMismatches": 0,
+    "classification": "giao thông và tàu minh họa (illustrative); không phải dữ liệu giao thông hay AIS thật",
+    "surfaceChecked": 4802,
+    "belowRoad": 0,
+    "belowRoadSamples": [],
+    "motorbikes": 2811,
+    "cars": 527,
+    "buses": 136,
+    "trucks": 123,
+    "trafficPool": 3599,
+    "vehicleTriangles": [
+     266,
+     160,
+     244,
+     284
+    ],
+    "active": 3059,
+    "total": 3599,
+    "drawn": 270,
+    "edgeTransitions": 30068,
+    "edgeTransitionsLast30s": 10718,
+    "gapViolations": 0,
+    "onewayViolations": 0,
+    "teleports": 0,
+    "onBridge": 219,
+    "respawns": 403,
+    "breakerRespawns": 33,
+    "waitingNow": 243,
+    "maxStopS": 50.1,
+    "signals": 86,
+    "controlledNodes": 7179,
+    "simTime": 113.7,
+    "cpuMsP50": 0.4,
+    "cpuMsP95": 1.3,
+    "lightFactor": 0.85,
+    "fraction": 1,
+    "regionEligible": 3599,
+    "lastFrame": 11036,
+    "vesselsInRegion": 22
+   },
+   "errors": [],
+   "region": {
+    "lf": 0.85,
+    "items": [
+     {
+      "id": "tay",
+      "eligible": 2129,
+      "n0": 1810
+     },
+     {
+      "id": "dong",
+      "eligible": 1419,
+      "n0": 1206
+     }
+    ],
+    "margin": {
+     "strictEligible": 2129,
+     "eligible": 2191,
+     "margin": 120,
+     "worst": 117.38,
+     "teleports": 0,
+     "gap": 0,
+     "active": 1862
+    },
+    "restore": {
+     "back": 3059,
+     "wantedBack": 3059,
+     "target": 3059,
+     "full0": 3059,
+     "pendingAfter": 0,
+     "settleS": 0,
+     "region": {
+      "id": null,
+      "active": false
+     },
+     "dataset": "/0",
+     "active": 3059
+    }
+   }
+  }
+ }
+}

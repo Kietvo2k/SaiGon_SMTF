@@ -1,0 +1,13 @@
+PASS window.__smartCapture và __smartApp tồn tại
+backend render: WebGPU
+PASS registry có đúng 2 camera HX (CAM-HX-001, CAM-HX-002)
+PASS CAM-HX-001: trời ở trên (hàng trên lum 140.63/xanh 31.94; hàng dưới lum 86.53/xanh 11.98)
+PASS CAM-HX-001: khung chỉ có 1 đầu đèn của HX-01 nhóm 0 ([{"node_id":"HX-01","group":0,"lit":["green"]}])
+PASS CAM-HX-001: đúng 1 đèn sáng trong khung (["green"])
+FAIL QA lỗi: page.evaluate: ReferenceError: node is not defined
+    at eval (eval at evaluate (:302:30), <anonymous>:20:91)
+    at Scene.traverse (http://127.0.0.1:8838/hcmc-poc/vendor/three186/three.core.js:12974:3)
+    at eval (eval at evaluate (:302:30), <anonymous>:20:33)
+    at async <anonymous>:328:30
+FAILED 1
+exit=1

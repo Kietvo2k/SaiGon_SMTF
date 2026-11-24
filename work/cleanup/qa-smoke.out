@@ -1,0 +1,20 @@
+[
+  {
+    "url": "http://127.0.0.1:8879/hcmc-poc/",
+    "finalUrl": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=31a&view=overview",
+    "badResponses": [],
+    "consoleErrors": []
+  },
+  {
+    "url": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=31a",
+    "finalUrl": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=31a",
+    "badResponses": [],
+    "consoleErrors": []
+  },
+  {
+    "url": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&view=overview",
+    "finalUrl": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&view=overview&app=smart&region=bac&region=bac",
+    "badResponses": [],
+    "consoleErrors": []
+  }
+]

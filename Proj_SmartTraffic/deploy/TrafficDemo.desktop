@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Traffic Demo
+Comment=Menu dieu khien du an giao thong Da Nang
+Exec=gnome-terminal -- bash /home/nvidia/traffic_project/menu.sh
+Icon=utilities-terminal
+Terminal=false
+Categories=Application;

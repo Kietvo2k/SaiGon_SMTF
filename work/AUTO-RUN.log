@@ -1,0 +1,22 @@
+# AUTO-RUN log — bắt đầu 2026-10-17 21:24 (giờ hệ thống)
+# Điều phối viên: kimi-k3. Nhánh main sạch. 3 sub agent đã khai báo (worker-strong/worker-cheap/worker-alt).
+21:25 | FIX-LABELS | ĐẠT | 81b4ab6 (labels.ts + labels.test.ts, mojibake 0)
+21:25 | DEMAND-1 | DỪNG SỚM | worker-cheap 429, worker-alt 429 (1 lần) — thử lại ở vòng sau
+21:25 | PERF-1 | DỪNG SỚM | worker-cheap 429, worker-alt 429 (1 lần) — thử lại ở vòng sau
+21:55 | GHI CHÚ | deepseek/glm free 429 kéo dài (>25 phút, 4 lần thử). Đổi sang vietapi theo yêu cầu người dùng.
+21:55 | ÁNH XẠ MỚI | việc nhẹ/trung = general + vietapi/glm-5.2 | task (*) = general + vietapi/qwen-3.8-max
+22:24 | DEMAND-1 | ĐẠT | ea78dfb (kpi-ab-32.mjs + demand-measure-32.test.mjs; kết luận G3 đúng, G1/G4 sai; 211/211 pass)
+22:24 | PERF-1 | ĐẠT | 4601e21 (perf-soak-32.cjs 568 dòng; WS 708,6 MB/giờ, CPU pha A 98%; sửa sẵn lỗi ws is not defined trong script đo cũ)
+22:30 | VÒNG 2 | DEMAND-2* + PERF-4 | qwen-3.8-max + glm-5.2 |
+23:30 | PERF-4 | ĐẠT | e0562b4 (8 file backend, pytest 112/112, telemetry không tăng trong soak)
+23:30 | DEMAND-2 | KHÔNG ĐẠT | a2ef95c (G3: breaker 2117/2089 không giảm ≥50%; 212/212 pass) — retry 1 lần theo luật
+03:30 | VÒNG 3 | DEMAND-2 retry (kimi-k3) + PERF-5 (glm-5.2) |
+04:35 | DEMAND-2 retry | KHÔNG ĐẠT | không commit mới; 4 cơ chế mới đều không hạ breaker ≥50% — chấm dứt, sang DEMAND-3
+04:35 | PERF-5 | ĐẠT | 11dc2cd (App.tsx, ViolationsTab.tsx, refresh.ts + test; vitest 53 pass, build OK)
+04:35 | KIỂM VÒNG 3 | node 212/212, pytest 112, vitest 53 + build — XANH | push 3f9da5d..11dc2cd
+04:35 | VÒNG 4 | DEMAND-3 + PERF-2* + FIX-SPEED | glm + qwen + glm |
+07:39 | VÒNG 4 | HỦY | 3 call song song cùng provider bị lỗi ("content after finish reason" / aborted); chuyển sang tự làm
+08:32 | PERF-2 | ĐẠT | cd9e06e (4 file; 219/219 test; QA north-32 + traffic-31 PASS; qa-region-31 treo → hủy)
+08:32 | KIỂM CUỐI | node 219/219, pytest 112, vitest 53 + build — XANH | push 11dc2cd..545009c (6 commit)
+08:32 | KẾT THÚC | HANDOFF + summary đã cập nhật; 6 task ĐẠT, DEMAND-2 KHÔNG ĐẠT 2 lần |
+08:40 | PERF-2 | CẬP NHẬT | ac8d5ef (sub agent hoàn tất sau: thêm 10 test); CPU pha A 98→34,9 %; 3 QA PASS; node 222/222 — đẩy lại HANDOFF + summary

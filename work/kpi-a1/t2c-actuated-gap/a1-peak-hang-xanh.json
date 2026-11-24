@@ -1,0 +1,1391 @@
+{
+  "scenario": "peak-hang-xanh",
+  "duration_s": 900,
+  "window_s": [
+    300,
+    1800
+  ],
+  "seeds": [
+    31031,
+    31032,
+    31033,
+    31034,
+    31035
+  ],
+  "mean_delta_pct": -110.48503346742419,
+  "throughput_delta_pct": 52.306707635954204,
+  "pass_threshold": false,
+  "all_seeds_not_worse": false,
+  "throughput_ok": false,
+  "params": {
+    "yellowS": 3,
+    "allRedS": 2,
+    "minGreenS": 8,
+    "maxGreenS": 45,
+    "decisionIntervalS": 1,
+    "switchMargin": 0.15,
+    "fixed": {
+      "green0S": 22,
+      "green1S": 16
+    },
+    "clusterM": 80,
+    "algorithm": "actuated-gap"
+  },
+  "rows": [
+    {
+      "seed": 31031,
+      "fixed": {
+        "mode": "fixed",
+        "seed": 31031,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 16,
+        "wait_avg_s_hx": 4.758,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 21.34,
+            "queue_max": 19,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 1,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 7.21,
+            "queue_max": 24,
+            "flow_per_min": 17,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 21.34,
+            "queue_max": 19,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 1,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 7.21,
+            "queue_max": 24,
+            "flow_per_min": 17,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "queue_max_hx": 24,
+        "flow_per_min_hx": 20,
+        "a1_delay_s_hx": 72.444,
+        "a1_crossings_hx": 1304,
+        "a1_crossings_per_hour_hx": 7824,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8303,
+        "state_hash": "c9fc7725",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "smart": {
+        "mode": "smart",
+        "seed": 31031,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 21.91,
+        "wait_avg_s_hx": 10.685,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.12,
+            "queue_max": 12,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 20.88,
+            "queue_max": 9,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 21.11,
+            "queue_max": 25,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.12,
+            "queue_max": 12,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 20.88,
+            "queue_max": 9,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 21.11,
+            "queue_max": 25,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "queue_max_hx": 25,
+        "flow_per_min_hx": 0,
+        "a1_delay_s_hx": 135.65,
+        "a1_crossings_hx": 658,
+        "a1_crossings_per_hour_hx": 3948,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8303,
+        "state_hash": "f6785547",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "delta_pct": -87.24808127657225,
+      "throughput_delta_pct": 49.5398773006135
+    },
+    {
+      "seed": 31032,
+      "fixed": {
+        "mode": "fixed",
+        "seed": 31032,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 15.77,
+        "wait_avg_s_hx": 7.503,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 21.68,
+            "queue_max": 21,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 5.97,
+            "queue_max": 5,
+            "flow_per_min": 5,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 10.66,
+            "queue_max": 26,
+            "flow_per_min": 4,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 6.71,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 21.68,
+            "queue_max": 21,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 5.97,
+            "queue_max": 5,
+            "flow_per_min": 5,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 10.66,
+            "queue_max": 26,
+            "flow_per_min": 4,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 6.71,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "queue_max_hx": 26,
+        "flow_per_min_hx": 11,
+        "a1_delay_s_hx": 50.821,
+        "a1_crossings_hx": 1490,
+        "a1_crossings_per_hour_hx": 8940,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8301,
+        "state_hash": "c9fc7725",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "smart": {
+        "mode": "smart",
+        "seed": 31032,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 20.26,
+        "wait_avg_s_hx": 10.452,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 20.14,
+            "queue_max": 6,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 23.7,
+            "queue_max": 10,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 18.87,
+            "queue_max": 36,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 20.14,
+            "queue_max": 6,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 23.7,
+            "queue_max": 10,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 18.87,
+            "queue_max": 36,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "queue_max_hx": 36,
+        "flow_per_min_hx": 0,
+        "a1_delay_s_hx": 118.792,
+        "a1_crossings_hx": 672,
+        "a1_crossings_per_hour_hx": 4032,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8301,
+        "state_hash": "f6785547",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "delta_pct": -133.7458924460361,
+      "throughput_delta_pct": 54.899328859060404
+    },
+    {
+      "seed": 31033,
+      "fixed": {
+        "mode": "fixed",
+        "seed": 31033,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 15.46,
+        "wait_avg_s_hx": 4.918,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 21.87,
+            "queue_max": 15,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 7.64,
+            "queue_max": 18,
+            "flow_per_min": 7,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 21.87,
+            "queue_max": 15,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 7.64,
+            "queue_max": 18,
+            "flow_per_min": 7,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "queue_max_hx": 18,
+        "flow_per_min_hx": 11,
+        "a1_delay_s_hx": 57.237,
+        "a1_crossings_hx": 1444,
+        "a1_crossings_per_hour_hx": 8664,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8301,
+        "state_hash": "c9fc7725",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "smart": {
+        "mode": "smart",
+        "seed": 31033,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 21.57,
+        "wait_avg_s_hx": 10.9,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.21,
+            "queue_max": 13,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.88,
+            "queue_max": 7,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 20.31,
+            "queue_max": 22,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.21,
+            "queue_max": 13,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.88,
+            "queue_max": 7,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 20.31,
+            "queue_max": 22,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "queue_max_hx": 22,
+        "flow_per_min_hx": 0,
+        "a1_delay_s_hx": 125.181,
+        "a1_crossings_hx": 693,
+        "a1_crossings_per_hour_hx": 4158,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8301,
+        "state_hash": "f6785547",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "delta_pct": -118.70643115467266,
+      "throughput_delta_pct": 52.00831024930748
+    },
+    {
+      "seed": 31034,
+      "fixed": {
+        "mode": "fixed",
+        "seed": 31034,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 15.63,
+        "wait_avg_s_hx": 4.87,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.58,
+            "queue_max": 18,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 3,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 6.64,
+            "queue_max": 17,
+            "flow_per_min": 4,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.58,
+            "queue_max": 18,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 3,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 6.64,
+            "queue_max": 17,
+            "flow_per_min": 4,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "queue_max_hx": 18,
+        "flow_per_min_hx": 11,
+        "a1_delay_s_hx": 65.203,
+        "a1_crossings_hx": 1270,
+        "a1_crossings_per_hour_hx": 7620,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8301,
+        "state_hash": "c9fc7725",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "smart": {
+        "mode": "smart",
+        "seed": 31034,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 22.08,
+        "wait_avg_s_hx": 11.22,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.15,
+            "queue_max": 14,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 24.08,
+            "queue_max": 8,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 21.09,
+            "queue_max": 27,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.15,
+            "queue_max": 14,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 24.08,
+            "queue_max": 8,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 21.09,
+            "queue_max": 27,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "queue_max_hx": 27,
+        "flow_per_min_hx": 0,
+        "a1_delay_s_hx": 120.796,
+        "a1_crossings_hx": 699,
+        "a1_crossings_per_hour_hx": 4194,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8301,
+        "state_hash": "f6785547",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "delta_pct": -85.26141435210036,
+      "throughput_delta_pct": 44.960629921259844
+    },
+    {
+      "seed": 31035,
+      "fixed": {
+        "mode": "fixed",
+        "seed": 31035,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 13.51,
+        "wait_avg_s_hx": 4.218,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 12.1,
+            "queue_max": 16,
+            "flow_per_min": 9,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 1,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 13.21,
+            "queue_max": 26,
+            "flow_per_min": 4,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 12,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 12.1,
+            "queue_max": 16,
+            "flow_per_min": 9,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 1,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 13.21,
+            "queue_max": 26,
+            "flow_per_min": 4,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 12,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 2,
+            "switches_per_hour": 148
+          }
+        ],
+        "queue_max_hx": 26,
+        "flow_per_min_hx": 28,
+        "a1_delay_s_hx": 58.66,
+        "a1_crossings_hx": 1595,
+        "a1_crossings_per_hour_hx": 9570,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8303,
+        "state_hash": "c9fc7725",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "smart": {
+        "mode": "smart",
+        "seed": 31035,
+        "scenario": "peak-hang-xanh",
+        "duration_s": 900,
+        "wait_avg_s": 20.99,
+        "wait_avg_s_hx": 10.727,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.3,
+            "queue_max": 6,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.36,
+            "queue_max": 10,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 19.7,
+            "queue_max": 25,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.3,
+            "queue_max": 6,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 22.36,
+            "queue_max": 10,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 19.7,
+            "queue_max": 25,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 0
+          }
+        ],
+        "queue_max_hx": 25,
+        "flow_per_min_hx": 0,
+        "a1_delay_s_hx": 133.43,
+        "a1_crossings_hx": 636,
+        "a1_crossings_per_hour_hx": 3816,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 8303,
+        "state_hash": "f6785547",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "algorithm": "actuated-gap"
+        }
+      },
+      "delta_pct": -127.46334810773953,
+      "throughput_delta_pct": 60.125391849529784
+    }
+  ]
+}

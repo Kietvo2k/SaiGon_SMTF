@@ -1,0 +1,29 @@
+FAIL work\kpi-ctrl\check\F4\app-1730-31047.json te (node:internal/modules/esm/module_job:327:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:431:5)
+    at async node:internal/modules/esm/loader:643:26
+    at async file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/scripts/kpi-ab-32.mjs:38:65
+
+Node.js v24.18.1
+
+FAIL work\kpi-ctrl\check\F4\app-1730-31048.json te (node:internal/modules/esm/module_job:327:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:431:5)
+    at async node:internal/modules/esm/loader:643:26
+    at async file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/scripts/kpi-ab-32.mjs:38:65
+
+Node.js v24.18.1
+
+FAIL work\kpi-ctrl\check\F4\app-1730-31049.json te (node:internal/modules/esm/module_job:327:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:431:5)
+    at async node:internal/modules/esm/loader:643:26
+    at async file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/scripts/kpi-ab-32.mjs:38:65
+
+Node.js v24.18.1
+
+FAIL work\kpi-ctrl\check\F4\app-1730-31050.json te (node:internal/modules/esm/module_job:327:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:431:5)
+    at async node:internal/modules/esm/loader:643:26
+    at async file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/scripts/kpi-ab-32.mjs:38:65
+
+Node.js v24.18.1
+
+{"name":"F4","params":{"algorithm":"max-pressure-gated"},"failed":4,"compact":{"peak-hang-xanh":{"n":5,"mean_d":20.77,"min_d":0.44,"mean_thr":114.4,"min_thr":90,"seeds":"31046:18.14/115.2 31047:41.84/138.2 31048:25.86/127.8 31049:17.57/100.8 31050:0.44/90"},"app-1730":{"n":1,"mean_d":5.28,"min_d":5.28,"mean_thr":98.7,"min_thr":98.7,"seeds":"31046:5.28/98.7"}}}

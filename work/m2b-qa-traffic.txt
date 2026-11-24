@@ -1,0 +1,823 @@
+{
+ "suite": "traffic-31 ┬╖ D",
+ "passed": 70,
+ "failed": 1,
+ "checks": [
+  "m├ú nguß╗ôn: module city-traffic-31.js ─æ╞░ß╗úc nß║íp, v├▓ng xe theo ─æoß║ín thß║│ng 26B ─æ├ú bß╗Å",
+  "baseline CPU v├▓ng cß║¡p nhß║¡t xe ─æ├ú ─æo tr╞░ß╗¢c khi sß╗¡a",
+  "[webgpu] API giao th├┤ng 31D (materialStatus.motion.api)",
+  "[webgpu] [materials ┬╖ 20 s] c├│ xe ─æ╞░ß╗úc vß║╜ v├á lß║Ñy mß║½u ─æß╗º khung",
+  "[webgpu] [materials ┬╖ 20 s] 0 teleport giß╗»a ─æ╞░ß╗¥ng theo ma trß║¡n ─æ├ú vß║╜ (╬ö Γëñ vmax┬╖╬öt┬╖1,6 + 0,3 m, trß╗½ t├íi sinh c├│ cß╗¥)",
+  "[webgpu] [materials ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) trong c├íc xe ─æ├ú vß║╜",
+  "[webgpu] [materials ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) tr├¬n to├án bß╗Ö xe ─æang chß║íy",
+  "[webgpu] [materials ┬╖ 20 s] ─æß╗ô thß╗ï: 0 teleport/l├╣i, c├│ chuyß╗ân cß║ính, t├íi sinh chß╗ë c├│ cß╗¥",
+  "[webgpu] [materials ┬╖ 20 s] 0 xe ng╞░ß╗úc chiß╗üu oneway (l├án Γåö tag) v├á m┼⌐i xe c├╣ng h╞░ß╗¢ng cß║ính",
+  "[webgpu] [materials ┬╖ 20 s] ─æ╞░ß╗¥ng hai chiß╗üu: xe ─æi b├¬n phß║úi tim ─æ╞░ß╗¥ng",
+  "[webgpu] [materials ┬╖ 20 s] 0 cß║╖p xe c├╣ng l├án gß║ºn h╞ín (LΓéü+LΓéé)/2 + 0.3 m, kß╗â cß║ú qua ranh giß╗¢i cß║ính",
+  "[webgpu] [materials ┬╖ 20 s] c├│ xe tr├¬n cß║ºu ß╗ƒ mß╗ìi khung",
+  "[webgpu] [ba-son ┬╖ 20 s] c├│ xe ─æ╞░ß╗úc vß║╜ v├á lß║Ñy mß║½u ─æß╗º khung",
+  "[webgpu] [ba-son ┬╖ 20 s] 0 teleport giß╗»a ─æ╞░ß╗¥ng theo ma trß║¡n ─æ├ú vß║╜ (╬ö Γëñ vmax┬╖╬öt┬╖1,6 + 0,3 m, trß╗½ t├íi sinh c├│ cß╗¥)",
+  "[webgpu] [ba-son ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) trong c├íc xe ─æ├ú vß║╜",
+  "[webgpu] [ba-son ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) tr├¬n to├án bß╗Ö xe ─æang chß║íy",
+  "[webgpu] [ba-son ┬╖ 20 s] ─æß╗ô thß╗ï: 0 teleport/l├╣i, c├│ chuyß╗ân cß║ính, t├íi sinh chß╗ë c├│ cß╗¥",
+  "[webgpu] [ba-son ┬╖ 20 s] 0 xe ng╞░ß╗úc chiß╗üu oneway (l├án Γåö tag) v├á m┼⌐i xe c├╣ng h╞░ß╗¢ng cß║ính",
+  "[webgpu] [ba-son ┬╖ 20 s] ─æ╞░ß╗¥ng hai chiß╗üu: xe ─æi b├¬n phß║úi tim ─æ╞░ß╗¥ng",
+  "[webgpu] [ba-son ┬╖ 20 s] 0 cß║╖p xe c├╣ng l├án gß║ºn h╞ín (LΓéü+LΓéé)/2 + 0.3 m, kß╗â cß║ú qua ranh giß╗¢i cß║ính",
+  "[webgpu] [ba-son ┬╖ 20 s] c├│ xe tr├¬n cß║ºu ß╗ƒ mß╗ìi khung",
+  "[webgpu] xe ─æi qua cß║ºu Ba Son ─æ╞░ß╗úc vß║╜, y khß╗¢p mß║╖t cß║ºu vß║╜ (profile, n├óng l├¬n mß║╖t chß╗ông Γëñ 0,5 m) Γëñ 0.05 m",
+  "[webgpu] tß║Ñt ─æß╗ïnh: reset + 20 s hai lß║ºn c├╣ng hash",
+  "[webgpu] kh├┤ng kß║╣t v─⌐nh viß╗àn sau 180 s: dß╗½ng li├¬n tß╗Ñc l├óu nhß║Ñt < 120 s, vß║½n c├▓n chuyß╗ân cß║ính",
+  "[webgpu] giao lß╗Ö: c├│ ─æ├¿n giß║ú lß║¡p ß╗ƒ trß╗Ñc ch├¡nh v├á xe dß╗½ng chß╗¥",
+  "[webgpu] mß║¡t ─æß╗Ö theo thß╗⌐ bß║¡c: trß╗Ñc ch├¡nh ─æ├┤ng h╞ín ─æ╞░ß╗¥ng nß╗Öi bß╗Ö",
+  "[webgpu] xe m├íy chiß║┐m ─æa sß╗æ, c├│ ├┤ t├┤, xe bu├╜t v├á xe tß║úi",
+  "[webgpu] mß║¡t ─æß╗Ö theo giß╗¥: giß╗¥ v├áng ΓëÑ ng├áy > ─æ├¬m, ─æ├¬m xe ph├ít s├íng",
+  "[webgpu] API b╞░ß╗¢c H setRegion: xe ngo├ái khu tß║»t, c├│ chuyß╗ân cß║ính, 0 vi phß║ím gap/oneway/teleport, F ├íp l├¬n xe trong khu, kh├┤i phß╗Ñc setRegion(null), tß║Ñt ─æß╗ïnh",
+  "[webgpu] sim d├ái 600 s: ph├í kß║╣t th╞░a, ├¡t xe chß╗¥, hß╗ôi ─æß╗º xe ngay khi vß╗ü ─Éß║ºy ─æß╗º, 0 vi phß║ím gap/oneway/teleport",
+  "[webgpu] API b╞░ß╗¢c E: setVisibleFraction th╞░a ─æß╗üu, x├íc ─æß╗ïnh, giß╗» signature; setDensity kh├┤i phß╗Ñc",
+  "[webgpu] API b╞░ß╗¢c E: F ΓåÆ thß║Ñp ΓåÆ F c┼⌐ kh├┤i phß╗Ñc ─æ├║ng tß╗òng xe d├╣ sim ─æ├ú chß║íy 0ΓÇô60 s",
+  "[webgpu] h├¼nh xe: 4 loß║íi tß╗ë lß╗ç thß║¡t, tam gi├íc hß╗úp l├╜, InstancedMesh ├¡t draw call",
+  "[webgpu] CPU v├▓ng cß║¡p nhß║¡t xe Γëñ baseline (trung b├¼nh, p95)",
+  "[webgpu] materialStatus.motion + dataset: sß╗æ xe, chuyß╗ân cß║ính, vi phß║ím = 0, xe tr├¬n cß║ºu, CPU, nh├ún minh hß╗ìa",
+  "[webgpu] console kh├┤ng c├│ lß╗ùi",
+  "[webgl] API giao th├┤ng 31D (materialStatus.motion.api)",
+  "[webgl] [materials ┬╖ 20 s] c├│ xe ─æ╞░ß╗úc vß║╜ v├á lß║Ñy mß║½u ─æß╗º khung",
+  "[webgl] [materials ┬╖ 20 s] 0 teleport giß╗»a ─æ╞░ß╗¥ng theo ma trß║¡n ─æ├ú vß║╜ (╬ö Γëñ vmax┬╖╬öt┬╖1,6 + 0,3 m, trß╗½ t├íi sinh c├│ cß╗¥)",
+  "[webgl] [materials ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) trong c├íc xe ─æ├ú vß║╜",
+  "[webgl] [materials ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) tr├¬n to├án bß╗Ö xe ─æang chß║íy",
+  "[webgl] [materials ┬╖ 20 s] ─æß╗ô thß╗ï: 0 teleport/l├╣i, c├│ chuyß╗ân cß║ính, t├íi sinh chß╗ë c├│ cß╗¥",
+  "[webgl] [materials ┬╖ 20 s] 0 xe ng╞░ß╗úc chiß╗üu oneway (l├án Γåö tag) v├á m┼⌐i xe c├╣ng h╞░ß╗¢ng cß║ính",
+  "[webgl] [materials ┬╖ 20 s] ─æ╞░ß╗¥ng hai chiß╗üu: xe ─æi b├¬n phß║úi tim ─æ╞░ß╗¥ng",
+  "[webgl] [materials ┬╖ 20 s] 0 cß║╖p xe c├╣ng l├án gß║ºn h╞ín (LΓéü+LΓéé)/2 + 0.3 m, kß╗â cß║ú qua ranh giß╗¢i cß║ính",
+  "[webgl] [materials ┬╖ 20 s] c├│ xe tr├¬n cß║ºu ß╗ƒ mß╗ìi khung",
+  "[webgl] [ba-son ┬╖ 20 s] c├│ xe ─æ╞░ß╗úc vß║╜ v├á lß║Ñy mß║½u ─æß╗º khung",
+  "[webgl] [ba-son ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) trong c├íc xe ─æ├ú vß║╜",
+  "[webgl] [ba-son ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) tr├¬n to├án bß╗Ö xe ─æang chß║íy",
+  "[webgl] [ba-son ┬╖ 20 s] ─æß╗ô thß╗ï: 0 teleport/l├╣i, c├│ chuyß╗ân cß║ính, t├íi sinh chß╗ë c├│ cß╗¥",
+  "[webgl] [ba-son ┬╖ 20 s] 0 xe ng╞░ß╗úc chiß╗üu oneway (l├án Γåö tag) v├á m┼⌐i xe c├╣ng h╞░ß╗¢ng cß║ính",
+  "[webgl] [ba-son ┬╖ 20 s] ─æ╞░ß╗¥ng hai chiß╗üu: xe ─æi b├¬n phß║úi tim ─æ╞░ß╗¥ng",
+  "[webgl] [ba-son ┬╖ 20 s] 0 cß║╖p xe c├╣ng l├án gß║ºn h╞ín (LΓéü+LΓéé)/2 + 0.3 m, kß╗â cß║ú qua ranh giß╗¢i cß║ính",
+  "[webgl] [ba-son ┬╖ 20 s] c├│ xe tr├¬n cß║ºu ß╗ƒ mß╗ìi khung",
+  "[webgl] xe ─æi qua cß║ºu Ba Son ─æ╞░ß╗úc vß║╜, y khß╗¢p mß║╖t cß║ºu vß║╜ (profile, n├óng l├¬n mß║╖t chß╗ông Γëñ 0,5 m) Γëñ 0.05 m",
+  "[webgl] tß║Ñt ─æß╗ïnh: reset + 20 s hai lß║ºn c├╣ng hash",
+  "[webgl] kh├┤ng kß║╣t v─⌐nh viß╗àn sau 180 s: dß╗½ng li├¬n tß╗Ñc l├óu nhß║Ñt < 120 s, vß║½n c├▓n chuyß╗ân cß║ính",
+  "[webgl] giao lß╗Ö: c├│ ─æ├¿n giß║ú lß║¡p ß╗ƒ trß╗Ñc ch├¡nh v├á xe dß╗½ng chß╗¥",
+  "[webgl] mß║¡t ─æß╗Ö theo thß╗⌐ bß║¡c: trß╗Ñc ch├¡nh ─æ├┤ng h╞ín ─æ╞░ß╗¥ng nß╗Öi bß╗Ö",
+  "[webgl] xe m├íy chiß║┐m ─æa sß╗æ, c├│ ├┤ t├┤, xe bu├╜t v├á xe tß║úi",
+  "[webgl] mß║¡t ─æß╗Ö theo giß╗¥: giß╗¥ v├áng ΓëÑ ng├áy > ─æ├¬m, ─æ├¬m xe ph├ít s├íng",
+  "[webgl] API b╞░ß╗¢c H setRegion: xe ngo├ái khu tß║»t, c├│ chuyß╗ân cß║ính, 0 vi phß║ím gap/oneway/teleport, F ├íp l├¬n xe trong khu, kh├┤i phß╗Ñc setRegion(null), tß║Ñt ─æß╗ïnh",
+  "[webgl] sim d├ái 600 s: ph├í kß║╣t th╞░a, ├¡t xe chß╗¥, hß╗ôi ─æß╗º xe ngay khi vß╗ü ─Éß║ºy ─æß╗º, 0 vi phß║ím gap/oneway/teleport",
+  "[webgl] API b╞░ß╗¢c E: setVisibleFraction th╞░a ─æß╗üu, x├íc ─æß╗ïnh, giß╗» signature; setDensity kh├┤i phß╗Ñc",
+  "[webgl] API b╞░ß╗¢c E: F ΓåÆ thß║Ñp ΓåÆ F c┼⌐ kh├┤i phß╗Ñc ─æ├║ng tß╗òng xe d├╣ sim ─æ├ú chß║íy 0ΓÇô60 s",
+  "[webgl] h├¼nh xe: 4 loß║íi tß╗ë lß╗ç thß║¡t, tam gi├íc hß╗úp l├╜, InstancedMesh ├¡t draw call",
+  "[webgl] CPU v├▓ng cß║¡p nhß║¡t xe Γëñ baseline (trung b├¼nh, p95)",
+  "[webgl] materialStatus.motion + dataset: sß╗æ xe, chuyß╗ân cß║ính, vi phß║ím = 0, xe tr├¬n cß║ºu, CPU, nh├ún minh hß╗ìa",
+  "[webgl] console kh├┤ng c├│ lß╗ùi",
+  "tß║Ñt ─æß╗ïnh giß╗»a WebGPU v├á WebGL 2 (c├╣ng seed, c├╣ng 20 s)"
+ ],
+ "failures": [
+  {
+   "name": "[webgl] [ba-son ┬╖ 20 s] 0 teleport giß╗»a ─æ╞░ß╗¥ng theo ma trß║¡n ─æ├ú vß║╜ (╬ö Γëñ vmax┬╖╬öt┬╖1,6 + 0,3 m, trß╗½ t├íi sinh c├│ cß╗¥)",
+   "error": "[{\"id\":1212,\"d\":3.92,\"allow\":3.82,\"x\":-1052.2,\"z\":-1740.8,\"dtSim\":0.1,\"dtWall\":0.018}]"
+  }
+ ],
+ "summary": {
+  "webgpu": {
+   "windows": {
+    "materials": {
+     "frames": 1286,
+     "drawnMax": 317,
+     "active": [
+      3059,
+      3059
+     ],
+     "matrixPairs": 61927,
+     "matrixJumps": 0,
+     "obbChecks": 180146,
+     "obbOverlaps": 0,
+     "allObbOverlaps": 0,
+     "graph": {
+      "steps": 199,
+      "sameLane": 601181,
+      "transitions": 7501,
+      "respawns": 59,
+      "teleports": 0,
+      "backwards": 0
+     },
+     "oneway": 0,
+     "heading": [
+      250778,
+      0
+     ],
+     "right": [
+      27282,
+      0
+     ],
+     "gap": {
+      "pairs": 1417777,
+      "cross": 575304,
+      "bad": 0
+     },
+     "bridge": {
+      "framesWith": 1286,
+      "maxCount": 300,
+      "ySamples": 35090,
+      "yWorst": 0.010003824618918244,
+      "drawnOn": 35366
+     }
+    },
+    "ba-son": {
+     "frames": 1129,
+     "drawnMax": 338,
+     "active": [
+      3059,
+      3059
+     ],
+     "matrixPairs": 61468,
+     "matrixJumps": 0,
+     "obbChecks": 196069,
+     "obbOverlaps": 0,
+     "allObbOverlaps": 0,
+     "graph": {
+      "steps": 186,
+      "sameLane": 562182,
+      "transitions": 6699,
+      "respawns": 93,
+      "teleports": 0,
+      "backwards": 0
+     },
+     "oneway": 0,
+     "heading": [
+      239334,
+      0
+     ],
+     "right": [
+      56552,
+      0
+     ],
+     "gap": {
+      "pairs": 1349588,
+      "cross": 499178,
+      "bad": 0
+     },
+     "bridge": {
+      "framesWith": 1129,
+      "maxCount": 266,
+      "ySamples": 29898,
+      "yWorst": 0.010003934356790367,
+      "drawnOn": 30353
+     }
+    }
+   },
+   "determinism": {
+    "h1": "cd83eb27",
+    "h2": "cd83eb27",
+    "t1": 20
+   },
+   "longRun": {
+    "t": 180,
+    "active": 3059,
+    "total": 3599,
+    "edgeTransitions": 64018,
+    "edgeTransitionsLast30s": 10438,
+    "gapViolations": 0,
+    "onewayViolations": 0,
+    "teleports": 0,
+    "onBridge": 204,
+    "respawns": 849,
+    "breakerRespawns": 236,
+    "waitingNow": 373,
+    "waitsTotal": 4295,
+    "maxStopS": 50.1,
+    "signals": 86,
+    "controlledNodes": 7179,
+    "holders": 1690
+   },
+   "densityPerLaneKm": {
+    "residential": 1.16,
+    "tertiary": 2.21,
+    "trunk": 4.57,
+    "secondary": 3.85,
+    "primary": 4.89,
+    "other": 1.6
+   },
+   "kindShares": {
+    "motorbike": 2397,
+    "truck": 106,
+    "car": 434,
+    "bus": 122
+   },
+   "light": {
+    "day": {
+     "active": 3059,
+     "emissive": 0.12
+    },
+    "golden": {
+     "active": 3599,
+     "emissive": 0.328
+    },
+    "night": {
+     "active": 1800,
+     "emissive": 2.72
+    }
+   },
+   "densityApi": {
+    "viaTraffic": true,
+    "returned": 3059,
+    "retHalf": 1530,
+    "countHalf": 1530,
+    "total": 3599,
+    "full": 3059,
+    "half": 1530,
+    "halfSame": true,
+    "sigTotal": 27,
+    "sigHalf": 27,
+    "zero": 27,
+    "restored": 3059,
+    "settled": 3059,
+    "emptied": 0,
+    "emptiedFull": 0,
+    "thinWorst": 0.25,
+    "hasSetDensity": true,
+    "instances": 3599,
+    "instanceKeys": [
+     "id",
+     "kind",
+     "signature"
+    ]
+   },
+   "kinds": [
+    {
+     "name": "motorbike",
+     "length": 1.9,
+     "width": 0.7,
+     "height": 1.62,
+     "triangles": 246
+    },
+    {
+     "name": "car",
+     "length": 4.5,
+     "width": 1.8,
+     "height": 1.48,
+     "triangles": 160
+    },
+    {
+     "name": "bus",
+     "length": 12,
+     "width": 2.5,
+     "height": 3.2,
+     "triangles": 244
+    },
+    {
+     "name": "truck",
+     "length": 7.4,
+     "width": 2.3,
+     "height": 3.05,
+     "triangles": 284
+    }
+   ],
+   "geo": [
+    {
+     "x": 1.81,
+     "y": 1.62,
+     "z": 0.64,
+     "colours": 10,
+     "emissiveVerts": 48,
+     "paintVerts": 246,
+     "triangles": 246,
+     "minY": 0.022
+    },
+    {
+     "x": 4.58,
+     "y": 1.39,
+     "z": 1.85,
+     "colours": 7,
+     "emissiveVerts": 24,
+     "paintVerts": 60,
+     "triangles": 160,
+     "minY": 0.026
+    },
+    {
+     "x": 12.14,
+     "y": 3.37,
+     "z": 2.92,
+     "colours": 10,
+     "emissiveVerts": 120,
+     "paintVerts": 30,
+     "triangles": 244,
+     "minY": 0
+    },
+    {
+     "x": 7.54,
+     "y": 3.05,
+     "z": 2.7,
+     "colours": 9,
+     "emissiveVerts": 24,
+     "paintVerts": 78,
+     "triangles": 284,
+     "minY": 0
+    }
+   ],
+   "kindPool": [
+    2812,
+    527,
+    136,
+    124
+   ],
+   "meshes": [
+    {
+     "name": "Traffic 31D ┬╖ motorbike",
+     "count": 209,
+     "capacity": 2812,
+     "frustumCulled": false,
+     "triangles": 246,
+     "castShadow": false
+    },
+    {
+     "name": "Traffic 31D ┬╖ car",
+     "count": 35,
+     "capacity": 527,
+     "frustumCulled": false,
+     "triangles": 160,
+     "castShadow": true
+    },
+    {
+     "name": "Traffic 31D ┬╖ bus",
+     "count": 10,
+     "capacity": 136,
+     "frustumCulled": false,
+     "triangles": 244,
+     "castShadow": true
+    },
+    {
+     "name": "Traffic 31D ┬╖ truck",
+     "count": 8,
+     "capacity": 124,
+     "frustumCulled": false,
+     "triangles": 284,
+     "castShadow": true
+    }
+   ],
+   "cpu": {
+    "mean": 0.716,
+    "p50": 0.6000000000931323,
+    "p95": 2.1000000000931323,
+    "baseMean": 0.83,
+    "baseP95": 2.2
+   },
+   "motion": {
+    "roadSource": "ROAD_GRAPH_31 (OSM centerlines)",
+    "vessels": 22,
+    "vesselRoute": "illustrative Saigon River lane",
+    "vesselAuditSamples": 6005,
+    "vesselSamplesOutsideWater": 0,
+    "vesselHeadingMismatches": 0,
+    "classification": "giao th├┤ng v├á t├áu minh hß╗ìa (illustrative); kh├┤ng phß║úi dß╗» liß╗çu giao th├┤ng hay AIS thß║¡t",
+    "surfaceChecked": 4802,
+    "belowRoad": 0,
+    "belowRoadSamples": [],
+    "motorbikes": 2811,
+    "cars": 527,
+    "buses": 136,
+    "trucks": 123,
+    "trafficPool": 3599,
+    "vehicleTriangles": [
+     246,
+     160,
+     244,
+     284
+    ],
+    "active": 3059,
+    "total": 3599,
+    "drawn": 262,
+    "edgeTransitions": 29184,
+    "edgeTransitionsLast30s": 10684,
+    "gapViolations": 0,
+    "onewayViolations": 0,
+    "teleports": 0,
+    "onBridge": 237,
+    "respawns": 386,
+    "breakerRespawns": 33,
+    "waitingNow": 239,
+    "maxStopS": 50.1,
+    "signals": 86,
+    "controlledNodes": 7179,
+    "simTime": 106.5,
+    "cpuMsP50": 0.7,
+    "cpuMsP95": 2.4,
+    "lightFactor": 0.85,
+    "fraction": 1,
+    "regionEligible": 3599,
+    "lastFrame": 6024,
+    "vesselsInRegion": 22
+   },
+   "errors": [],
+   "region": {
+    "lf": 0.85,
+    "items": [
+     {
+      "id": "tay",
+      "eligible": 2129,
+      "n0": 1810
+     },
+     {
+      "id": "dong",
+      "eligible": 1419,
+      "n0": 1206
+     }
+    ],
+    "margin": {
+     "strictEligible": 2129,
+     "eligible": 2191,
+     "margin": 120,
+     "worst": 117.38,
+     "teleports": 0,
+     "gap": 0,
+     "active": 1862
+    },
+    "restore": {
+     "back": 3059,
+     "wantedBack": 3059,
+     "target": 3059,
+     "full0": 3059,
+     "pendingAfter": 0,
+     "settleS": 0,
+     "region": {
+      "id": null,
+      "active": false
+     },
+     "dataset": "/0",
+     "active": 3059
+    }
+   }
+  },
+  "webgl": {
+   "windows": {
+    "materials": {
+     "frames": 1994,
+     "drawnMax": 314,
+     "active": [
+      3059,
+      3059
+     ],
+     "matrixPairs": 62057,
+     "matrixJumps": 0,
+     "obbChecks": 259208,
+     "obbOverlaps": 0,
+     "allObbOverlaps": 0,
+     "graph": {
+      "steps": 200,
+      "sameLane": 604281,
+      "transitions": 7444,
+      "respawns": 75,
+      "teleports": 0,
+      "backwards": 0
+     },
+     "oneway": 0,
+     "heading": [
+      383197,
+      0
+     ],
+     "right": [
+      52056,
+      0
+     ],
+     "gap": {
+      "pairs": 2314918,
+      "cross": 933810,
+      "bad": 0
+     },
+     "bridge": {
+      "framesWith": 1994,
+      "maxCount": 263,
+      "ySamples": 56787,
+      "yWorst": 0.010003914590392071,
+      "drawnOn": 57364
+     }
+    },
+    "ba-son": {
+     "frames": 1981,
+     "drawnMax": 321,
+     "active": [
+      3059,
+      3059
+     ],
+     "matrixPairs": 62691,
+     "matrixJumps": 1,
+     "obbChecks": 269442,
+     "obbOverlaps": 0,
+     "allObbOverlaps": 0,
+     "graph": {
+      "steps": 201,
+      "sameLane": 607370,
+      "transitions": 7380,
+      "respawns": 109,
+      "teleports": 0,
+      "backwards": 0
+     },
+     "oneway": 0,
+     "heading": [
+      385660,
+      0
+     ],
+     "right": [
+      94986,
+      0
+     ],
+     "gap": {
+      "pairs": 2431750,
+      "cross": 888514,
+      "bad": 0
+     },
+     "bridge": {
+      "framesWith": 1981,
+      "maxCount": 244,
+      "ySamples": 49301,
+      "yWorst": 0.010003733019645189,
+      "drawnOn": 49800
+     }
+    }
+   },
+   "determinism": {
+    "h1": "cd83eb27",
+    "h2": "cd83eb27",
+    "t1": 20
+   },
+   "longRun": {
+    "t": 180,
+    "active": 3059,
+    "total": 3599,
+    "edgeTransitions": 64018,
+    "edgeTransitionsLast30s": 10438,
+    "gapViolations": 0,
+    "onewayViolations": 0,
+    "teleports": 0,
+    "onBridge": 204,
+    "respawns": 849,
+    "breakerRespawns": 236,
+    "waitingNow": 373,
+    "waitsTotal": 4295,
+    "maxStopS": 50.1,
+    "signals": 86,
+    "controlledNodes": 7179,
+    "holders": 1690
+   },
+   "densityPerLaneKm": {
+    "residential": 1.27,
+    "tertiary": 2.13,
+    "trunk": 4.27,
+    "secondary": 3.8,
+    "primary": 4.9,
+    "other": 0
+   },
+   "kindShares": {
+    "truck": 108,
+    "motorbike": 2394,
+    "car": 436,
+    "bus": 121
+   },
+   "light": {
+    "day": {
+     "active": 3059,
+     "emissive": 0.12
+    },
+    "golden": {
+     "active": 3599,
+     "emissive": 0.328
+    },
+    "night": {
+     "active": 1800,
+     "emissive": 2.72
+    }
+   },
+   "densityApi": {
+    "viaTraffic": true,
+    "returned": 3059,
+    "retHalf": 1530,
+    "countHalf": 1530,
+    "total": 3599,
+    "full": 3059,
+    "half": 1530,
+    "halfSame": true,
+    "sigTotal": 27,
+    "sigHalf": 27,
+    "zero": 27,
+    "restored": 3059,
+    "settled": 3059,
+    "emptied": 0,
+    "emptiedFull": 0,
+    "thinWorst": 0.25,
+    "hasSetDensity": true,
+    "instances": 3599,
+    "instanceKeys": [
+     "id",
+     "kind",
+     "signature"
+    ]
+   },
+   "kinds": [
+    {
+     "name": "motorbike",
+     "length": 1.9,
+     "width": 0.7,
+     "height": 1.62,
+     "triangles": 246
+    },
+    {
+     "name": "car",
+     "length": 4.5,
+     "width": 1.8,
+     "height": 1.48,
+     "triangles": 160
+    },
+    {
+     "name": "bus",
+     "length": 12,
+     "width": 2.5,
+     "height": 3.2,
+     "triangles": 244
+    },
+    {
+     "name": "truck",
+     "length": 7.4,
+     "width": 2.3,
+     "height": 3.05,
+     "triangles": 284
+    }
+   ],
+   "geo": [
+    {
+     "x": 1.81,
+     "y": 1.62,
+     "z": 0.64,
+     "colours": 10,
+     "emissiveVerts": 48,
+     "paintVerts": 246,
+     "triangles": 246,
+     "minY": 0.022
+    },
+    {
+     "x": 4.58,
+     "y": 1.39,
+     "z": 1.85,
+     "colours": 7,
+     "emissiveVerts": 24,
+     "paintVerts": 60,
+     "triangles": 160,
+     "minY": 0.026
+    },
+    {
+     "x": 12.14,
+     "y": 3.37,
+     "z": 2.92,
+     "colours": 10,
+     "emissiveVerts": 120,
+     "paintVerts": 30,
+     "triangles": 244,
+     "minY": 0
+    },
+    {
+     "x": 7.54,
+     "y": 3.05,
+     "z": 2.7,
+     "colours": 9,
+     "emissiveVerts": 24,
+     "paintVerts": 78,
+     "triangles": 284,
+     "minY": 0
+    }
+   ],
+   "kindPool": [
+    2812,
+    527,
+    136,
+    124
+   ],
+   "meshes": [
+    {
+     "name": "Traffic 31D ┬╖ motorbike",
+     "count": 211,
+     "capacity": 2812,
+     "frustumCulled": false,
+     "triangles": 246,
+     "castShadow": false
+    },
+    {
+     "name": "Traffic 31D ┬╖ car",
+     "count": 32,
+     "capacity": 527,
+     "frustumCulled": false,
+     "triangles": 160,
+     "castShadow": true
+    },
+    {
+     "name": "Traffic 31D ┬╖ bus",
+     "count": 10,
+     "capacity": 136,
+     "frustumCulled": false,
+     "triangles": 244,
+     "castShadow": true
+    },
+    {
+     "name": "Traffic 31D ┬╖ truck",
+     "count": 9,
+     "capacity": 124,
+     "frustumCulled": false,
+     "triangles": 284,
+     "castShadow": true
+    }
+   ],
+   "cpu": {
+    "mean": 0.501,
+    "p50": 0.19999999972060323,
+    "p95": 1.7999999998137355,
+    "baseMean": 0.83,
+    "baseP95": 2.2
+   },
+   "motion": {
+    "roadSource": "ROAD_GRAPH_31 (OSM centerlines)",
+    "vessels": 22,
+    "vesselRoute": "illustrative Saigon River lane",
+    "vesselAuditSamples": 6005,
+    "vesselSamplesOutsideWater": 0,
+    "vesselHeadingMismatches": 0,
+    "classification": "giao th├┤ng v├á t├áu minh hß╗ìa (illustrative); kh├┤ng phß║úi dß╗» liß╗çu giao th├┤ng hay AIS thß║¡t",
+    "surfaceChecked": 4802,
+    "belowRoad": 0,
+    "belowRoadSamples": [],
+    "motorbikes": 2811,
+    "cars": 527,
+    "buses": 136,
+    "trucks": 123,
+    "trafficPool": 3599,
+    "vehicleTriangles": [
+     246,
+     160,
+     244,
+     284
+    ],
+    "active": 1800,
+    "total": 3599,
+    "drawn": 166,
+    "edgeTransitions": 33659,
+    "edgeTransitionsLast30s": 10934,
+    "gapViolations": 0,
+    "onewayViolations": 0,
+    "teleports": 0,
+    "onBridge": 154,
+    "respawns": 456,
+    "breakerRespawns": 51,
+    "waitingNow": 136,
+    "maxStopS": 50.1,
+    "signals": 86,
+    "controlledNodes": 7179,
+    "simTime": 137.9,
+    "cpuMsP50": 0.6,
+    "cpuMsP95": 2,
+    "lightFactor": 0.5,
+    "fraction": 1,
+    "regionEligible": 3599,
+    "lastFrame": 12976,
+    "vesselsInRegion": 22
+   },
+   "errors": [],
+   "region": {
+    "lf": 0.85,
+    "items": [
+     {
+      "id": "tay",
+      "eligible": 2129,
+      "n0": 1810
+     },
+     {
+      "id": "dong",
+      "eligible": 1419,
+      "n0": 1206
+     }
+    ],
+    "margin": {
+     "strictEligible": 2129,
+     "eligible": 2191,
+     "margin": 120,
+     "worst": 117.38,
+     "teleports": 0,
+     "gap": 0,
+     "active": 1862
+    },
+    "restore": {
+     "back": 3059,
+     "wantedBack": 3059,
+     "target": 3059,
+     "full0": 3059,
+     "pendingAfter": 0,
+     "settleS": 0,
+     "region": {
+      "id": null,
+      "active": false
+     },
+     "dataset": "/0",
+     "active": 3059
+    }
+   }
+  }
+ }
+}

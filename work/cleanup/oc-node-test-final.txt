@@ -1,0 +1,306 @@
+﻿(node:12072) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö chß╗ë sß╗æ mß╗¢i: t├¡nh tay tr├¬n t├¼nh huß╗æng nhß╗Å (v├áng chß║¡m trong 150 m tr╞░ß╗¢c vß║ích) (2.5494ms)
+Γ£ö chß╗ë sß╗æ mß╗¢i chß║íy tr├¬n sim thß║¡t: HX c├│ vß║ích, ─æß║┐m xe qua v├á ─æß╗Ö trß╗à hß╗»u hß║ín (18602.8209ms)
+Γ£ö demand: kh├┤ng truyß╗ün = y nguy├¬n (hash cß╗ò ─æiß╗ân c05ce91e); truyß╗ün demand ΓåÆ kh├íc (16092.7434ms)
+(node:23824) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/camera-capture-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö projectToCamera32: xe tr╞░ß╗¢c mß║╖t camera nß║▒m trong FOV, sau l╞░ng th├¼ kh├┤ng (1.8134ms)
+Γ£ö projectToPixel32: px ti lß╗ç g├│c lß╗çch (giß╗»a khung khi thß║│ng tr╞░ß╗¢c, lß╗çch khi sang b├¬n) (0.4703ms)
+Γ£ö captureFrame/captureEvidence: gß╗ìi readRenderTargetPixelsAsync ─æ├║ng chß╗» k├╜, trß║ú ─æß╗º 3 ß║únh + plate_crop theo vß╗ï tr├¡ xe (9.1546ms)
+Γ£ö projectToPixel32 theo ph├⌐p chiß║┐u phß╗æi cß║únh: xa h╞ín th├¼ cao h╞ín trong khung; sang phß║úi th├¼ px lß╗¢n h╞ín (5.3367ms)
+Γ£ö rowBandStats32 + skyAboveRoad32: khung trß╗¥i-tr├¬n nhß║¡n true, khung lß║¡t dß╗ìc nhß║¡n false (0.9944ms)
+Γ£ö readbackFlip32 theo backend thß║¡t: WebGPU kh├┤ng lß║¡t; WebGL (kß╗â cß║ú WebGPURenderer chß║íy backend WebGL2) lß║¡t (0.224ms)
+Γ£ö captureFrame (WebGPU): kh├┤ng lß║¡t dß╗ìc ΓÇö h├áng ─æß║ºu cß╗ºa buffer l├á h├áng tr├¬n khung (30.5841ms)
+Γ£ö captureFrame (WebGPURenderer chß║íy backend WebGL2): buffer d╞░ß╗¢i-l├¬n n├¬n ß║únh vß║╜ ra phß║úi lß║¡t lß║íi ─æß╗â trß╗¥i ß╗ƒ tr├¬n (38.816ms)
+Γ£ö pickCaptureHeads32: chß╗ë x├⌐t ─æß║ºu ─æ├¿n cß╗ºa ─æ├║ng n├║t camera; chß╗ìn mß║╖t nh├¼n vß╗ü camera nhß║Ñt; kh├┤ng mß║╖t n├áo nh├¼n vß╗ü camera ΓåÆ -1 (0.5237ms)
+Γ£ö renderTo: chß╗ë ─æß║ºu ─æ├¿n ─æ╞░ß╗úc chß╗ìn hiß╗çn khi render; HUD v├á quß║ºng ß║⌐n; trß║íng th├íi trß║ú lß║íi ─æ├║ng sau chß╗Ñp (7.1609ms)
+Γ£ö visibleHeadsOf: b├ío ─æ├║ng ─æß║ºu ─æ├¿n sß║╜ hiß╗çn trong khung v├á ─æ├¿n ─æang s├íng cß╗ºa n├│ (8.168ms)
+Γ£ö camera chß╗Ñp chß╗ë ─æß╗ìc layer 0 (helper kh├┤ng render v├áo ß║únh) (0.5877ms)
+(node:16672) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-region-31.js?v=31a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö hß║▒ng sß╗æ hß╗úp ─æß╗ông M2a (3.3415ms)
+Γ£ö chuß║⌐n h├│a cß║Ñp ─æ╞░ß╗¥ng: bß╗Å _link, xß║┐p hß║íng, nhß║¡n diß╗çn ─æ╞░ß╗¥ng nhß╗Å (1.1545ms)
+Γ£ö segmentDistance32 = khoß║úng c├ích ─æiß╗âm tß╗¢i ─æoß║ín (0.2933ms)
+Γ£ö selectNorthBuildings32: giß╗» nh├á khu Bß║»c Γëñ 40 m tß╗¢i tim ─æ╞░ß╗¥ng lß╗¢n, giß╗» 100 % signature, bß╗Å nh├á khu kh├íc (60.3366ms)
+Γ£ö lockRoadFilter32: khu Bß║»c ß║⌐n ─æ╞░ß╗¥ng nhß╗Å TRß╗¬ 80 m quanh n├║t c├│ ─æ├¿n; ngo├ái khu Bß║»c chß╗ë giß╗» ΓëÑ secondary; signature way lu├┤n giß╗» (1.613ms)
+Γ£ö northCameraLimits32 + clampNorthCamera32: t├óm quay trong bbox + 400 m, khoß║úng c├ích Γëñ mß╗⌐c thß║Ñy to├án khu Bß║»c (0.5868ms)
+Γ£ö lockRegionLabels32: nh├ún kh├│a + t├¬n khu, t├óm nh├ún trong bbox khu ─æ├│ (0.9493ms)
+Γ£ö M2c: signature c├│ t├óm ngo├ái khu Bß║»c bß╗ï ß║⌐n; trong khu Bß║»c giß╗» (0.3656ms)
+Γ£ö M2c: cß║ºu vß║»t ranh (c├│ ─æiß╗âm trong bac) giß╗» trß╗ìn; cß║ºu nß║▒m hß║│n ngo├ái khu Bß║»c bß╗ï ß║⌐n (9.1573ms)
+Γ£ö M2c: mß║╖t nß║í khu kh├│a ─æ├║ng 1024┬▓ v├á khß╗¢p regionOf tß║íi t├óm tß╗½ng ├┤ (259.8598ms)
+Γ£ö M2c: albedo khu kh├│a ─æ├ú hiß╗çu chß╗ënh; mß╗Ñc ti├¬u hiß╗ân thß╗ï l├á x├ím trß║ºm v├á x├ím-xanh b├úo h├▓a thß║Ñp (0.1952ms)
+Γ£ö M2c: roadPoints32 nhß║¡n cß║ú mß║úng cß║╖p v├á mß║úng phß║│ng (0.2187ms)
+(node:25396) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö phi├¬n bß║ún + tham sß╗æ mß║╖c ─æß╗ïnh ─æ├║ng hß╗úp ─æß╗ông (1.6324ms)
+Γ£ö isGreen fixed khß╗¢p chu kß╗│ 48 s (xanh 22/16, v├áng 3, ─æß╗Å chung 2) v├á khß╗¢p stateOf 100 % b╞░ß╗¢c (2041.1375ms)
+Γ£ö SignalState c├│ phases[].countdown_s, override null ban ─æß║ºu (2597.7383ms)
+Γ£ö max-pressure ─æß╗òi pha ─æ├║ng ng╞░ß╗íng switchMargin; giß╗» pha khi ch├¬nh < margin (1720.0309ms)
+Γ£ö switchMargin ─æ╞░ß╗úc nß╗æi v├áo quyß║┐t ─æß╗ïnh: margin nhß╗Å ─æß╗òi pha, margin lß╗¢n giß╗» (2993.3219ms)
+Γ£ö overridePhase: ─æß╗òi nh├│m ─æi qua v├áng 3 s + ─æß╗Å chung 2 s; c├│ until_t_sim + until_at; null ─æß╗â hß╗ºy (993.9909ms)
+Γ£ö setMode giß╗»a chß╗½ng ├íp dß╗Ñng tß╗½ lß║ºn ─æß╗òi pha kß║┐ (trß╗½ immediate); kh├┤ng reset tSim (1136.6563ms)
+Γ£ö metrics l├á superset ─æß╗º tr╞░ß╗¥ng; stateHash tß║Ñt ─æß╗ïnh, ─æß╗òi khi ─æß╗òi override (927.2232ms)
+Γ£ö runsRed: redRun quyß║┐t ─æß╗ïnh xe chß╗º ─æß╗Öng v╞░ß╗út; mß║╖c ─æß╗ïnh false (1847.5214ms)
+Γ£ö 6 n├║t c├│ node_id HX-01ΓÇªHX-06, chß╗ë HX-01/HX-05 chung cß╗Ñm HX-C1; metrics by_node kh├│a HX (950.525ms)
+Γ£ö ├íp lß╗▒c trß╗½ q_out: h├áng chß╗¥ bß╗ï l├án ra triß╗çt ti├¬u th├¼ kh├┤ng ─æß╗òi pha (1029.5952ms)
+Γ£ö smart: ├íp lß╗▒c c├ón bß║▒ng giß╗» pha, isGreen xanh tß╗¢i maxGreen 45 s rß╗ôi mß╗¢i ─æß╗òi (1328.4475ms)
+Γ£ö cycleIdOf = floor((t ΓêÆ origin)/48): t=96ΓåÆ2, t=120ΓåÆ2 (1340.5572ms)
+Γ£ö flow_per_min cß╗Öng dß╗ôn crossed mß╗ùi b╞░ß╗¢c rß╗ôi lß║Ñy mß║½u 1 s (kh├┤ng chß╗ë b╞░ß╗¢c tr├╣ng mß╗æc) (1134.02ms)
+Γ£ö wait_avg d├╣ng mß║½u sß╗æ ╬úcount (d├▓ng count=0 kh├┤ng k├⌐o lß╗çch trung b├¼nh) (1092.1064ms)
+Γ£ö reset(): ─æ╞░a pha vß╗ü gß╗æc (nh├│m 0 xanh) v├á x├│a ghi ─æ├¿ (2655.2088ms)
+Γ£ö stateOf n├║t 31A ngo├ái kß║┐ hoß║ích: cß╗Ñm 31A-n, chu kß╗│ 44 s (kh├┤ng r╞íi v├áo HX-C1) (1197.3833ms)
+Γ£ö algorithm mß║╖c ─æß╗ïnh max-pressure; actuated-gap giß╗» xanh khi c├▓n xe tß╗¢i, kh├íc max-pressure (2071.1653ms)
+Γ£ö D cycle-max-pressure: chia 38 s tß╗ë lß╗ç ├íp lß╗▒c, kß║╣p [10,28], EMA ╬▒=0,5; 0 ├íp lß╗▒c ΓåÆ 19/19 (0.4943ms)
+Γ£ö D cycle-max-pressure: chu kß╗│ 48 s, mß║╖c ─æß╗ïnh g0=19/g1=19, ─æ├║ng 2 lß║ºn chuyß╗ân nh├│m mß╗ùi chu kß╗│ (1014.8223ms)
+Γ£ö E max-pressure-abs: chß╗ë chuyß╗ân khi (├íp lß╗▒c nh├│m kia ΓêÆ nh├│m hiß╗çn tß║íi) ΓëÑ switchAbs (2126.9547ms)
+Γ£ö E max-pressure-abs: chß╗æng ─æ├│i ΓÇö nh├│m ─æß╗Å li├¬n tß╗Ñc ΓëÑ maxRedS ─æ╞░ß╗úc phß╗Ñc vß╗Ñ d├╣ ├íp lß╗▒c thß║Ñp h╞ín (1127.1175ms)
+Γ£ö max-pressure-150: ├íp lß╗▒c 150 m theo nh├│m ─æß╗òi pha; kh├íc actuated-gap (1063.0651ms)
+Γ£ö F max-pressure-gated: nh├│m c├│ l├án ra ─æß║ºy (q_out ΓëÑ exitCapS) c├│ ├íp lß╗▒c 0 ΓåÆ kh├┤ng ─æß╗òi sang nh├│m ─æ├│ (1103.5576ms)
+Γ£ö F max-pressure-gated: l├án ra th├┤ng ΓåÆ nh├│m hiß╗çn tß║íi kh├┤ng c├│ xe, nh├│m kia c├│ xe ΓåÆ ─æß╗òi ─æ├║ng tß║íi minGreenS = 8 (1068.0916ms)
+Γ£ö F max-pressure-gated: xanh tß╗æi thiß╗âu ─æß╗Öng = xe chß╗¥ hiß╗çn tß║íi / satPerS (12 xe / 0,5 = 24 s), ─æß╗òi khi ch├¬nh ΓëÑ switchAbs (922.0022ms)
+Γ£ö F max-pressure-gated: kh├┤ng ─æß╗òi sang nh├│m kh├┤ng c├│ xe chß╗¥ (cß║ú hai nh├│m trß╗æng ΓåÆ giß╗» xanh tß╗¢i maxGreen) (1114.4926ms)
+Γ£ö F max-pressure-gated: chß╗æng ─æ├│i ΓÇö nh├│m kia ─æ├│i ΓëÑ maxRedS (40) ─æ╞░ß╗úc phß╗Ñc vß╗Ñ d├╣ ch├¬nh ├íp lß╗▒c nhß╗Å h╞ín switchAbs (1016.495ms)
+Γ£ö F max-pressure-gated: lastServeEnd ─æ╞░ß╗úc ghi khi nh├│m kß║┐t th├║c xanh, v├á ─æi theo exportPhases/importPhases (1117.1813ms)
+Γ£ö F max-pressure-gated: tß╗¢i maxGreen m├á nh├│m kia trß╗æng th├¼ giß╗» xanh (isGreen vß║½n bß║¡t); c├│ xe chß╗¥ th├¼ ─æß╗òi ngay (881.4049ms)
+(node:13256) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/forecast-32.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö xu h╞░ß╗¢ng t─âng -> prob t─âng theo horizon (18.2456ms)
+Γ£ö xu h╞░ß╗¢ng giß║úm -> prob giß║úm theo horizon (7.693ms)
+Γ£ö ├¡t dß╗» liß╗çu -> reliability thß║Ñp (0.4486ms)
+Γ£ö nhiß╗àu cao -> reliability giß║úm (0.3416ms)
+Γ£ö horizon xa -> reliability giß║úm (0.2656ms)
+Γ£ö prob l├á x├íc suß║Ñt kß║╣t level>=0.7: level cao cho prob cao (0.23ms)
+Γ£ö alerts32 sß║»p theo prob giß║úm dß║ºn v├á lß╗ìc theo ng╞░ß╗íng (0.8531ms)
+Γ£ö combineWithLookahead32 trß╗Ön ─æ├║ng trß╗ìng sß╗æ (0.5932ms)
+Γ£ö forecastEdge32 vß╗¢i recent rß╗ùng vß║½n trß║ú prob/reliability hß╗úp lß╗ç (0.6313ms)
+(node:16720) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/heat-32.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö level thß║Ñp khi th├┤ng, cao khi kß║╣t (2.3644ms)
+Γ£ö EMA hß╗Öi tß╗Ñ dß║ºn vß╗ü mß╗⌐c ß╗òn ─æß╗ïnh (0.5694ms)
+Γ£ö snapshot trß║ú Float32Array ─æ├║ng k├¡ch th╞░ß╗¢c v├á clamp [0,1] (0.5065ms)
+Γ£ö hourly: t├¡ch l┼⌐y ─æ├║ng ├┤ giß╗¥ theo tSim v├á dayStartHour (0.4166ms)
+Γ£ö hourly wrap quanh ng├áy (tSim lß╗¢n) (0.297ms)
+Γ£ö colorOf 5 nß║Ñc cß╗æ ─æß╗ïnh xanh->v├áng->cam->─æß╗Å (0.5465ms)
+Γ£ö ingest kh├┤ng c├│ sample giß╗» nguy├¬n level (kh├┤ng NaN) (0.186ms)
+Γ£ö ingest vß╗¢i edge out-of-range kh├┤ng n├⌐m lß╗ùi (0.1793ms)
+(node:3040) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö phi├¬n bß║ún module M4b1, hß║▒ng sß╗æ ─æ├║ng ─æß║╖c tß║ú, m├ú mß╗¢i kh├┤ng c├│ chß╗» cß║Ñm (2.9654ms)
+Γ£ö thu mß║½u: chß╗ë xe ─æang chß║íy, cß║ính hß╗úp lß╗ç, cß╗¥ dß╗½ng theo vß║¡n tß╗æc; tß╗æc ─æß╗Ö tß╗▒ do theo cß║ính (2692.1535ms)
+Γ£ö tu├ón thß╗º cß║únh b├ío: ~60 % xe, tß║Ñt ─æß╗ïnh theo seed, giß╗æng nhau giß╗»a c├íc lß║ºn gß╗ìi (1.7712ms)
+Γ£ö routeBias: chß╗ë giß║úm vß╗¢i cß║ính ─æang cß║únh b├ío v├á xe tu├ón thß╗º; kh├┤ng cß║únh b├ío = 1 (2.12ms)
+Γ£ö sim kh├┤ng truyß╗ün routeBias (hoß║╖c h├ám lu├┤n trß║ú 1) cho c├╣ng trß║íng th├íi: hash cß╗ò ─æiß╗ân kh├┤ng ─æß╗òi (8286.6425ms)
+Γ£ö routeBias tr├¬n sim: tß╗òng sß╗æ lß║ºn xe ─æi v├áo c├íc cß║ính ─æ├¡ch giß║úm r├╡ (ΓëÑ 30 %) (37208.7061ms)
+Γ£ö engine: tick theo gi├óy sim tß║ío bß║ún ─æß╗ô nhiß╗çt, lß╗ïch sß╗¡, dß╗▒ b├ío; payload gß╗¡i ─æ├║ng 10 s mß╗Öt lß║ºn (5125.2597ms)
+Γ£ö engine: sim ─æß║╖t lß║íi (thß╗¥i gian l├╣i) th├¼ x├│a lß╗ïch sß╗¡ v├á cß║únh b├ío (1914.4201ms)
+Γ£ö bß║úng VMS: 2ΓÇô4 bß║úng tr├¬n l├án tß╗¢i H├áng Xanh, c├ích nhau ΓëÑ 120 m, c├│ cß║ính ph├¡a tr╞░ß╗¢c v├á h╞░ß╗¢ng quay vß╗ü xe tß╗¢i (757.5762ms)
+Γ£ö th├┤ng ─æiß╗çp VMS: b├¼nh th╞░ß╗¥ng khi kh├┤ng c├│ cß║únh b├ío ph├¡a tr╞░ß╗¢c; Kß║╕T XE + tuyß║┐n thay thß║┐ khi c├│ (0.5896ms)
+Γ£ö dß║úi nhiß╗çt (h├¼nh hß╗ìc thuß║ºn): ─æß╗ënh 2 mß╗ùi ─æiß╗âm, chß╗ë sß╗æ tam gi├íc hß╗úp lß╗ç, t├┤ m├áu theo mß╗⌐c (0.6693ms)
+Γ£ö ribbonEdges32 tr├¬n mß║íng thß║¡t: chß╗ë cß║ính tertiary trß╗ƒ l├¬n, c├│ trong khu (kh├┤ng lß╗ìc khu = mß╗ìi cß║ính) (724.7853ms)
+Γ£ö gß╗¡i trß║ím: sendHeat POST ─æ├║ng payload; 404 (backend ch╞░a c├│ endpoint) trß║ú false, kh├┤ng v├áo dead-letter/h├áng ─æß╗úi (1.5548ms)
+Γ£ö kpi-ab-32 chß║íy headless, fixed v├á smart c├╣ng seed cho JSON hß╗úp lß╗ç (36549.0342ms)
+Γ£ö tß║Ñt ─æß╗ïnh: chß║íy hai lß║ºn c├╣ng seed c├╣ng mode ΓåÆ c├╣ng wait_avg_s_hx (22501.072ms)
+(node:18808) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö groupAlertsByRoad32: mß╗Öt d├▓ng mß╗ùi t├¬n (prob cao nhß║Ñt, ─æß║┐m ─æoß║ín), ─æ╞░ß╗¥ng kh├┤ng t├¬n gß╗Öp theo cß║ính, tß╗æi ─æa 5 d├▓ng (2.2152ms)
+Γ£ö expandHeatHistory32: ─æ├║ng ─æß╗ïnh dß║íng th├¼ mß╗ƒ rß╗Öng theo chß╗ë sß╗æ cß║ính; sai NE, sai sß╗æ mß╗⌐c hoß║╖c chß╗ë sß╗æ lß║í th├¼ tß╗½ chß╗æi (8.9377ms)
+Γ£ö probOfLevel32 ─æ╞ín ─æiß╗çu t─âng; mß╗⌐c 0,7 Γåö x├íc suß║Ñt 50 % (0.2653ms)
+Γ£ö ─æß╗ông hß╗ô: 16:00 l├║c mß╗ƒ, +1 giß╗¥ = 17:00 giß╗¥ v├áng, qua nß╗¡a ─æ├¬m ─æß╗òi ng├áy; nh├ún thß╗⌐/ng├áy ─æ├║ng (0.5848ms)
+Γ£ö heat-live: giß╗¥ cß╗ºa lß╗ïch sß╗¡ theo ─æß╗ông hß╗ô (clockOf), kh├┤ng theo gi├óy sim (213.4651ms)
+Γ£ö heat-live: nß║íp lß╗ïch sß╗¡ v├á tua tr╞░ß╗¢c; tß╗½ chß╗æi k├¡ch th╞░ß╗¢c sai; tua c┼⌐ qu├í 60 s sim th├¼ kh├┤ng d├╣ng (794.5082ms)
+Γ£ö KPI l╞░u l╞░ß╗úng: flow_per_node_min = trung b├¼nh c├íc n├║t ─æiß╗üu khiß╗ân; flow_per_min vß║½n l├á tß╗òng to├án mß║íng (2487.5503ms)
+Γ£ö tua tr╞░ß╗¢c (l├╡i Worker) khß╗¢p sim ch├¡nh: chß║íy 60 s tß╗½ ß║únh + pha ─æ├¿n cho c├╣ng hash (─æ├¿n cß╗æ ─æß╗ïnh) (1645.8998ms)
+Γ£ö tua tr╞░ß╗¢c (l├╡i Worker) khß╗¢p sim ch├¡nh ß╗ƒ chß║┐ ─æß╗Ö th├┤ng minh (max-pressure) (1405.0684ms)
+Γ£ö tua tr╞░ß╗¢c chß║¡m (ng├ón s├ích rß║Ñt nhß╗Å): giß║úm sß╗æ xe theo tß╗ë lß╗ç v├á ghi scale < 1 (3874.7395ms)
+Γ£ö collectBuffers32 gom ─æ├║ng mß╗ìi ArrayBuffer, kh├┤ng tr├╣ng (0.4934ms)
+Γ£ö ─æß╗ông hß╗ô (installClock32, kh├┤ng DOM): nhß║úy +1 giß╗¥ ─æß╗òi nh├│m ├ính s├íng v├á nhu cß║ºu; kh├┤ng cß║ºn document (1.1482ms)
+(node:8220) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö hiß╗çu chß╗ënh: cß║ính ─æang th├┤ng (<0,3) ß╗ƒ 30 ph├║t kh├┤ng qu├í 50 %; horizon 10/20 kh├┤ng bß╗ï cß║»t (2.1871ms)
+Γ£ö hiß╗çu chß╗ënh: xu h╞░ß╗¢ng t─âng r├╡ (quan s├ít ΓëÑ0,15 v├á dß╗▒ kiß║┐n ΓëÑ0,15) th├¼ kh├┤ng cß║»t; t─âng nhiß╗àu th├¼ cß║»t (0.2865ms)
+Γ£ö hiß╗çu chß╗ënh: ─æß╗Ö tin cß║¡y giß║úm ─æ├║ng theo horizon (10 > 20 > 30) vß╗¢i c├╣ng ─æß║ºu v├áo (0.2302ms)
+Γ£ö hiß╗çu chß╗ënh tr├¬n dß╗▒ b├ío thß╗æng k├¬: cß║ính th├┤ng ─æß╗⌐ng y├¬n ß╗ƒ 30 ph├║t c├│ prob Γëñ 0,5 v├á gi├í trß╗ï hß╗úp lß╗ç (0.5898ms)
+Γ£ö nhu cß║ºu app smart = PEAK_HANG_XANH_DEMAND cß╗ºa A1, trß╗½ poolScale (5 thay 10 ─æß╗â l╞░u l╞░ß╗úng HX ─æß║ít 5 xe/ph├║t) (1.1172ms)
+Γ£ö mß║¡t ─æß╗Ö: 17:30 c├│ ΓëÑ120 xe trong 300 m quanh H├áng Xanh v├á ΓëÑ30 xe tr├¬n cß║ºu S├ái G├▓n; 03:00 th╞░a r├╡ (4266.1155ms)
+Γ£ö bi├¬n khu: chß╗ë cß║ºu S├ái G├▓n ─æ╞░ß╗úc vß║»t ranh; xe ngo├ái khu kh├┤ng phß║úi xe tr├¬n cß║ºu l├á 0 (1730.628ms)
+Γ£ö hß║ín chß║┐ l├án: xe kh├┤ng v╞░ß╗út qua xe hß╗Ång; xe rß║╜ v├áo l├án bß╗ï chß║»n ─æß╗òi sang l├án kß╗ü tß║íi n├║t; bß╗Å hß║ín chß║┐ ΓåÆ trß║ú nguy├¬n (4668.767ms)
+Γ£ö hß║ín chß║┐ l├án: giß║úm tß╗æc c├▓n 20 % l├ám xe tr├¬n l├án chß║¡m lß║íi; l├án ─æ├│ng bß╗ï loß║íi khß╗Åi lß╗Ö tr├¼nh (trß╗½ khi kh├┤ng c├▓n lß╗æi kh├íc) (976.4857ms)
+Γ£ö hß║ín chß║┐ l├án: xuß║Ñt/nhß║¡p trß║íng th├íi giß╗» nguy├¬n hß║ín chß║┐ v├á c├╣ng hash sau khi chß║íy tiß║┐p (263.8352ms)
+Γ£ö hß║ín chß║┐ l├án kh├┤ng ─æß╗òi hash cß╗ò ─æiß╗ân (kh├┤ng truyß╗ün g├¼): c05ce91e (2017.2247ms)
+Γ£ö kß╗ïch bß║ún: kh├│a ─æ├║ng 4 mß╗Ñc; kh├│a lß║í bß╗ï tß╗½ chß╗æi v├á trß║íng th├íi kh├┤ng ─æß╗òi (24.675ms)
+Γ£ö kß╗ïch bß║ún lane-block: chß║»n l├án ~120 m tr╞░ß╗¢c HX-01, tß╗▒ hß║┐t sau N ph├║t sim, stop trß║ú l├án (1531.3579ms)
+Γ£ö kß╗ïch bß║ún flood-nhc: giß║úm tß╗æc + ─æ├│ng ─æoß║ín s├óu + tr├ính (routing) + VMS gß║ºn v├╣ng ngß║¡p; stop x├│a hß║┐t (40.3409ms)
+Γ£ö kß╗ïch bß║ún peak-hang-xanh: ─æß║╖t ─æß╗ông hß╗ô 17:30 v├á nhu cß║ºu 100 %; ─æß╗òi kß╗ïch bß║ún th├¼ dß╗½ng c├íi c┼⌐ (349.8156ms)
+Γ£ö kß╗ïch bß║ún: pool khu Bß║»c c├│ ─æß╗º xe ─æß╗â ─æß║┐m ß╗ƒ 17:30 (kh├┤ng hß║ín chß║┐) ΓÇö mß║¡t ─æß╗Ö 1 lß║ºn ─æo (386.1298ms)
+Γ£ö lß╗çnh trß║ím: cmd.scenario gß╗ìi start/stop; kh├│a lß║í kh├┤ng l├ám dß╗½ng v├▓ng chß║íy (0.8381ms)
+Γ£ö lß╗çnh trß║ím: cmd.vms manual ghi ─æ├¿ (tß╗æi ─æa 2 d├▓ng, Γëñ 60 k├╜ tß╗▒); auto trß║ú vß╗ü hß╗ç thß╗æng; bß║úng lß║í bß╗ï bß╗Å qua (0.825ms)
+Γ£ö ╞░u ti├¬n hiß╗ân thß╗ï VMS: c├ín bß╗Ö ─æß║╖t > ngß║¡p > cß║únh b├ío kß║╣t > l├íi xe an to├án (0.3298ms)
+Γ£ö ─æß╗ông hß╗ô: goTo(17,30) ─æß║╖t ─æ├║ng giß╗¥, dß╗▒ng lß║íi nhu cß║ºu giß╗¥ 17 (=100 %) v├á ─æi theo ─æ╞░ß╗¥ng ngß║»n (1.5223ms)
+Γ£ö h├¼nh hß╗ìc: ─æa gi├íc ngß║¡p ─æß╗üu 16 ─æß╗ënh bao t├óm; ─æa gi├íc ngß║¡p chß╗⌐a ─æiß╗âm t├óm (0.1429ms)
+Γ£ö vß╗ï tr├¡ xe hß╗Ång: l├án phß║úi ─Éiß╗çn Bi├¬n Phß╗º, l├╣i ─æ├║ng 120 m tß╗½ vß║ích HX-01 (1.137ms)
+(node:22340) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/smart-app-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö NORTH_TOUR_32 ─æ├║ng 5 g├│c khu Bß║»c, ─æ├║ng thß╗⌐ tß╗▒ (5.6109ms)
+Γ£ö buildNorthViews32 sinh 5 g├│c, tß╗ìa ─æß╗Ö lß║Ñy tß╗½ dß╗» liß╗çu v├á nß║▒m trong khu bß║»c (3.1253ms)
+(node:10280) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö mulberry32 + plateFor32 tß║Ñt ─æß╗ïnh, khß╗¢p ─æß╗ïnh dß║íng biß╗ân VN (2.6316ms)
+Γ£ö biß╗ân kß╗ïch bß║ún: ─æ├║ng 6 biß╗ân, format khß╗¢p nh├│m xe, cß╗¥ is_scenario (0.6673ms)
+Γ£ö ocrNoise32: nhiß╗àu tß║Ñt ─æß╗ïnh, p_swap/p_miss ─æ├║ng tham sß╗æ, confidence trong [0,1] (0.5263ms)
+Γ£ö luß║¡t RED-LIGHT: m├íy trß║íng th├íi sinh bß║ún ghi sau grace, chß╗æng tr├╣ng (vehicle, node, cycle) (9801.3426ms)
+Γ£ö tß║Ñt ─æß╗ïnh: hai lß║ºn chß║íy 60 s c├╣ng seed ΓåÆ c├╣ng sß╗æ vi phß║ím v├á c├╣ng biß╗ân (8937.8951ms)
+(node:3624) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/violation-perception-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö plates.json do seed_plates.py sinh khß╗¢p plateFor32 bß║ún JS (test ch├⌐o) (3394.2007ms)
+Γ£ö ─æß╗ïnh dß║íng biß╗ân sinh ra lu├┤n khß╗¢p regex; scenario rows ─æ├║ng 6 (377.8995ms)
+(node:11364) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/signal-plan-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö ─æß╗º 6 n├║t H├áng Xanh, chß╗ë sß╗æ n├║t khß╗¢p osm_id (15.1209ms)
+Γ£ö HX-01 v├á HX-05 c├╣ng cß╗Ñm HX-C1, chung offset; cß╗Ñm kh├íc nhau offset (1.3485ms)
+Γ£ö arriveGroup: trß║íng th├íi v├áo HX-01 song song trß╗Ñc ─Éiß╗çn Bi├¬n Phß╗º (160.4┬░) v├áo nh├│m 0, c├▓n lß║íi nh├│m 1 (5.7253ms)
+Γ£ö tß║Ñt ─æß╗ïnh: gß╗ìi hai lß║ºn c├╣ng kß║┐t quß║ú (13.775ms)
+(node:7496) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö kh├┤ng tham sß╗æ mß╗¢i: h├ánh vi 31A y nguy├¬n (signal 86 n├║t, breaker 50 s, hash ß╗òn ─æß╗ïnh) (4880.84ms)
+Γ£ö signalPlan: 6 n├║t HX c├│ ─æ├¿n; net.signal khß╗¢p signalNodes (1854.8713ms)
+Γ£ö controller ─æ╞░ß╗úc attach: api sim c├│ controller/signalGroups; update mß╗ùi b╞░ß╗¢c kh├┤ng n├⌐m lß╗ùi (3092.9358ms)
+Γ£ö attachController sau khi tß║ío sim (gß╗ìi tr╞░ß╗¢c b╞░ß╗¢c ─æß║ºu) hoß║ít ─æß╗Öng (1266.7362ms)
+Γ£ö breakerS: Infinity th├¼ kh├┤ng c├│ breakerRespawns; 50 th├¼ c├│ khi sim d├ái (43507.4692ms)
+Γ£ö seed kh├íc nhau ΓåÆ stateHash kh├íc nhau; c├╣ng seed ΓåÆ tr├╣ng nhau (5069.5711ms)
+Γ£ö controller.update chß║íy trong chuß╗ùi beginStep/workStep/finishStep: nh├│m 1 c├│ xanh trong 60 s (2127.827ms)
+Γ£ö n├║t 31A c├│ ─æ├¿n ngo├ái plan kh├┤ng do controller quß║ún (giß╗» ─æ├¿n 31A) (3329.7996ms)
+Γ£ö buildQueues: q_out lß║Ñy tß╗½ l├án RA (25 m ─æß║ºu), kh├┤ng phß║úi l├án v├áo (1744.7654ms)
+Γ£ö isGreen qua beginStep/workStep/finishStep khß╗¢p stateOf (HX-02 c├│ cß║ú hai nh├│m) (2145.3074ms)
+(node:10268) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö export giß╗»a chß╗½ng kh├┤ng ─æß╗òi h├ánh vi: sim c├│ export v├á sim kh├┤ng export cho c├╣ng hash (1239.09ms)
+Γ£ö importState: bß║ún sao chß║íy tiß║┐p cho ─æ├║ng stateHash cß╗ºa sim gß╗æc (c├│ khu Bß║»c, tß╗ë lß╗ç 0,6, ├ính s├íng 0,85) (909.1787ms)
+Γ£ö importState sau khi ─æß╗òi tß╗ë lß╗ç/├ính s├íng: vß║½n khß╗¢p tß╗½ng b╞░ß╗¢c (kh├┤ng cß║ºn gß╗ìi lß║íi setRegion/setFraction) (334.0138ms)
+Γ£ö importState tß╗½ chß╗æi trß║íng th├íi kh├┤ng khß╗¢p mß║íng (N/NL) hoß║╖c ─æß╗ïnh dß║íng lß║í (115.2776ms)
+Γ£ö hash cß╗ò ─æiß╗ân 31A kh├┤ng ─æß╗òi (kh├┤ng truyß╗ün g├¼, sau 300 b╞░ß╗¢c): c05ce91e (3732.1712ms)
+(node:12080) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/smart-app-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö sanitizeStatusText32 loß║íi chuß╗ùi cß║Ñm, giß╗» c├óu sß║ích (1.8909ms)
+Γ£ö applySmartLabels32 ghi ─æ├¿ ─æ├║ng 3 nh├ún mß╗Ñc 9.3 (selector THß║¼T #floodState span) (0.4588ms)
+Γ£ö lockRegions32: giß╗» bac, kh├│a mß╗ìi lß╗▒a chß╗ìn kh├íc, ß║⌐n panel cß╗ò ─æiß╗ân #story (0.3965ms)
+(node:8216) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/station-queue-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö hß║▒ng sß╗æ hß╗úp ─æß╗ông: phi├¬n bß║ún transport, heartbeat 15 s, backoff 1ΓåÆ30 s, stream 2 fps (19.3878ms)
+Γ£ö lß╗ùi mß║íng ΓåÆ giß╗» trong h├áng ─æß╗úi; online ΓåÆ gß╗¡i lß║íi v├á xo├í; gß╗¡i ─æ├║ng ─æ╞░ß╗¥ng dß║½n v├á Bearer (100.4111ms)
+Γ£ö 409 = ─æ├ú gß╗¡i (xo├í, kh├┤ng dead-letter); 422 ΓåÆ dead-letter; 5xx giß╗» lß║íi (1.1739ms)
+Γ£ö sendViolation nhß║¡n 409 kh├┤ng xß║┐p h├áng; 422 ─æ╞░a dead-letter ngay (0.5125ms)
+Γ£ö 401: ─æ─âng nhß║¡p lß║íi ─æ├║ng mß╗Öt lß║ºn rß╗ôi gß╗¡i lß║íi vß╗¢i token mß╗¢i (0.4571ms)
+Γ£ö ch╞░a c├│ token: nhiß╗üu y├¬u cß║ºu ─æß╗ông thß╗¥i chß╗ë ─æ─âng nhß║¡p mß╗Öt lß║ºn (9.521ms)
+Γ£ö backoff 1 ΓåÆ 2 ΓåÆ 4 s khi 429 (─æß╗ông hß╗ô giß║ú, kh├┤ng chß╗¥ thß║¡t) (5.3803ms)
+Γ£ö heartbeat 15 s: gß╗¡i ngay khi start rß╗ôi mß╗ùi 15 s (─æ├║ng app_version, kh├┤ng d├╣ng process) (1.1434ms)
+Γ£ö bß║▒ng chß╗⌐ng multipart gß╗¡i sau khi c├│ id; tr╞░ß╗¥ng kind + file (Blob image/jpeg), kh├┤ng ─æß║╖t Content-Type (220.9691ms)
+Γ£ö vi phß║ím xß║┐p h├áng (offline): bß║▒ng chß╗⌐ng giß╗» trong bß╗Ö nhß╗¢ v├á gß╗¡i khi flush th├ánh c├┤ng (1.8803ms)
+Γ£ö bß║▒ng chß╗⌐ng 409 (tr├╣ng kind) coi l├á ─æ├ú gß╗¡i; 404 bß║▒ng chß╗⌐ng v├áo dead-letter (0.8751ms)
+Γ£ö body gß╗¡i l├¬n chß╗ë gß╗ôm tr╞░ß╗¥ng ViolationIn; cycle_id lß║Ñy tß╗½ signal khi thiß║┐u cß║Ñp gß╗æc; kh├│a khß╗¢p backend (0.1961ms)
+Γ£ö resolveApiBase32: mß║╖c ─æß╗ïnh 127.0.0.1:8900; chß║Ñp nhß║¡n m├íy cß╗Ñc bß╗Ö c├│ ?api=; tß╗½ chß╗æi m├íy kh├íc (kh├┤ng gß╗¡i t├ái khoß║ún trß║ím ─æi) (1.3475ms)
+Γ£ö dataUrl: t├ích base64 v├á Blob ─æ├║ng MIME; dataUrl hß╗Ång vß║½n kh├┤ng v─âng lß╗ùi ngo├ái mong ─æß╗úi (0.238ms)
+Γ£ö buildSignalStates32: mß╗ùi n├║t trong cß╗Ñm mß╗Öt d├▓ng; pha xanh/v├áng/─æß╗Å + ghi ─æ├¿ (0.4044ms)
+Γ£ö WebSocket: gß╗¡i {type:"auth",token} ngay khi mß╗ƒ; tin nhß║»n cmd.* gß╗ìi onCommand; stop ─æ├│ng socket (5.5838ms)
+Γ£ö gß╗¡i metrics v├á khung: lß╗ùi/429 kh├┤ng xß║┐p h├áng; khung gß╗¡i ─æ├║ng camera, seq, base64 (0.5728ms)
+Γ£ö startStationLoop32: bß║¡t stream 2 fps cho camera ─æang mß╗ƒ; vi phß║ím gß╗¡i k├¿m 3 bß║▒ng chß╗⌐ng; khung gß╗¡i ─æi (98.4807ms)
+Γ£ö STATION-a: khung 429 bß╗ï bß╗Å ngay, KH├öNG chß║╖n h├áng ─æß╗úi vi phß║ím (kh├┤ng xß║┐p h├áng, kh├┤ng dead-letter) (1.0717ms)
+Γ£ö STATION-a: vi phß║ím gß║╖p 429 chß╗¥ ─æ├║ng Retry-After rß╗ôi gß╗¡i lß║íi (kh├┤ng d├╣ng backoff) (10.9279ms)
+Γ£ö m├ú nguß╗ôn client kh├┤ng d├╣ng process v├á kh├┤ng c├│ chß╗» cß║Ñm tr├¬n UI cß╗ºa HUD (1.1307ms)
+(node:16036) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/station-queue-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö hß║▒ng sß╗æ: QUEUE_MAX 2000; h├áng ─æß╗úi FIFO async, bß╗Å bß║ún ghi c┼⌐ nhß║Ñt khi v╞░ß╗út giß╗¢i hß║ín (118.3171ms)
+Γ£ö thao t├íc ─æß╗ông thß╗¥i vß║½n giß╗» ─æ├║ng thß╗⌐ tß╗▒ (kh├│a tuß║ºn tß╗▒) v├á ghi xuß╗æng store (196.781ms)
+Γ£ö shift tr├¬n h├áng ─æß╗úi rß╗ùng trß║ú undefined v├á kh├┤ng l├ám hß╗Ång trß║íng th├íi (0.3932ms)
+Γ£ö adapter IndexedDB: ghi rß╗ôi ─æß╗ìc lß║íi, v├á dß╗» liß╗çu c├▓n khi mß╗ƒ kß║┐t nß╗æi mß╗¢i (qua khß╗ƒi ─æß╗Öng lß║íi trß║ím) (1.9206ms)
+Γ£ö adapter IndexedDB: kh├│a ch╞░a c├│ trß║ú undefined; set/get kh├│a kh├íc nhau kh├┤ng lß║½n (0.372ms)
+(node:5828) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/traffic-signals-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö lightColorOf ├ính xß║í phase ΓåÆ m├áu ─æ├¿n (0.9553ms)
+Γ£ö mß║╖t ─æ├¿n quay theo TRß╗ñC pha cß╗ºa n├║t: nh├│m 0 song song trß╗Ñc, nh├│m 1 vu├┤ng g├│c, mß╗ùi nh├│m hai mß║╖t ─æß╗æi nhau (4.0846ms)
+Γ£ö den giao thong: moi dau den chi 1 den sang, den tat co emissive 0 va quang an (2.0211ms)
+Γ£ö helper (non FOV, vien non FOV, cot camera, bang dem nguoc) nam layer 1; camera chinh bat layer 1 (0.6623ms)
+Γ£ö stopLinesOf32: mß╗ùi l├án ─æi v├áo n├║t c├│ mß╗Öt vß║ích tß║íi L ΓêÆ Rz, theo bß╗ü ngang l├án; l├án cß╗ºa n├║t kh├íc bß╗ï bß╗Å qua (0.4449ms)
+Γ£ö vß║ích dß╗½ng: tß║Ñm nß║▒m ngang l├án (trß╗Ñc rß╗Öng song song (ax, az)) v├á gß║»n ─æ├║ng n├║t (0.3954ms)
+(node:22076) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+STATION-b tß╗ë lß╗ç new theo m├ú: {"NO-HELMET":{"n":6,"nw":4},"RED-LIGHT":{"n":24,"nw":17},"OVERLOAD":{"n":7,"nw":1},"SPEED":{"n":1,"nw":1},"PHONE":{"n":2,"nw":0},"LANE":{"n":3,"nw":1},"WRONG-WAY":{"n":2,"nw":2},"PARK":{"n":4,"nw":3},"NO-SEATBELT":{"n":1,"nw":0}}
+Γ£ö luß║¡t tß║Ñt ─æß╗ïnh: c├╣ng (xe, thß║┐ hß╗ç, seed) ΓåÆ c├╣ng m├ú; tß╗ë lß╗ç mß╗ùi m├ú gß║ºn thiß║┐t kß║┐ (60.9192ms)
+Γ£ö phß║ít theo bß║úng N─É 168/2024: sß╗æ tiß╗ün, ─æiß╗âm v├á cß╗¥ verified (1.3728ms)
+Γ£ö khung h├¼nh bß║▒ng chß╗⌐ng: xe ph├¡a sau camera kh├┤ng nß║▒m trong khung (0.5745ms)
+Γ£ö RED-LIGHT: ├ón hß║ín chß╗ë t├¡nh tß╗½ l├║c chuyß╗ân ─Éß╗Ä (pha v├áng kh├┤ng ghi) (7.2613ms)
+Γ£ö SPEED: ─æo tß║íi ─ÉIß╗éM ─ÉO tß╗æc ─æß╗Ö (─æoß║ín ─æo trong FOV): v╞░ß╗út giß╗¢i hß║ín + 5 km/h th├¼ ghi; xe chß║¡m hoß║╖c ngo├ái ─æoß║ín ─æo th├¼ kh├┤ng (1.9841ms)
+Γ£ö LANE: ├┤ t├┤ ─æi l├án 0 cß╗ºa trß╗Ñc ΓëÑ 2 l├án bß╗ï ghi; c├╣ng xe ß╗ƒ l├án 1 th├¼ kh├┤ng (0.8678ms)
+Γ£ö PARK: ─æß╗⌐ng y├¬n ΓëÑ 60 s trong V├ÖNG Cß║ñM ─Éß╗û (trong FOV), kh├┤ng c├│ xe ─æß╗⌐ng ngay tr╞░ß╗¢c ΓåÆ ghi ─æ├║ng 1 lß║ºn; ─æß║ºu h├áng ΓåÆ kh├┤ng ghi (7.4259ms)
+Γ£ö NO-HELMET: xe m├íy mang lß╗ùi m┼⌐ ─æ╞░ß╗úc ghi (kh├┤ng cß║ºn h├ánh vi sim); ├┤ t├┤ kh├┤ng (1.4315ms)
+Γ£ö WRONG-TURN: xe vi phß║ím rß║╜ tr├íi tß║íi n├║t cß║Ñm ─æ╞░ß╗úc ghi; lß╗æi kh├┤ng phß║úi n├║t cß║Ñm th├¼ kh├┤ng (1.3487ms)
+Γ£ö m├ú bß╗ï tß║»t trong `codes` kh├┤ng ─æ╞░ß╗úc ghi, kß╗â cß║ú khi xe mang lß╗ùi (0.6245ms)
+Γ£ö kh├┤ng truyß╗ün behavior: sim tß║»t h├ánh vi, m├ú h├ánh vi kh├┤ng c├│ (hash cß╗ò ─æiß╗ân giß╗» ß╗ƒ test sim-state) (146.5655ms)
+Γ£ö l├án xe m├íy: sau 60 s, ├┤ t├┤/bus/tß║úi kh├┤ng ─æi l├án 0 cß╗ºa trß╗Ñc ΓëÑ 2 l├án (trß╗½ ├┤ t├┤ vi phß║ím LANE) (3172.5758ms)
+Γ£ö rß║╜ tr├íi ß╗ƒ n├║t cß║Ñm: xe kh├┤ng vi phß║ím chß╗ë rß║╜ tr├íi khi kh├┤ng c├▓n lß╗æi n├áo kh├íc (ng├╡ cß╗Ñt) (14472.5715ms)
+Γ£ö m├┤ phß╗Ång c├│ behavior tß║Ñt ─æß╗ïnh: hai lß║ºn c├╣ng seed ΓåÆ c├╣ng hash trß║íng th├íi (3021.1103ms)
+Γ£ö confidenceOf32: gß║ºn > xa, giß╗»a khung > lß╗çch g├│c, kh├┤ng bß╗ï che > bß╗ï che, xe to > xe nhß╗Å (0.482ms)
+Γ£ö 8 ph├║t cao ─æiß╗âm camera HX: 50ΓÇô80 % bß║ún ghi `new`; biß╗ân sai ─æß╗ïnh dß║íng lu├┤n `needs_review` (183304.5762ms)
+(node:25212) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö v├╣ng quan s├ít: mß╗ùi v├╣ng nß║▒m trß╗ìn trong FOV camera cß╗ºa n├│ v├á ─æß╗º d├ái (ΓëÑ 10 m) (11.5249ms)
+Γ£ö t├íc nh├ón WRONG-WAY: chuyß║┐n ─æß║ºu l├║c 90 s, mß╗ùi 240 s; chß║íy NG╞»ß╗óC chiß╗üu (s giß║úm, h╞░ß╗¢ng ─æi ─æß║úo) v├á lß╗çch sang lß╗ü tr├íi (0.6604ms)
+Γ£ö WRONG-WAY: t├íc nh├ón ng╞░ß╗úc chiß╗üu trong FOV ΓåÆ bß║ún ghi WRONG-WAY (xe m├íy, phß║ít 4ΓÇô6 triß╗çu, 2 ─æiß╗âm) k├¿m t╞░ thß║┐ bß║▒ng chß╗⌐ng (7.6161ms)
+Γ£ö WRONG-WAY: kh├┤ng bß║¡t m├ú th├¼ kh├┤ng ghi (0.4393ms)
+Γ£ö biß╗ân ─æß╗ìc sai ─æß╗ïnh dß║íng ΓåÆ needs_review vß╗¢i ─æß╗Ö tin cß║¡y Γëñ 0,84; biß╗ân ─æ├║ng ─æß╗ïnh dß║íng mß╗¢i c├│ thß╗â l├á new (30.3617ms)
+Γ£ö cß║¡n cß║únh ─æß║ºu ng╞░ß╗¥i l├íi: ─æß║ºu ─æß║╖t sau t├óm xe 0,26 m, camera cß║¡n cß║únh c├ích ─æß║ºu ─æ├║ng CLOSE_DIST v├á nh├¼n v├áo ─æß║ºu (1.5864ms)
+(node:21108) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö 5 ph├║t cao ─æiß╗âm: c├│ v╞░ß╗út ─æß╗Å tß╗▒ nhi├¬n ß╗ƒ HX-01 hoß║╖c HX-02, ─æ├║ng l├║c ─æ├¿n ─æß╗Å (135351.6926ms)
+Γä╣ tests 209
+Γä╣ suites 0
+Γä╣ pass 209
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 216403.838

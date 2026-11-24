@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Xem Dashboard
+Comment=Mo dashboard giao thong (video nhan dien) toan man hinh
+Exec=bash /home/nvidia/traffic_project/view_dashboard.sh
+Icon=chromium-browser
+Terminal=false
+Categories=Application;

@@ -1,0 +1,255 @@
+(node:27812) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ chỉ số mới: tính tay trên tình huống nhỏ (vàng chậm trong 150 m trước vạch) (2.0125ms)
+✔ chỉ số mới chạy trên sim thật: HX có vạch, đếm xe qua và độ trễ hữu hạn (20709.8669ms)
+✔ demand: không truyền = y nguyên (hash cổ điển c05ce91e); truyền demand → khác (14389.4629ms)
+(node:24012) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/camera-capture-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ projectToCamera32: xe trước mặt camera nằm trong FOV, sau lưng thì không (1.3467ms)
+✔ projectToPixel32: px ti lệ góc lệch (giữa khung khi thẳng trước, lệch khi sang bên) (0.3796ms)
+✔ captureFrame/captureEvidence: gọi readRenderTargetPixelsAsync đúng chữ ký, trả đủ 3 ảnh + plate_crop theo vị trí xe (13.2319ms)
+✔ projectToPixel32 theo phép chiếu phối cảnh: xa hơn thì cao hơn trong khung; sang phải thì px lớn hơn (0.3306ms)
+✔ rowBandStats32 + skyAboveRoad32: khung trời-trên nhận true, khung lật dọc nhận false (2.4653ms)
+✔ readbackFlip32 theo backend thật: WebGPU không lật; WebGL (kể cả WebGPURenderer chạy backend WebGL2) lật (0.2347ms)
+✔ captureFrame (WebGPU): không lật dọc — hàng đầu của buffer là hàng trên khung (9.5583ms)
+✔ captureFrame (WebGPURenderer chạy backend WebGL2): buffer dưới-lên nên ảnh vẽ ra phải lật lại để trời ở trên (15.679ms)
+✔ pickCaptureHeads32: chỉ xét đầu đèn của đúng nút camera; chọn mặt nhìn về camera nhất; không mặt nào nhìn về camera → -1 (0.4748ms)
+✔ renderTo: chỉ đầu đèn được chọn hiện khi render; HUD và quầng ẩn; trạng thái trả lại đúng sau chụp (39.4296ms)
+✔ visibleHeadsOf: báo đúng đầu đèn sẽ hiện trong khung và đèn đang sáng của nó (4.8201ms)
+✔ camera chụp chỉ đọc layer 0 (helper không render vào ảnh) (0.3709ms)
+(node:17728) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-region-31.js?v=31a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hằng số hợp đồng M2a (1.9301ms)
+✔ chuẩn hóa cấp đường: bỏ _link, xếp hạng, nhận diện đường nhỏ (0.5439ms)
+✔ segmentDistance32 = khoảng cách điểm tới đoạn (0.292ms)
+✔ selectNorthBuildings32: giữ nhà khu Bắc ≤ 40 m tới tim đường lớn, giữ 100 % signature, bỏ nhà khu khác (3.6796ms)
+✔ lockRoadFilter32: khu Bắc ẩn đường nhỏ TRỪ 80 m quanh nút có đèn; ngoài khu Bắc chỉ giữ ≥ secondary; signature way luôn giữ (0.9253ms)
+✔ northCameraLimits32 + clampNorthCamera32: tâm quay trong bbox + 400 m, khoảng cách ≤ mức thấy toàn khu Bắc (0.3511ms)
+✔ lockRegionLabels32: nhãn khóa + tên khu, tâm nhãn trong bbox khu đó (0.3452ms)
+✔ M2c: signature có tâm ngoài khu Bắc bị ẩn; trong khu Bắc giữ (0.2228ms)
+✔ M2c: cầu vắt ranh (có điểm trong bac) giữ trọn; cầu nằm hẳn ngoài khu Bắc bị ẩn (0.2215ms)
+✔ M2c: mặt nạ khu khóa đúng 1024² và khớp regionOf tại tâm từng ô (242.5575ms)
+✔ M2c: albedo khu khóa đã hiệu chỉnh; mục tiêu hiển thị là xám trầm và xám-xanh bão hòa thấp (0.2112ms)
+✔ M2c: roadPoints32 nhận cả mảng cặp và mảng phẳng (0.2256ms)
+(node:20772) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ phiên bản + tham số mặc định đúng hợp đồng (1.7877ms)
+✔ isGreen fixed khớp chu kỳ 48 s (xanh 22/16, vàng 3, đỏ chung 2) và khớp stateOf 100 % bước (2052.9551ms)
+✔ SignalState có phases[].countdown_s, override null ban đầu (2159.9247ms)
+✔ max-pressure đổi pha đúng ngưỡng switchMargin; giữ pha khi chênh < margin (1770.3679ms)
+✔ switchMargin được nối vào quyết định: margin nhỏ đổi pha, margin lớn giữ (3951.5456ms)
+✔ overridePhase: đổi nhóm đi qua vàng 3 s + đỏ chung 2 s; có until_t_sim + until_at; null để hủy (1348.1817ms)
+✔ setMode giữa chừng áp dụng từ lần đổi pha kế (trừ immediate); không reset tSim (1352.6755ms)
+✔ metrics là superset đủ trường; stateHash tất định, đổi khi đổi override (1550.4397ms)
+✔ runsRed: redRun quyết định xe chủ động vượt; mặc định false (2442.8925ms)
+✔ 6 nút có node_id HX-01…HX-06, chỉ HX-01/HX-05 chung cụm HX-C1; metrics by_node khóa HX (1026.8451ms)
+✔ áp lực trừ q_out: hàng chờ bị làn ra triệt tiêu thì không đổi pha (1013.6156ms)
+✔ smart: áp lực cân bằng giữ pha, isGreen xanh tới maxGreen 45 s rồi mới đổi (977.1786ms)
+✔ cycleIdOf = floor((t − origin)/48): t=96→2, t=120→2 (1034.1519ms)
+✔ flow_per_min cộng dồn crossed mỗi bước rồi lấy mẫu 1 s (không chỉ bước trùng mốc) (1092.4799ms)
+✔ wait_avg dùng mẫu số Σcount (dòng count=0 không kéo lệch trung bình) (1119.6302ms)
+✔ reset(): đưa pha về gốc (nhóm 0 xanh) và xóa ghi đè (2207.0055ms)
+✔ stateOf nút 31A ngoài kế hoạch: cụm 31A-n, chu kỳ 44 s (không rơi vào HX-C1) (1010.0076ms)
+✔ algorithm mặc định max-pressure; actuated-gap giữ xanh khi còn xe tới, khác max-pressure (2012.0321ms)
+✔ D cycle-max-pressure: chia 38 s tỉ lệ áp lực, kẹp [10,28], EMA α=0,5; 0 áp lực → 19/19 (0.5176ms)
+✔ D cycle-max-pressure: chu kỳ 48 s, mặc định g0=19/g1=19, đúng 2 lần chuyển nhóm mỗi chu kỳ (943.3211ms)
+✔ E max-pressure-abs: chỉ chuyển khi (áp lực nhóm kia − nhóm hiện tại) ≥ switchAbs (1905.8054ms)
+✔ E max-pressure-abs: chống đói — nhóm đỏ liên tục ≥ maxRedS được phục vụ dù áp lực thấp hơn (1121.7452ms)
+✔ max-pressure-150: áp lực 150 m theo nhóm đổi pha; khác actuated-gap (1018.8678ms)
+(node:19412) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/forecast-32.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ xu hướng tăng -> prob tăng theo horizon (2.7037ms)
+✔ xu hướng giảm -> prob giảm theo horizon (0.3767ms)
+✔ ít dữ liệu -> reliability thấp (0.2829ms)
+✔ nhiễu cao -> reliability giảm (0.2394ms)
+✔ horizon xa -> reliability giảm (0.2269ms)
+✔ prob là xác suất kẹt level>=0.7: level cao cho prob cao (0.2258ms)
+✔ alerts32 sắp theo prob giảm dần và lọc theo ngưỡng (0.3882ms)
+✔ combineWithLookahead32 trộn đúng trọng số (0.2391ms)
+✔ forecastEdge32 với recent rỗng vẫn trả prob/reliability hợp lệ (0.3384ms)
+(node:18116) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/heat-32.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ level thấp khi thông, cao khi kẹt (3.0792ms)
+✔ EMA hội tụ dần về mức ổn định (0.8ms)
+✔ snapshot trả Float32Array đúng kích thước và clamp [0,1] (0.299ms)
+✔ hourly: tích lũy đúng ô giờ theo tSim và dayStartHour (0.3153ms)
+✔ hourly wrap quanh ngày (tSim lớn) (0.2405ms)
+✔ colorOf 5 nấc cố định xanh->vàng->cam->đỏ (0.3874ms)
+✔ ingest không có sample giữ nguyên level (không NaN) (0.1646ms)
+✔ ingest với edge out-of-range không ném lỗi (0.1751ms)
+(node:12716) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ phiên bản module M4b1, hằng số đúng đặc tả, mã mới không có chữ cấm (23.635ms)
+✔ thu mẫu: chỉ xe đang chạy, cạnh hợp lệ, cờ dừng theo vận tốc; tốc độ tự do theo cạnh (2683.7413ms)
+✔ tuân thủ cảnh báo: ~60 % xe, tất định theo seed, giống nhau giữa các lần gọi (3.7611ms)
+✔ routeBias: chỉ giảm với cạnh đang cảnh báo và xe tuân thủ; không cảnh báo = 1 (4.9009ms)
+✔ sim không truyền routeBias (hoặc hàm luôn trả 1) cho cùng trạng thái: hash cổ điển không đổi (8593.4632ms)
+✔ routeBias trên sim: tổng số lần xe đi vào các cạnh đích giảm rõ (≥ 30 %) (39085.5344ms)
+✔ engine: tick theo giây sim tạo bản đồ nhiệt, lịch sử, dự báo; payload gửi đúng 10 s một lần (5585.0516ms)
+✔ engine: sim đặt lại (thời gian lùi) thì xóa lịch sử và cảnh báo (2316.8833ms)
+✔ bảng VMS: 2–4 bảng trên làn tới Hàng Xanh, cách nhau ≥ 120 m, có cạnh phía trước và hướng quay về xe tới (796.3169ms)
+✔ thông điệp VMS: bình thường khi không có cảnh báo phía trước; KẸT XE + tuyến thay thế khi có (0.4308ms)
+✔ dải nhiệt (hình học thuần): đỉnh 2 mỗi điểm, chỉ số tam giác hợp lệ, tô màu theo mức (0.4446ms)
+✔ ribbonEdges32 trên mạng thật: chỉ cạnh tertiary trở lên, có trong khu (không lọc khu = mọi cạnh) (829.7668ms)
+✔ gửi trạm: sendHeat POST đúng payload; 404 (backend chưa có endpoint) trả false, không vào dead-letter/hàng đợi (1.5787ms)
+✔ kpi-ab-32 chạy headless, fixed và smart cùng seed cho JSON hợp lệ (33406.7674ms)
+✔ tất định: chạy hai lần cùng seed cùng mode → cùng wait_avg_s_hx (22877.5638ms)
+(node:15220) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ groupAlertsByRoad32: một dòng mỗi tên (prob cao nhất, đếm đoạn), đường không tên gộp theo cạnh, tối đa 5 dòng (6.4938ms)
+✔ expandHeatHistory32: đúng định dạng thì mở rộng theo chỉ số cạnh; sai NE, sai số mức hoặc chỉ số lạ thì từ chối (0.6769ms)
+✔ probOfLevel32 đơn điệu tăng; mức 0,7 ↔ xác suất 50 % (0.2757ms)
+✔ đồng hồ: 16:00 lúc mở, +1 giờ = 17:00 giờ vàng, qua nửa đêm đổi ngày; nhãn thứ/ngày đúng (0.4869ms)
+✔ heat-live: giờ của lịch sử theo đồng hồ (clockOf), không theo giây sim (435.2144ms)
+✖ heat-live: nạp lịch sử và tua trước; từ chối kích thước sai; tua cũ quá 60 s sim thì không dùng (1404.5108ms)
+✔ KPI lưu lượng: flow_per_node_min = trung bình các nút điều khiển; flow_per_min vẫn là tổng toàn mạng (3159.5795ms)
+✔ tua trước (lõi Worker) khớp sim chính: chạy 60 s từ ảnh + pha đèn cho cùng hash (đèn cố định) (2359.9814ms)
+✔ tua trước (lõi Worker) khớp sim chính ở chế độ thông minh (max-pressure) (1356.5065ms)
+✔ tua trước chậm (ngân sách rất nhỏ): giảm số xe theo tỉ lệ và ghi scale < 1 (4854.4006ms)
+✔ collectBuffers32 gom đúng mọi ArrayBuffer, không trùng (0.4583ms)
+✔ đồng hồ (installClock32, không DOM): nhảy +1 giờ đổi nhóm ánh sáng và nhu cầu; không cần document (1.1083ms)
+(node:4548) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/smart-app-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ NORTH_TOUR_32 đúng 5 góc khu Bắc, đúng thứ tự (1.8927ms)
+✔ buildNorthViews32 sinh 5 góc, tọa độ lấy từ dữ liệu và nằm trong khu bắc (3.1862ms)
+(node:15240) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mulberry32 + plateFor32 tất định, khớp định dạng biển VN (2.8985ms)
+✔ biển kịch bản: đúng 6 biển, format khớp nhóm xe, cờ is_scenario (0.7113ms)
+✔ ocrNoise32: nhiễu tất định, p_swap/p_miss đúng tham số, confidence trong [0,1] (0.6011ms)
+✔ luật RED-LIGHT: máy trạng thái sinh bản ghi sau grace, chống trùng (vehicle, node, cycle) (9745.4548ms)
+✔ tất định: hai lần chạy 60 s cùng seed → cùng số vi phạm và cùng biển (9799.9403ms)
+(node:21796) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/violation-perception-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ plates.json do seed_plates.py sinh khớp plateFor32 bản JS (test chéo) (1239.9367ms)
+✔ định dạng biển sinh ra luôn khớp regex; scenario rows đúng 6 (95.0808ms)
+(node:27852) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/signal-plan-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ đủ 6 nút Hàng Xanh, chỉ số nút khớp osm_id (6.6186ms)
+✔ HX-01 và HX-05 cùng cụm HX-C1, chung offset; cụm khác nhau offset (1.023ms)
+✔ arriveGroup: trạng thái vào HX-01 song song trục Điện Biên Phủ (160.4°) vào nhóm 0, còn lại nhóm 1 (5.2775ms)
+✔ tất định: gọi hai lần cùng kết quả (14.6288ms)
+(node:27808) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ không tham số mới: hành vi 31A y nguyên (signal 86 nút, breaker 50 s, hash ổn định) (4516.3205ms)
+✔ signalPlan: 6 nút HX có đèn; net.signal khớp signalNodes (1968.3935ms)
+✔ controller được attach: api sim có controller/signalGroups; update mỗi bước không ném lỗi (3499.4211ms)
+✔ attachController sau khi tạo sim (gọi trước bước đầu) hoạt động (1684.7213ms)
+✔ breakerS: Infinity thì không có breakerRespawns; 50 thì có khi sim dài (46831.5711ms)
+✔ seed khác nhau → stateHash khác nhau; cùng seed → trùng nhau (4927.9308ms)
+✔ controller.update chạy trong chuỗi beginStep/workStep/finishStep: nhóm 1 có xanh trong 60 s (2050.5358ms)
+✔ nút 31A có đèn ngoài plan không do controller quản (giữ đèn 31A) (3499.657ms)
+✔ buildQueues: q_out lấy từ làn RA (25 m đầu), không phải làn vào (1558.2855ms)
+✔ isGreen qua beginStep/workStep/finishStep khớp stateOf (HX-02 có cả hai nhóm) (2218.5281ms)
+(node:15124) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ export giữa chừng không đổi hành vi: sim có export và sim không export cho cùng hash (2072.1333ms)
+✔ importState: bản sao chạy tiếp cho đúng stateHash của sim gốc (có khu Bắc, tỉ lệ 0,6, ánh sáng 0,85) (914.6274ms)
+✔ importState sau khi đổi tỉ lệ/ánh sáng: vẫn khớp từng bước (không cần gọi lại setRegion/setFraction) (348.1139ms)
+✔ importState từ chối trạng thái không khớp mạng (N/NL) hoặc định dạng lạ (99.0074ms)
+✔ hash cổ điển 31A không đổi (không truyền gì, sau 300 bước): c05ce91e (4127.4551ms)
+(node:15584) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/smart-app-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sanitizeStatusText32 loại chuỗi cấm, giữ câu sạch (1.6321ms)
+✔ applySmartLabels32 ghi đè đúng 3 nhãn mục 9.3 (selector THẬT #floodState span) (0.5114ms)
+✔ lockRegions32: giữ bac, khóa mọi lựa chọn khác, ẩn panel cổ điển #story (0.4294ms)
+(node:8912) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/station-queue-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hằng số hợp đồng: phiên bản transport, heartbeat 15 s, backoff 1→30 s, stream 2 fps (1.3393ms)
+✔ lỗi mạng → giữ trong hàng đợi; online → gửi lại và xoá; gửi đúng đường dẫn và Bearer (2.3897ms)
+✔ 409 = đã gửi (xoá, không dead-letter); 422 → dead-letter; 5xx giữ lại (2.5096ms)
+✔ sendViolation nhận 409 không xếp hàng; 422 đưa dead-letter ngay (0.6029ms)
+✔ 401: đăng nhập lại đúng một lần rồi gửi lại với token mới (0.4759ms)
+✔ chưa có token: nhiều yêu cầu đồng thời chỉ đăng nhập một lần (12.6265ms)
+✔ backoff 1 → 2 → 4 s khi 429 (đồng hồ giả, không chờ thật) (13.7048ms)
+✔ heartbeat 15 s: gửi ngay khi start rồi mỗi 15 s (đúng app_version, không dùng process) (2.0075ms)
+✔ bằng chứng multipart gửi sau khi có id; trường kind + file (Blob image/jpeg), không đặt Content-Type (34.0826ms)
+✔ vi phạm xếp hàng (offline): bằng chứng giữ trong bộ nhớ và gửi khi flush thành công (14.7383ms)
+✔ bằng chứng 409 (trùng kind) coi là đã gửi; 404 bằng chứng vào dead-letter (0.8113ms)
+✔ body gửi lên chỉ gồm trường ViolationIn; cycle_id lấy từ signal khi thiếu cấp gốc; khóa khớp backend (0.1693ms)
+✔ resolveApiBase32: mặc định 127.0.0.1:8900; chấp nhận máy cục bộ có ?api=; từ chối máy khác (không gửi tài khoản trạm đi) (1.1901ms)
+✔ dataUrl: tách base64 và Blob đúng MIME; dataUrl hỏng vẫn không văng lỗi ngoài mong đợi (0.2028ms)
+✔ buildSignalStates32: mỗi nút trong cụm một dòng; pha xanh/vàng/đỏ + ghi đè (0.4101ms)
+✔ WebSocket: gửi {type:"auth",token} ngay khi mở; tin nhắn cmd.* gọi onCommand; stop đóng socket (4.907ms)
+✔ gửi metrics và khung: lỗi/429 không xếp hàng; khung gửi đúng camera, seq, base64 (0.8439ms)
+✔ startStationLoop32: bật stream 2 fps cho camera đang mở; vi phạm gửi kèm 3 bằng chứng; khung gửi đi (59.7465ms)
+✔ mã nguồn client không dùng process và không có chữ cấm trên UI của HUD (3.0973ms)
+(node:23448) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/station-queue-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hằng số: QUEUE_MAX 2000; hàng đợi FIFO async, bỏ bản ghi cũ nhất khi vượt giới hạn (35.1757ms)
+✔ thao tác đồng thời vẫn giữ đúng thứ tự (khóa tuần tự) và ghi xuống store (46.0185ms)
+✔ shift trên hàng đợi rỗng trả undefined và không làm hỏng trạng thái (0.3698ms)
+✔ adapter IndexedDB: ghi rồi đọc lại, và dữ liệu còn khi mở kết nối mới (qua khởi động lại trạm) (1.1375ms)
+✔ adapter IndexedDB: khóa chưa có trả undefined; set/get khóa khác nhau không lẫn (0.3366ms)
+(node:29312) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/traffic-signals-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lightColorOf ánh xạ phase → màu đèn (1.1085ms)
+✔ mặt đèn quay theo TRỤC pha của nút: nhóm 0 song song trục, nhóm 1 vuông góc, mỗi nhóm hai mặt đối nhau (35.6122ms)
+✔ den giao thong: moi dau den chi 1 den sang, den tat co emissive 0 va quang an (4.2646ms)
+✔ helper (non FOV, vien non FOV, cot camera, bang dem nguoc) nam layer 1; camera chinh bat layer 1 (0.6361ms)
+ℹ tests 153
+ℹ suites 0
+ℹ pass 152
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 76173.7889
+
+✖ failing tests:
+
+test at outputs\hcmc-poc\test\m4b2-32.test.mjs:110:1
+✖ heat-live: nạp lịch sử và tua trước; từ chối kích thước sai; tua cũ quá 60 s sim thì không dùng (1404.5108ms)
+  AssertionError [ERR_ASSERTION]: tua trước mức 0,95 phải sinh cảnh báo
+      at TestContext.<anonymous> (file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/test/m4b2-32.test.mjs:122:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+exit=1

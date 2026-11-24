@@ -1,0 +1,75 @@
+{
+ "http4xx5xx": 9,
+ "notFound404": 0,
+ "consoleOrPageErrors": 3,
+ "bad": [
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8881/hcmc-poc/",
+   "err": "net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8881/hcmc-poc/",
+   "err": "net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8881/hcmc-poc/",
+   "err": "net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a",
+   "status": "failed",
+   "url": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a",
+   "err": "net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a",
+   "status": "failed",
+   "url": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a",
+   "err": "net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a",
+   "status": "failed",
+   "url": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a",
+   "err": "net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "status": "failed",
+   "url": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "err": "net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "status": "failed",
+   "url": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "err": "net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "status": "failed",
+   "url": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "err": "net::ERR_CONNECTION_REFUSED"
+  }
+ ],
+ "errs": [
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/",
+   "goto": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8881/hcmc-poc/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8881/hcmc-poc/\", waiting until \"load\"\u001b[22m\n"
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a",
+   "goto": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a\","
+  },
+  {
+   "page": "http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "goto": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8881/hcmc-poc/webgpu-mate"
+  }
+ ]
+}

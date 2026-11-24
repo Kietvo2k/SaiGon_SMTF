@@ -1,0 +1,15 @@
+[
+  { "name": "cdbp-a", "file": "work/m2b2-cdbp-a.png", "x": -1209, "z": -1593, "dist": 300, "az": 0.6, "polar": 1.30 },
+  { "name": "cdbp-b", "file": "work/m2b2-cdbp-b.png", "x": -1209, "z": -1593, "dist": 300, "az": 2.3, "polar": 1.30 },
+  { "name": "ctkd-a", "file": "work/m2b2-ctkd-a.png", "x": -2275, "z": -1858, "dist": 300, "az": 0.6, "polar": 1.30 },
+  { "name": "ctn1-a", "file": "work/m2b2-ctn1-a.png", "x": -547, "z": -1407, "dist": 300, "az": 0.6, "polar": 1.30 },
+  { "name": "ctn2-a", "file": "work/m2b2-ctn2-a.png", "x": -222, "z": -962, "dist": 300, "az": 0.6, "polar": 1.30 },
+  { "name": "cvt2-a", "file": "work/m2b2-cvt2-a.png", "x": 168, "z": -1164, "dist": 300, "az": 0.6, "polar": 1.30 },
+  { "name": "csg-a", "file": "work/m2b2-csg-a.png", "x": 1595, "z": -2179, "dist": 520, "az": 0.6, "polar": 1.20 },
+  { "name": "csg-b", "file": "work/m2b2-csg-b.png", "x": 1595, "z": -2179, "dist": 300, "az": 2.3, "polar": 1.38 },
+  { "name": "ctt-a", "file": "work/m2b2-ctt-a.png", "x": 605, "z": -994, "dist": 420, "az": 0.6, "polar": 1.20 },
+  { "name": "ctt-b", "file": "work/m2b2-ctt-b.png", "x": 605, "z": -994, "dist": 260, "az": 2.3, "polar": 1.38 },
+  { "name": "l81-a", "file": "work/m2b2-l81-a.png", "x": 1124, "z": -1768, "dist": 700, "az": 0.9, "polar": 0.95 },
+  { "name": "l81-b", "file": "work/m2b2-l81-b.png", "x": 1124, "z": -1768, "dist": 520, "az": 2.4, "polar": 0.55 },
+  { "name": "l81-c", "file": "work/m2b2-l81-c.png", "x": 1124, "z": -1768, "dist": 300, "az": 0.9, "polar": 1.40 }
+]

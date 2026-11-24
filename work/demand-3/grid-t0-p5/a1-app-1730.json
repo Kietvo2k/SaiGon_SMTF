@@ -1,0 +1,559 @@
+{
+  "scenario": "app-1730",
+  "duration_s": 1800,
+  "window_s": [
+    300,
+    1800
+  ],
+  "seeds": [
+    31031
+  ],
+  "mean_delta_pct": -58.91444803386432,
+  "throughput_delta_pct": 28.281308762692742,
+  "pass_threshold": false,
+  "all_seeds_not_worse": false,
+  "throughput_ok": false,
+  "params": {
+    "yellowS": 3,
+    "allRedS": 2,
+    "minGreenS": 8,
+    "maxGreenS": 45,
+    "decisionIntervalS": 1,
+    "switchMargin": 0.15,
+    "switchAbs": 3,
+    "maxRedS": 50,
+    "fixed": {
+      "green0S": 22,
+      "green1S": 16
+    },
+    "clusterM": 80,
+    "exitCapS": 4,
+    "satPerS": 0.5,
+    "algorithm": "max-pressure"
+  },
+  "rows": [
+    {
+      "seed": 31031,
+      "fixed": {
+        "mode": "fixed",
+        "seed": 31031,
+        "scenario": "app-1730",
+        "duration_s": 1800,
+        "breaker_s": 180,
+        "breaker_respawns": 2413,
+        "respawns": 6143,
+        "max_stop_s": 180.3,
+        "demand": {
+          "center": [
+            -130,
+            -2540
+          ],
+          "radius_m": 1500,
+          "turnBias": 0,
+          "spawnBias": 200,
+          "poolScale": 5
+        },
+        "stopped_hx_by_group": [
+          13.746,
+          0.13
+        ],
+        "active_hx_by_group": [
+          15.157,
+          0.726
+        ],
+        "stopped_hx_samples": 1501,
+        "top_stuck_lanes": [
+          {
+            "lane": 14173,
+            "road": "Cầu Sài Gòn",
+            "node": null,
+            "group": 0,
+            "stuck_s": 137772
+          },
+          {
+            "lane": 4719,
+            "road": "Điện Biên Phủ",
+            "node": null,
+            "group": 0,
+            "stuck_s": 117763
+          },
+          {
+            "lane": 14172,
+            "road": "Cầu Sài Gòn",
+            "node": null,
+            "group": 0,
+            "stuck_s": 106747
+          },
+          {
+            "lane": 19966,
+            "road": "Điện Biên Phủ",
+            "node": null,
+            "group": 0,
+            "stuck_s": 93021
+          },
+          {
+            "lane": 8676,
+            "road": "Nguyễn Hữu Cảnh",
+            "node": null,
+            "group": 1,
+            "stuck_s": 86057
+          },
+          {
+            "lane": 18475,
+            "road": "Ung Văn Khiêm",
+            "node": null,
+            "group": 0,
+            "stuck_s": 74731
+          },
+          {
+            "lane": 8677,
+            "road": "Nguyễn Hữu Cảnh",
+            "node": null,
+            "group": 1,
+            "stuck_s": 70431
+          },
+          {
+            "lane": 3899,
+            "road": "Cầu Sài Gòn",
+            "node": null,
+            "group": 0,
+            "stuck_s": 69837
+          },
+          {
+            "lane": 2428,
+            "road": "Cầu Văn Thánh 2",
+            "node": null,
+            "group": 0,
+            "stuck_s": 66122
+          },
+          {
+            "lane": 14165,
+            "road": "Điện Biên Phủ",
+            "node": null,
+            "group": 0,
+            "stuck_s": 60976
+          }
+        ],
+        "spawn_dest_hx": {
+          "by_group": [
+            1195,
+            1464
+          ],
+          "by_node": {
+            "HX-04": 219,
+            "HX-03": 1093,
+            "HX-05": 592,
+            "HX-02": 414,
+            "HX-01": 95,
+            "HX-06": 246
+          },
+          "by_node_group": {
+            "HX-04|0": 131,
+            "HX-03|0": 462,
+            "HX-05|1": 533,
+            "HX-03|1": 631,
+            "HX-04|1": 88,
+            "HX-02|0": 270,
+            "HX-02|1": 144,
+            "HX-01|0": 95,
+            "HX-05|0": 59,
+            "HX-06|0": 178,
+            "HX-06|1": 68
+          }
+        },
+        "wait_avg_s": 50.02,
+        "wait_avg_s_hx": 19.567,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 67.2,
+            "queue_max": 4,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 4,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 13.6,
+            "queue_max": 2,
+            "flow_per_min": 6,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 36.6,
+            "queue_max": 1,
+            "flow_per_min": 1,
+            "switches_per_hour": 148
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 67.2,
+            "queue_max": 4,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 4,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 13.6,
+            "queue_max": 2,
+            "flow_per_min": 6,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 148
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 36.6,
+            "queue_max": 1,
+            "flow_per_min": 1,
+            "switches_per_hour": 148
+          }
+        ],
+        "queue_max_hx": 4,
+        "flow_per_min_hx": 11,
+        "a1_delay_s_hx": 71.816,
+        "a1_crossings_hx": 2659,
+        "a1_crossings_per_hour_hx": 6381.6,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 6248,
+        "state_hash": "06073c4d",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "switchAbs": 3,
+          "maxRedS": 50,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "exitCapS": 4,
+          "satPerS": 0.5,
+          "algorithm": "max-pressure"
+        }
+      },
+      "smart": {
+        "mode": "smart",
+        "seed": 31031,
+        "scenario": "app-1730",
+        "duration_s": 1800,
+        "breaker_s": 180,
+        "breaker_respawns": 2442,
+        "respawns": 5827,
+        "max_stop_s": 180.1,
+        "demand": {
+          "center": [
+            -130,
+            -2540
+          ],
+          "radius_m": 1500,
+          "turnBias": 0,
+          "spawnBias": 200,
+          "poolScale": 5
+        },
+        "stopped_hx_by_group": [
+          15.278,
+          0.472
+        ],
+        "active_hx_by_group": [
+          16.624,
+          0.87
+        ],
+        "stopped_hx_samples": 1501,
+        "top_stuck_lanes": [
+          {
+            "lane": 14173,
+            "road": "Cầu Sài Gòn",
+            "node": null,
+            "group": 0,
+            "stuck_s": 125340
+          },
+          {
+            "lane": 4719,
+            "road": "Điện Biên Phủ",
+            "node": null,
+            "group": 0,
+            "stuck_s": 123206
+          },
+          {
+            "lane": 14172,
+            "road": "Cầu Sài Gòn",
+            "node": null,
+            "group": 0,
+            "stuck_s": 100692
+          },
+          {
+            "lane": 19966,
+            "road": "Điện Biên Phủ",
+            "node": null,
+            "group": 0,
+            "stuck_s": 96846
+          },
+          {
+            "lane": 8676,
+            "road": "Nguyễn Hữu Cảnh",
+            "node": null,
+            "group": 1,
+            "stuck_s": 79687
+          },
+          {
+            "lane": 18475,
+            "road": "Ung Văn Khiêm",
+            "node": null,
+            "group": 0,
+            "stuck_s": 77619
+          },
+          {
+            "lane": 14165,
+            "road": "Điện Biên Phủ",
+            "node": null,
+            "group": 0,
+            "stuck_s": 71097
+          },
+          {
+            "lane": 8677,
+            "road": "Nguyễn Hữu Cảnh",
+            "node": null,
+            "group": 1,
+            "stuck_s": 70698
+          },
+          {
+            "lane": 3899,
+            "road": "Cầu Sài Gòn",
+            "node": null,
+            "group": 0,
+            "stuck_s": 70338
+          },
+          {
+            "lane": 19965,
+            "road": "Điện Biên Phủ",
+            "node": null,
+            "group": 0,
+            "stuck_s": 67058
+          }
+        ],
+        "spawn_dest_hx": {
+          "by_group": [
+            842,
+            1065
+          ],
+          "by_node": {
+            "HX-02": 378,
+            "HX-05": 399,
+            "HX-03": 680,
+            "HX-06": 225,
+            "HX-04": 140,
+            "HX-01": 85
+          },
+          "by_node_group": {
+            "HX-02|1": 85,
+            "HX-05|1": 344,
+            "HX-02|0": 293,
+            "HX-03|1": 461,
+            "HX-03|0": 219,
+            "HX-06|0": 120,
+            "HX-04|0": 70,
+            "HX-01|0": 85,
+            "HX-05|0": 55,
+            "HX-04|1": 70,
+            "HX-06|1": 105
+          }
+        },
+        "wait_avg_s": 41.2,
+        "wait_avg_s_hx": 31.635,
+        "by_node": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 62.27,
+            "queue_max": 8,
+            "flow_per_min": 0,
+            "switches_per_hour": 110
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 4,
+            "switches_per_hour": 110
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 7.94,
+            "queue_max": 15,
+            "flow_per_min": 9,
+            "switches_per_hour": 132
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 78
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 88
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 119.6,
+            "queue_max": 1,
+            "flow_per_min": 0,
+            "switches_per_hour": 110
+          }
+        ],
+        "by_node_hx": [
+          {
+            "node_id": "HX-01",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 62.27,
+            "queue_max": 8,
+            "flow_per_min": 0,
+            "switches_per_hour": 110
+          },
+          {
+            "node_id": "HX-05",
+            "cluster_id": "HX-C1",
+            "wait_avg_s": 0,
+            "queue_max": 1,
+            "flow_per_min": 4,
+            "switches_per_hour": 110
+          },
+          {
+            "node_id": "HX-02",
+            "cluster_id": "HX-C2",
+            "wait_avg_s": 7.94,
+            "queue_max": 15,
+            "flow_per_min": 9,
+            "switches_per_hour": 132
+          },
+          {
+            "node_id": "HX-03",
+            "cluster_id": "HX-C3",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 78
+          },
+          {
+            "node_id": "HX-04",
+            "cluster_id": "HX-C4",
+            "wait_avg_s": 0,
+            "queue_max": 0,
+            "flow_per_min": 0,
+            "switches_per_hour": 88
+          },
+          {
+            "node_id": "HX-06",
+            "cluster_id": "HX-C5",
+            "wait_avg_s": 119.6,
+            "queue_max": 1,
+            "flow_per_min": 0,
+            "switches_per_hour": 110
+          }
+        ],
+        "queue_max_hx": 15,
+        "flow_per_min_hx": 13,
+        "a1_delay_s_hx": 114.126,
+        "a1_crossings_hx": 1907,
+        "a1_crossings_per_hour_hx": 4576.8,
+        "a1_window_s": [
+          300,
+          1800
+        ],
+        "active_vehicles": 6248,
+        "state_hash": "e95d7a37",
+        "params": {
+          "yellowS": 3,
+          "allRedS": 2,
+          "minGreenS": 8,
+          "maxGreenS": 45,
+          "decisionIntervalS": 1,
+          "switchMargin": 0.15,
+          "switchAbs": 3,
+          "maxRedS": 50,
+          "fixed": {
+            "green0S": 22,
+            "green1S": 16
+          },
+          "clusterM": 80,
+          "exitCapS": 4,
+          "satPerS": 0.5,
+          "algorithm": "max-pressure"
+        }
+      },
+      "delta_pct": -58.91444803386432,
+      "throughput_delta_pct": 28.281308762692742
+    }
+  ]
+}

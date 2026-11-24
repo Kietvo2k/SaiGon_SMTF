@@ -1,0 +1,26 @@
+PASS window.__smartCapture và __smartApp tồn tại
+backend render: WebGPU
+PASS registry có đúng 2 camera HX (CAM-HX-001, CAM-HX-002)
+PASS CAM-HX-001: trời ở trên (hàng trên lum 140.63/xanh 31.94; hàng dưới lum 86.53/xanh 11.98)
+PASS CAM-HX-001: khung chỉ có 1 đầu đèn của HX-01 nhóm 0 ([{"node_id":"HX-01","group":0,"lit":["green"]}])
+PASS CAM-HX-001: đúng 1 đèn sáng trong khung (["green"])
+PASS CAM-HX-001: có vạch dừng HX-01 vẽ trong scene gần điểm dừng (lệch 0 m)
+PASS CAM-HX-001: tâm vạch dừng nằm trong khung
+PASS CAM-HX-001: vạch dừng trong khung (ndc 0,0.33)
+PASS CAM-HX-001: đầu đèn nhóm 0 trong khung (ndc -0.09,0.56)
+PASS CAM-HX-001: projectToPixel32 khớp ma trận camera thật (lệch 0 px)
+PASS CAM-HX-002: trời ở trên (hàng trên lum 133.18/xanh 70.56; hàng dưới lum 88.51/xanh 13.51)
+PASS CAM-HX-002: khung chỉ có 1 đầu đèn của HX-06 nhóm 1 ([{"node_id":"HX-06","group":1,"lit":["red"]}])
+PASS CAM-HX-002: đúng 1 đèn sáng trong khung (["red"])
+PASS CAM-HX-002: có vạch dừng HX-06 vẽ trong scene gần điểm dừng (lệch 1.8 m)
+PASS CAM-HX-002: tâm vạch dừng nằm trong khung
+PASS CAM-HX-002: vạch dừng trong khung (ndc 0,0.3)
+PASS CAM-HX-002: đầu đèn nhóm 1 trong khung (ndc -0.06,0.53)
+PASS CAM-HX-002: projectToPixel32 khớp ma trận camera thật (lệch 0 px)
+PASS có xe chờ tại vạch dừng HX-01 khi đèn nhóm 0 đỏ (1 s)
+PASS xe chờ nằm trong khung CAM-HX-001 (s=54, vạch=55.9, t_sim=12.4)
+PASS bằng chứng đủ before/after/plate_crop
+PASS ảnh after: trời ở trên (hàng trên lum 140.63; hàng dưới lum 86.53)
+PASS bằng chứng: khung chỉ có đầu đèn HX-01 nhóm 0 ([{"node_id":"HX-01","group":0,"lit":["red"]}])
+PASS bằng chứng: đèn sáng là đỏ đúng pha nhóm 0 (["red"])
+PASS qa-capture-32

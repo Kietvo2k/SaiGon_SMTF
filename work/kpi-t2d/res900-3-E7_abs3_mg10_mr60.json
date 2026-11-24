@@ -1,0 +1,116 @@
+{
+  "name": "E7_abs3_mg10_mr60",
+  "algorithm": "max-pressure-abs",
+  "params": {
+    "switchAbs": 3,
+    "minGreenS": 10,
+    "maxRedS": 60
+  },
+  "duration_s": 900,
+  "seeds": [
+    31031,
+    31032,
+    31033,
+    31034,
+    31035
+  ],
+  "mean_delta_pct": 0.76,
+  "throughput_delta_pct": -9.71,
+  "min_delta_pct": -15.21,
+  "all_not_worse": false,
+  "throughput_ok": true,
+  "deltas": [
+    12.02,
+    -3.98,
+    -15.21,
+    -2.08,
+    13.05
+  ],
+  "rows": [
+    {
+      "seed": 31031,
+      "fixed": {
+        "a1_delay_s_hx": 72.444,
+        "a1_crossings_hx": 1304,
+        "active": 8303,
+        "a1_crossings_per_hour_hx": 7824
+      },
+      "smart": {
+        "a1_delay_s_hx": 63.737,
+        "a1_crossings_hx": 1624,
+        "active": 8303,
+        "a1_crossings_per_hour_hx": 9744
+      },
+      "delta_pct": 12.0189387664955,
+      "throughput_delta_pct": -24.539877300613497
+    },
+    {
+      "seed": 31032,
+      "fixed": {
+        "a1_delay_s_hx": 50.821,
+        "a1_crossings_hx": 1490,
+        "active": 8301,
+        "a1_crossings_per_hour_hx": 8940
+      },
+      "smart": {
+        "a1_delay_s_hx": 52.846,
+        "a1_crossings_hx": 1611,
+        "active": 8301,
+        "a1_crossings_per_hour_hx": 9666
+      },
+      "delta_pct": -3.9845733063103808,
+      "throughput_delta_pct": -8.120805369127517
+    },
+    {
+      "seed": 31033,
+      "fixed": {
+        "a1_delay_s_hx": 57.237,
+        "a1_crossings_hx": 1444,
+        "active": 8301,
+        "a1_crossings_per_hour_hx": 8664
+      },
+      "smart": {
+        "a1_delay_s_hx": 65.943,
+        "a1_crossings_hx": 1389,
+        "active": 8300,
+        "a1_crossings_per_hour_hx": 8334
+      },
+      "delta_pct": -15.210440798783994,
+      "throughput_delta_pct": 3.8088642659279777
+    },
+    {
+      "seed": 31034,
+      "fixed": {
+        "a1_delay_s_hx": 65.203,
+        "a1_crossings_hx": 1270,
+        "active": 8301,
+        "a1_crossings_per_hour_hx": 7620
+      },
+      "smart": {
+        "a1_delay_s_hx": 66.56,
+        "a1_crossings_hx": 1385,
+        "active": 8301,
+        "a1_crossings_per_hour_hx": 8310
+      },
+      "delta_pct": -2.08119258316335,
+      "throughput_delta_pct": -9.05511811023622
+    },
+    {
+      "seed": 31035,
+      "fixed": {
+        "a1_delay_s_hx": 58.66,
+        "a1_crossings_hx": 1595,
+        "active": 8303,
+        "a1_crossings_per_hour_hx": 9570
+      },
+      "smart": {
+        "a1_delay_s_hx": 51.007,
+        "a1_crossings_hx": 1765,
+        "active": 8302,
+        "a1_crossings_per_hour_hx": 10590
+      },
+      "delta_pct": 13.046368905557449,
+      "throughput_delta_pct": -10.658307210031348
+    }
+  ]
+}

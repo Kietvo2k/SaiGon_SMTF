@@ -1,0 +1,1425 @@
+﻿=== qa-traffic-31 webgl ===
+{
+ "suite": "traffic-31 ┬╖ D",
+ "passed": 36,
+ "failed": 0,
+ "checks": [
+  "m├ú nguß╗ôn: module city-traffic-31.js ─æ╞░ß╗úc nß║íp, v├▓ng xe theo ─æoß║ín thß║│ng 26B ─æ├ú bß╗Å",
+  "baseline CPU v├▓ng cß║¡p nhß║¡t xe ─æ├ú ─æo tr╞░ß╗¢c khi sß╗¡a",
+  "[webgl] API giao th├┤ng 31D (materialStatus.motion.api)",
+  "[webgl] [materials ┬╖ 20 s] c├│ xe ─æ╞░ß╗úc vß║╜ v├á lß║Ñy mß║½u ─æß╗º khung",
+  "[webgl] [materials ┬╖ 20 s] 0 teleport giß╗»a ─æ╞░ß╗¥ng theo ma trß║¡n ─æ├ú vß║╜ (╬ö Γëñ vmax┬╖╬öt┬╖1,6 + 0,3 m, trß╗½ t├íi sinh c├│ cß╗¥)",
+  "[webgl] [materials ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) trong c├íc xe ─æ├ú vß║╜",
+  "[webgl] [materials ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) tr├¬n to├án bß╗Ö xe ─æang chß║íy",
+  "[webgl] [materials ┬╖ 20 s] ─æß╗ô thß╗ï: 0 teleport/l├╣i, c├│ chuyß╗ân cß║ính, t├íi sinh chß╗ë c├│ cß╗¥",
+  "[webgl] [materials ┬╖ 20 s] 0 xe ng╞░ß╗úc chiß╗üu oneway (l├án Γåö tag) v├á m┼⌐i xe c├╣ng h╞░ß╗¢ng cß║ính",
+  "[webgl] [materials ┬╖ 20 s] ─æ╞░ß╗¥ng hai chiß╗üu: xe ─æi b├¬n phß║úi tim ─æ╞░ß╗¥ng",
+  "[webgl] [materials ┬╖ 20 s] 0 cß║╖p xe c├╣ng l├án gß║ºn h╞ín (LΓéü+LΓéé)/2 + 0.3 m, kß╗â cß║ú qua ranh giß╗¢i cß║ính",
+  "[webgl] [materials ┬╖ 20 s] c├│ xe tr├¬n cß║ºu ß╗ƒ mß╗ìi khung",
+  "[webgl] [ba-son ┬╖ 20 s] c├│ xe ─æ╞░ß╗úc vß║╜ v├á lß║Ñy mß║½u ─æß╗º khung",
+  "[webgl] [ba-son ┬╖ 20 s] 0 teleport giß╗»a ─æ╞░ß╗¥ng theo ma trß║¡n ─æ├ú vß║╜ (╬ö Γëñ vmax┬╖╬öt┬╖1,6 + 0,3 m, trß╗½ t├íi sinh c├│ cß╗¥)",
+  "[webgl] [ba-son ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) trong c├íc xe ─æ├ú vß║╜",
+  "[webgl] [ba-son ┬╖ 20 s] 0 cß║╖p xe xuy├¬n nhau (OBB) tr├¬n to├án bß╗Ö xe ─æang chß║íy",
+  "[webgl] [ba-son ┬╖ 20 s] ─æß╗ô thß╗ï: 0 teleport/l├╣i, c├│ chuyß╗ân cß║ính, t├íi sinh chß╗ë c├│ cß╗¥",
+  "[webgl] [ba-son ┬╖ 20 s] 0 xe ng╞░ß╗úc chiß╗üu oneway (l├án Γåö tag) v├á m┼⌐i xe c├╣ng h╞░ß╗¢ng cß║ính",
+  "[webgl] [ba-son ┬╖ 20 s] ─æ╞░ß╗¥ng hai chiß╗üu: xe ─æi b├¬n phß║úi tim ─æ╞░ß╗¥ng",
+  "[webgl] [ba-son ┬╖ 20 s] 0 cß║╖p xe c├╣ng l├án gß║ºn h╞ín (LΓéü+LΓéé)/2 + 0.3 m, kß╗â cß║ú qua ranh giß╗¢i cß║ính",
+  "[webgl] [ba-son ┬╖ 20 s] c├│ xe tr├¬n cß║ºu ß╗ƒ mß╗ìi khung",
+  "[webgl] xe ─æi qua cß║ºu Ba Son ─æ╞░ß╗úc vß║╜, y khß╗¢p mß║╖t cß║ºu vß║╜ (profile, n├óng l├¬n mß║╖t chß╗ông Γëñ 0,5 m) Γëñ 0.05 m",
+  "[webgl] tß║Ñt ─æß╗ïnh: reset + 20 s hai lß║ºn c├╣ng hash",
+  "[webgl] kh├┤ng kß║╣t v─⌐nh viß╗àn sau 180 s: dß╗½ng li├¬n tß╗Ñc l├óu nhß║Ñt < 120 s, vß║½n c├▓n chuyß╗ân cß║ính",
+  "[webgl] giao lß╗Ö: c├│ ─æ├¿n giß║ú lß║¡p ß╗ƒ trß╗Ñc ch├¡nh v├á xe dß╗½ng chß╗¥",
+  "[webgl] mß║¡t ─æß╗Ö theo thß╗⌐ bß║¡c: trß╗Ñc ch├¡nh ─æ├┤ng h╞ín ─æ╞░ß╗¥ng nß╗Öi bß╗Ö",
+  "[webgl] xe m├íy chiß║┐m ─æa sß╗æ, c├│ ├┤ t├┤, xe bu├╜t v├á xe tß║úi",
+  "[webgl] mß║¡t ─æß╗Ö theo giß╗¥: giß╗¥ v├áng ΓëÑ ng├áy > ─æ├¬m, ─æ├¬m xe ph├ít s├íng",
+  "[webgl] API b╞░ß╗¢c H setRegion: xe ngo├ái khu tß║»t, c├│ chuyß╗ân cß║ính, 0 vi phß║ím gap/oneway/teleport, F ├íp l├¬n xe trong khu, kh├┤i phß╗Ñc setRegion(null), tß║Ñt ─æß╗ïnh",
+  "[webgl] sim d├ái 600 s: ph├í kß║╣t th╞░a, ├¡t xe chß╗¥, hß╗ôi ─æß╗º xe ngay khi vß╗ü ─Éß║ºy ─æß╗º, 0 vi phß║ím gap/oneway/teleport",
+  "[webgl] API b╞░ß╗¢c E: setVisibleFraction th╞░a ─æß╗üu, x├íc ─æß╗ïnh, giß╗» signature; setDensity kh├┤i phß╗Ñc",
+  "[webgl] API b╞░ß╗¢c E: F ΓåÆ thß║Ñp ΓåÆ F c┼⌐ kh├┤i phß╗Ñc ─æ├║ng tß╗òng xe d├╣ sim ─æ├ú chß║íy 0ΓÇô60 s",
+  "[webgl] h├¼nh xe: 4 loß║íi tß╗ë lß╗ç thß║¡t, tam gi├íc hß╗úp l├╜, InstancedMesh ├¡t draw call",
+  "[webgl] CPU v├▓ng cß║¡p nhß║¡t xe Γëñ baseline (trung b├¼nh, p95)",
+  "[webgl] materialStatus.motion + dataset: sß╗æ xe, chuyß╗ân cß║ính, vi phß║ím = 0, xe tr├¬n cß║ºu, CPU, nh├ún minh hß╗ìa",
+  "[webgl] console kh├┤ng c├│ lß╗ùi"
+ ],
+ "failures": [],
+ "summary": {
+  "webgl": {
+   "windows": {
+    "materials": {
+     "frames": 2076,
+     "drawnMax": 313,
+     "active": [
+      3059,
+      3059
+     ],
+     "matrixPairs": 61033,
+     "matrixJumps": 0,
+     "obbChecks": 264570,
+     "obbOverlaps": 0,
+     "allObbOverlaps": 0,
+     "graph": {
+      "steps": 200,
+      "sameLane": 604064,
+      "transitions": 7675,
+      "respawns": 61,
+      "teleports": 0,
+      "backwards": 0
+     },
+     "oneway": 0,
+     "heading": [
+      403064,
+      0
+     ],
+     "right": [
+      38474,
+      0
+     ],
+     "gap": {
+      "pairs": 2246103,
+      "cross": 968774,
+      "bad": 0
+     },
+     "bridge": {
+      "framesWith": 2076,
+      "maxCount": 293,
+      "ySamples": 57891,
+      "yWorst": 0.010003903365405797,
+      "drawnOn": 58374
+     }
+    },
+    "ba-son": {
+     "frames": 2062,
+     "drawnMax": 332,
+     "active": [
+      3059,
+      3059
+     ],
+     "matrixPairs": 64635,
+     "matrixJumps": 0,
+     "obbChecks": 364088,
+     "obbOverlaps": 0,
+     "allObbOverlaps": 0,
+     "graph": {
+      "steps": 201,
+      "sameLane": 607519,
+      "transitions": 7233,
+      "respawns": 107,
+      "teleports": 0,
+      "backwards": 0
+     },
+     "oneway": 0,
+     "heading": [
+      426908,
+      0
+     ],
+     "right": [
+      99137,
+      0
+     ],
+     "gap": {
+      "pairs": 2441336,
+      "cross": 947736,
+      "bad": 0
+     },
+     "bridge": {
+      "framesWith": 2062,
+      "maxCount": 276,
+      "ySamples": 55711,
+      "yWorst": 0.010003995996814119,
+      "drawnOn": 56625
+     }
+    }
+   },
+   "determinism": {
+    "h1": "cd83eb27",
+    "h2": "cd83eb27",
+    "t1": 20
+   },
+   "longRun": {
+    "t": 180,
+    "active": 3059,
+    "total": 3599,
+    "edgeTransitions": 64018,
+    "edgeTransitionsLast30s": 10438,
+    "gapViolations": 0,
+    "onewayViolations": 0,
+    "teleports": 0,
+    "onBridge": 204,
+    "respawns": 849,
+    "breakerRespawns": 236,
+    "waitingNow": 373,
+    "waitsTotal": 4295,
+    "maxStopS": 50.1,
+    "signals": 86,
+    "controlledNodes": 7179,
+    "holders": 1690
+   },
+   "densityPerLaneKm": {
+    "residential": 1.14,
+    "tertiary": 2.27,
+    "trunk": 4.54,
+    "secondary": 3.8,
+    "primary": 4.9,
+    "other": 1.6
+   },
+   "kindShares": {
+    "motorbike": 2401,
+    "truck": 107,
+    "car": 428,
+    "bus": 123
+   },
+   "light": {
+    "day": {
+     "active": 3059,
+     "emissive": 0.12
+    },
+    "golden": {
+     "active": 3599,
+     "emissive": 0.328
+    },
+    "night": {
+     "active": 1800,
+     "emissive": 2.72
+    }
+   },
+   "densityApi": {
+    "viaTraffic": true,
+    "returned": 3059,
+    "retHalf": 1530,
+    "countHalf": 1530,
+    "total": 3599,
+    "full": 3059,
+    "half": 1530,
+    "halfSame": true,
+    "sigTotal": 27,
+    "sigHalf": 27,
+    "zero": 27,
+    "restored": 3059,
+    "settled": 3059,
+    "emptied": 0,
+    "emptiedFull": 0,
+    "thinWorst": 0.25,
+    "hasSetDensity": true,
+    "instances": 3599,
+    "instanceKeys": [
+     "id",
+     "kind",
+     "signature"
+    ]
+   },
+   "kinds": [
+    {
+     "name": "motorbike",
+     "length": 1.9,
+     "width": 0.7,
+     "height": 1.62,
+     "triangles": 266
+    },
+    {
+     "name": "car",
+     "length": 4.5,
+     "width": 1.8,
+     "height": 1.48,
+     "triangles": 160
+    },
+    {
+     "name": "bus",
+     "length": 12,
+     "width": 2.5,
+     "height": 3.2,
+     "triangles": 244
+    },
+    {
+     "name": "truck",
+     "length": 7.4,
+     "width": 2.3,
+     "height": 3.05,
+     "triangles": 284
+    }
+   ],
+   "geo": [
+    {
+     "x": 1.81,
+     "y": 1.51,
+     "z": 0.64,
+     "colours": 11,
+     "emissiveVerts": 48,
+     "paintVerts": 180,
+     "triangles": 266,
+     "minY": 0.022
+    },
+    {
+     "x": 4.58,
+     "y": 1.39,
+     "z": 1.85,
+     "colours": 7,
+     "emissiveVerts": 24,
+     "paintVerts": 60,
+     "triangles": 160,
+     "minY": 0.026
+    },
+    {
+     "x": 12.14,
+     "y": 3.37,
+     "z": 2.92,
+     "colours": 10,
+     "emissiveVerts": 120,
+     "paintVerts": 30,
+     "triangles": 244,
+     "minY": 0
+    },
+    {
+     "x": 7.54,
+     "y": 3.05,
+     "z": 2.7,
+     "colours": 9,
+     "emissiveVerts": 24,
+     "paintVerts": 78,
+     "triangles": 284,
+     "minY": 0
+    }
+   ],
+   "kindPool": [
+    2812,
+    527,
+    136,
+    124
+   ],
+   "meshes": [
+    {
+     "name": "Traffic 31D ┬╖ motorbike",
+     "count": 201,
+     "capacity": 2812,
+     "frustumCulled": false,
+     "triangles": 266,
+     "castShadow": false
+    },
+    {
+     "name": "Traffic 31D ┬╖ car",
+     "count": 32,
+     "capacity": 527,
+     "frustumCulled": false,
+     "triangles": 160,
+     "castShadow": true
+    },
+    {
+     "name": "Traffic 31D ┬╖ bus",
+     "count": 10,
+     "capacity": 136,
+     "frustumCulled": false,
+     "triangles": 244,
+     "castShadow": true
+    },
+    {
+     "name": "Traffic 31D ┬╖ truck",
+     "count": 9,
+     "capacity": 124,
+     "frustumCulled": false,
+     "triangles": 284,
+     "castShadow": true
+    }
+   ],
+   "cpu": {
+    "mean": 0.315,
+    "p50": 0.19999999925494194,
+    "p95": 1,
+    "baseMean": 0.83,
+    "baseP95": 2.2
+   },
+   "motion": {
+    "roadSource": "ROAD_GRAPH_31 (OSM centerlines)",
+    "vessels": 22,
+    "vesselRoute": "illustrative Saigon River lane",
+    "vesselAuditSamples": 6005,
+    "vesselSamplesOutsideWater": 0,
+    "vesselHeadingMismatches": 0,
+    "classification": "giao th├┤ng v├á t├áu minh hß╗ìa (illustrative); kh├┤ng phß║úi dß╗» liß╗çu giao th├┤ng hay AIS thß║¡t",
+    "surfaceChecked": 4802,
+    "belowRoad": 0,
+    "belowRoadSamples": [],
+    "motorbikes": 2811,
+    "cars": 527,
+    "buses": 136,
+    "trucks": 123,
+    "trafficPool": 3599,
+    "vehicleTriangles": [
+     266,
+     160,
+     244,
+     284
+    ],
+    "active": 1800,
+    "total": 3599,
+    "drawn": 161,
+    "edgeTransitions": 28601,
+    "edgeTransitionsLast30s": 10907,
+    "gapViolations": 0,
+    "onewayViolations": 0,
+    "teleports": 0,
+    "onBridge": 150,
+    "respawns": 361,
+    "breakerRespawns": 33,
+    "waitingNow": 147,
+    "maxStopS": 50.1,
+    "signals": 86,
+    "controlledNodes": 7179,
+    "simTime": 108.2,
+    "cpuMsP50": 0.4,
+    "cpuMsP95": 1.2,
+    "lightFactor": 0.5,
+    "fraction": 1,
+    "regionEligible": 3599,
+    "lastFrame": 10622,
+    "vesselsInRegion": 22
+   },
+   "errors": [],
+   "region": {
+    "lf": 0.85,
+    "items": [
+     {
+      "id": "tay",
+      "eligible": 2129,
+      "n0": 1810
+     },
+     {
+      "id": "dong",
+      "eligible": 1419,
+      "n0": 1206
+     }
+    ],
+    "margin": {
+     "strictEligible": 2129,
+     "eligible": 2191,
+     "margin": 120,
+     "worst": 117.38,
+     "teleports": 0,
+     "gap": 0,
+     "active": 1862
+    },
+    "restore": {
+     "back": 3059,
+     "wantedBack": 3059,
+     "target": 3059,
+     "full0": 3059,
+     "pendingAfter": 0,
+     "settleS": 0,
+     "region": {
+      "id": null,
+      "active": false
+     },
+     "dataset": "/0",
+     "active": 3059
+    }
+   }
+  }
+ }
+}
+traffic-exit=0
+=== qa-region-31 webgl ===
+{
+ "suite": "region-31 ┬╖ H",
+ "passed": 59,
+ "failed": 0,
+ "failures": [],
+ "table": {
+  "webgl": {
+   "full:all": {
+    "triangles": 2489317,
+    "drawCalls": 97,
+    "buildings": 70539,
+    "inRegion": 70539,
+    "trees": 10824,
+    "vehicles": 3059,
+    "switchMs": 17,
+    "maxFrameMs": 17
+   },
+   "full:trung-tam": {
+    "triangles": 1085799,
+    "drawCalls": 78,
+    "buildings": 23290,
+    "inRegion": 23271,
+    "trees": 1781,
+    "vehicles": 1318,
+    "switchMs": 32,
+    "maxFrameMs": 32
+   },
+   "full:ven-song": {
+    "triangles": 829527,
+    "drawCalls": 78,
+    "buildings": 8411,
+    "inRegion": 8381,
+    "trees": 7177,
+    "vehicles": 925,
+    "switchMs": 31,
+    "maxFrameMs": 31
+   },
+   "full:bac": {
+    "triangles": 1006957,
+    "drawCalls": 74,
+    "buildings": 23111,
+    "inRegion": 23084,
+    "trees": 1208,
+    "vehicles": 770,
+    "switchMs": 24,
+    "maxFrameMs": 24
+   },
+   "full:nam": {
+    "triangles": 824967,
+    "drawCalls": 78,
+    "buildings": 15841,
+    "inRegion": 15803,
+    "trees": 1081,
+    "vehicles": 605,
+    "switchMs": 21,
+    "maxFrameMs": 21
+   },
+   "minimal:all": {
+    "triangles": 706486,
+    "drawCalls": 37,
+    "buildings": 11319,
+    "inRegion": 11319,
+    "trees": 2274,
+    "vehicles": 459,
+    "switchMs": 10,
+    "maxFrameMs": 13
+   },
+   "minimal:trung-tam": {
+    "triangles": 481484,
+    "drawCalls": 38,
+    "buildings": 5069,
+    "inRegion": 5050,
+    "trees": 469,
+    "vehicles": 201,
+    "switchMs": 44,
+    "maxFrameMs": 44
+   },
+   "minimal:ven-song": {
+    "triangles": 386020,
+    "drawCalls": 38,
+    "buildings": 1397,
+    "inRegion": 1367,
+    "trees": 1546,
+    "vehicles": 139,
+    "switchMs": 27,
+    "maxFrameMs": 27
+   },
+   "minimal:bac": {
+    "triangles": 403350,
+    "drawCalls": 35,
+    "buildings": 3033,
+    "inRegion": 3006,
+    "trees": 354,
+    "vehicles": 116,
+    "switchMs": 25,
+    "maxFrameMs": 25
+   },
+   "minimal:nam": {
+    "triangles": 375984,
+    "drawCalls": 38,
+    "buildings": 1934,
+    "inRegion": 1896,
+    "trees": 328,
+    "vehicles": 91,
+    "switchMs": 32,
+    "maxFrameMs": 32
+   }
+  }
+ },
+ "summary": {
+  "webgl": {
+   "coverage": {
+    "total": 70726,
+    "counts": {
+     "trung-tam": 23366,
+     "bac": 23115,
+     "ven-song": 8393,
+     "nam": 15852
+    },
+    "bad": [],
+    "badCount": 0,
+    "sweepN": 27710,
+    "sweepBad": 0,
+    "chunkMismatch": [],
+    "chunkMismatchCount": 0,
+    "chunkCounts": {
+     "bac": 23084,
+     "nam": 15803,
+     "trung-tam": 23271,
+     "ven-song": 8381
+    },
+    "dupes": 0,
+    "drawable": 70539,
+    "polygons": [
+     {
+      "id": "trung-tam",
+      "n": 31
+     },
+     {
+      "id": "ven-song",
+      "n": 30
+     },
+     {
+      "id": "bac",
+      "n": 20
+     },
+     {
+      "id": "nam",
+      "n": 23
+     }
+    ],
+    "ids": [
+     "trung-tam",
+     "ven-song",
+     "bac",
+     "nam"
+    ]
+   },
+   "camera": {
+    "all": {
+     "label": "TO├ÇN V├ÖNG ┬╖ 38,57 KM┬▓",
+     "distance": 7600,
+     "expected": 7600,
+     "url": "?v=31a&view=overview&backend=webgl&density=full"
+    },
+    "trung-tam": {
+     "label": "KHU ┬╖ L├òI QUß║¼N 1 ┬╖ Bß║╛N NGH├ë",
+     "distance": 5300,
+     "expected": 5300,
+     "url": "?v=31a&view=overview&backend=webgl&density=full"
+    },
+    "ven-song": {
+     "label": "KHU ┬╖ VEN S├öNG ┬╖ BA SON ┬╖ THß╗ª THI├èM",
+     "distance": 7200,
+     "expected": 7200,
+     "url": "?v=31a&view=overview&backend=webgl&density=full"
+    },
+    "bac": {
+     "label": "KHU ┬╖ PH├ìA Bß║«C ┬╖ THß╗è NGH├ê ┬╖ B├îNH THß║áNH",
+     "distance": 5000,
+     "expected": 5000,
+     "url": "?v=31a&view=overview&backend=webgl&density=full"
+    },
+    "nam": {
+     "label": "KHU ┬╖ PH├ìA NAM ┬╖ QUß║¼N 4 ┬╖ KH├üNH Hß╗ÿI",
+     "distance": 5400,
+     "expected": 5400,
+     "url": "?v=31a&view=overview&backend=webgl&density=full"
+    }
+   },
+   "views": {
+    "bason": {
+     "region": "ven-song",
+     "label": "BA SON ┬╖ MARINA CENTRAL + GRAND MARINA",
+     "notice": "G├│c nh├¼n ΓÇ£BA SON ┬╖ MARINA CENTRAL + GRAND MARINAΓÇ¥ nß║▒m ß╗ƒ khu ΓÇ£Ven s├┤ng ┬╖ Ba Son ┬╖ Thß╗º Thi├¬mΓÇ¥ ΓÇö ─æ├ú chuyß╗ân khu ─æß╗â giß╗» tß║úi GPU thß║Ñp.",
+     "active": "bason"
+    },
+    "materials": {
+     "region": "trung-tam",
+     "label": "MATERIAL DISTRICT",
+     "notice": "G├│c nh├¼n ΓÇ£MATERIAL DISTRICTΓÇ¥ nß║▒m ß╗ƒ khu ΓÇ£L├╡i Quß║¡n 1 ┬╖ Bß║┐n Ngh├⌐ΓÇ¥ ΓÇö ─æ├ú chuyß╗ân khu ─æß╗â giß╗» tß║úi GPU thß║Ñp.",
+     "active": "materials"
+    },
+    "river": {
+     "region": "trung-tam",
+     "label": "Bß║╛N Bß║áCH ─Éß║░NG",
+     "notice": "G├│c nh├¼n ΓÇ£Bß║╛N Bß║áCH ─Éß║░NGΓÇ¥ nß║▒m ß╗ƒ khu ΓÇ£L├╡i Quß║¡n 1 ┬╖ Bß║┐n Ngh├⌐ΓÇ¥ ΓÇö ─æ├ú chuyß╗ân khu ─æß╗â giß╗» tß║úi GPU thß║Ñp.",
+     "active": "river"
+    },
+    "boulevard": {
+     "region": "trung-tam",
+     "label": "NGUYß╗äN HUß╗å",
+     "notice": "G├│c nh├¼n ΓÇ£NGUYß╗äN HUß╗åΓÇ¥ nß║▒m ß╗ƒ khu ΓÇ£L├╡i Quß║¡n 1 ┬╖ Bß║┐n Ngh├⌐ΓÇ¥ ΓÇö ─æ├ú chuyß╗ân khu ─æß╗â giß╗» tß║úi GPU thß║Ñp.",
+     "active": "boulevard"
+    },
+    "corridor": {
+     "region": "trung-tam",
+     "label": "LAM S╞áN ┬╖ ─Éß╗ÆNG KHß╗₧I ┬╖ NH├Ç H├üT",
+     "notice": "G├│c nh├¼n ΓÇ£LAM S╞áN ┬╖ ─Éß╗ÆNG KHß╗₧I ┬╖ NH├Ç H├üTΓÇ¥ nß║▒m ß╗ƒ khu ΓÇ£L├╡i Quß║¡n 1 ┬╖ Bß║┐n Ngh├⌐ΓÇ¥ ΓÇö ─æ├ú chuyß╗ân khu ─æß╗â giß╗» tß║úi GPU thß║Ñp.",
+     "active": "corridor"
+    },
+    "overview": {
+     "region": "nam",
+     "label": "KHU ┬╖ PH├ìA NAM ┬╖ QUß║¼N 4 ┬╖ KH├üNH Hß╗ÿI",
+     "notice": "G├│c nh├¼n ΓÇ£LAM S╞áN ┬╖ ─Éß╗ÆNG KHß╗₧I ┬╖ NH├Ç H├üTΓÇ¥ nß║▒m ß╗ƒ khu ΓÇ£L├╡i Quß║¡n 1 ┬╖ Bß║┐n Ngh├⌐ΓÇ¥ ΓÇö ─æ├ú chuyß╗ân khu ─æß╗â giß╗» tß║úi GPU thß║Ñp.",
+     "active": "overview"
+    }
+   },
+   "flood": {
+    "open": {
+     "region": "ven-song",
+     "panel": true,
+     "label": "THß║óO ─ÉIß╗ÇN ┬╖ M├ö PHß╗ÄNG NGß║¼P 25A"
+    },
+    "rain": {
+     "ok": true
+    },
+    "closed": {
+     "open": false,
+     "region": "ven-song"
+    }
+   },
+   "motion": {
+    "all": {
+     "vehicles": 3059,
+     "via": "traffic.api.setRegion",
+     "vessels": 22,
+     "apiRegion": {
+      "id": null,
+      "active": false,
+      "margin": 0,
+      "lanes": 20195,
+      "spawnLanes": 200,
+      "eligible": 3599
+     },
+     "total": 3599,
+     "eligibleBefore": null,
+     "eligibleAfter": null,
+     "bridgeVehicles": 0,
+     "bridgesWithVehicles": 0,
+     "boundaryBridges": 0
+    },
+    "trung-tam": {
+     "vehicles": 1311,
+     "via": "traffic.api.setRegion",
+     "vessels": 6,
+     "apiRegion": {
+      "id": "trung-tam",
+      "active": true,
+      "margin": 250,
+      "lanes": 8803,
+      "spawnLanes": 209,
+      "eligible": 1542
+     },
+     "total": 3599,
+     "eligibleBefore": 1250,
+     "eligibleAfter": 1542,
+     "bridgeVehicles": 19,
+     "bridgesWithVehicles": 9,
+     "boundaryBridges": 21
+    },
+    "ven-song": {
+     "vehicles": 951,
+     "via": "traffic.api.setRegion",
+     "vessels": 11,
+     "apiRegion": {
+      "id": "ven-song",
+      "active": true,
+      "margin": 250,
+      "lanes": 4842,
+      "spawnLanes": 177,
+      "eligible": 1119
+     },
+     "total": 3599,
+     "eligibleBefore": 938,
+     "eligibleAfter": 1119,
+     "bridgeVehicles": 19,
+     "bridgesWithVehicles": 6,
+     "boundaryBridges": 12
+    },
+    "bac": {
+     "vehicles": 764,
+     "via": "traffic.api.setRegion",
+     "vessels": 4,
+     "apiRegion": {
+      "id": "bac",
+      "active": true,
+      "margin": 250,
+      "lanes": 5552,
+      "spawnLanes": 134,
+      "eligible": 899
+     },
+     "total": 3599,
+     "eligibleBefore": 789,
+     "eligibleAfter": 899,
+     "bridgeVehicles": 17,
+     "bridgesWithVehicles": 8,
+     "boundaryBridges": 22
+    },
+    "nam": {
+     "vehicles": 582,
+     "via": "traffic.api.setRegion",
+     "vessels": 1,
+     "apiRegion": {
+      "id": "nam",
+      "active": true,
+      "margin": 250,
+      "lanes": 4496,
+      "spawnLanes": 165,
+      "eligible": 685
+     },
+     "total": 3599,
+     "eligibleBefore": 479,
+     "eligibleAfter": 685,
+     "bridgeVehicles": 6,
+     "bridgesWithVehicles": 4,
+     "boundaryBridges": 11
+    }
+   },
+   "bridges": {
+    "trung-tam": [
+     724,
+     899,
+     1506,
+     2039,
+     2107,
+     2148,
+     2274,
+     2832,
+     2847,
+     2939,
+     3246,
+     4454,
+     5097,
+     5561,
+     5735,
+     5741,
+     7091,
+     8181,
+     14024,
+     18717,
+     24015
+    ],
+    "ven-song": [
+     308,
+     1964,
+     2139,
+     2140,
+     2976,
+     3970,
+     4288,
+     4302,
+     6134,
+     16413,
+     17361,
+     22529
+    ],
+    "bac": [
+     308,
+     899,
+     1506,
+     1964,
+     2039,
+     2139,
+     2140,
+     2148,
+     2274,
+     2976,
+     3246,
+     3970,
+     4288,
+     4302,
+     5561,
+     5741,
+     6134,
+     16413,
+     17361,
+     18717,
+     22529,
+     24015
+    ],
+    "nam": [
+     724,
+     2107,
+     2832,
+     2847,
+     2939,
+     4454,
+     5097,
+     5735,
+     7091,
+     8181,
+     14024
+    ],
+    "margin": 250
+   },
+   "pipeline": {
+    "full": {
+     "first": {
+      "newPipelines": 0,
+      "histogram": {},
+      "maxFrameMs": 32
+     },
+     "second": {
+      "newPipelines": 0,
+      "histogram": {},
+      "maxFrameMs": 29
+     }
+    },
+    "minimal": {
+     "first": {
+      "newPipelines": 0,
+      "histogram": {},
+      "maxFrameMs": 41
+     },
+     "second": {
+      "newPipelines": 0,
+      "histogram": {},
+      "maxFrameMs": 38
+     }
+    }
+   },
+   "pick": {
+    "trung-tam": {
+     "insideHits": [
+      {
+       "id": 801710770,
+       "picked": 801710770,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101382601,
+       "picked": 1101382601,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 1161664599,
+       "picked": 1161664599,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 1218367429,
+       "picked": 1218367429,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101679549,
+       "picked": 1101679549,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 165400089,
+       "picked": 165400089,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      }
+     ],
+     "outsideHits": [
+      {
+       "id": 409004246,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507468,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 193288938,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985217,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 682689444,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 620913924,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      }
+     ]
+    },
+    "ven-song": {
+     "insideHits": [
+      {
+       "id": 409004246,
+       "picked": 1151129911,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507468,
+       "picked": 1101507468,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507469,
+       "picked": 1101507469,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 193085711,
+       "picked": 193085711,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101415098,
+       "picked": 1101415098,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101415099,
+       "picked": 1101415099,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      }
+     ],
+     "outsideHits": [
+      {
+       "id": 801710770,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101382601,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 193288938,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985217,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 682689444,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 620913924,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      }
+     ]
+    },
+    "bac": {
+     "insideHits": [
+      {
+       "id": 193288938,
+       "picked": 193288938,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985217,
+       "picked": 1300985217,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 744233633,
+       "picked": 744233633,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 744233636,
+       "picked": 744233636,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985215,
+       "picked": 1300985215,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 744233634,
+       "picked": 744233634,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      }
+     ],
+     "outsideHits": [
+      {
+       "id": 801710770,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101382601,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 409004246,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507468,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 682689444,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 620913924,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      }
+     ]
+    },
+    "nam": {
+     "insideHits": [
+      {
+       "id": 682689444,
+       "picked": 682689444,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 620913924,
+       "picked": 620913924,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 682689441,
+       "picked": 682689441,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 166103218,
+       "picked": 166103218,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 682199589,
+       "picked": 682199589,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 682689482,
+       "picked": 682689482,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      }
+     ],
+     "outsideHits": [
+      {
+       "id": 801710770,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101382601,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 409004246,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507468,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 193288938,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985217,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      }
+     ]
+    }
+   },
+   "withDensity": {
+    "balanced": {
+     "region": "bac",
+     "level": "balanced",
+     "outside": 0,
+     "notShownSignature": 0,
+     "shown": 11392,
+     "audit": true
+    },
+    "light": {
+     "region": "bac",
+     "level": "light",
+     "outside": 0,
+     "notShownSignature": 0,
+     "shown": 6315,
+     "audit": true
+    },
+    "minimal": {
+     "region": "bac",
+     "level": "minimal",
+     "outside": 0,
+     "notShownSignature": 0,
+     "shown": 3033,
+     "audit": true
+    },
+    "full": {
+     "region": "bac",
+     "level": "full",
+     "outside": 0,
+     "notShownSignature": 0,
+     "shown": 23111,
+     "audit": true
+    }
+   },
+   "persist": {
+    "url": {
+     "region": "bac",
+     "source": "url",
+     "checked": "bac",
+     "dataset": "bac",
+     "level": "full",
+     "stored": null,
+     "url": "?v=31a&view=overview&backend=webgl&region=bac",
+     "label": "KHU ┬╖ PH├ìA Bß║«C ┬╖ THß╗è NGH├ê ┬╖ B├îNH THß║áNH"
+    },
+    "urlAfterClick": {
+     "region": "nam",
+     "source": "user",
+     "checked": "nam",
+     "dataset": "nam",
+     "level": "full",
+     "stored": "nam",
+     "url": "?v=31a&view=overview&backend=webgl&region=nam",
+     "label": "KHU ┬╖ PH├ìA NAM ┬╖ QUß║¼N 4 ┬╖ KH├üNH Hß╗ÿI"
+    },
+    "urlAfterView": {
+     "region": "nam",
+     "source": "user",
+     "checked": "nam",
+     "dataset": "nam",
+     "level": "full",
+     "stored": "nam",
+     "url": "?v=31a&view=overview&backend=webgl&region=nam",
+     "label": "KHU ┬╖ PH├ìA NAM ┬╖ QUß║¼N 4 ┬╖ KH├üNH Hß╗ÿI"
+    },
+    "urlAfterSwitch": {
+     "region": "trung-tam",
+     "source": "view",
+     "checked": "trung-tam",
+     "dataset": "trung-tam",
+     "level": "full",
+     "stored": "trung-tam",
+     "url": "?v=31a&view=river&backend=webgl&region=trung-tam",
+     "label": "Bß║╛N Bß║áCH ─Éß║░NG"
+    },
+    "storage": {
+     "region": "nam",
+     "source": "storage",
+     "checked": "nam",
+     "dataset": "nam",
+     "level": "full",
+     "stored": "nam",
+     "url": "?v=31a&view=overview&backend=webgl",
+     "label": "KHU ┬╖ PH├ìA NAM ┬╖ QUß║¼N 4 ┬╖ KH├üNH Hß╗ÿI"
+    },
+    "storageAfterClick": {
+     "region": "trung-tam",
+     "source": "user",
+     "checked": "trung-tam",
+     "dataset": "trung-tam",
+     "level": "full",
+     "stored": "trung-tam",
+     "url": "?v=31a&view=overview&backend=webgl",
+     "label": "KHU ┬╖ L├òI QUß║¼N 1 ┬╖ Bß║╛N NGH├ë"
+    },
+    "reload": {
+     "region": "trung-tam",
+     "source": "storage",
+     "checked": "trung-tam",
+     "dataset": "trung-tam",
+     "level": "full",
+     "stored": "trung-tam",
+     "url": "?v=31a&view=overview&backend=webgl",
+     "label": "KHU ┬╖ L├òI QUß║¼N 1 ┬╖ Bß║╛N NGH├ë"
+    },
+    "urlWins": {
+     "region": "ven-song",
+     "source": "url",
+     "checked": "ven-song",
+     "dataset": "ven-song",
+     "level": "full",
+     "stored": "nam",
+     "url": "?v=31a&view=overview&backend=webgl&region=ven-song",
+     "label": "KHU ┬╖ VEN S├öNG ┬╖ BA SON ┬╖ THß╗ª THI├èM"
+    },
+    "combo": {
+     "region": "nam",
+     "source": "url",
+     "checked": "nam",
+     "dataset": "nam",
+     "level": "minimal",
+     "stored": null,
+     "url": "?v=31a&view=overview&backend=webgl&density=minimal&region=nam",
+     "label": "KHU ┬╖ PH├ìA NAM ┬╖ QUß║¼N 4 ┬╖ KH├üNH Hß╗ÿI"
+    },
+    "invalid": {
+     "region": "all",
+     "source": "default",
+     "checked": "all",
+     "dataset": "all",
+     "level": "full",
+     "stored": null,
+     "url": "?v=31a&view=overview&backend=webgl&region=khong-co",
+     "label": "TO├ÇN V├ÖNG ┬╖ 38,57 KM┬▓"
+    }
+   },
+   "errors": []
+  }
+ }
+}
+
+CHECKS PASS:
+ Γ£ô m├ú nguß╗ôn: city-region-31.js xuß║Ñt hß║▒ng v├á regionOf; HTML c├│ radiogroup "Khu m├┤ phß╗Ång" ─æß╗º 5 n├║t; module nß║íp c├│ kh├│a cache 30b-31h
+ Γ£ô [webgl] backend ─æ├║ng y├¬u cß║ºu
+ Γ£ô [webgl] mß║╖c ─æß╗ïnh "To├án bß╗Ö" khi ch╞░a c├│ URL/localStorage
+ Γ£ô [webgl] ─æiß╗üu khiß╗ân: radiogroup "Khu m├┤ phß╗Ång", 5 n├║t role=radio ─æ├║ng nh├ún tiß║┐ng Viß╗çt, ─æ├║ng 1 aria-checked, roving tabindex
+ Γ£ô [webgl] bß╗æn khu phß╗º to├án bß╗Ö c├┤ng tr├¼nh ─æ├║ng mß╗Öt lß║ºn (0 lß╗ù hß╗ƒ, 0 chß╗ông), chunk ─æ├║ng khu, kh├┤ng c├┤ng tr├¼nh tr├╣ng
+ Γ£ô [webgl] full/all: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] full/all: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] full/trung-tam: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] full/trung-tam: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] full/trung-tam: ─æ├¿n ngo├ái khu chß╗ë l├á ─æ├¿n v├╣ng bß║úo vß╗ç (lampsOutsideUnprotected = 0)
+ Γ£ô [webgl] full/trung-tam: sß╗æ c├┤ng tr├¼nh trong khu + tß╗òng tß╗▒ b├ío khß╗¢p mesh
+ Γ£ô [webgl] full/ven-song: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] full/ven-song: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] full/ven-song: ─æ├¿n ngo├ái khu chß╗ë l├á ─æ├¿n v├╣ng bß║úo vß╗ç (lampsOutsideUnprotected = 0)
+ Γ£ô [webgl] full/ven-song: sß╗æ c├┤ng tr├¼nh trong khu + tß╗òng tß╗▒ b├ío khß╗¢p mesh
+ Γ£ô [webgl] full/bac: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] full/bac: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] full/bac: ─æ├¿n ngo├ái khu chß╗ë l├á ─æ├¿n v├╣ng bß║úo vß╗ç (lampsOutsideUnprotected = 0)
+ Γ£ô [webgl] full/bac: sß╗æ c├┤ng tr├¼nh trong khu + tß╗òng tß╗▒ b├ío khß╗¢p mesh
+ Γ£ô [webgl] full/nam: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] full/nam: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] full/nam: ─æ├¿n ngo├ái khu chß╗ë l├á ─æ├¿n v├╣ng bß║úo vß╗ç (lampsOutsideUnprotected = 0)
+ Γ£ô [webgl] full/nam: sß╗æ c├┤ng tr├¼nh trong khu + tß╗òng tß╗▒ b├ío khß╗¢p mesh
+ Γ£ô [webgl] minimal/all: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] minimal/all: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] minimal/trung-tam: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] minimal/trung-tam: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] minimal/trung-tam: ─æ├¿n ngo├ái khu chß╗ë l├á ─æ├¿n v├╣ng bß║úo vß╗ç (lampsOutsideUnprotected = 0)
+ Γ£ô [webgl] minimal/trung-tam: sß╗æ c├┤ng tr├¼nh trong khu + tß╗òng tß╗▒ b├ío khß╗¢p mesh
+ Γ£ô [webgl] minimal/ven-song: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] minimal/ven-song: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] minimal/ven-song: ─æ├¿n ngo├ái khu chß╗ë l├á ─æ├¿n v├╣ng bß║úo vß╗ç (lampsOutsideUnprotected = 0)
+ Γ£ô [webgl] minimal/ven-song: sß╗æ c├┤ng tr├¼nh trong khu + tß╗òng tß╗▒ b├ío khß╗¢p mesh
+ Γ£ô [webgl] minimal/bac: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] minimal/bac: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] minimal/bac: ─æ├¿n ngo├ái khu chß╗ë l├á ─æ├¿n v├╣ng bß║úo vß╗ç (lampsOutsideUnprotected = 0)
+ Γ£ô [webgl] minimal/bac: sß╗æ c├┤ng tr├¼nh trong khu + tß╗òng tß╗▒ b├ío khß╗¢p mesh
+ Γ£ô [webgl] minimal/nam: c├┤ng tr├¼nh hiß╗ân thß╗ï Γèå khu Γê¬ signature; signature 100 %; registry ─æß╗º
+ Γ£ô [webgl] minimal/nam: c├óy ngo├ái khu chß╗ë l├á mß╗Ñc bß║úo vß╗ç; bß║ún xa chß╗ë cß╗ºa khu + nh├│m bß║úo vß╗ç
+ Γ£ô [webgl] minimal/nam: ─æ├¿n ngo├ái khu chß╗ë l├á ─æ├¿n v├╣ng bß║úo vß╗ç (lampsOutsideUnprotected = 0)
+ Γ£ô [webgl] minimal/nam: sß╗æ c├┤ng tr├¼nh trong khu + tß╗òng tß╗▒ b├ío khß╗¢p mesh
+ Γ£ô [webgl] ─Éß║ºy ─æß╗º: mß╗ùi khu giß║úm r├╡ tam gi├íc (Γëñ 70 %) v├á draw call (< To├án bß╗Ö) so vß╗¢i To├án bß╗Ö
+ Γ£ô [webgl] Tß╗æi thiß╗âu: mß╗ùi khu kh├┤ng nß║╖ng h╞ín To├án bß╗Ö (tam gi├íc Γëñ; draw call Γëñ +3 do nh├│m bß║ún xa/thiß║┐t bß╗ï m├íi t├ích theo khu)
+ Γ£ô [webgl] ─æß╗òi khu: khung d├ái nhß║Ñt (gß╗ôm camera bay) Γëñ 300 ms, ├íp dß╗Ñng ngay (switchMs nhß╗Å)
+ Γ£ô [webgl] ─æß╗òi khu kh├┤ng dß╗▒ng pipeline mß╗¢i: ─Éß║ºy ─æß╗º cß║ú hai v├▓ng = 0; Tß╗æi thiß╗âu v├▓ng 1 chß╗ë l├á pipeline lß║ºn ─æß║ºu dß╗▒ng bß║ún gß╗Öp khu, v├▓ng 2 = 0
+ Γ£ô [webgl] sau khi ─æi qua mß╗ìi khu rß╗ôi vß╗ü "To├án bß╗Ö": sß╗æ liß╗çu quay vß╗ü nh╞░ ban ─æß║ºu
+ Γ£ô [webgl] chß╗ìn c├┤ng tr├¼nh: trong khu tr├║ng ─æ├║ng (─æa sß╗æ), mß╗ìi lß║ºn tr├║ng l├á c├┤ng tr├¼nh trong khu hoß║╖c signature; ngo├ái khu (kh├┤ng signature) kh├┤ng chß╗ìn ─æ╞░ß╗úc
+ Γ£ô [webgl] camera: chß╗ìn khu bay tß╗¢i khung khu (nh├ún HUD + khoß║úng c├ích); To├án bß╗Ö vß╗ü To├án v├╣ng; URL kh├┤ng bß╗ï th├¬m region khi kh├┤ng c├│
+ Γ£ô [webgl] g├│c nh├¼n data-view trong khu: t├óm g├│c ß╗ƒ khu kh├íc ΓåÆ chuyß╗ân sang khu ─æ├│ (c├│ th├┤ng b├ío); To├án v├╣ng = khung khu; g├│c c├╣ng khu giß╗» khu
+ Γ£ô [webgl] Flood Lab trong khu: mß╗ƒ sang khu chß╗⌐a Thß║úo ─Éiß╗ün (ven s├┤ng) kh├┤ng lß╗ùi; kß╗ïch bß║ún m╞░a vß║½n chß║íy
+ Γ£ô [webgl] xe theo khu: d├╣ng traffic.api.setRegion thß║¡t; tß╗òng xe giß║úm theo khu; mß╗ìi xe ─æang chß║íy nß║▒m trong ─æa gi├íc khu ─É├â Nß╗ÜI (bi├¬n REGION_TRAFFIC_MARGIN_M)
+ Γ£ô [webgl] T1 ┬╖ xe tr├¬n cß║ºu nß╗æi ranh: mß╗ùi khu c├│ ΓëÑ 1 cß║ºu nß╗æi ranh c├│ xe; eligible sau khi nß╗¢i bi├¬n ΓëÑ tr╞░ß╗¢c, kh├┤ng mß║Ñt xe
+ Γ£ô [webgl] t├áu theo khu: tß╗òng 4 khu Γëê 22 t├áu, mß╗ùi khu chß╗ë vß║╜ t├áu trong khu
+ Γ£ô [webgl] b├án ph├¡m: m┼⌐i t├¬n/Home/End ─æß╗òi khu, focus ─æi theo, aria-checked khß╗¢p, roving tabindex
+ Γ£ô [webgl] sß╗æ liß╗çu hiß╗ân thß╗ï trong bß║úng ─æiß╗üu khiß╗ân (nh├á/c├óy/xe) v├á aria-live
+ Γ£ô [webgl] kß║┐t hß╗úp mß╗ìi mß╗⌐c mß║¡t ─æß╗Ö: khu giß╗» nguy├¬n, tß║¡p hiß╗ân thß╗ï Γèå khu Γê¬ signature, registry ─æß╗º
+ Γ£ô [webgl] URL &region= ╞░u ti├¬n localStorage; ─æß╗òi khu cß║¡p nhß║¡t URL (nß║┐u c├│) + localStorage; g├│c nh├¼n giß╗» &region=; gi├í trß╗ï lß║í ΓåÆ To├án bß╗Ö
+ Γ£ô [webgl] kß║┐t hß╗úp &density=minimal&region=nam&view=bason: cß║ú hai ├íp dß╗Ñng; g├│c ß╗ƒ khu kh├íc ΓåÆ khu theo URL quyß║┐t ─æß╗ïnh (khung khu)
+ Γ£ô [webgl] console kh├┤ng c├│ lß╗ùi
+region-exit=0
+=== smoke ===
+[
+  {
+    "url": "http://127.0.0.1:8879/hcmc-poc/",
+    "finalUrl": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=31a&view=overview",
+    "badResponses": [],
+    "consoleErrors": []
+  },
+  {
+    "url": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=31a",
+    "finalUrl": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=31a&view=materials",
+    "badResponses": [],
+    "consoleErrors": []
+  },
+  {
+    "url": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&view=overview",
+    "finalUrl": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&view=overview&app=smart&region=bac&region=bac",
+    "badResponses": [],
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    ]
+  }
+]
+smoke-exit=1
+done

@@ -1,0 +1,18 @@
+[Unit]
+Description=Traffic Detection (YOLO + Jetson GPIO) - chay trong Docker
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nvidia
+WorkingDirectory=/mnt/jetson_sd/traffic_project
+# This service and the GPIO controller run on the same Jetson.
+Environment=MAIN_ARGS=--camera-v 0 --jetson 127.0.0.1
+ExecStart=/bin/bash /mnt/jetson_sd/traffic_project/run_traffic_headless.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

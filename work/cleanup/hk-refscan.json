@@ -1,0 +1,756 @@
+{
+ "candidates": 1371,
+ "delete": 1166,
+ "keep": 205,
+ "keepDetail": {
+  "outputs/BAO-CAO-POC.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/CODEBASE-CLEANUP-POC-12.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/DEMO-RUNBOOK-POC-12.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-02-TIEN-DO.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-03-TIEN-DO.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-04-TIEN-DO.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-05-TIEN-DO.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-06-VISUAL-CEILING.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-07A-REALITY-PATCH.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-07B-REALITY-TILE.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-07C-GROUND-CAPTURE.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-07C1-BA-SON-BRIDGE.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-07C2-BACH-DANG-FOOTBRIDGE.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-08-SEMANTIC-MATERIALS.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-09-COLOR-CALIBRATION-TEXTURE-ATLAS.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-10-URBAN-DETAIL.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-11-CONFIDENCE-ACQUISITION.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-12-CINEMATIC-MAP-UI.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/POC-13-REALITY-ENRICHMENT.md": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/3dtiles/ingest-contract.schema.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/3dtiles/tileset-07b.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/3dtiles/tileset-plan.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/google-height-pilot-2023.tif": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/data/google-height-provenance.json",
+  "outputs/hcmc-poc/data/google-height-tile-selection.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/height-pilot.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/height-pilot.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/height-region-comparison.csv": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/height-region.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/overture-candidates.geojson": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/overture-pilot.geojson": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/overture-pilot.geojson.state": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/overture-quality.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/overture-region.geojson.state": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/data/tiles-18/catalog.json, outputs/hcmc-poc/data/tiles-18/tileset.json, outputs/shared/digital-twin-core/projects/hcmc.json (+1)",
+  "outputs/hcmc-poc/data/query.overpass": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/reality-patch-grid.geojson": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/surface-18/official-forest-quarantine-report.json": "GIỮ: tham chiếu từ research/vibecode-18/ARCHITECTURE-AND-SOURCES.md, research/vibecode-18/evidence-source-owned/final-source-builder-snapshot.json, research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/data/surface-18/quarantine/official-forest-2024-provider.zip": "GIỮ: tham chiếu từ outputs/hcmc-poc/data/surface-18/quarantine/official-forest-2024-provider.acquisition.json",
+  "outputs/hcmc-poc/research/bites-report.txt": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/research/bites.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/research/claims.jsonl": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/refinery.py",
+  "outputs/hcmc-poc/research/domain.yaml": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/refinery.py",
+  "outputs/hcmc-poc/research/reality-patch-readiness.csv": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/research/refinery-report.txt": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/google-temporal-download.ipynb": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/data/google-height-provenance.json",
+  "outputs/hcmc-poc/scripts/build_ba_son_bridge.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/build_bach_dang_footbridge.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/build_confidence_map_11.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/build_ground_capture_plan.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/build_reality_patch.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/build_reality_tile_07b.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/build_registry.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/build_semantic_materials_08.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/build_texture_atlas_09.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/build_urban_detail_10.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/capture_sources.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/compare_overture.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/download_height_pilot.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/fetch_ground.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/fetch_osm.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/package_single.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/report_height_region.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/sample_height_pilot.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/sample_height_region.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/test_server_18.py": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/scripts/validate_cinematic_ui_12.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/validate_confidence_map_11.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/validate_ground_capture_plan.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/validate_reality_enrichment_13.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/validate_reality_patch.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/validate_reality_tile_07b.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/validate_semantic_materials_08.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/validate_texture_atlas_09.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/validate_urban_detail_10.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/scripts/write_catalog.py": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "research/hcmc-flood-digital-twin/build_scenario_catalog.py": "GIỮ: tham chiếu từ research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/README.md",
+  "research/vibecode-17/ARCHITECTURE-AND-SOURCES.md": "GIỮ: tham chiếu từ outputs/DEMO-17-HUONG-DAN.md",
+  "research/vibecode-17/qa/core-suite-summary.json": "GIỮ: tham chiếu từ research/vibecode-17/VERIFY.md",
+  "research/vibecode-17/qa/hcmc-local-verification.json": "GIỮ: tham chiếu từ research/vibecode-17/VERIFY.md",
+  "research/vibecode-17/qa/regression-results.json": "GIỮ: tham chiếu từ research/vibecode-17/VERIFY.md",
+  "research/vibecode-17/qa/root-visual-review.json": "GIỮ: tham chiếu từ research/vibecode-17/VERIFY.md",
+  "research/vibecode-17/qa/ui-results.json": "GIỮ: tham chiếu từ research/vibecode-17/VERIFY.md",
+  "research/vibecode-17/qa/verify-oracle.py": "GIỮ: tham chiếu từ research/vibecode-17/COMPLETION-GIS.md",
+  "research/vibecode-18/BLUEPRINT.md": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/COMPLETION-GIS18.md": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/COMPLETION-SOURCES.md": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/final-source-builder-snapshot.json, research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/COMPLETION-UI.md": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/COMPLETION.md": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/DECISIONS.md": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/TIP-GIS18.md": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/TIP-SOURCES.md": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/final-source-builder-snapshot.json, research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/TIP-UI.md": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/VERIFY.md": "GIỮ: tham chiếu từ outputs/DEMO-18-HUONG-DAN.md, research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/check-cog-browser.cjs": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/check-ground-alignment.py": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/check-produced-tiles.py": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/check-real-photos.py": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/cog-browser-results.json": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/create-release-snapshot.py": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/ground-alignment-oracle.json": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/night-restored.png": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/produced-tiles-oracle.json": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/real-photo-audit.json": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/surface-desktop.png": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/surface-mobile-collapsed.png": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/surface-mobile.png": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/surface-overview.png": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/ui-integrity-results.json": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/ui-results.json": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-18/qa/validate-glb.cjs": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "research/vibecode-22-building-gap/snapshots/osm-building-changes-meta-since-20260531-20260917T115353Z.json": "GIỮ: tham chiếu từ research/vibecode-22-building-gap/osm-delta-source.json, research/vibecode-22-building-gap/snapshots/osm-delta-source.json",
+  "outputs/hcmc-poc/research/snapshots/cesium.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/colmap.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/copernicus.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/dlubal-model-lead.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/eox-capabilities.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/eox-license.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/geofabrik.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/google-temporal.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/google-tiles-policy.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/gsplat.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/hcm-portal.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/mapillary.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/microsoft.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/oam-query.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/oam.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/odm.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/osm.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/overpass.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/overture-access.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/overture-license.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/overture.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/terrain-license.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/terrain.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/three-license.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "outputs/hcmc-poc/research/snapshots/webodm.html": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/research/capture-manifest.json",
+  "research/vibecode-18/evidence-source-owned/S2A_T48PXS_20260403T032317_L2A-scl-native-window.tif": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/sentinel-local-quality-candidates.json",
+  "research/vibecode-18/evidence-source-owned/S2B_T48PXS_20260317T032004_L2A-scl-native-window.tif": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/sentinel-local-quality-candidates.json",
+  "research/vibecode-18/evidence-source-owned/S2C_T48PXS_20260322T032011_L2A-scl-native-window.tif": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/sentinel-local-quality-candidates.json",
+  "research/vibecode-18/evidence-source-owned/S2C_T48PXS_20260325T033123_L2A-scl-native-window.tif": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/sentinel-local-quality-candidates.json",
+  "research/vibecode-18/evidence-source-owned/S2C_T48PXS_20260401T031741_L2A-scl-native-window.tif": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/sentinel-local-quality-candidates.json",
+  "research/vibecode-18/evidence-source-owned/S2C_T48PXS_20260501T032327_L2A-scl-native-window.tif": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/sentinel-local-quality-candidates.json",
+  "research/vibecode-18/evidence-source-owned/S2C_T48PXS_20260720T031436_L2A-scl-native-window.tif": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/sentinel-local-quality-candidates.json",
+  "research/vibecode-18/evidence-source-owned/copdem-license-2025.pdf": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/additional-primary-source-receipts.json",
+  "research/vibecode-18/evidence-source-owned/copdem-producer-specification.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/additional-primary-source-receipts.json",
+  "research/vibecode-18/evidence-source-owned/copdem-provider-readme.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "research/vibecode-18/evidence-source-owned/copdem-registry.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-data-home.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-gis-api-home.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-gis-guide.pdf": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-gis-page.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-gis-public-bundle.js": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/additional-primary-source-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-open-catalog.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-open-data-home.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/additional-primary-source-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-open-directory.pdf": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-public-dataset-page.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/official-raw-access-and-photo-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-public-dcat-catalog.xml": "GIỮ: tham chiếu từ outputs/hcmc-poc/data/surface-18/official-source-leads.json, research/vibecode-18/evidence-source-owned/hcm-dcat-spatial-resolved.json, research/vibecode-18/evidence-source-owned/official-raw-access-and-photo-receipts.json",
+  "research/vibecode-18/evidence-source-owned/hcm-qhpk-resource-schema.pdf": "GIỮ: tham chiếu từ outputs/hcmc-poc/data/surface-18/official-source-leads.json, research/vibecode-18/evidence-source-owned/commons-multiview-and-official-resource-receipts.json",
+  "research/vibecode-18/evidence-source-owned/sentinel-aws-registry.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "research/vibecode-18/evidence-source-owned/sentinel-license.html": "GIỮ: tham chiếu từ research/vibecode-18/evidence-source-owned/primary-source-snapshot-receipts.json",
+  "outputs/hcmc-poc/app.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/scripts/validate_demo_ready.py, research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/architecture.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/bridge-detail.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/scripts/validate_ba_son_bridge.py",
+  "outputs/hcmc-poc/cinematic-night-12.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/scripts/validate_demo_ready.py",
+  "outputs/hcmc-poc/confidence-map-11.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/construction-change-23.js": "GIỮ: tham chiếu từ outputs/hcmc-poc/scripts/qa-construction-change-23.cjs",
+  "outputs/hcmc-poc/contact-shadows.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/catalog.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/confidence-map-11.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/confidence-map-11.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/construction-change-23.js": "GIỮ: tham chiếu từ outputs/hcmc-poc/scripts/qa-construction-change-23.cjs",
+  "outputs/hcmc-poc/data/construction-change-23.json": "GIỮ: tham chiếu từ outputs/hcmc-poc/scripts/qa-construction-change-23.cjs",
+  "outputs/hcmc-poc/data/ground-capture-plan.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/ground-capture-plan.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/height-region-report.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/height-region.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/reality-patch-manifest.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/reality-patch.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/texture-atlas-09.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/texture-atlas-09.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/urban-detail-10.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/data/urban-detail-10.json": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/demo-shell.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/scripts/validate_demo_ready.py",
+  "outputs/hcmc-poc/executive-story-19.js": "GIỮ: tham chiếu từ outputs/hcmc-poc/scripts/validate_demo_ready.py",
+  "outputs/hcmc-poc/experience.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/ground-capture-07c.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/leadership-16.css": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/leadership-16.js": "GIỮ: tham chiếu từ outputs/hcmc-poc/scripts/qa-construction-change-23.cjs, research/vibecode-17/qa/release-fingerprints.json, research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/pbr-environment.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/photo-facades-15.js": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/poc6-maximum.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/public-realm.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/reality-enrichment-13.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/scripts/validate_demo_ready.py",
+  "outputs/hcmc-poc/reality-patch.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/reality-tile-07b.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/river-reflection.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/semantic-materials-08.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/style.css": "GIỮ: tham chiếu từ outputs/delivery-manifest.json, outputs/hcmc-poc/scripts/validate_demo_ready.py",
+  "outputs/hcmc-poc/texture-atlas-09.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/hcmc-poc/twin-analysis-17.css": "GIỮ: tham chiếu từ research/vibecode-17/qa/release-fingerprints.json, research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/twin-analysis-17.js": "GIỮ: tham chiếu từ outputs/hcmc-poc/scripts/validate_demo_ready.py, research/vibecode-17/qa/release-fingerprints.json, research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/twin-surface-18.css": "GIỮ: tham chiếu từ research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/twin-surface-18.js": "GIỮ: tham chiếu từ outputs/hcmc-poc/scripts/validate_demo_ready.py, research/vibecode-18/qa/release-fingerprints.json",
+  "outputs/hcmc-poc/urban-detail-10.js": "GIỮ: tham chiếu từ outputs/delivery-manifest.json",
+  "outputs/tayninh-data-batch-03/registry/data-registry.json": "GIỮ: tham chiếu từ outputs/shared/digital-twin-core/scripts/prepare-project.py",
+  "outputs/tayninh-imagery-campaign-05/evidence/baseline/providers/c05-gedtm-zenodo.json": "GIỮ: tham chiếu từ outputs/shared/digital-twin-core/scripts/prepare-project.py"
+ },
+ "weakOnly": {
+  "outputs/hcmc-poc/data/surface-18/rgb-preview.png": [
+   "outputs/shared/digital-twin-core/scripts/prepare-surfaces-18.py"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16/BLUEPRINT.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16/COMPLETION-UI.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16/VERIFY.md": [
+   "outputs/DEMO-18-HUONG-DAN.md",
+   "outputs/shared/digital-twin-core/README.md",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16b/BLUEPRINT.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16b/COMPLETION-UI.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16b/VERIFY.md": [
+   "outputs/DEMO-18-HUONG-DAN.md",
+   "outputs/shared/digital-twin-core/README.md",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16c/VERIFY.md": [
+   "outputs/DEMO-18-HUONG-DAN.md",
+   "outputs/shared/digital-twin-core/README.md",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16d/BLUEPRINT.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16d/VERIFY.md": [
+   "outputs/DEMO-18-HUONG-DAN.md",
+   "outputs/shared/digital-twin-core/README.md",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/scripts/archive/README.md": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "outputs/DEMO-17-HUONG-DAN.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/capture-manifest.json",
+   "outputs/hcmc-poc/research/visual-14/captures.json",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "outputs/hcmc-poc/scripts/archive/qa-surface-18-integrity.cjs": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/scripts/archive/qa-surface-18.cjs": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/scripts/archive/qa-twin-17-regression.cjs": [
+   "research/vibecode-17/qa/release-fingerprints.json"
+  ],
+  "outputs/hcmc-poc/scripts/archive/qa-twin-17-ui.cjs": [
+   "research/vibecode-17/qa/release-fingerprints.json"
+  ],
+  "research/hcmc-flood-digital-twin/ARCHITECTURE-AND-SOURCES.md": [
+   "outputs/DEMO-17-HUONG-DAN.md",
+   "outputs/DEMO-18-HUONG-DAN.md",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "research/hcmc-visual-spectrum-26/claims.jsonl": [
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/refinery.py",
+   "outputs/hcmc-poc/research/visual-14/index.html",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/README.md",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/extract_claims.py"
+  ],
+  "research/hcmc-visual-spectrum-26/domain.yaml": [
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/refinery.py"
+  ],
+  "research/hcmc-visual-spectrum-26/refinery-report.txt": [
+   "outputs/delivery-manifest.json"
+  ],
+  "research/vibecode-17/BLUEPRINT.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "research/vibecode-17/COMPLETION-SOURCES.md": [
+   "research/vibecode-18/evidence-source-owned/final-source-builder-snapshot.json",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "research/vibecode-17/COMPLETION-UI.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "research/vibecode-17/COMPLETION.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "research/vibecode-17/TIP-SOURCES.md": [
+   "research/vibecode-18/evidence-source-owned/final-source-builder-snapshot.json",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "research/vibecode-17/TIP-UI.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "research/vibecode-17/qa/gia-loc-local-verification.json": [
+   "research/vibecode-17/VERIFY.md"
+  ],
+  "research/vibecode-17/qa/gis-mapped-road-result.json": [
+   "research/vibecode-17/COMPLETION-GIS.md"
+  ],
+  "research/vibecode-17/qa/gis-sample-result.json": [
+   "research/vibecode-17/COMPLETION-GIS.md"
+  ],
+  "research/vibecode-17/qa/oracle-corridor.json": [
+   "research/vibecode-17/COMPLETION-GIS.md"
+  ],
+  "research/vibecode-17/qa/oracle-mapped-road.json": [
+   "research/vibecode-17/COMPLETION-GIS.md"
+  ],
+  "research/vibecode-22-building-gap/README.md": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "outputs/DEMO-17-HUONG-DAN.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/capture-manifest.json",
+   "outputs/hcmc-poc/research/visual-14/captures.json",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "research/vibecode-22-building-gap/bites-report.txt": [
+   "outputs/delivery-manifest.json"
+  ],
+  "research/vibecode-22-building-gap/bites.py": [
+   "outputs/delivery-manifest.json",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/README.md"
+  ],
+  "research/vibecode-22-building-gap/claims.jsonl": [
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/refinery.py",
+   "outputs/hcmc-poc/research/visual-14/index.html",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/README.md",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/extract_claims.py"
+  ],
+  "research/vibecode-22-building-gap/domain.yaml": [
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/refinery.py"
+  ],
+  "research/vibecode-22-building-gap/refinery-report.txt": [
+   "outputs/delivery-manifest.json"
+  ],
+  "research/vibecode-22-building-gap/refinery.py": [
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/refinery.py",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/README.md",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/export_registry.py"
+  ],
+  "research/vibecode-22-building-gap/snapshots/building-gap-22.json": [
+   "outputs/hcmc-poc/scripts/prepare_scene.py",
+   "outputs/shared/digital-twin-core/projects/hcmc.json"
+  ],
+  "research/vibecode-23-change-lens/README.md": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "outputs/DEMO-17-HUONG-DAN.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/capture-manifest.json",
+   "outputs/hcmc-poc/research/visual-14/captures.json",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "research/vibecode-24-webgpu-materials/README.md": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "outputs/DEMO-17-HUONG-DAN.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/capture-manifest.json",
+   "outputs/hcmc-poc/research/visual-14/captures.json",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "research/vibecode-29-reality-js/README.md": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "outputs/DEMO-17-HUONG-DAN.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/capture-manifest.json",
+   "outputs/hcmc-poc/research/visual-14/captures.json",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "work/build_registry.py": [
+   "outputs/delivery-manifest.json"
+  ],
+  "work/capture_sources.py": [
+   "outputs/delivery-manifest.json",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/README.md"
+  ],
+  "work/compare_overture.py": [
+   "outputs/delivery-manifest.json"
+  ],
+  "work/fetch_ground.py": [
+   "outputs/delivery-manifest.json"
+  ],
+  "work/fetch_osm.py": [
+   "outputs/delivery-manifest.json"
+  ],
+  "work/prepare_scene.py": [
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/data/road-graph-31.js",
+   "outputs/hcmc-poc/data/road-graph-31.json",
+   "outputs/hcmc-poc/scripts/build_road_graph_31.py"
+  ],
+  "work/write_catalog.py": [
+   "outputs/delivery-manifest.json"
+  ],
+  "research/baseline-30b/screens/30b-webgl-presentationrequested-overview-day.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgl-presentationrequested-overview-night.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-balanced-overview-day.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-performance-overview-day.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-bason-day.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-bason-night.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-boulevard-day.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-boulevard-night.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-corridor-day.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-corridor-night.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-materials-day.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-materials-night.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-overview-day.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-overview-night.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-river-day.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/baseline-30b/screens/30b-webgpu-presentation-river-night.png": [
+   "research/baseline-30b/baseline-30b-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgl-presentationrequested-overview-day.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgl-presentationrequested-overview-night.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-balanced-overview-day.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-performance-overview-day.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-bason-day.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-bason-night.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-boulevard-day.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-boulevard-night.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-corridor-day.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-corridor-night.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-materials-day.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-materials-night.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-overview-day.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-overview-night.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-river-day.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "research/vibecode-31-bridge/screens/31c-webgpu-presentation-river-night.png": [
+   "research/vibecode-31-bridge/bridge-31c-metrics.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16/source-snapshots/hdnd-survey.html": [
+   "outputs/hcmc-poc/research/vibecode-16/source-snapshots/manifest.json"
+  ],
+  "outputs/hcmc-poc/research/vibecode-16/source-snapshots/hdnd-workshop.html": [
+   "outputs/hcmc-poc/research/vibecode-16/source-snapshots/manifest.json"
+  ],
+  "research/vibecode-22-building-gap/snapshots/google-temporal.html": [
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/capture-manifest.json"
+  ],
+  "research/vibecode-22-building-gap/snapshots/overture-access.html": [
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/research/capture-manifest.json"
+  ],
+  "outputs/hcmc-poc/research/visual-14/snapshots/Asphalt-catalog.json": [
+   "outputs/hcmc-poc/assets/pbr14/manifest.json",
+   "outputs/hcmc-poc/research/visual-14/snapshot-hashes.json"
+  ],
+  "outputs/hcmc-poc/research/visual-14/snapshots/Bark-catalog.json": [
+   "outputs/hcmc-poc/assets/pbr14/manifest.json",
+   "outputs/hcmc-poc/research/visual-14/snapshot-hashes.json"
+  ],
+  "outputs/hcmc-poc/research/visual-14/snapshots/Grass-catalog.json": [
+   "outputs/hcmc-poc/assets/pbr14/manifest.json",
+   "outputs/hcmc-poc/research/visual-14/snapshot-hashes.json"
+  ],
+  "outputs/hcmc-poc/research/visual-14/snapshots/PavingStones-catalog.json": [
+   "outputs/hcmc-poc/assets/pbr14/manifest.json",
+   "outputs/hcmc-poc/research/visual-14/snapshot-hashes.json"
+  ],
+  "outputs/hcmc-poc/research/visual-14/snapshots/Plaster-catalog.json": [
+   "outputs/hcmc-poc/assets/pbr14/manifest.json",
+   "outputs/hcmc-poc/research/visual-14/snapshot-hashes.json"
+  ],
+  "outputs/hcmc-poc/times-facade-16d.js": [
+   "outputs/hcmc-poc/data/signature-registry-31.js",
+   "outputs/hcmc-poc/data/signature-registry-31.json",
+   "outputs/hcmc-poc/scripts/build_signature_registry_31.py"
+  ],
+  "outputs/tayninh-data-batch-01/governance/BLUEPRINT.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/tayninh-data-batch-01/governance/VERIFY.md": [
+   "outputs/DEMO-18-HUONG-DAN.md",
+   "outputs/shared/digital-twin-core/README.md",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/tayninh-data-batch-01/index.html": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/VISUAL-RUNTIME-31.md",
+   "outputs/hcmc-poc/city-bridges-31.js",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "outputs/tayninh-data-batch-01/raw/local/nq1682-2025.pdf": [
+   "outputs/tayninh-data-batch-01/sources/aoi.json"
+  ],
+  "outputs/tayninh-data-batch-01/registry/data-registry.json": [
+   "outputs/shared/digital-twin-core/scripts/prepare-project.py"
+  ],
+  "outputs/tayninh-data-batch-01/sources/global/buildings.html": [
+   "outputs/hcmc-poc/research/visual-14/snapshots/quaternius.html"
+  ],
+  "outputs/tayninh-data-batch-02/derived/surface/sentinel-2-20251130-aoi-scl.pgw": [
+   "outputs/tayninh-data-batch-02/derived/surface/surface-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-02/derived/surface/sentinel-2-20251130-aoi-scl.prj": [
+   "outputs/tayninh-data-batch-02/derived/surface/surface-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-02/derived/surface/sentinel-2-20251130-aoi-tci.pgw": [
+   "outputs/tayninh-data-batch-02/derived/surface/surface-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-02/derived/surface/sentinel-2-20251130-aoi-tci.prj": [
+   "outputs/tayninh-data-batch-02/derived/surface/surface-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-02/derived/surface/worldcover-2021-aoi.pgw": [
+   "outputs/tayninh-data-batch-02/derived/surface/surface-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-02/derived/surface/worldcover-2021-aoi.prj": [
+   "outputs/tayninh-data-batch-02/derived/surface/surface-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-02/governance/BLUEPRINT.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/tayninh-data-batch-02/governance/VERIFY.md": [
+   "outputs/DEMO-18-HUONG-DAN.md",
+   "outputs/shared/digital-twin-core/README.md",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/tayninh-data-batch-02/index.html": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/VISUAL-RUNTIME-31.md",
+   "outputs/hcmc-poc/city-bridges-31.js",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "outputs/tayninh-data-batch-02/registry/data-registry.json": [
+   "outputs/shared/digital-twin-core/scripts/prepare-project.py"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/eth-canopy-height-2020-aoi.pgw": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/eth-canopy-height-2020-aoi.prj": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/eth-canopy-height-2020-uncertainty-aoi.pgw": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/eth-canopy-height-2020-uncertainty-aoi.prj": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/jrc-water-change-1984-1999-vs-2000-2024-aoi.pgw": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/jrc-water-change-1984-1999-vs-2000-2024-aoi.prj": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/jrc-water-occurrence-1984-2024-aoi.pgw": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/jrc-water-occurrence-1984-2024-aoi.prj": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/jrc-water-seasonality-2024-aoi.pgw": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/ecosystem/jrc-water-seasonality-2024-aoi.prj": [
+   "outputs/tayninh-data-batch-03/derived/ecosystem/ecosystem-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20241220-aoi-scl.pgw": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20241220-aoi-scl.prj": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20241220-aoi-tci.pgw": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20241220-aoi-tci.prj": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20241220-vs-20251130-change-heatmap.pgw": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20241220-vs-20251130-change-heatmap.prj": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20241220-vs-20251130-mask-candidates.pgw": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20241220-vs-20251130-mask-candidates.prj": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20251130-reference-aoi-scl.pgw": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20251130-reference-aoi-scl.prj": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20251130-reference-aoi-tci.pgw": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/derived/temporal/sentinel-2-20251130-reference-aoi-tci.prj": [
+   "outputs/tayninh-data-batch-03/derived/temporal/temporal-aoi-qa.json"
+  ],
+  "outputs/tayninh-data-batch-03/governance/BLUEPRINT.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/tayninh-data-batch-03/governance/VERIFY.md": [
+   "outputs/DEMO-18-HUONG-DAN.md",
+   "outputs/shared/digital-twin-core/README.md",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/tayninh-data-batch-03/index.html": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/VISUAL-RUNTIME-31.md",
+   "outputs/hcmc-poc/city-bridges-31.js",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "outputs/tayninh-data-batch-04/derived/s07/materials/manifest.json": [
+   "outputs/hcmc-poc/data/tiles-18/catalog.json",
+   "outputs/hcmc-poc/data/tiles-18/tileset.json",
+   "outputs/hcmc-poc/research/visual-14/snapshots/kartaview.html",
+   "outputs/hcmc-poc/research/visual-14/snapshots/mapillary.html",
+   "outputs/shared/digital-twin-core/scripts/build-tiles-18.cjs",
+   "outputs/shared/digital-twin-core/scripts/prepare-surfaces-18.py"
+  ],
+  "outputs/tayninh-data-batch-04/governance/BLUEPRINT.md": [
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/tayninh-data-batch-04/governance/VERIFY.md": [
+   "outputs/DEMO-18-HUONG-DAN.md",
+   "outputs/shared/digital-twin-core/README.md",
+   "research/vibecode-18/qa/release-fingerprints.json"
+  ],
+  "outputs/tayninh-data-batch-04/governance/baseline-s06/index.html": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/VISUAL-RUNTIME-31.md",
+   "outputs/hcmc-poc/city-bridges-31.js",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "outputs/tayninh-data-batch-04/governance/baseline-s06/styles.css": [
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/raw/epa-swmm.html",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/raw/hcmc-warning-markers.html"
+  ],
+  "outputs/tayninh-data-batch-04/index.html": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/VISUAL-RUNTIME-31.md",
+   "outputs/hcmc-poc/city-bridges-31.js",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "outputs/tayninh-data-batch-04/static/styles.css": [
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/raw/epa-swmm.html",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/raw/hcmc-warning-markers.html"
+  ],
+  "outputs/tayninh-data-batch-04/vendor/three.min.js": [
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/vendor/three.min.js"
+  ],
+  "outputs/tayninh-imagery-campaign-05/evidence/techniques/three-pbr.html": [
+   "outputs/hcmc-poc/research/visual-14/captures.json",
+   "outputs/hcmc-poc/research/visual-14/snapshot-hashes.json"
+  ],
+  "outputs/tayninh-imagery-campaign-05/index.html": [
+   "docs/superpowers/plans/2026-10-14-m1-hang-xanh.md",
+   "docs/superpowers/specs/2026-10-14-smart-traffic-bac-design.md",
+   "outputs/delivery-manifest.json",
+   "outputs/hcmc-poc/VISUAL-RUNTIME-31.md",
+   "outputs/hcmc-poc/city-bridges-31.js",
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt"
+  ],
+  "outputs/tayninh-imagery-campaign-05/static/styles.css": [
+   "outputs/hcmc-poc/research/visual-14/snapshots/ez-tree-files.txt",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/raw/epa-swmm.html",
+   "research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/raw/hcmc-warning-markers.html"
+  ]
+ }
+}

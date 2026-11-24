@@ -1,0 +1,7 @@
+[
+  { "name": "ctn1", "file": "work/m2b-sig-ctn1-a.png", "x": -547, "z": -1407, "dist": 200, "az": 0.9, "polar": 1.42 },
+  { "name": "ctn2", "file": "work/m2b-sig-ctn2-a.png", "x": -222, "z": -962, "dist": 200, "az": 0.9, "polar": 1.42 },
+  { "name": "cvt2", "file": "work/m2b-sig-cvt2-a.png", "x": 168, "z": -1164, "dist": 200, "az": 0.9, "polar": 1.42 },
+  { "name": "cdbp", "file": "work/m2b-sig-cdbp-a.png", "x": -1209, "z": -1593, "dist": 200, "az": 0.9, "polar": 1.42 },
+  { "name": "ctkd", "file": "work/m2b-sig-ctkd-a.png", "x": -2275, "z": -1858, "dist": 200, "az": 0.9, "polar": 1.42 }
+]

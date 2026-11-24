@@ -1,0 +1,87 @@
+✔ both retained project manifests validate (2.8409ms)
+✔ HCMC south-positive and Gia Loc north-positive frames retain opposite signs (0.4759ms)
+✔ both frames roundtrip geographic coordinates to less than 1e-10 degrees (0.2931ms)
+✔ unknown frame and nonfinite geographic coordinates reject (0.4957ms)
+✔ mismatched native scene origin rejects rather than moving reality (0.7978ms)
+✔ native polygons close with holes retained and model source date stays unknown (1.5768ms)
+✔ duplicate OSM IDs remain two representations and one source identity; illustrations separate (0.4259ms)
+✔ Gia Loc Google height model epoch remains separate from Microsoft release and capture (22.3662ms)
+✔ valid generic WGS84 future-source FeatureCollection normalizes with explicit null epoch (1.309ms)
+✔ lead acquisition cannot bypass admission by calling normalizeScene (0.697ms)
+✔ noncommercial rights cannot bypass admission by calling normalizeScene (1.6389ms)
+✔ missing license cannot bypass admission by calling normalizeScene (0.6487ms)
+✔ missing CRS cannot bypass admission by calling normalizeScene (0.6407ms)
+✔ missing hash cannot bypass admission by calling normalizeScene (0.5322ms)
+✔ coordinate-unit mismatch cannot bypass admission by calling normalizeScene (0.5885ms)
+✔ projected CRS cannot reinterpret GeoJSON degree coordinates (0.6582ms)
+✔ invalid hole crossing outside outer is rejected even when its first vertex is inside (0.3597ms)
+✔ overlapping and nested holes reject (0.5773ms)
+✔ crossed polygon and degenerate ring reject (0.1927ms)
+✔ overlapping MultiPolygon components reject while separate components pass (0.4915ms)
+✔ MultiPolygon component inside a polygon hole does not overlap occupied interior (0.2995ms)
+✔ negative and infinite survey accuracy cannot qualify a surveyed source (0.307ms)
+✔ modeled survey and unapproved plans fail; unknown capability never passes (0.2871ms)
+✔ survey terrain alone is insufficient for hydrological simulation (0.3366ms)
+✔ procedural asset cannot become real capture by changing role (0.2634ms)
+✔ unsafe source URLs and malformed source entries reject without script execution (0.3551ms)
+✔ byte verification catches changed expected fingerprint without touching source (90.9312ms)
+✔ quarantine import admits one valid GeoJSON, holds rejected rights, prevents clobber and path traversal (33.0057ms)
+✖ retained source snapshots verify actual local bytes for both projects (191.2982ms)
+✖ CLI separates byte integrity from admission and refuses an empty denied preparation (153.4114ms)
+✔ asset symlink escape cannot masquerade as contained verified data (57.5072ms)
+✔ CLI safe project slugs admit added configs and block filename traversal (0.1336ms)
+✔ Point and LineString may be query geometries but cannot be normalized as footprint buildings (1.0855ms)
+✔ empty footprint collection is held in quarantine without a normalized artifact (7.9282ms)
+✔ unverified surveyed height claim is rejected instead of silently downgraded (0.6783ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 33
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 695.1747
+
+✖ failing tests:
+
+test at outputs\shared\digital-twin-core\tests\source-core.cjs:51:1
+✖ retained source snapshots verify actual local bytes for both projects (191.2982ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\source-core.cjs:51:90)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at outputs\shared\digital-twin-core\tests\source-core.cjs:52:1
+✖ CLI separates byte integrity from admission and refuses an empty denied preparation (153.4114ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\source-core.cjs:54:91)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

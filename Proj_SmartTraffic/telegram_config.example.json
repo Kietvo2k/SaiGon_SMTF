@@ -1,0 +1,6 @@
+{
+  "_comment": "Copy to telegram_config.json, then set enabled, bot_token and chat_id only on the operator machine.",
+  "enabled": false,
+  "bot_token": "PASTE_BOT_TOKEN_HERE",
+  "chat_id": "PASTE_PRIVATE_OPERATOR_CHAT_ID_HERE"
+}

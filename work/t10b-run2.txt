@@ -1,0 +1,48 @@
+(node:5704) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/camera-capture-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ projectToCamera32: xe trước mặt camera nằm trong FOV, sau lưng thì không (0.7597ms)
+✔ projectToPixel32: px ti lệ góc lệch (giữa khung khi thẳng trước, lệch khi sang bên) (0.21ms)
+✔ captureFrame/captureEvidence: gọi readRenderTargetPixelsAsync đúng chữ ký, trả đủ 3 ảnh + plate_crop theo vị trí xe (4.3394ms)
+✔ readbackFlip32: WebGPU (readRenderTargetPixelsAsync) top-first nên KHÔNG lật; WebGL thì lật (0.1088ms)
+✔ rowBandStats32 + skyAboveRoad32: khung trời-trên nhận true, khung lật dọc nhận false (1.6255ms)
+✔ captureFrame (WebGPU): không lật dọc — hàng đầu của buffer là hàng trên khung (7.2439ms)
+✔ captureFrame (WebGL fallback): buffer đọc gốc dưới-trái nên ảnh vẽ ra phải lật lại (6.5616ms)
+✖ renderTo: dau den huong nguoc camera chup bi an, dau den huong ve camera giu lai; HUD + quang an khi chup (3.0725ms)
+(node:18844) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/traffic-signals-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lightColorOf ánh xạ phase → màu đèn (0.536ms)
+✔ den giao thong: moi dau den chi 1 den sang, den tat co emissive 0 va quang an (2.4572ms)
+✔ helper (non FOV, vien non FOV, cot camera, bang dem nguoc) nam layer 1; camera chinh bat layer 1 (0.4481ms)
+✔ camera chup: layers chi bat layer 0 nen khong render helper (0.5225ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 96.4994
+
+✖ failing tests:
+
+test at outputs\hcmc-poc\test\camera-capture-32.test.mjs:203:1
+✖ renderTo: dau den huong nguoc camera chup bi an, dau den huong ve camera giu lai; HUD + quang an khi chup (3.0725ms)
+  AssertionError [ERR_ASSERTION]: dau den huong ve camera chup giu lai
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/test/camera-capture-32.test.mjs:222:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

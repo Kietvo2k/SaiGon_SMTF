@@ -69,3 +69,8 @@ work/hardtest/
 .vercel/
 .wrangler/
 /dist/public-demo/
+
+# Proj_SmartTraffic: video minh hoạ và trọng số mô hình lớn, tải/tạo lại được.
+# 2.mp4 (175 MB) vượt giới hạn 100 MB của GitHub nên nhóm này giữ ngoài Git.
+Proj_SmartTraffic/**/*.mp4
+Proj_SmartTraffic/**/*.pt

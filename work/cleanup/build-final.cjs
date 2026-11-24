@@ -1,0 +1,11 @@
+const fs=require('fs');
+const dir=__dirname+'/';
+const readNul=f=>{const s=fs.readFileSync(dir+f,'utf8');return s.split('\0').filter(Boolean);};
+const a=readNul('remaining-A.list');
+const zip='outputs/hcmc-poc/data/surface-18/quarantine/official-forest-2024-provider.zip';
+const aFinal=[...new Set([...a,zip])];
+const b=readNul('remaining-B.list');
+fs.writeFileSync(dir+'FINAL-A.list',aFinal.join('\0')+'\0','utf8');
+fs.writeFileSync(dir+'FINAL-B.list',b.join('\0')+'\0','utf8');
+console.log('A',aFinal.length,'B',b.length);
+console.log('A contains zip:',aFinal.includes(zip));

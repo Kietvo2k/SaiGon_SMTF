@@ -1,0 +1,26 @@
+const fs=require('fs');
+const dir=__dirname+'/';
+const read=f=>fs.readFileSync(dir+f,'utf8').split(/\r?\n/).filter(Boolean);
+const del2=read('DEL2.txt'), deca=read('DECA.txt'), review=read('REVIEW.txt'), tach=read('TACH.txt'), legacy=read('legacy-only.txt');
+const deleteAll=new Set(read('DELETE-ALL.txt'));
+const keep3=new Set(read('KEEP3.txt'));
+const groupA=[...new Set([...del2,...deca,...review])];
+const groupB=[...new Set(legacy)].filter(p=>p!=='outputs/hcmc-poc/index.html');
+const groupC=[...new Set(tach)];
+const ovA=groupA.filter(p=>keep3.has(p));
+const ovB=groupB.filter(p=>keep3.has(p));
+console.log('A',groupA.length,'B',groupB.length,'C',groupC.length,'A+B+C',groupA.length+groupB.length+groupC.length);
+console.log('A∩KEEP3',ovA.length);
+console.log('B∩KEEP3',ovB.length);
+console.log('legacy not in DELETE-ALL:',[...new Set(legacy)].filter(p=>!deleteAll.has(p)));
+const w=(f,arr)=>fs.writeFileSync(dir+f, arr.join('\0')+'\0','utf8');
+w('GROUP-A.list',groupA); w('GROUP-B.list',groupB); w('GROUP-C.list',groupC);
+const special=p=>/[?*[\]\\]/.test(p);
+console.log('special chars A/B/C', groupA.filter(special).length, groupB.filter(special).length, groupC.filter(special).length);
+// verify all tracked & existing
+const {execSync}=require('child_process');
+const all=[...groupA,...groupB,...groupC];
+const lsOut=execSync('git ls-files -z',{cwd:__dirname+'/../..',maxBuffer:1<<30}).toString().split('\0').filter(Boolean);
+const lsSet=new Set(lsOut);
+const missing=all.filter(p=>!lsSet.has(p));
+console.log('total paths', all.length, 'not tracked:', missing.length, missing.slice(0,10));

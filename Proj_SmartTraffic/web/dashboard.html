@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giám Sát Giao Thông – TP. Đà Nẵng</title>
+  <style>
+    /* ============ CSS TU CHUA (offline, khong can internet) ============ */
+    :root {
+      --bg1:#eef2f8; --bg2:#e7ecf3;
+      --card:#ffffff; --text:#0f172a; --muted:#64748b;
+      --border:#dce3ec; --banner:rgba(255,255,255,.9);
+      --row-hover:#f1f5f9; --shadow:0 10px 30px rgba(15,23,42,.10);
+      --lights-bg:linear-gradient(180deg,#1f2937,#0b1220);
+      --accent:#2563eb;
+    }
+    html.dark {
+      --bg1:#0b1220; --bg2:#0f172a;
+      --card:#111a2e; --text:#f1f5f9; --muted:#94a3b8;
+      --border:#26324a; --banner:rgba(15,23,42,.9);
+      --row-hover:rgba(37,99,235,.08); --shadow:0 12px 34px rgba(0,0,0,.5);
+      --lights-bg:linear-gradient(180deg,#0b1424,#05070d);
+      --accent:#60a5fa;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; min-height:100vh; color:var(--text);
+      font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 500px at 15% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(1000px 500px at 100% 0%, rgba(168,85,247,.10), transparent 55%),
+        linear-gradient(135deg,var(--bg1),var(--bg2));
+      transition:background .3s,color .3s;
+    }
+    @keyframes gx { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+    @keyframes ping { 75%,100%{transform:scale(2);opacity:0} }
+    @keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:.35} }
+    @keyframes slidein { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .hidden { display:none !important; }
+
+    /* ---------- BANNER ---------- */
+    .banner {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:12px 22px; position:sticky; top:0; z-index:40;
+      background:var(--banner); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+      border-bottom:1px solid var(--border); box-shadow:0 2px 16px rgba(0,0,0,.07);
+    }
+    .brand { display:flex; align-items:center; gap:13px; min-width:0; }
+    .logo {
+      position:relative; width:50px; height:50px; border-radius:14px; flex:0 0 auto;
+      background:linear-gradient(90deg,#3b82f6,#6366f1,#a855f7);
+      background-size:200% 200%; animation:gx 4s ease infinite;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 6px 18px rgba(99,102,241,.45);
+    }
+    .logo svg { width:28px; height:28px; color:#fff; }
+    .logo .dot { position:absolute; right:-3px; top:-3px; width:14px; height:14px; }
+    .logo .dot i { position:absolute; inset:0; border-radius:50%; background:#22c55e; }
+    .logo .dot i.p { animation:ping 1.5s cubic-bezier(0,0,.2,1) infinite; opacity:.75; }
+    .title {
+      font-size:1.45rem; font-weight:800; line-height:1.1; margin:0; letter-spacing:.3px;
+      background:linear-gradient(90deg,#2563eb,#7c3aed,#db2777);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .subtitle { font-size:.8rem; color:var(--muted); margin:3px 0 0; }
+    .actions { display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+    .conn {
+      display:flex; align-items:center; gap:8px; padding:9px 14px; border-radius:11px;
+      font-size:.85rem; font-weight:700; background:var(--card); border:1px solid var(--border);
+      box-shadow:0 2px 8px rgba(0,0,0,.05);
+    }
+    .conn .cdot { width:10px; height:10px; border-radius:50%; background:#9ca3af; box-shadow:0 0 0 3px rgba(148,163,184,.25); }
+    .theme-btn {
+      width:42px; height:42px; border-radius:11px; cursor:pointer; font-size:18px;
+      background:var(--card); border:1px solid var(--border); color:var(--text);
+    }
+
+    main { max-width:1180px; margin:0 auto; padding:22px 16px 40px; display:flex; flex-direction:column; gap:20px; }
+    .card {
+      background:var(--card); border:1px solid var(--border); border-radius:18px;
+      box-shadow:var(--shadow);
+    }
+    .section-title { display:flex; align-items:center; gap:9px; font-size:1.1rem; font-weight:800; margin:0; }
+    .section-title .ic { font-size:1.15rem; }
+
+    /* ---------- DEN GIAO THONG ---------- */
+    .lights-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    @media(max-width:760px){ .lights-grid{ grid-template-columns:1fr; } }
+    .light-card { padding:22px; position:relative; overflow:hidden; }
+    .light-card::before {
+      content:''; position:absolute; inset:0 0 auto 0; height:5px;
+      background:linear-gradient(90deg,var(--accent),transparent);
+    }
+    .lc-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .lc-title { font-size:1.05rem; font-weight:800; margin:0; }
+    .lc-title small { font-weight:500; color:var(--muted); font-size:.72rem; display:block; margin-top:2px; }
+    .badge-count {
+      font-size:.85rem; padding:6px 14px; border-radius:999px; font-weight:700;
+      background:rgba(37,99,235,.12); color:#2563eb; white-space:nowrap;
+    }
+    html.dark .badge-count { background:rgba(96,165,250,.18); color:#93c5fd; }
+    .badge-count.g { background:rgba(34,197,94,.14); color:#15803d; }
+    html.dark .badge-count.g { background:rgba(34,197,94,.2); color:#86efac; }
+    .lc-body { display:flex; align-items:center; justify-content:center; gap:30px; }
+    .housing {
+      display:flex; flex-direction:column; gap:12px; padding:14px;
+      border-radius:18px; background:var(--lights-bg);
+      box-shadow:inset 0 2px 6px rgba(0,0,0,.6), 0 6px 16px rgba(0,0,0,.3);
+    }
+    .bulb { width:46px; height:46px; border-radius:50%; background:#2a3446; transition:all .25s; position:relative; }
+    .bulb.on-red    { background:radial-gradient(circle at 35% 30%, #ff8a8a, #ef4444 60%, #b91c1c); box-shadow:0 0 24px 6px rgba(239,68,68,.85); }
+    .bulb.on-yellow { background:radial-gradient(circle at 35% 30%, #fde68a, #eab308 60%, #a16207); box-shadow:0 0 24px 6px rgba(234,179,8,.85); }
+    .bulb.on-green  { background:radial-gradient(circle at 35% 30%, #86efac, #22c55e 60%, #15803d); box-shadow:0 0 24px 6px rgba(34,197,94,.85); }
+    .countdown { text-align:center; min-width:120px; }
+    .cd-num {
+      font-size:4.4rem; font-weight:900; line-height:1; font-variant-numeric:tabular-nums;
+      font-family:'Consolas','Courier New',monospace;
+    }
+    .cd-state { font-size:.95rem; font-weight:800; margin-top:8px; letter-spacing:1px; }
+
+    /* ---------- STAT TILES ---------- */
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    @media(max-width:760px){ .stats{ grid-template-columns:1fr 1fr; } }
+    .stat { padding:18px; text-align:center; position:relative; overflow:hidden; }
+    .stat .num { font-size:2.1rem; font-weight:900; line-height:1; font-variant-numeric:tabular-nums; }
+    .stat .lbl { font-size:.76rem; color:var(--muted); margin-top:7px; font-weight:600; }
+    .num-red{color:#dc2626} .num-blue{color:#2563eb} .num-green{color:#16a34a} .num-purple{color:#9333ea}
+    html.dark .num-red{color:#f87171} html.dark .num-blue{color:#60a5fa}
+    html.dark .num-green{color:#4ade80} html.dark .num-purple{color:#c084fc}
+
+    /* ---------- CHARTS (Feature #3) ---------- */
+    .charts { display:grid; grid-template-columns:1.4fr 1fr; gap:18px; }
+    @media(max-width:760px){ .charts{ grid-template-columns:1fr; } }
+    .chart-box { background:rgba(148,163,184,.06); border:1px solid var(--border); border-radius:14px; padding:14px 16px; }
+    .chart-title { font-size:.82rem; font-weight:700; color:var(--muted); margin-bottom:12px; }
+    .chart-side { display:flex; flex-direction:column; gap:18px; }
+    /* Bar chart ngang theo gio: 24 cot */
+    .bars-h { display:flex; align-items:flex-end; gap:3px; height:150px; }
+    .bars-h .bh { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:4px; }
+    .bars-h .bh .fill { width:100%; border-radius:4px 4px 0 0; background:linear-gradient(180deg,#60a5fa,#2563eb); min-height:2px; transition:height .4s; }
+    .bars-h .bh .fill.zero { background:rgba(148,163,184,.2); }
+    .bars-h .bh .hl { font-size:.55rem; color:var(--muted); }
+    .bars-h .bh .hv { font-size:.6rem; font-weight:700; color:var(--text); }
+    /* Bar chart doc theo loai/tuyen */
+    .bars-v { display:flex; flex-direction:column; gap:9px; }
+    .bars-v .bv { display:flex; align-items:center; gap:10px; font-size:.8rem; }
+    .bars-v .bv .lb { width:74px; flex:0 0 auto; text-align:right; color:var(--muted); font-weight:600; text-transform:capitalize; }
+    .bars-v .bv .track { flex:1; background:rgba(148,163,184,.15); border-radius:999px; height:16px; overflow:hidden; }
+    .bars-v .bv .track .fv { height:100%; border-radius:999px; background:linear-gradient(90deg,#a855f7,#7c3aed); min-width:3px; transition:width .4s; }
+    .bars-v .bv .vv { width:26px; flex:0 0 auto; font-weight:800; color:var(--text); }
+    .chart-empty { color:var(--muted); font-size:.8rem; text-align:center; padding:24px 0; }
+    /* Nut xem clip video vi pham */
+    .clip-btn {
+      cursor:pointer; border:none; border-radius:999px; padding:4px 12px;
+      font-size:.72rem; font-weight:700; color:#fff;
+      background:linear-gradient(90deg,#ef4444,#dc2626);
+      box-shadow:0 2px 6px rgba(239,68,68,.4);
+    }
+    .clip-btn:hover { filter:brightness(1.08); }
+    /* Modal video: khung video vi pham phong to */
+    .modal video { max-width:100%; max-height:100%; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,.6); background:#000; }
+    .clip-status {
+      position:absolute; top:22px; right:22px; z-index:2;
+      padding:7px 12px; border-radius:999px; color:#fff; background:rgba(15,23,42,.82);
+      font-size:.78rem; font-weight:800; box-shadow:0 4px 18px rgba(0,0,0,.3);
+    }
+
+    /* ---------- LICENSE PLATE (kieu VN) ---------- */
+    .plate {
+      display:inline-flex; align-items:center; gap:0; background:#f8fafc; color:#0b0b0b;
+      border:3px solid #0b0b0b; border-radius:9px; overflow:hidden;
+      font-family:'Consolas','Courier New',monospace; font-weight:800;
+      box-shadow:0 3px 8px rgba(0,0,0,.25);
+    }
+    .plate .flag { background:#1e3a8a; color:#fff; font-size:.6em; padding:0 6px; align-self:stretch; display:flex; align-items:center; letter-spacing:1px; }
+    .plate .txt { padding:5px 12px; letter-spacing:2px; white-space:nowrap; }
+    .plate.na { color:#94a3b8; border-color:#cbd5e1; }
+    .plate.na .flag { background:#94a3b8; }
+    .plate.na .txt { letter-spacing:.7px; }
+
+    /* ---------- HERO VI PHAM (moi nhat) ---------- */
+    .hero {
+      padding:0; overflow:hidden; border:2px solid #ef4444;
+      box-shadow:0 12px 34px rgba(239,68,68,.28); animation:slidein .4s ease;
+    }
+    .hero-bar {
+      background:linear-gradient(90deg,#ef4444,#dc2626); color:#fff;
+      padding:10px 18px; font-weight:800; display:flex; align-items:center; gap:9px; font-size:1rem;
+    }
+    .hero-bar .live { margin-left:auto; font-size:.72rem; background:rgba(255,255,255,.22); padding:3px 10px; border-radius:999px; animation:blink 1.2s infinite; }
+    .hero-body { display:flex; gap:20px; padding:18px; align-items:center; flex-wrap:wrap; }
+    .hero-photo {
+      width:230px; height:150px; object-fit:cover; border-radius:12px; cursor:pointer;
+      border:1px solid var(--border); background:#0b1220; flex:0 0 auto; transition:transform .15s;
+    }
+    .hero-photo:hover { transform:scale(1.03); }
+    .hero-photo.none { display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:.85rem; }
+    .hero-info { flex:1; min-width:200px; display:flex; flex-direction:column; gap:12px; }
+    .hero-info .plate .txt { font-size:1.9rem; }
+    .hero-meta { display:flex; flex-wrap:wrap; gap:8px 20px; color:var(--muted); font-size:.9rem; }
+    .hero-meta b { color:var(--text); }
+
+    /* ---------- BANG / LUOI VI PHAM ---------- */
+    .viol-head { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 12px; }
+    .viol-head .cnt { font-size:.85rem; color:var(--muted); font-weight:600; }
+    .viol-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; padding:0 20px 20px; }
+    .vcard {
+      border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--card);
+      transition:transform .15s,box-shadow .15s; animation:slidein .3s ease;
+    }
+    .vcard:hover { transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.14); }
+    .vcard .vimg { width:100%; height:130px; object-fit:cover; cursor:pointer; background:#0b1220; display:block; }
+    .vcard .vimg.none { display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:.8rem; height:130px; }
+    .vcard .vbody { padding:12px; display:flex; flex-direction:column; gap:9px; }
+    .vcard .vrow { display:flex; align-items:center; justify-content:space-between; font-size:.82rem; color:var(--muted); }
+    .vcard .vrow .tag { padding:2px 9px; border-radius:999px; background:rgba(239,68,68,.12); color:#dc2626; font-weight:700; font-size:.72rem; }
+    html.dark .vcard .vrow .tag { background:rgba(239,68,68,.2); color:#fca5a5; }
+    .vcard .plate .txt { font-size:1.05rem; }
+    .viol-empty { text-align:center; color:var(--muted); padding:50px 16px; grid-column:1/-1; }
+    .viol-empty .big { font-size:2.4rem; margin-bottom:8px; }
+
+    /* ---------- QR TELEGRAM ---------- */
+    .qr {
+      position:fixed; bottom:16px; right:16px; z-index:50; text-decoration:none;
+      background:var(--card); border:1px solid var(--border); border-radius:16px;
+      box-shadow:var(--shadow); padding:10px; width:172px; transition:transform .15s;
+    }
+    .qr:hover { transform:scale(1.04); }
+    .qr .cap { text-align:center; font-size:.74rem; font-weight:800; color:var(--text); margin-bottom:6px; }
+    .qr img { width:150px; height:150px; object-fit:contain; margin:0 auto; display:block; border-radius:9px; background:#fff; padding:4px; }
+    .qr .fb { width:150px; height:150px; display:none; align-items:center; justify-content:center; text-align:center; font-size:11px; color:var(--muted); }
+    .qr .cap2 { margin-top:6px; text-align:center; font-size:.72rem; color:var(--muted); }
+
+    /* ---------- PHONG THI NGHIEM VIDEO LOCAL ---------- */
+    .upload-lab { padding:20px; position:relative; overflow:hidden; }
+    .upload-lab::before { content:''; position:absolute; inset:0 0 auto; height:5px; background:linear-gradient(90deg,#2563eb,#7c3aed,#db2777); }
+    .upload-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; }
+    .upload-sub { color:var(--muted); font-size:.82rem; line-height:1.45; margin:6px 0 0; max-width:820px; }
+    .upload-controls { display:grid; grid-template-columns:minmax(210px,1.4fr) minmax(190px,.9fr) auto; gap:12px; align-items:end; margin-top:18px; }
+    .upload-field { display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .upload-field > span { font-size:.74rem; font-weight:800; color:var(--muted); }
+    .upload-field input, .upload-field select {
+      width:100%; min-height:42px; border:1px solid var(--border); border-radius:10px;
+      background:var(--card); color:var(--text); padding:8px 10px; font:inherit; font-size:.84rem;
+    }
+    .upload-field input[type=file] { padding:7px; }
+    .lab-btn { min-height:42px; border:0; border-radius:10px; padding:9px 16px; cursor:pointer; font-weight:800; color:#fff; background:linear-gradient(90deg,#2563eb,#7c3aed); box-shadow:0 5px 14px rgba(37,99,235,.28); white-space:nowrap; }
+    .lab-btn:disabled { opacity:.55; cursor:not-allowed; box-shadow:none; }
+    .lab-btn.secondary { background:var(--card); color:var(--text); border:1px solid var(--border); box-shadow:none; }
+    .lab-btn.drive { background:linear-gradient(90deg,#16a34a,#0d9488); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    .lab-btn.danger { background:linear-gradient(90deg,#ef4444,#dc2626); }
+    .mode-options { margin-top:12px; padding:12px; border:1px dashed var(--border); border-radius:12px; background:rgba(37,99,235,.04); display:grid; grid-template-columns:repeat(5,minmax(100px,1fr)); gap:10px; }
+    .mode-options .upload-field input, .mode-options .upload-field select { min-height:36px; padding:6px 8px; }
+    .switch-line { display:flex; align-items:center; gap:8px; min-height:36px; font-size:.78rem; font-weight:700; }
+    .switch-line input { width:17px; height:17px; min-height:0; }
+    .lab-note { display:flex; gap:8px; align-items:flex-start; margin-top:12px; color:var(--muted); font-size:.76rem; line-height:1.45; }
+    .job-panel { margin-top:16px; padding:14px; border:1px solid var(--border); border-radius:14px; background:rgba(148,163,184,.06); }
+    .job-top { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .job-status { font-size:.86rem; font-weight:800; }
+    .job-badge { font-size:.7rem; font-weight:900; border-radius:999px; padding:5px 9px; color:#1d4ed8; background:rgba(59,130,246,.13); }
+    .job-progress { height:11px; overflow:hidden; border-radius:999px; background:rgba(148,163,184,.22); margin-top:10px; }
+    .job-bar { width:0%; height:100%; border-radius:999px; background:linear-gradient(90deg,#22c55e,#2563eb,#7c3aed); transition:width .35s; }
+    .job-meta { margin-top:8px; display:flex; gap:12px; flex-wrap:wrap; font-size:.74rem; color:var(--muted); }
+    .job-view { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(220px,.65fr); gap:14px; margin-top:14px; }
+    .job-media { min-height:220px; background:#030712; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .job-media img, .job-media video { width:100%; max-height:480px; object-fit:contain; display:block; }
+    .job-side { border:1px solid var(--border); border-radius:12px; padding:12px; }
+    .job-side h3 { font-size:.82rem; margin:0 0 9px; }
+    .job-artifacts { display:flex; flex-direction:column; gap:7px; }
+    .job-artifacts a { font-size:.73rem; color:var(--accent); overflow-wrap:anywhere; }
+    @media(max-width:850px){
+      .upload-controls { grid-template-columns:1fr; }
+      .mode-options { grid-template-columns:1fr 1fr; }
+      .job-view { grid-template-columns:1fr; }
+    }
+
+    /* ---------- WEBCAM THUC TE + YOLO ---------- */
+    .webcam-lab { padding:20px; position:relative; overflow:hidden; }
+    .webcam-lab::before {
+      content:''; position:absolute; inset:0 0 auto; height:5px;
+      background:linear-gradient(90deg,#06b6d4,#2563eb,#22c55e);
+    }
+    .webcam-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; }
+    .webcam-badge {
+      display:inline-flex; align-items:center; gap:7px; border-radius:999px; padding:7px 11px;
+      background:rgba(100,116,139,.13); color:var(--muted); font-size:.72rem; font-weight:900;
+    }
+    .webcam-badge[data-state="starting"] { color:#b45309; background:rgba(245,158,11,.14); }
+    .webcam-badge[data-state="running"] { color:#15803d; background:rgba(34,197,94,.14); }
+    .webcam-badge[data-state="error"] { color:#dc2626; background:rgba(239,68,68,.14); }
+    html.dark .webcam-badge[data-state="starting"] { color:#fcd34d; }
+    html.dark .webcam-badge[data-state="running"] { color:#86efac; }
+    html.dark .webcam-badge[data-state="error"] { color:#fca5a5; }
+    .webcam-controls {
+      display:grid; grid-template-columns:minmax(230px,1fr) auto auto; gap:10px;
+      align-items:end; margin-top:16px;
+    }
+    .lab-btn.success { background:linear-gradient(90deg,#059669,#16a34a); }
+    .webcam-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+    .webcam-pane { min-width:0; }
+    .webcam-pane-title { font-size:.75rem; font-weight:900; color:var(--muted); margin:0 0 7px; }
+    .webcam-stage {
+      position:relative; min-height:260px; background:#020617; border-radius:14px;
+      overflow:hidden; border:1px solid #1e293b; display:flex; align-items:center; justify-content:center;
+    }
+    .webcam-stage video, .webcam-stage img {
+      display:block; width:100%; max-height:470px; min-height:260px; object-fit:contain; background:#000;
+    }
+    .webcam-placeholder {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      padding:22px; text-align:center; color:#94a3b8; font-size:.84rem; line-height:1.5;
+      background:radial-gradient(circle at center,rgba(30,41,59,.6),rgba(2,6,23,.96));
+    }
+    .webcam-overlay-label {
+      position:absolute; top:10px; left:10px; z-index:2; border-radius:999px; padding:5px 9px;
+      color:#fff; background:rgba(15,23,42,.78); font-size:.66rem; font-weight:900;
+      pointer-events:none;
+    }
+    .webcam-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px; }
+    .webcam-metric { border:1px solid var(--border); background:rgba(148,163,184,.06); border-radius:11px; padding:10px; min-width:0; }
+    .webcam-metric b { display:block; font-size:.88rem; overflow-wrap:anywhere; }
+    .webcam-metric span { display:block; margin-top:3px; color:var(--muted); font-size:.65rem; font-weight:700; }
+    @media(max-width:850px){
+      .webcam-controls { grid-template-columns:1fr; }
+      .webcam-grid { grid-template-columns:1fr; }
+      .webcam-metrics { grid-template-columns:1fr 1fr; }
+    }
+
+    /* ---------- MODAL ---------- */
+    .modal { position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; padding:16px; }
+    .modal img { max-width:100%; max-height:100%; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+  </style>
+</head>
+<body>
+
+  <!-- BANNER -->
+  <div class="banner">
+    <div class="brand">
+      <div class="logo">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 19h8m-9-4h10a2 2 0 002-2V9a2 2 0 00-2-2H6a2 2 0 00-2 2v4a2 2 0 002 2z"/></svg>
+        <span class="dot"><i class="p"></i><i></i></span>
+      </div>
+      <div>
+        <h1 class="title">Giám Sát Giao Thông Đà Nẵng</h1>
+        <p class="subtitle">Phát hiện vượt đèn đỏ &middot; Giám sát thời gian thực</p>
+      </div>
+    </div>
+    <div class="actions">
+      <span class="conn"><span id="conn-dot" class="cdot"></span><span id="conn-text">Đang kết nối…</span></span>
+      <button id="theme-btn" class="theme-btn" title="Đổi giao diện sáng/tối"><span id="theme-icon">🌙</span></button>
+    </div>
+  </div>
+
+  <main>
+    <!-- WEBCAM TRINH DUYET: FRAME GUI VE BACKEND VA CHAY YOLO THAT -->
+    <section id="webcam-lab" class="card webcam-lab">
+      <div class="webcam-head">
+        <div>
+          <h2 class="section-title"><span class="ic">🎥</span> Webcam Thực Tế Bằng AI</h2>
+          <p class="upload-sub">Bật webcam laptop/USB để nhận dạng phương tiện ngoài đời. Mỗi khung hình được xử lý bằng model YOLOv26n thật và trả về box, loại xe, độ tin cậy cùng FPS.</p>
+        </div>
+        <span id="webcam-status" class="webcam-badge" data-state="idle">● CHƯA BẬT WEBCAM</span>
+      </div>
+
+      <div class="webcam-controls">
+        <label class="upload-field"><span>CAMERA</span>
+          <select id="webcam-device"><option value="">Camera mặc định</option></select>
+        </label>
+        <button id="webcam-start" class="lab-btn success" type="button">▶ Bật webcam + YOLO</button>
+        <button id="webcam-stop" class="lab-btn danger" type="button" disabled>■ Dừng webcam</button>
+      </div>
+
+      <div class="webcam-grid">
+        <div class="webcam-pane">
+          <div class="webcam-pane-title">CAMERA GỐC — THỜI GIAN THỰC</div>
+          <div class="webcam-stage">
+            <span class="webcam-overlay-label">RAW WEBCAM</span>
+            <video id="webcam-source" autoplay muted playsinline></video>
+            <div id="webcam-source-placeholder" class="webcam-placeholder">Bấm “Bật webcam + YOLO” và cho phép trình duyệt sử dụng camera.</div>
+          </div>
+        </div>
+        <div class="webcam-pane">
+          <div class="webcam-pane-title">KẾT QUẢ MODEL — BOX & PHÂN LOẠI XE</div>
+          <div class="webcam-stage">
+            <span class="webcam-overlay-label">AI YOLOv26n</span>
+            <img id="webcam-result" class="hidden" alt="Khung webcam đã được YOLO nhận dạng" />
+            <div id="webcam-result-placeholder" class="webcam-placeholder">Kết quả AI sẽ xuất hiện ở đây sau khi model khởi động.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="webcam-metrics">
+        <div class="webcam-metric"><b id="webcam-model">YOLOv26n COCO</b><span>MODEL NHẬN DẠNG</span></div>
+        <div class="webcam-metric"><b id="webcam-fps">0.0 FPS</b><span>TỐC ĐỘ AI</span></div>
+        <div class="webcam-metric"><b id="webcam-count">0 phương tiện</b><span>TRONG KHUNG HÌNH</span></div>
+        <div class="webcam-metric"><b id="webcam-classes">Chưa có dữ liệu</b><span>PHÂN LOẠI</span></div>
+      </div>
+      <canvas id="webcam-capture" class="hidden" aria-hidden="true"></canvas>
+      <div class="lab-note"><span>🔒</span><span>Khung webcam chỉ được xử lý trong bộ nhớ, không tự lưu ảnh, không gửi Drive/Telegram và không điều khiển GPIO. Để trình duyệt cho phép camera, hãy mở dashboard bằng <b>http://localhost:8090</b> hoặc HTTPS. Khi chạy Video Test, webcam sẽ tự dừng để tránh hai model tranh CPU/GPU.</span></div>
+    </section>
+
+    <!-- CAMERA GIAM SAT (video co ve box nhan dien) -->
+    <section id="cam-card" class="card" style="padding:0;overflow:hidden;">
+      <div style="padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between;">
+        <h2 class="section-title"><span class="ic">📹</span> Camera Giám Sát</h2>
+        <span id="cam-live" class="hero-bar" style="padding:4px 12px;font-size:.72rem;border-radius:999px;background:linear-gradient(90deg,#ef4444,#dc2626);color:#fff;">● TRỰC TIẾP</span>
+      </div>
+      <div style="background:#000;position:relative;">
+        <img id="cam-img" alt="Camera nhận diện" style="width:100%;max-height:520px;object-fit:contain;display:block;"
+             onerror="document.getElementById('cam-fallback').style.display='flex';this.style.display='none'" />
+        <div id="cam-fallback" style="display:none;align-items:center;justify-content:center;height:300px;color:#94a3b8;font-size:.95rem;text-align:center;">
+          Chưa có tín hiệu camera.<br>Chạy nhận diện (main.py) để xem video.
+        </div>
+        <div id="cam-stopped" style="display:flex;position:absolute;inset:0;align-items:center;justify-content:center;background:rgba(2,6,23,.56);color:#fff;font-weight:800;font-size:1rem;text-align:center;pointer-events:none;">
+          LUỒNG VIDEO ĐÃ DỪNG<br><span style="font-size:.78rem;font-weight:500;margin-left:8px;">Chạy video mẫu để tiếp tục</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEST VIDEO LOCAL: tach biet khoi luong camera/Jetson dang chay -->
+    <section id="video-lab" class="card upload-lab">
+      <div class="upload-head">
+        <div>
+          <h2 class="section-title"><span class="ic">🧠</span> Test Video Local Bằng AI</h2>
+          <p class="upload-sub">Chọn video bất kỳ để YOLO vẽ box và phân loại xe theo thời gian thực. Có thể chuyển sang mô phỏng vượt đèn đỏ, đo tốc độ hai vạch hoặc heatmap dự phòng khi hình ảnh mờ/mưa lớn.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a class="lab-btn secondary" href="/demo-videos/degraded_visibility_fixedcam_12s_640x360_10fps_ccby4.mp4" target="_blank" rel="noopener noreferrer">🌧 Video mưa/mờ input</a>
+          <a class="lab-btn secondary" href="/demo-videos/degraded_visibility_heatmap_12s_640x360_10fps_ccby4.mp4" target="_blank" rel="noopener noreferrer">🔥 Xem heatmap mẫu 12s</a>
+          <a id="drive-btn" class="lab-btn drive" href="#" target="_blank" rel="noopener noreferrer">☁ Mở Drive bằng chứng</a>
+        </div>
+      </div>
+
+      <div class="upload-controls">
+        <label class="upload-field"><span>1. VIDEO TEST (tối đa 256 MB)</span><input id="video-file" type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,.m4v" /></label>
+        <label class="upload-field"><span>2. CHẾ ĐỘ AI</span>
+          <select id="video-mode">
+            <option value="vehicle">YOLO — box & phân loại phương tiện</option>
+            <option value="redlight">YOLO + OCR — mô phỏng vượt đèn đỏ</option>
+            <option value="speed">YOLO + ByteTrack + OCR — tốc độ 2 vạch</option>
+            <option value="heatmap">Heatmap mật độ giao thông & ùn tắc (AI Footprint)</option>
+          </select>
+        </label>
+        <button id="video-run" class="lab-btn" type="button">▶ Tải lên & chạy AI</button>
+      </div>
+
+      <div id="mode-options" class="mode-options">
+        <label class="upload-field redlight-opt"><span>VẠCH DỪNG (%)</span><input id="stop-line-ratio" type="number" min="10" max="95" value="72" /></label>
+        <label class="upload-field speed-opt"><span>VẠCH A (%)</span><input id="line-a-ratio" type="number" min="5" max="90" value="45" /></label>
+        <label class="upload-field speed-opt"><span>VẠCH B (%)</span><input id="line-b-ratio" type="number" min="10" max="95" value="72" /></label>
+        <label class="upload-field speed-opt"><span>KHOẢNG CÁCH A–B (m)</span><input id="distance-m" type="number" min="0.5" max="500" step="0.5" value="8" /></label>
+        <label class="upload-field speed-opt"><span>NGƯỠNG DEMO (km/h)</span><input id="limit-kmh" type="number" min="1" max="300" value="50" /></label>
+        <label class="upload-field speed-opt"><span>HƯỚNG XE</span><select id="speed-direction"><option value="auto">Tự động</option><option value="down">Từ trên xuống</option><option value="up">Từ dưới lên</option></select></label>
+        <label class="upload-field common-opt"><span>BƯỚC NHẢY FRAME</span><input id="video-stride" type="number" min="1" max="12" value="2" /></label>
+        <label class="upload-field common-opt"><span>TỐI ĐA FRAME AI</span><input id="max-frames" type="number" min="0" max="50000" value="900" title="0 = chạy hết video" /></label>
+        <label class="switch-line redlight-opt"><input id="force-red" type="checkbox" checked /> Toàn thời gian là đèn đỏ (demo)</label>
+        <label class="switch-line redlight-opt"><input id="notify-demo" type="checkbox" /> Send this DEMO to Telegram and the configured app recipient</label>
+        <div class="upload-field redlight-opt">
+          <span>APP DEMO RECIPIENT CCCD (LOCAL ONLY)</span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input id="demo-recipient-cccd" type="password" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="12 digits" style="flex:1;min-width:180px;" />
+            <button id="demo-recipient-save" class="lab-btn secondary" type="button">Save recipient</button>
+          </div>
+          <small id="demo-recipient-status" class="upload-sub">No local demo recipient configured.</small>
+        </div>
+      </div>
+
+      <div id="mode-explain" class="lab-note"><span>ℹ️</span><span></span></div>
+
+      <div id="job-panel" class="job-panel hidden">
+        <div class="job-top">
+          <span id="job-status" class="job-status">Đang chuẩn bị…</span>
+          <div style="display:flex;gap:8px;align-items:center;"><span id="job-badge" class="job-badge">YOLO</span><button id="job-cancel" class="lab-btn danger hidden" type="button" style="min-height:32px;padding:5px 10px;font-size:.72rem;">Dừng</button></div>
+        </div>
+        <div class="job-progress"><div id="job-bar" class="job-bar"></div></div>
+        <div id="job-meta" class="job-meta"></div>
+        <div class="job-view">
+          <div class="job-media"><img id="job-preview" alt="Preview AI video tải lên" /><video id="job-video" class="hidden" controls playsinline></video></div>
+          <aside class="job-side"><h3>Kết quả & tệp xuất</h3><div id="job-artifacts" class="job-artifacts"><span class="upload-sub">Đang chờ AI tạo kết quả…</span></div></aside>
+        </div>
+      </div>
+
+      <div class="lab-note"><span>🛡️</span><span>Luồng upload chạy tách biệt và mặc định không gửi GPIO. Phần cứng đèn giao thông/4 LED 7 đoạn vẫn do luồng Jetson ở “Camera Giám Sát” điều khiển sau khi đấu dây. Nếu dashboard được triển khai trực tiếp trên Nano thì worker AI này cũng chạy bằng Python của Nano.</span></div>
+    </section>
+
+    <!-- DEN 2 TRUC -->
+    <section class="lights-grid">
+      <div class="card light-card">
+        <div class="lc-head">
+          <h2 class="lc-title">Trục Dọc<small>Hướng Bắc – Nam</small></h2>
+          <span id="cnt-v" class="badge-count">🚗 -- xe</span>
+        </div>
+        <div class="lc-body">
+          <div id="lights-v" class="housing"></div>
+          <div class="countdown">
+            <div id="time-v" class="cd-num">--</div>
+            <div id="state-v" class="cd-state">--</div>
+            <div id="green-v" class="cd-green">⚡ Xanh thích ứng: -- s</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card light-card">
+        <div class="lc-head">
+          <h2 class="lc-title">Trục Ngang<small>Hướng Đông – Tây</small></h2>
+          <span id="cnt-h" class="badge-count g">🚗 -- xe</span>
+        </div>
+        <div class="lc-body">
+          <div id="lights-h" class="housing"></div>
+          <div class="countdown">
+            <div id="time-h" class="cd-num">--</div>
+            <div id="state-h" class="cd-state">--</div>
+            <div id="green-h" class="cd-green">⚡ Xanh thích ứng: -- s</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAT TILES -->
+    <section class="stats">
+      <div class="card stat"><div class="num num-red" id="stat-viol">0</div><div class="lbl">Vi phạm ghi nhận</div></div>
+      <div class="card stat"><div class="num num-blue" id="stat-cars">0</div><div class="lbl">Xe trục dọc</div></div>
+      <div class="card stat"><div class="num num-green" id="stat-motor">0</div><div class="lbl">Xe trục ngang</div></div>
+      <div class="card stat"><div class="num num-purple" id="stat-fps">0</div><div class="lbl">FPS xử lý</div></div>
+    </section>
+
+    <!-- THONG KE + BIEU DO (Feature #3) -->
+    <section class="card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <h2 class="section-title"><span class="ic">📊</span> Thống Kê Vi Phạm</h2>
+        <span id="stats-total" class="cnt">Tổng: 0</span>
+      </div>
+      <div class="charts">
+        <!-- Bieu do theo gio -->
+        <div class="chart-box">
+          <div class="chart-title">Vi phạm theo giờ trong ngày</div>
+          <div id="chart-hour" class="bars-h"></div>
+        </div>
+        <!-- Bieu do theo loai xe + tuyen -->
+        <div class="chart-side">
+          <div class="chart-box">
+            <div class="chart-title">Theo loại xe</div>
+            <div id="chart-type" class="bars-v"></div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Theo tuyến</div>
+            <div id="chart-lane" class="bars-v"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HERO VI PHAM MOI NHAT -->
+    <section id="hero" class="card hero hidden">
+      <div class="hero-bar">🚨 Vi Phạm Mới Nhất <span class="live">● TRỰC TIẾP</span></div>
+      <div class="hero-body">
+        <img id="hero-img" class="hero-photo none" alt="Ảnh vi phạm mới nhất" />
+        <div class="hero-info">
+          <div id="hero-plate" class="plate na"><span class="flag">VN</span><span class="txt">--</span></div>
+          <div class="hero-meta">
+            <span>Loại xe: <b id="hero-type">--</b></span>
+            <span>Tuyến: <b id="hero-lane">--</b></span>
+            <span>Thời gian: <b id="hero-time">--</b></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LUOI VI PHAM -->
+    <section class="card">
+      <div class="viol-head">
+        <h2 class="section-title"><span class="ic">📋</span> Danh Sách Biển Số Vi Phạm</h2>
+        <span id="viol-count" class="cnt">0 vi phạm</span>
+      </div>
+      <div id="viol-grid" class="viol-grid">
+        <div class="viol-empty"><div class="big">✅</div>Chưa có vi phạm nào được ghi nhận.</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- QR TELEGRAM -->
+  <a id="qr-link" href="#" target="_blank" rel="noreferrer" class="qr" title="Mở Telegram Bot">
+    <div class="cap">📲 Bot Cảnh Báo Telegram</div>
+    <img id="qr-img" src="/qr.png" alt="QR Telegram Bot"
+         onerror="this.style.display='none';document.getElementById('qr-fallback').style.display='flex'" />
+    <div id="qr-fallback" class="fb">Chưa có ảnh QR<br>(web/qr.png)</div>
+    <div id="qr-caption" class="cap2">Quét để nhận cảnh báo</div>
+  </a>
+
+  <!-- MODAL ANH -->
+  <div id="modal" class="modal hidden" onclick="closeModal()">
+    <img id="modal-img" src="" alt="Ảnh vi phạm phóng to" />
+  </div>
+
+  <!-- MODAL CLIP VIDEO -->
+  <div id="modal-video" class="modal hidden" onclick="closeClip()">
+    <div id="clip-status" class="clip-status"></div>
+    <video id="modal-vid" src="" controls autoplay loop playsinline
+           style="max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.6);background:#000;"
+           onclick="event.stopPropagation()"></video>
+  </div>
+
+<script src="/app.js?v=video-ai-lab-1"></script>
+</body>
+</html>

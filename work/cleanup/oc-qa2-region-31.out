@@ -1,0 +1,16 @@
+{
+ "suite": "region-31 · H",
+ "passed": 1,
+ "failed": 1,
+ "failures": [
+  {
+   "name": "[webgl] mở app và chạy kịch bản khu mô phỏng",
+   "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a&view=overview&density=full&backend=webgl\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8881/hcmc-poc/webgpu-materials-24.html?v=31a&view=overview&density=full&backend=webgl\", waiting until \"load\"\u001b[22m\n"
+  }
+ ],
+ "table": {},
+ "summary": {}
+}
+
+CHECKS PASS:
+ ✓ mã nguồn: city-region-31.js xuất hằng và regionOf; HTML có radiogroup "Khu mô phỏng" đủ 5 nút; module nạp có khóa cache 30b-31h

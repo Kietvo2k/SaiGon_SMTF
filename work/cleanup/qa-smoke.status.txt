@@ -1,0 +1,1 @@
+﻿qa-smoke exit= elapsed=22.1s

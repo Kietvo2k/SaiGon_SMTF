@@ -1,0 +1,41 @@
+(node:31188) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ phiên bản + tham số mặc định đúng hợp đồng (0.818ms)
+✔ isGreen fixed khớp chu kỳ 48 s (xanh 22/16, vàng 3, đỏ chung 2) và khớp stateOf 100 % bước (757.2019ms)
+✔ SignalState có phases[].countdown_s, override null ban đầu (713.864ms)
+✔ max-pressure đổi pha đúng ngưỡng switchMargin; giữ pha khi chênh < margin (749.7776ms)
+✔ switchMargin được nối vào quyết định: margin nhỏ đổi pha, margin lớn giữ (1621.2048ms)
+✔ overridePhase: đổi nhóm đi qua vàng 3 s + đỏ chung 2 s; có until_t_sim + until_at; null để hủy (762.9912ms)
+✔ setMode giữa chừng áp dụng từ lần đổi pha kế (trừ immediate); không reset tSim (793.2705ms)
+✔ metrics là superset đủ trường; stateHash tất định, đổi khi đổi override (757.4876ms)
+✔ runsRed: redRun quyết định xe chủ động vượt; mặc định false (1508.4017ms)
+✔ 6 nút có node_id HX-01…HX-06, chỉ HX-01/HX-05 chung cụm HX-C1; metrics by_node khóa HX (701.9055ms)
+✔ áp lực trừ q_out: hàng chờ bị làn ra triệt tiêu thì không đổi pha (796.4272ms)
+✔ smart: áp lực cân bằng giữ pha, isGreen xanh tới maxGreen 45 s rồi mới đổi (928.8689ms)
+✔ cycleIdOf = floor((t − origin)/48): t=96→2, t=120→2 (1072.4021ms)
+✔ flow_per_min cộng dồn crossed mỗi bước rồi lấy mẫu 1 s (không chỉ bước trùng mốc) (1087.2434ms)
+✔ wait_avg dùng mẫu số Σcount (dòng count=0 không kéo lệch trung bình) (1092.8771ms)
+✔ reset(): đưa pha về gốc (nhóm 0 xanh) và xóa ghi đè (2092.9079ms)
+✔ stateOf nút 31A ngoài kế hoạch: cụm 31A-n, chu kỳ 44 s (không rơi vào HX-C1) (910.3414ms)
+✔ algorithm mặc định max-pressure; actuated-gap giữ xanh khi còn xe tới, khác max-pressure (1683.7093ms)
+✔ D cycle-max-pressure: chia 38 s tỉ lệ áp lực, kẹp [10,28], EMA α=0,5; 0 áp lực → 19/19 (0.4017ms)
+✔ D cycle-max-pressure: chu kỳ 48 s, mặc định g0=19/g1=19, đúng 2 lần chuyển nhóm mỗi chu kỳ (827.0311ms)
+✔ E max-pressure-abs: chỉ chuyển khi (áp lực nhóm kia − nhóm hiện tại) ≥ switchAbs (1729.9122ms)
+✔ E max-pressure-abs: chống đói — nhóm đỏ liên tục ≥ maxRedS được phục vụ dù áp lực thấp hơn (852.9327ms)
+✔ max-pressure-150: áp lực 150 m theo nhóm đổi pha; khác actuated-gap (845.1612ms)
+✔ F max-pressure-gated: nhóm có làn ra đầy (q_out ≥ exitCapS) có áp lực 0 → không đổi sang nhóm đó (932.5885ms)
+✔ F max-pressure-gated: làn ra thông → nhóm hiện tại không có xe, nhóm kia có xe → đổi đúng tại minGreenS = 8 (809.0142ms)
+✔ F max-pressure-gated: xanh tối thiểu động = xe chờ hiện tại / satPerS (12 xe / 0,5 = 24 s), đổi khi chênh ≥ switchAbs (789.3169ms)
+✔ F max-pressure-gated: không đổi sang nhóm không có xe chờ (cả hai nhóm trống → giữ xanh tới maxGreen) (797.3653ms)
+✔ F max-pressure-gated: chống đói — nhóm kia đói ≥ maxRedS (40) được phục vụ dù chênh áp lực nhỏ hơn switchAbs (800.53ms)
+✔ F max-pressure-gated: lastServeEnd được ghi khi nhóm kết thúc xanh, và đi theo exportPhases/importPhases (809.5116ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 28594.1587

@@ -1,0 +1,15 @@
+{
+  "_comment": "Copy to evidence_sync.json and configure rclone separately. Do not store OAuth credentials in this file.",
+  "version": 1,
+  "enabled": false,
+  "backend": "rclone",
+  "rclone_remote": "YOUR_RCLONE_REMOTE:Smart-Traffic-VAIC/BANG_CHUNG_TU_DONG",
+  "queue": "logs/evidence_sync_queue.json",
+  "poll_seconds": 5,
+  "missing_poll_seconds": 5,
+  "stable_seconds": 2,
+  "backoff_base_seconds": 5,
+  "backoff_cap_seconds": 300,
+  "rclone_min_interval_seconds": 2,
+  "timeout": 120
+}

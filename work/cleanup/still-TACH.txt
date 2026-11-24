@@ -1,0 +1,2 @@
+outputs/tayninh-data-batch-03/registry/data-registry.json
+outputs/tayninh-imagery-campaign-05/evidence/baseline/providers/c05-gedtm-zenodo.json

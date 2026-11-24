@@ -1,0 +1,4 @@
+CFG E2_abs2_mg10_mr50: TB 2.04% min -11.1% tput -7.93%
+CFG E3_abs4_mg10_mr50: TB -0.16% min -10.98% tput -2.99%
+CFG E4_abs3_mg12_mr50: TB -0.6% min -11.81% tput 1.01%
+XONG work/kpi-t2d/res900-2

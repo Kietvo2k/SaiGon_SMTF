@@ -1,0 +1,138 @@
+✔ Worker client ready/query result exposes execution mode (4.7884ms)
+✔ superseded requests reject immediately and stale Worker response ignored (17.9737ms)
+✔ cancelled requests reject and late result cannot restore selection (14.3236ms)
+✔ Worker geometry failure retains code and does not silently fallback (1.4927ms)
+✔ Worker runtime errors reject pending operation and require reinitialization (14.5455ms)
+✔ Worker query timeout ends operation and terminates stalled Worker (31.0072ms)
+✔ large dataset unsupported Worker refuses main-thread freeze explicitly (1.2015ms)
+✔ destroy rejects pending work and further requests (13.943ms)
+✔ reinitialization during boot isolates old Worker messages and timer (31.5636ms)
+✔ reinitialize during query rejects old query; late old errors do not destroy fresh Worker (30.4294ms)
+✔ bounded main-thread fallback is explicit, functional and cancellable (51.2165ms)
+✔ raw JSON client transfers buffer ownership to Worker and retains verified ready info (2.9239ms)
+✔ raw JSON requires Worker and cannot silently fallback after integrity failure (6.5082ms)
+✔ holes exclude entirely contained footprint and subtract hole area (12.8749ms)
+✔ concave notch excludes polygon whose bbox/center would be misleading (2.7496ms)
+✔ edge-only intersection counts contact with zero clipped area (1.3074ms)
+✔ actual clipping finds polygon overlap when centroid lies outside query (2.4774ms)
+✔ duplicate source IDs group conservatively and unique area removes overlaps (1.3588ms)
+✔ cross-provider identical IDs are not merged as physical buildings (1.3916ms)
+✔ unknown source IDs retain separate representation identities (1.6677ms)
+✔ illustrative/nonbuilding features are excluded from statistics (0.8191ms)
+✔ MultiPolygon query retains disjoint regions and holes (1.9516ms)
+✔ corridor distances are meters with monotonic area and selected counts (28.8914ms)
+✔ self-crossing query rejected before any statistics (0.7525ms)
+✔ NaN/infinite/string coordinates and wrong axis range rejected (0.2934ms)
+✔ unclosed, degenerate and external-hole geometry rejected (0.4481ms)
+✔ outside source extent and partial coverage explicitly labeled (0.7433ms)
+✔ invalid source geometry is rejected and its evidence is reported (0.3354ms)
+✔ source, epoch, unsurveyed height and model linkage preserved in exports (0.7277ms)
+✔ broad candidate query refuses; never returns capped partial selection (0.3024ms)
+✔ scenario distances reject zero, negative, excessive and duplicates (0.2949ms)
+✔ untrusted source keys do not invoke object prototype properties (0.3955ms)
+✔ missing or denied source gate refuses all spatial counts (0.1642ms)
+✔ HCMC actual sample normalizes 70726 representations and excludes 10 illustrations (2575.6472ms)
+✔ Gia Loc project was removed with the Tây Ninh datasets; the shared kernel keeps only the HCMC contract (0.198ms)
+✔ actual Worker hashes UTF8 bytes, parses and propagates verified provenance into query (44.5085ms)
+✔ mismatching source hash fails closed and removes a previously initialized dataset (10.0312ms)
+✔ valid hash for malformed JSON fails parsing; unavailable crypto never admits unverified bytes (22.9778ms)
+✔ legacy parsed input remains compatible and explicitly unverified (8.9502ms)
+✔ late asynchronous hash completion from older initialization cannot replace fresh dataset (10.9226ms)
+✔ actual HCMC 30MB file passes expected SHA256 and mapped-road query through Worker endpoint (4013.2903ms)
+✔ retained HCMC project manifest validates (1.2283ms)
+✔ HCMC south-positive frame inverts local Z below the origin (0.2018ms)
+✔ HCMC frame roundtrips geographic coordinates to less than 1e-10 degrees (0.1705ms)
+✔ unknown frame and nonfinite geographic coordinates reject (0.2673ms)
+✔ mismatched native scene origin rejects rather than moving reality (0.4998ms)
+✔ native polygons close with holes retained and model source date stays unknown (1.2911ms)
+✔ duplicate OSM IDs remain two representations and one source identity; illustrations separate (0.4529ms)
+✔ valid generic WGS84 future-source FeatureCollection normalizes with explicit null epoch (0.7913ms)
+✔ lead acquisition cannot bypass admission by calling normalizeScene (0.6867ms)
+✔ noncommercial rights cannot bypass admission by calling normalizeScene (0.6976ms)
+✔ missing license cannot bypass admission by calling normalizeScene (0.5733ms)
+✔ missing CRS cannot bypass admission by calling normalizeScene (0.5399ms)
+✔ missing hash cannot bypass admission by calling normalizeScene (0.6104ms)
+✔ coordinate-unit mismatch cannot bypass admission by calling normalizeScene (0.5381ms)
+✔ projected CRS cannot reinterpret GeoJSON degree coordinates (0.5267ms)
+✔ invalid hole crossing outside outer is rejected even when its first vertex is inside (0.1548ms)
+✔ overlapping and nested holes reject (0.2348ms)
+✔ crossed polygon and degenerate ring reject (0.1324ms)
+✔ overlapping MultiPolygon components reject while separate components pass (0.466ms)
+✔ MultiPolygon component inside a polygon hole does not overlap occupied interior (0.4145ms)
+✔ negative and infinite survey accuracy cannot qualify a surveyed source (0.3443ms)
+✔ modeled survey and unapproved plans fail; unknown capability never passes (0.2854ms)
+✔ survey terrain alone is insufficient for hydrological simulation (0.9042ms)
+✔ procedural asset cannot become real capture by changing role (0.4464ms)
+✔ unsafe source URLs and malformed source entries reject without script execution (0.4063ms)
+✔ byte verification catches changed expected fingerprint without touching source (225.6982ms)
+✔ quarantine import admits one valid GeoJSON, holds rejected rights, prevents clobber and path traversal (35.228ms)
+✖ retained source snapshots verify actual local bytes for HCMC (177.9902ms)
+✖ CLI separates byte integrity from admission and refuses an empty denied preparation (166.9003ms)
+✔ asset symlink escape cannot masquerade as contained verified data (125.0625ms)
+✔ CLI safe project slugs admit added configs and block filename traversal (0.2144ms)
+✔ Point and LineString may be query geometries but cannot be normalized as footprint buildings (0.7705ms)
+✔ empty footprint collection is held in quarantine without a normalized artifact (9.2244ms)
+✔ unverified surveyed height claim is rejected instead of silently downgraded (0.7396ms)
+✔ COG manifest rejects unsupportedCRS and false common source admission (16.1307ms)
+✔ Range client refuses HTTP200 before reading fullbody and verifies expectedETag/length (23.0118ms)
+✔ Range budgets/logs remain bounded and source totals remain accurate (13.7082ms)
+✔ Output budget and out-of-coverage refused before network (4.7582ms)
+✔ Raster client stale/cancel and reinit isolate old Worker results (17.0613ms)
+✔ LOD select is frustum, SSE and byte/count bounded (0.6509ms)
+✔ Standard ENU ECEF transform equals glTFY-up axis-converted placement (0.9801ms)
+✔ bilinear source sampler ignores zero-weight NoData neighbors but rejects contributors and outside center grid (0.2693ms)
+✔ streamed source admission binds the exact asset path/hash and invalid reinit clears prior sources (4.3471ms)
+✔ actual acquired ground validates its north-up raw grid and rejects metadata substitutions (14.0489ms)
+✔ raster Worker timeout is explicit and a superseded boot timer cannot terminate a newer ready Worker (60.5094ms)
+ℹ tests 86
+ℹ suites 0
+ℹ pass 84
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4275.7635
+
+✖ failing tests:
+
+test at outputs\shared\digital-twin-core\tests\source-core.cjs:50:1
+✖ retained source snapshots verify actual local bytes for HCMC (177.9902ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\source-core.cjs:50:81)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at outputs\shared\digital-twin-core\tests\source-core.cjs:51:1
+✖ CLI separates byte integrity from admission and refuses an empty denied preparation (166.9003ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\source-core.cjs:53:91)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

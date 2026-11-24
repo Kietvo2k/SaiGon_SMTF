@@ -1,0 +1,5 @@
+﻿fb1 target= [ 1216, -1697 ] dist= 180 camY= 25 az= 0.98 polar= 1.43
+fb2 target= [ 1215, -1700 ] dist= 180 camY= 25 az= -3.13 polar= 1.43
+fb3 target= [ 1211, -1708 ] dist= 187 camY= 139 az= 1.94 polar= 0.73
+crown target= [ 1122, -1774 ] dist= 440 camY= 433 az= 1.03 polar= 0.18
+spire target= [ 1148, -1759 ] dist= 832 camY= 787 az= 1.09 polar= 0.33

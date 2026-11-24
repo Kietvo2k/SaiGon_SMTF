@@ -1,0 +1,35 @@
+✔ actual generated catalog accounts all non-illustrative source representations, standard1.1/rootENU and retained sourcehash (0.6145ms)
+✖ all actual GLBs validate binary bounds/index space plus stable IDs across fine/coarse (4.6444ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 318.5674
+
+✖ failing tests:
+
+test at outputs\shared\digital-twin-core\tests\tiles-18.cjs:7:1
+✖ all actual GLBs validate binary bounds/index space plus stable IDs across fine/coarse (4.6444ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '7f650c8bbf0db6bbc94daac25a21aa7cfa1e3b6f5f7ec43e2899b4d8862f5c95'
+  - '711fba01238a327a08c5f9154cb4e9ac3ba095db510627981c71d53b28e40eeb'
+  
+      at TestContext.<anonymous> (C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\tiles-18.cjs:7:1217)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '7f650c8bbf0db6bbc94daac25a21aa7cfa1e3b6f5f7ec43e2899b4d8862f5c95',
+    expected: '711fba01238a327a08c5f9154cb4e9ac3ba095db510627981c71d53b28e40eeb',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

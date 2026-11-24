@@ -1,0 +1,5 @@
+[
+  { "name": "A", "algorithm": "max-pressure", "params": {} },
+  { "name": "D", "algorithm": "cycle-max-pressure", "params": {} },
+  { "name": "E1_abs3_mg10_mr50", "algorithm": "max-pressure-abs", "params": { "switchAbs": 3, "minGreenS": 10, "maxRedS": 50 } }
+]

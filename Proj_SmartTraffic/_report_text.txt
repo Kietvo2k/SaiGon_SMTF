@@ -1,0 +1,1782 @@
+-692785-51435   Họ và tên sinh viên: Văn Viết Hiễu                                                                                                                                                                 Năm 2025                               
+            Lê Minh Đạt 
+   Họ và tên sinh viên: Văn Viết Hiễu                                                                                                                                                                 Năm 2025                               
+            Lê Minh Đạt 
+ĐẠI HỌC ĐÀ NẴNG
+TRƯỜNG ĐẠI HỌC SƯ PHẠM KỸ THUẬT
+KHOA ĐIỆN – ĐIỆN TỬ
+ĐỀ TÀI: THIẾT KẾ HỆ THỐNG ĐIỀU KHIỂN VÀ GIÁM SÁT GIAO THÔNG THÔNG MINH
+ĐỀ TÀI: THIẾT KẾ HỆ THỐNG ĐIỀU KHIỂN VÀ GIÁM SÁT GIAO THÔNG THÔNG MINH
+ĐỒ ÁN TỐT NGHIỆP
+ĐẠI HỌC
+NGÀNH: CÔNG NGHỆ KỸ THUẬT ĐIỀU KHIỂN VÀ TỰ ĐỘNG HÓA
+ĐỀ TÀI:
+THIẾT KẾ HỆ THỐNG ĐIỀU KHIỂN VÀ GIÁM SÁT GIAO THÔNG THÔNG MINH
+Giảng viên hướng dẫn : ThS. Phan Thị Thanh Vân
+Sinh viên thực hiện      : Văn Viết Hiễu          Lê Minh Đạt
+Mã sinh viên                 : 21115055120219                                                                 21115055120115
+Lớp                                : 21TDH2
+                                         21TDH1
+Đà Nẵng,  tháng     năm 2025
+ĐẠI HỌC ĐÀ NẴNG
+TRƯỜNG ĐẠI HỌC SƯ PHẠM KỸ THUẬT
+KHOA ĐIỆN – ĐIỆN TỬ
+ĐỒ ÁN TỐT NGHIỆP
+ĐẠI HỌC
+NGÀNH: CÔNG NGHỆ KỸ THUẬT ĐIỀU KHIỂN VÀ TỰ ĐỘNG HÓA
+ĐỀ TÀI:
+THIẾT KẾ HỆ THỐNG ĐIỀU KHIỂN VÀ GIÁM SÁT GIAO THÔNG THÔNG MINH
+Giảng viên hướng dẫn : ThS. Phan Thị Thanh Vân
+Sinh viên thực hiện      : Văn Viết Hiễu          Lê Minh Đạt
+Mã sinh viên                 : 21115055120219                                                                 21115055120115
+Lớp                                : 21TDH2
+                                         21TDH1
+Đà Nẵng,  tháng    năm 2025
+NHẬN XÉT CỦA NGƯỜI HƯỚNG DẪN
+NHẬN XÉT CỦA NGƯỜI PHẢN BIỆN
+TÓM TẮT 
+Tên đề tài: Thiết kế hệ thống điều khiển và giám sát giao thông thông minh. 
+Sinh viên thực hiện: Văn Viết Hiễu                  Lớp: 21TDH2
+Lê Minh Đạt                          21TDH1
+Mã SV:21115055120219
+21115055120115
+Đề tài tập trung phát triển, xây dựng và thiết kế hệ thống điều khiển và giám sát giao thông tại ngã tư, bao gồm 2 chức năng: 
+Điều chỉnh thời gian đèn giao thông dựa vào sự chênh lệch lượng xe trên 2 tuyến đường trong một chu kỳ đèn. 
+Phát hiện, xử lý thông tin các xe vi phạm vượt đèn đỏ
+Trong đề tài này có các phương pháp được đưa vào sử dụng để điều khiển mô hình:
+- Phương pháp tính toán thời gian cho các pha tín hiệu đèn giao thông. 
+- Phương pháp xử lí ảnh từ camera để thực hiện giám sát, phân tích dữ liệu, truy xuất thông tin các phương tiện vi phạm vượt đèn đỏ tại ngã tư.
+Nội dung báo cáo gồm:
+Chương 1: Tổng quan về hệ thống giao thông thông minh.
+Chương 2: Giới thiệu vi điều khiển Arduino Mega 2560, phần mềm Arduino IDE và Pycharm. 
+Chương 3: Thiết kế hệ thống và thi công mô hình
+Chương 4: Xây dựng chương trình điều khiển và giám sát giao thông thông minh
+TRƯỜNG ĐẠI HỌC SƯ PHẠM KỸ THUẬT
+KHOA ĐIỆN – ĐIỆN TỬ
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập - Tự do - Hạnh phúc
+NHIỆM VỤ ĐỒ ÁN TỐT NGHIỆP
+Giảng viên hướng dẫn : 
+ThS. Phan Thị Thanh Vân
+Sinh viên thực hiện :
+Văn Viết Hiễu
+Mã SV: 21115055120219
+Lê Minh Đạt 
+Mã SV: 21115055120115
+1. Tên đề tài:
+“THIẾT KẾ HỆ THỐNG ĐIỀU KHIỂN VÀ GIÁM SÁT GIAO THÔNG THÔNG MINH”
+Thời gian thực hiện: Từ ngày 10/02/2025 đến ngày 30/05/2025                       
+2. Các số liệu, tài liệu ban đầu:
+Kích thước ô tô: chiều dài (3,5 - 4,5m), chiều rộng (1,5 – 1,8m)
+Kích thước xe máy: chiều dài (1,5 – 1,8m), chiều rộng (0,7 – 0,8m)
+Kích thước biển số ô tô: chiều cao 165mm, chiều dài 330mm.
+Kích thước biển số xe máy: chiều cao 140mm, chiều dài 190mm.
+Camera giám sát cần có độ phân giải cao.
+Bộ điều khiển trung tâm đủ mạnh để đảm bảo thời gian xử lý các công việc.
+Khả năng nhận diện biển số xe và phát hiện vi phạm tốt.
+Đo lưu lượng xe di chuyển thông qua video mô phỏng để điều chỉnh tín hiệu giao thông.
+Có tính linh hoạt và khả năng mở rộng.
+Các linh kiện được sử dụng phải đảm bảo tính chính xác, ổn định.
+Xuất và lưu dữ liệu về thông tin xe vi phạm trên hệ thống. 
+3. Nội dung chính của đồ án:
+CHƯƠNG 1: TỔNG QUAN VỀ HỆ THỐNG GIAO THÔNG THÔNG MINH.
+CHƯƠNG 2: GIỚI THIỆU VỀ VI ĐIỀU KHIỂN ARDUINO MEGA2560, PHẦN MỀM ARDUINO IDE và PYCHARM.
+CHƯƠNG 3: THIẾT KẾ HỆ THỐNG VÀ THI CÔNG MÔ HÌNH.
+CHƯƠNG 4: XÂY DỰNG CHƯƠNG TRÌNH ĐIỀU KHIỂN VÀ GIÁM SÁT GIAO THÔNG THÔNG MINH.
+KẾT LUẬN.
+4. Các sản phẩm dự kiến
+- Mô hình điều khiển hệ thống giao thông thông minh
+- Báo cáo thuyết minh đề tài
+- Chương trình điều khiển giám sát hệ thống trên Webserver, Arduino IDE, Pycharm.
+5. Ngày giao đồ án: 10/02/2025
+6. Ngày nộp đồ án: 30/05/2025                       
+      Đà nẵng, ngày   tháng   năm 2025
+Trưởng Bộ môn
+Người hướng dẫn
+LỜI NÓI ĐẦU
+Trong sự phát triển mạnh mẽ của kinh tế xã hội cùng đất nước, nhiều hệ thống giao thông thông minh đã và đang đóng góp phần không nhỏ trong việc nâng cao chất lượng đời sống và phát triển hạ tầng đô thị. Ngày nay, khi nhu cầu di chuyển ngày càng tăng, các hệ thống giao thông thông minh đóng vai trò quan trọng trong việc tối ưu hóa lưu lượng phương tiện, giảm ùn tắc và tai nạn giao thông, đồng thời nâng cao hiệu suất vận hành.
+Hiện nay, việc áp dụng công nghệ tự động hóa và trí tuệ nhân tạo vào hệ thống giao thông đang được ưu tiên và là giải pháp tất yếu trong quá trình phát triển đô thị hiện đại. Những hệ thống này giúp nâng cao hiệu quả quản lý, giảm thiểu sự can thiệp của con người và đặc biệt là mang lại độ chính xác cao trong việc điều phối, kiểm soát giao thông cũng như hạn chế tối đa các rủi ro về an toàn.
+Xuất phát từ yêu cầu thực tế đó, việc nghiên cứu và phát triển một hệ thống giao thông thông minh là vô cùng cần thiết, góp phần xây dựng một mạng lưới giao thông an toàn, hiệu quả và bền vững.
+Do thời gian thực hiện đồ án có giới hạn và kiến thức chuyên môn còn nhiều hạn chế, nhóm em không thể tránh khỏi những thiếu sót. Nhóm em rất mong nhận được sự góp ý từ các thầy cô và các bạn để hoàn thiện đồ án này tốt hơn.
+Chúng em xin gửi lời cảm ơn sâu sắc đến Ban Giám Hiệu, các thầy cô trong Khoa Điện – Điện Tử đã tạo điều kiện thuận lợi nhất cho nhóm em hoàn thành đồ án này. Đặc biệt, chúng em xin chân thành cảm ơn ThS. Phan Thị Thanh Vân đã quan tâm, tận tình hướng dẫn và truyền đạt những kiến thức, kinh nghiệm vô cùng quý báu để nhóm em hoàn thành đồ án tốt nghiệp.
+Xin chân thành cảm ơn! 
+CAM ĐOAN
+Chúng em xin cam đoan rằng đồ án này là kết quả nghiên cứu và làm việc của nhóm chúng em trong thời gian qua, dưới sự hướng dẫn của ThS. Phan Thị Thanh Vân. . Các thông tin, số liệu và kết quả nghiên cứu của chúng em sử dụng trong báo cáo đồ án tốt nghiệp là trung thực. Các dữ liệu và luận điểm được trích dẫn nguồn và chú thích rõ ràng. Nhóm em xin chịu hoàn toàn trách nhiệm trước Nhà trường, Khoa và Bộ môn về sự cam đoan này.
+TP. Đà Nẵng, ngày    tháng    năm 2025
+Sinh viên 
+MỤC LỤC
+ TOC \o "1-3" \h \z \u NHẬN XÉT CỦA NGƯỜI HƯỚNG DẪN PAGEREF _Toc200446556 \h i
+NHẬN XÉT CỦA NGƯỜI PHẢN BIỆN PAGEREF _Toc200446557 \h ii
+TÓM TẮT PAGEREF _Toc200446558 \h iii
+NHIỆM VỤ ĐỒ ÁN TỐT NGHIỆP PAGEREF _Toc200446559 \h iv
+LỜI NÓI ĐẦU PAGEREF _Toc200446560 \h v
+CAM ĐOAN PAGEREF _Toc200446561 \h vi
+MỤC LỤC PAGEREF _Toc200446562 \h vii
+DANH MỤC HÌNH ẢNH PAGEREF _Toc200446563 \h x
+DANH MỤC BẢNG BIỂU PAGEREF _Toc200446564 \h xiii
+MỞ ĐẦU PAGEREF _Toc200446565 \h 1
+CHƯƠNG 1: TỔNG QUAN VỀ HỆ THỐNG GIAO THÔNG THÔNG MINH PAGEREF _Toc200446566 \h 4
+1.1 Tổng quan về hệ thống và các giải pháp công nghệ PAGEREF _Toc200446567 \h 4
+1.1.1 Giới thiệu chung PAGEREF _Toc200446568 \h 4
+1.1.2 Tổng quan về các giải pháp dùng trong hệ thống PAGEREF _Toc200446569 \h 7
+1.2 Tiêu chí và phạm vi ứng dụng của hệ thống PAGEREF _Toc200446570 \h 9
+1.2.1 Tiêu chí: PAGEREF _Toc200446571 \h 9
+1.2.2 Phạm vi ứng dụng PAGEREF _Toc200446572 \h 10
+1.3 Lựa chọn giải pháp cho hệ thống PAGEREF _Toc200446573 \h 10
+1.4 Tổng quan về hệ thống đề xuất PAGEREF _Toc200446574 \h 10
+1.5 Tính mới của đề tài PAGEREF _Toc200446575 \h 11
+1.6 Ảnh hưởng của đề tài đến con người, môi trường và toàn cầu PAGEREF _Toc200446576 \h 11
+CHƯƠNG 2: GIỚI THIỆU VỀ VI ĐIỀU KHIỂN ARDUINO MEGA2560 VÀ PHẦN MỀM ARDUINO IDE, PYCHARM PAGEREF _Toc200446577 \h 13
+2.1 Tổng quan về Vi điều khiển PAGEREF _Toc200446578 \h 13
+2.1.1 Khái niệm về Vi điều khiển PAGEREF _Toc200446579 \h 13
+2.1.2 Cấu tạo của vi điều khiển PAGEREF _Toc200446580 \h 15
+2.2 Giới thiệu về Arduino mega2560 PAGEREF _Toc200446581 \h 16
+2.2.1 Khái quát về Arduino mega2560 PAGEREF _Toc200446582 \h 16
+2.2.2 Thông số kỹ thuật chính PAGEREF _Toc200446583 \h 16
+2.2.3 Ứng dụng PAGEREF _Toc200446584 \h 17
+2.3 Giới thiệu về phần mềm Arduino IDE, Pycharm. PAGEREF _Toc200446585 \h 19
+2.3.1 Khái niệm về phần mềm Arduino IDE PAGEREF _Toc200446586 \h 19
+2.3.2 Ưu điểm và nhược điểm của phần mềm PAGEREF _Toc200446587 \h 19
+2.3.3 Cách sử dụng phần mềm PAGEREF _Toc200446588 \h 20
+2.3.4 Giới thiệu về phần mềm PAGEREF _Toc200446589 \h 22
+2.4 Giới thiệu về công nghệ xử lý ảnh PAGEREF _Toc200446590 \h 27
+2.4.1 Tổng quan về công nghệ xử lý ảnh PAGEREF _Toc200446591 \h 27
+2.4.2 Một số công cụ và thư viện xử lý ảnh phổ biến PAGEREF _Toc200446592 \h 28
+2.5 Giới thiệu Google Sheets PAGEREF _Toc200446593 \h 29
+2.6 Giới thiệu về Webserver PAGEREF _Toc200446594 \h 31
+CHƯƠNG 3: THIẾT KẾ HỆ THỐNG VÀ THI CÔNG MÔ HÌNH PAGEREF _Toc200446595 \h 33
+3.1 Thiết kế hệ thống PAGEREF _Toc200446596 \h 33
+3.1.1 Yêu cầu kỹ thuật PAGEREF _Toc200446597 \h 33
+3.1.2 Đặt thời gian cho tín hiệu đèn giao thông PAGEREF _Toc200446598 \h 33
+3.1.3 Tính toán mật độ giao thông và tính toán giám sát lưu lượng xe PAGEREF _Toc200446599 \h 35
+3.1.4 Kích thước biển số tiêu chuẩn PAGEREF _Toc200446600 \h 36
+3.1.5 Nhận dữ liệu hệ thống giám sát gửi về và điều chỉnh đèn giao thông PAGEREF _Toc200446601 \h 37
+3.1.6  Tính chọn thiết bị PAGEREF _Toc200446602 \h 39
+3.1.7 Sơ đồ đấu nối của hệ thống PAGEREF _Toc200446603 \h 42
+3.2  Quy trình công nghệ PAGEREF _Toc200446604 \h 43
+3.2.1 Quy trình công nghệ 1 PAGEREF _Toc200446605 \h 43
+3.2.2 Quy trình công nghệ 2 PAGEREF _Toc200446606 \h 44
+3.2.3 Lựa chọn quy tình công nghệ PAGEREF _Toc200446607 \h 44
+3.3  Thi công mô hình PAGEREF _Toc200446608 \h 44
+CHƯƠNG 4: XÂY DỰNG CHƯƠNG TRÌNH ĐIỀU KHIỂN VÀ GIÁM SÁT GIAO THÔNG THÔNG MINH PAGEREF _Toc200446609 \h 50
+4.1 Bảng phân công đầu vào, đầu ra PAGEREF _Toc200446610 \h 50
+4.2  Lưu đồ thuật toán PAGEREF _Toc200446611 \h 50
+4.2.1Lưu đồ thuật toán điều khiển trên Arduino PAGEREF _Toc200446612 \h 50
+4.2.2Lưu đồ thuật toán chương trình xử lý dữ liệu trên máy tính PAGEREF _Toc200446613 \h 52
+4.3 Chương trình điều khiển và giám sát PAGEREF _Toc200446614 \h 53
+4.3.1 Chương trình điều khiển PAGEREF _Toc200446615 \h 53
+4.3.2 Hệ thống giám sát PAGEREF _Toc200446616 \h 54
+KẾT LUẬN PAGEREF _Toc200446617 \h 57
+TÀI LIỆU THAM KHẢO PAGEREF _Toc200446618 \h 60
+PHỤ LỤC
+DANH MỤC HÌNH ẢNH
+ TOC \h \z \t "Tiêu đề #1,1,Hình ảnh,1,Kiểu18,3,Kiểu19,2" Hình 1: Ngã tư Điện Biên Phủ giao Hà Huy Tập PAGEREF _Toc200446482 \h 2
+Hình 1.1: Một hệ thống giao thông thông minh PAGEREF _Toc200446483 \h 4
+Hình 1.2:  Đèn tín hiệu giao thông 3 màu đỏ – vàng – xanh PAGEREF _Toc200446484 \h 6
+Hình 1.3: Đèn tín hiệu phụ PAGEREF _Toc200446485 \h 6
+Hình 1.4: Đèn hai màu (đỏ – xanh) dành cho người đi bộ PAGEREF _Toc200446486 \h 6
+Hình 1.5: Sơ đồ khối của hệ thống PAGEREF _Toc200446487 \h 10
+Hình 2.1: Hình ảnh vi điều khiển PAGEREF _Toc200446488 \h 13
+Hình 2.2: Vi điều khiển Arduino PAGEREF _Toc200446489 \h 14
+Hình 2.3: Vi điều khiển ESP32 PAGEREF _Toc200446490 \h 14
+Hình 2.4: Vi điều khiển 8051 PAGEREF _Toc200446491 \h 15
+Hình 2.5: Cấu tạo của vi điều khiển PAGEREF _Toc200446492 \h 16
+Hình 2.6: Cấu trúc của mega2560 PAGEREF _Toc200446493 \h 17
+Hình 2.7: Máy CNC PAGEREF _Toc200446494 \h 17
+Hình 2.8: Máy in 3D PAGEREF _Toc200446495 \h 18
+Hình 2.9: Máy bay không người lái PAGEREF _Toc200446496 \h 18
+Hình 2.10: Nhà thông minh ứng dụng IOT PAGEREF _Toc200446497 \h 19
+Hình 2.11: Giao diện phần mềm Arduino IDE PAGEREF _Toc200446498 \h 19
+Hình 2.12: Giao diện khởi động phần mềm PAGEREF _Toc200446499 \h 20
+Hình 2.13: Tạo chương trình mới trên Arduino PAGEREF _Toc200446500 \h 20
+Hình 2.14: Giao diện viết code trên Arduino PAGEREF _Toc200446501 \h 21
+Hình 2.15: Chạy chương trình trên Arduino PAGEREF _Toc200446502 \h 21
+Hình 2.16: Nạp chương trình trên Arduino PAGEREF _Toc200446503 \h 21
+Hình 2.17: Lưu chương trình trên Arduino PAGEREF _Toc200446504 \h 22
+Hình 2.18: Ngôn ngữ Python PAGEREF _Toc200446505 \h 22
+Hình 2.19: Shortcut Pycharm PAGEREF _Toc200446506 \h 24
+Hình 2.20: Giao diện Pycharm PAGEREF _Toc200446507 \h 24
+Hình 2.21: Tạo project Pycharm PAGEREF _Toc200446508 \h 25
+Hình 2.22: Nơi để lập trình trên Pycharm PAGEREF _Toc200446509 \h 25
+Hình 2.23: Thư viện OpenCV PAGEREF _Toc200446510 \h 26
+Hình 2.24: Tổng quan về công nghệ xử lý ảnh PAGEREF _Toc200446511 \h 27
+Hình 2.25: Logo Googel sheet PAGEREF _Toc200446512 \h 29
+Hình 2.26: Tạo mới 1 trang tính PAGEREF _Toc200446513 \h 30
+Hình 2.27: Sử dụng google sheets PAGEREF _Toc200446514 \h 30
+Hình 2.28: Chia sẽ Google sheets PAGEREF _Toc200446515 \h 31
+Hình 2.29: Chọn email muốn chia sẽ google sheet PAGEREF _Toc200446516 \h 31
+Hình 2.30: Hình ảnh cấu trúc webserver PAGEREF _Toc200446517 \h 32
+Hình 3.1: Kích thước trung bình của ô tô PAGEREF _Toc200446518 \h 35
+Hình 3.2: Kích thước trung bình của xe máy PAGEREF _Toc200446519 \h 36
+Hình 3.3: Kích thước biển số ngắn của ô tô PAGEREF _Toc200446520 \h 36
+Hình 3.4: Kích thước biển số dài của ô tô PAGEREF _Toc200446521 \h 37
+Hình 3.5: Kích thước biển số xe máy PAGEREF _Toc200446522 \h 37
+Hình 3.6: Chu kì đèn hoạt động bình thường PAGEREF _Toc200446523 \h 38
+Hình 3.7: Chu kì đèn hoạt động ở tuyến 1 sau khi so sáng số lượng xe PAGEREF _Toc200446524 \h 38
+Hình 3.8: Chu kì đèn hoạt động ở tuyến 2 sau khi so sáng số lượng xe PAGEREF _Toc200446525 \h 38
+Hình 3.9: Camera giám sát giao thông PAGEREF _Toc200446526 \h 39
+Hình 3.10: Đèn tín hiệu giao thông DVX D300 PAGEREF _Toc200446527 \h 40
+Hình 3.11: Đèn đếm ngược D200 PAGEREF _Toc200446528 \h 40
+Hình 3.12: Cảm biến radar giao thông PAGEREF _Toc200446529 \h 41
+Hình 3.13: Bộ điều khiển EOS PAGEREF _Toc200446530 \h 42
+Hình 3.14: Sơ đồ đấu nối mô hình PAGEREF _Toc200446531 \h 42
+Hình 3.15: Mô hình thực tế sau khi thi công PAGEREF _Toc200446532 \h 44
+Hình 3.16: Module đèn led giao thông PAGEREF _Toc200446533 \h 45
+Hình 3.17: Module hiển thị LED 7 đoạn 74HC595 PAGEREF _Toc200446534 \h 46
+Hình 3.18: Webcam yoosee ys13 PAGEREF _Toc200446535 \h 46
+Hình 3.19: Arduino mega2560 PAGEREF _Toc200446536 \h 47
+Hình 3.20: IC 74HC595 PAGEREF _Toc200446537 \h 48
+Hình 3.21: Sơ đồ chân IC 74HC595 PAGEREF _Toc200446538 \h 48
+Hình 4.1: Lưu đồ thuật toán điều khiển trên Arduino PAGEREF _Toc200446539 \h 51
+Hình 4.2: Lưu đồ thuật toán chương trình trên máy tính PAGEREF _Toc200446540 \h 52
+Hình 4.3: Giao diện giám sát trên WebServer PAGEREF _Toc200446541 \h 54
+Hình 4.4: Camera giám sát trên Webserver PAGEREF _Toc200446542 \h 55
+Hình 4.5: Thông tin về lưu lượng xe trên webserver PAGEREF _Toc200446543 \h 55
+Hình 4.6: Thông tin các xe vi phạm vượt đèn đỏ trên Webserver PAGEREF _Toc200446544 \h 56
+Hình 4.7: Thông tin lưu trữ trên google sheet PAGEREF _Toc200446545 \h 56
+Hình 4.8: Hình ảnh vi phạm lưu trữ trên Driver PAGEREF _Toc200446546 \h 56
+DANH MỤC BẢNG BIỂU
+ TOC \h \z \t "Tiêu đề #1,1,Bảng,1,Kiểu18,3,Kiểu19,2" Bảng 1.1: So sánh các bộ điểu khiển trung tâm. PAGEREF _Toc200446547 \h 7
+Bảng 1.2: So sánh các giải pháp camera giám sát PAGEREF _Toc200446548 \h 8
+Bảng 1.3: So sánh các giải pháp xử lý ảnh. PAGEREF _Toc200446549 \h 9
+Bảng 2.1: Thông số kỹ thuật của arduino mega2560 PAGEREF _Toc200446550 \h 16
+Bảng 3.1: Đặt thời gian đèn giao thông PAGEREF _Toc200446551 \h 35
+Bảng 3.2: Thời gian sáng các đèn PAGEREF _Toc200446552 \h 39
+Bảng 3.3: Ý nghĩa các chân của IC 74HC595 PAGEREF _Toc200446553 \h 49
+Bảng 4.1: Bảng phân công đầu vào PAGEREF _Toc200446554 \h 50
+Bảng 4.2: Bảng phân công đầu ra PAGEREF _Toc200446555 \h 50
+MỞ ĐẦU
+Mục đích thực hiện đề tài
+Nhằm ứng dụng kiến thức đã học ở trường, sự hướng dẫn của giáo viên về thiết kế, lập trình, đấu dây và sự ứng dụng thực tế của chuyên ngành Công nghệ kỹ thuật Điều khiển và Tự động hóa qua các môn học ở trường, nhóm em muốn thiết kế được một hệ thống bao hàm tất cả cá điều trên vào một đề tài cụ thể liên quan đến nó. 
+Mô hình điều khiển và giám sát giao thông tại ngã tư đã xuất hiện nhiều trong lĩnh vực giao thông vận tải và được sử dụng rộng rãi trong giao thông đường bộ nhưng vẫn còn một số điểm chưa hoàn thiện, gây ra nhiều vi phạm trong việc tham gia giao thông dẫn đến mất an toàn cho người đi đường. Với mong muốn giảm thiểu tình trạng trên nhóm em đã đi đến quyết định chọn đề tài: “Thiết kế hệ thống điều khiển và giám sát giao thông thông minh” để điều khiển, giám sát và truy xuất dữ liệu các phương tiện tham gia giao thông. 
+Mục tiêu của đề tài 
+-  Điều chỉnh thời gian đèn giao thông dựa vào sự chênh lệch lượng xe tham gia trên 2 tuyến đường tại ngã tư.
+-  Phát hiện xe vi phạm vượt đèn đỏ.
+-  Truy xuất dữu liệu thông tin xe vi phạm: thời gian, biển số, hình ảnh xe vi phạm
+-  Thiết kế mô hình mô phỏng 
+Đối tượng và phạm vi nghiên cứu
+Đối tượng nghiên cứu
+Các phương tiện tham gia giao thông như : xe máy, xe ôtô, xe tải,....
+Nghiên cứu xem xét biện pháp giám sát phương tiện vi phạm, truy xuất đúng dữ liệu xe và thời gian vi phạm, điều chỉnh thời gian đèn giao thông phù hợp với mật độ xe trên đường.
+Phạm vi nghiên cứu
+Ngã tư Điện Biên Phủ giao Hà Huy Tập:
+Đây là đối tượng trực tiếp của nghiên cứu, nơi mà các phương tiện giao thông gặp nhau và tạo thành điểm nút giao thông. 
+Chọn tuyến đường Điện Biên Phủ là tuyến đường ưu tiên và tuyến Hà Huy Tập là tuyến không ưu tiên.
+Đề tài tập trung vào việc xử lý thông tin xe vượt đèn đỏ và so sánh số lượng xe trên 2 tuyến đường trong một chu kì đèn, từ đó điều chỉnh thời gian đèn giao thông phù hợp để tránh tắc đường.
+So với thực tế, mô hình chúng em tạo ra sẽ có thay đổi về thời gian đặt của đèn tín hiệu để phù hợp và thuận tiện hơn trong quá trình theo dõi.
+Về chức năng phát hiện vi phạm, nhóm chỉ giới hạn giám sát vượt đèn đỏ ở một tuyến đường chính.
+Việc so sánh xe trên 2 tuyến đường, chúng em sử sụng video về lưu lượng xe để mô phỏng tượng trưng cho lưu lượng xe 2 tuyến trên thực tế.
+Hình 1: Ngã tư Điện Biên Phủ giao Hà Huy Tập
+Phương pháp thực hiện đề tài
+Phân tích tình hình hiện tại:
+Hiểu rõ các vấn đề đang còn tồn tại như mức độ vi phạm, tần suất xảy ra tai nạn. 
+Nắm rõ tình hình giao thông tại các thời điểm khác nhau trong ngày.
+Xác định các yếu tố ảnh hưởng:
+Phân tích các yếu tố ảnh hưởng đến vấn đề còn tồn tại như đã nêu ở trên như đặc điểm địa hình, mật độ phương tiện, cơ sở hạ tầng,..
+Hiểu các vấn đề về pháp lý và các yếu tố khác.
+Phát triển hệ thống giám sát và điều khiển giao thông:
+Xây dựng một mô hình và giải pháp công nghệ để điều khiển và giám sát phương tiện giao thông tại ngã tư.
+Mô hình này bao gồm các hệ thống điều khiển đèn tín hiệu, ứng dụng công nghệ thông tin và trí tuệ nhân tạo để xử lý ảnh và phân tích dữ liệu.
+Đánh giá và so sánh:
+Đánh giá hiệu quả của mô hình hệ thống giám sát và điều khiển giao thông thông qua các chỉ số như tăng cường hiệu suất giao thông, giảm thiểu ùn tắc và tai nạn giao thông.
+Đánh giá tính khả thi và hiệu quả kinh tế của việc triển khai mô hình này so với các mô hình trong thực tế.
+Đề xuất biện pháp cải thiện:
+Dựa trên kết quả nghiên cứu được để đề xuất các biện pháp cải thiện, điều chỉnh cơ sở hạ tầng để có thể tối ưu hóa được kết quả mà mô hình nhắm đến tại ngã tư  Điện Biên Phủ - Hà Huy Tập và các ngã tư lớn trên toàn quốc nhằm cải thiện an toàn giao thông.
+Tính cấp thiết của đề tài
+Giảm ùn tắc: hệ thống giám sát và điều khiển giao thông giúp giảm thiểu ùn tắc tại các ngã tư lớn. Hệ thống giám sát và điểu khiển trên đã được sử dụng phổ biến ở các nước trên thế giới
+Tăng cường an toàn giao thông: hệ thống có thể cải thiện được nguy cơ xảy ra các va chạm và tai nạn tại các ngã tư.
+Tăng hiệu suất di chuyển: hệ thống có thể tăng hiệu suất giao thông bằng cách tối ưu hóa di chuyển của các phương tiện tham gia giao thông.
+Giảm ô nhiểm môi trường: Bằng các tối ưu hóa việc di chuyển, giảm thiểu ùn tắc làm giảm đi số lượng khí thải từ các phương tiện giao thông. Cải thiện được môi trương trong lành cho các hộ dân tại các ngã tư.
+Cấu trúc đồ án tốt nghiệp
+Phân tích đề tài
+Tính chọn thiết bị
+Lập trình mô phỏng
+Thiết kế phần cứng
+Kết nối thiết bị
+Phân tích đề tài
+Tính chọn thiết bị
+Lập trình mô phỏng
+Thiết kế phần cứng
+Kết nối thiết bị
+CHƯƠNG 1: TỔNG QUAN VỀ HỆ THỐNG GIAO THÔNG THÔNG MINH
+1.1 Tổng quan về hệ thống và các giải pháp công nghệ
+1.1.1 Giới thiệu chung
+Hệ thống giao thông thông minh với việc tích hợp camera giám sát và quản lý dữ liệu trên nền tảng web mang đến nhiều tính năng mới và giá trị nổi bật trong lĩnh vực nghiên cứu và ứng dụng vào đời sống. Đây là một giải pháp công nghệ quan trọng giúp tối ưu hóa việc quản lý và vận hành hệ thống giao thông đô thị.
+Đèn giao thông có vai trò quan trọng trong việc duy trì an toàn đường phố, giảm thiểu xung đột giữa các phương tiện và người đi bộ, tăng cường trật tự và an toàn giao thông.
+Các khái niệm về đèn giao thông thông minh
+Đèn giao thông thông minh là hệ thống đèn tín hiệu điền khiển phương tiện được tích hợp công nghệ. Hệ thống có thể điều khiển khả năng hiển thị của đèn giao thông dựa trên thông tin được thu nhập từ cảm biến, thiết bị biên và hệ thống video.
+Tại các giao lộ, đèn giao thông thông minh có thiết kế tương tự đèn giao thông thường ngoại trừ các yếu tố phần cứng như cảm biến hoặc camera giám sát tình hình thực tế.
+Hệ thống đèn giao thông thông minh được kết nối với một hệ thống điều khiển để phục vụ trong quá trình quản lý. Chúng thường cung cấp các thuật toán để điều chỉnh các tín hiệu đèn giao thông.
+Hình 1.1: Một hệ thống giao thông thông minh
+Đèn tín hiệu giao thông là một trong những hình thức báo hiệu đường bộ quan trọng để điều khiển giao thông, nhằm bảo đảm an toàn cho người tham gia giao thông, hạn chế đến mức thấp nhất những xung đột, va chạm giao thông xảy ra giữa các phương tiện tại nơi đường giao nhau hoặc nút giao, qua đó góp phần phòng ngừa, kéo giảm tai nạn giao thông, ùn tắc giao thông.
+Chức năng chính của đèn giao thông
+-   Điều tiết giao thông: Giúp phân luồng, hạn chế ùn tắc, tai nạn giao thông.
+-  Tăng độ an toàn: Hướng dẫn người tham gia giao thông di chuyển đúng thời điểm, đúng hướng.
+-   Hỗ trợ người đi bộ: Tạo điều kiện cho người đi bộ sang đường an toàn qua các pha đèn có tín hiệu phù hợp.
+Lợi ích của hệ thống giao thông thông minh
+Trong thực tế, hệ thống giao thông thông minh không thể khắc phục hoàn toàn tất cả các vấn đề giao thông đường bộ như tắc nghẽn, tai nạn và vi phạm. Tuy nhiên, chúng là một biện pháp phòng ngừa tốt hơn nhiều so với hệ giao thông truyền thống.
+Đối với các thành phố thông minh, công nghệ giao thông thông minh mang lại những lợi ích như:
+- Giảm thời gian đi lại: Mỗi người chi tiêu trung bình 58 giờ mỗi năm để chờ đèn giao thông. Các biện pháp kiểm soát thông minh hơn có thể giúp người dân và các tiện vận chuyển hàng hóa di chuyển nhanh hơn, thuận tiện hơn qua các tuyến đường trong thành phố.
+- Giảm tai nạn giao thông: 90% tai nạn đường bộ xảy ra chủ yếu do vi phạm an toàn giao thông. Hệ thống đèn giao thông thông minh giúp đi lại thuận tiện hơn, đồng thời ghi nhận các trường hợp vi phạm, góp phần nâng cao ý thức người tham gia giao thông.
+- Tăng lượng người sử dụng phương tiện công cộng: Các làn đường, tín hiệu ưu tiên cho giao thông công cộng sẽ thu hút nhiều cư dân sử dụng dịch vụ hơn.
+-  Giảm thiểu ô nhiễm môi trường do khí thải: Trung bình, mỗi chiếc ô tô chạy không tải phát ra 30 triệu tấn CO2 vào khí quyển hàng năm. Thời gian chờ đợi và ùn tắc giao thông giảm xuống giúp góp phần hạn chế ô nhiễm không khí.
+Hệ thống này hỗ trợ kiểm soát lưu lượng phương tiện, giảm ùn tắc, phát hiện và xử lý vi phạm giao thông một cách nhanh chóng. Đồng thời, nó giúp tiết kiệm chi phí, thời gian và nhân lực trong công tác giám sát, quản lý hạ tầng giao thông, góp phần nâng cao chất lượng di chuyển và đảm bảo an toàn cho người tham gia giao thông.
+Các loại đèn giao thông
+Đèn tín hiệu chính: 3 màu đỏ - vàng – xanh
+Ý nghĩa màu đèn giao thông: Đỏ, vàng, xanh
+Đèn đỏ: yêu cầu tất cả phương tiện phải dừng lại trước vạch dừng.
+Đèn vàng: cảnh báo sắp chuyển đổi trạng thái, người lái cần giảm tốc và chuẩn bị dừng.
+Đèn xanh: cho phép các phương tiện được di chuyển tiếp
+Hình 1.2:  Đèn tín hiệu giao thông 3 màu đỏ – vàng – xanh
+Đèn tín hiệu phụ 
+Ngoài đèn báo tín hiệu chính đỏ – vàng – xanh, tùy thuộc vào các nút giao thông khác nhau sẽ được lắp đặt thêm một số loại đèn tín hiệu phụ phù hợp. 
+Hình 1.3: Đèn tín hiệu phụ 
+Đèn hai màu (đỏ – xanh) dành cho người đi bộ 
+Người đi bộ chỉ được phép sang đường khi tín hiệu đèn xanh bật sáng và phải đi trên vạch kẻ trắng dành riêng cho người đi bộ. Khi đèn xanh nhấp nháy liên tục, có nghĩa tín hiệu đèn sắp chuyển sang đỏ và lúc này người đi bộ không được đi sang đường. 
+Hình 1.4: Đèn hai màu (đỏ – xanh) dành cho người đi bộ 
+1.1.2 Tổng quan về các giải pháp dùng trong hệ thống
+Các giải pháp về bộ điều khiển trung tâm
+Ở đây chúng ta tiến hành so sánh về ưu điểm và nhược điểm của hai bộ điều khiển trung tâm là PLC và vi điều khiển với các đại diện của từng bộ điều khiển như bảng 1.1 bên dưới:
+Bảng 1.1: So sánh các bộ điểu khiển trung tâm.
+Phương án
+Ưu điểm
+Nhược điểm
+PLC (S7 1200)
+Xử lý logic mạnh mẽ, hoạt động ổn định, phù hợp với hệ thống tự động hóa công nghiệp.
+Hỗ trợ nhiều giao thức như Ethernet, Profinet, Modbus TCP, RS485, dễ dàng kết nối với hệ thống giám sát SCADA.
+Giá thành cao hơn so với các bộ điều khiển khác.
+Cần cấu hình phức tạp khi tích hợp nhiều thiết bị ngoại vi.
+Không linh hoạt cho các ứng dụng nhỏ, không phù hợp cho người mới học lập trình nhúng.
+Vi điều khiển (mega2560)
+Số lượng chân I/O lớn, hỗ trợ nhiều cảm biến và thiết bị ngoại vi.
+Dung lượng bộ nhớ lớn giúp xử lý các chương trình phức tạp.
+Nhiều cổng giao tiếp Serial (UART).
+Khả năng xử lý mạnh mẽ .
+Dễ sử dụng và lập trình.
+Không phù hợp cho ứng dụng công nghiệp.
+Không đủ mạnh để xử lý các dữ liệu lớn như xử lý hình ảnh, trí tuệ nhân tạo, hoặc điều khiển thời gian thực phức tạp.
+Khả năng mở rộng có giới hạn.
+Các giải pháp về camera giám sát
+Hiện nay có nhiều loại camera được dùng trong hệ thống giao thông thông minh, được tích hợp AI để xử lý hình ảnh trực tiếp, bên cạnh đó cũng có các loại camera giám sát thông thường. Trong bối cảnh giao thông ngày càng phức tạp, camera giám sát giao thông trở nên thiết yếu hơn bao giờ hết. Camera giao thông giúp quan sát, theo dõi tình hình giao thông một cách toàn diện, đảm bảo an ninh trật tự, giảm thiểu chi phí nhân sự và xử lý kịp thời các sự cố. Bảng 1.2 sẽ so sánh các giải pháp camera giám sát về ưu và nhược điểm của chúng:
+Bảng 1.2: So sánh các giải pháp camera giám sát
+Phương án
+Ưu điểm
+Nhược điểm
+Camera ANPR (Tích hợp trí tuệ nhân tạo)
+Xử lý thời gian thực, nhận diện biển số ngay khi xe di chuyển.
+Dễ dàng kết nối với hệ thống giám sát giao thông, quản lý bãi đỗ xe, phạt nguội.
+Tự động hóa giúp giảm nhân công giám sát, tối ưu hiệu suất
+Yêu cầu phần cứng mạnh nếu cần phân tích nhiều xe cùng lúc
+Chi phí đầu tư ban đầu cao, đặc biệt với hệ thống quy mô lớn
+Cần hệ thống lưu trữ dữ liệu lớn nếu giám sát trên diện rộng
+Webcam yoosee ys13
+Chất lượng hình ảnh tốt, yoosee YS13 cung cấp độ phân giải HD 1080p, cho chất lượng hình ảnh rõ ràng và sắc nét
+Kiểu dáng gọn gàng, dễ sử dụng
+Đầu có thể tự do xoay lên xuống 45 độ và có thể dễ dàng điều chỉnh góc độ.
+Không hỗ trợ các tính năng như chống rung hình ảnh, tự động lấy nét, hay chế độ ánh sáng yếu.
+Webcam có độ trễ hình ảnh (lag) khi truyền tải video
+Các giải pháp về xử lý ảnh
+Phương pháp xử lý ảnh từ camera đã trở thành một công cụ quan trọng trong việc giám sát và quản lý giao thông tại các giao lộ. Các hệ thống camera này không chỉ thu thập dữ liệu hình ảnh mà còn ghi lại mật độ lưu thông của các phương tiện. Dữ liệu này sau đó được truyền về trung tâm điều khiển, nơi mà các thuật toán và chương trình điều khiển phức tạp được áp dụng để phân tích và đưa ra các quyết định phù hợp nhằm tăng cường an toàn và hiệu suất hoạt động của hệ thống giao thông.
+Trong phạm vi đề tài này, chúng em dùng phương pháp xử lý ảnh từ camera để giám sát xe được chính xác và ổn định nhất.
+ Về phương pháp xử lý ảnh từ camera thì sẽ có 2 phương pháp: dùng công nghệ để nhận diện xe và nhận diện bằng thủ công.
+Bảng 1.3: So sánh các giải pháp xử lý ảnh.
+Dùng công nghệ để xử lý ảnh
+Xử lý ảnh bằng thủ công
+Khái niệm
+Là một thuật toán phổ biến trong việc phát hiện đối tượng trong ảnh và video bằng trí tuệ nhân tạo
+Chuyển dữ liệu hình ảnh thành nền đen trắng để nhận diện xe (nền màu đen, có xe di chuyển là màu trắng)
+Ưu điểm
+Xác định và định vị nhanh chóng các đối tượng trong hình ảnh và video một các chính xác và hiệu quả
+Dễ dàng tiếp cận với nhiều người, phù hợp với các máy có cấu hình thấp
+Nhược điểm
+Cần một lượng lớn data để có thể đưa ra kết quả chính xác
+Mức độ nhận diện không được chuẩn xác (có sai số)
+1.2 Tiêu chí và phạm vi ứng dụng của hệ thống
+1.2.1 Tiêu chí:
+Tính khả thi kỹ thuật
+Độ chính xác và hiệu quả: Hệ thống cần có khả năng xử lý chính xác các dữ liệu từ các thiết bị thu thập thông tin như camera.
+Tính mở và dễ dàng nâng cấp: Hệ thống được thiết kế sao cho có thể dễ dàng mở rộng và cập nhật phần mềm, phần cứng khi cần thiết.
+Chi phí đầu tư và vận hành
+Chi phí đầu tư hợp lý: xác định chi phí đầu tư ban đầu để phát triển hệ thống và các chi phí vận hành, bảo trì.
+Hiệu quả kinh tế: Hệ thống cần đem lại hiệu quả về mặt kinh tế, giúp giảm thiểu chi phí liên quan đến ùn tắc giao thông, tai nạn, và bảo trì.
+Tính tương thích
+Hỗ trợ các phương tiện khác nhau: Hệ thống phải có khả năng tương thích với nhiều loại phương tiện, từ ô tô, xe máy,.. hoặc các phương tiện giao thông công cộng.
+Tương thích với hạ tầng hiện có: Hệ thống giao thông thông minh cần hoạt động cùng với các hạ tầng hiện tại, như đèn tín hiệu giao thông, biển báo điện tử, hoặc các phần mềm quản lý giao thông.
+Tính tối ưu hóa giao thông
+Quản lý lưu lượng giao thông: Cần có khả năng điều khiển lưu lượng xe cộ để tránh tắc nghẽn và giảm thời gian di chuyển.
+Định tuyến tối ưu: Hệ thống phải có khả năng tính toán các tuyến đường tối ưu cho người tham gia giao thông, giảm thiểu thời gian di chuyển và sử dụng nhiên liệu hiệu quả.
+1.2.2 Phạm vi ứng dụng
+Các ngã tư ở thành phố, nơi có mật độ giao thông đông đúc, phức tạp.
+Sử dụng Webcam để xử lý ảnh, vi điều khiển để điều khiển hệ thống.
+Trong đồ án này, nhóm chọn ngã tư Điện Biên Phủ giao Hà Huy Tập để làm đối tượng nghiên cứu.
+Trong đề tài thực hiện, nhóm chỉ giới hạn giám sát vượt đèn đỏ ở một tuyến đường chính. Về việc so sánh số lượng xe trên hai tuyến, chúng em sử dụng video mô phỏng xe chạy để thực hiện đếm số lượng xe để thay thế cho lượng xe trên thực tế.
+1.3 Lựa chọn giải pháp cho hệ thống
+Từ các phương pháp được trình bày ở mục 1.1, dựa trên những ưu điểm và nhược điểm nổi bật của các giải pháp và phạm vi của đồ án tốt nghiệp cùng với khả năng, kiến thức của bản thân, nhóm chúng em sử dụng các phương pháp sau:
+Giải pháp về điều khiển: sử dụng Arduino Mega2560
+Giải pháp về camera giám sát: sử dụng Webcam yoosee ys13
+Giải pháp về xử lý ảnh: Xử lý ảnh bằng OpenCV
+Tạo Webserver để giám sát và google sheet để lưu trữ dữ liệu
+1.4 Tổng quan về hệ thống đề xuất
+Ta có sơ đồ khối của hệ thống:
+Hình 1.5: Sơ đồ khối của hệ thống
+Chức năng các khối:
+Nguồn 5V: cấp nguồn cho camera, arduino, đèn giao thông, led 7 thanh
+Camera: ghi lại hình ảnh, video các hành vi vi phạm như vượt đèn đỏ, mật độ phương tiện.
+Đèn giao thông, led 7 đoạn: đưa ra tín hiệu điều khiển cho người tham gia giao thông
+Khối điều khiển Arduino: điều khiển đèn giao thông và led 7 đoạn
+Máy tính xử lý dữ liệu: dùng ngôn ngữ lập trình Python để xử lý hình ảnh, phát hiện phương tiện vi phạm, đếm số lượng xe trên 2 tuyến đường.
+1.5 Tính mới của đề tài
+Tính mới của đề tài không chỉ nằm ở việc giải quyết hai vấn đề độc lập (điều khiển đèn và phát hiện vi phạm) mà còn ở khả năng tích hợp, vận hành đồng bộ, phản hồi theo thời gian thực, hướng đến giao thông thông minh trong đô thị hiện đại. Dưới đây là một số tính mới nổi bật của đề tài: 
+Ứng dụng công nghệ xử lý ảnh trong việc phát hiện phương tiện vi phạm vượt đèn đỏ.
+Quản lý và giám sát bằng Webserver, dữ liệu được lưu trữ trên Google sheets.
+Khả năng cập nhật và quản lý vi phạm tự động, minh bạch.
+Tăng tính tự động hóa trong việc điều khiển và giám sát giao thông.
+Có khả năng tích hợp và mở rộng hệ thống theo nhu cầu thực tế.
+Điều chỉnh thời gian đèn xanh tự động theo sự chênh lệch lượng xe nhằm tối ưu luồng lưu thông.
+1.6 Ảnh hưởng của đề tài đến con người, môi trường và toàn cầu
+Trong lĩnh vực giao thông thông minh, hệ thống điều khiển và giám sát giao thông ra đời nhằm hỗ trợ quản lý phương tiện, giảm ùn tắc và nâng cao an toàn giao thông. Hệ thống này ứng dụng công nghệ hiện đại như AI, IoT, camera thông minh để giám sát, phân tích và tự động điều khiển tín hiệu giao thông, giúp tối ưu luồng di chuyển của phương tiện. Việc triển khai hệ thống không chỉ giảm thiểu tai nạn giao thông, tăng hiệu suất giao thông, mà còn đáp ứng yêu cầu về an toàn, bảo vệ môi trường và giải quyết các vấn đề giao thông đô thị.
+Con người: Hệ thống giám sát giao thông thông minh giúp giảm thiểu tai nạn giao thông, hỗ trợ cảnh báo sớm khi có sự cố và nâng cao ý thức chấp hành luật giao thông của người tham gia. Các công nghệ nhận diện biển số, camera AI, cảnh báo tự động giúp lực lượng chức năng giám sát hiệu quả mà không cần can thiệp trực tiếp, giảm nguy cơ tiếp xúc với môi trường nguy hiểm.
+Môi trường: Việc điều tiết giao thông thông minh giúp giảm ùn tắc, giảm thời gian chờ đèn đỏ không cần thiết, từ đó giảm khí thải từ phương tiện, góp phần cải thiện chất lượng không khí và bảo vệ môi trường đô thị.
+Các vấn đề toàn cầu: Giao thông đô thị là thách thức lớn của nhiều quốc gia trên thế giới. Hệ thống giao thông thông minh không chỉ giúp nâng cao năng lực quản lý, mà còn hướng tới giao thông bền vững, giảm tác động tiêu cực đến môi trường và sức khỏe con người. Các công nghệ như xe điện, điều khiển tín hiệu giao thông tối ưu, hệ thống giám sát AI đang góp phần giải quyết vấn đề giao thông toàn cầu theo hướng hiện đại và bền vững hơn.
+Như vậy, hệ thống điều khiển và giám sát giao thông thông minh có ý nghĩa cao trong việc giải quyết các vấn đề của con người, vấn đề môi trường và vấn đề toàn cầu.
+CHƯƠNG 2: GIỚI THIỆU VỀ VI ĐIỀU KHIỂN ARDUINO MEGA2560 VÀ PHẦN MỀM ARDUINO IDE, PYCHARM
+2.1 Tổng quan về Vi điều khiển
+2.1.1 Khái niệm về Vi điều khiển
+Là một máy tính được tích hợp trên một con chip (single chip microcomputer) được tạo ra qua VLSI. Vi điều khiển cũng được gọi là bộ điều khiển nhúng bởi vì vi điều khiển và các mạch điện hỗ trợ được tích hợp hoặc nhúng vào thiết bị mà nó kiểm soát. Vi điều khiển có nhiều bit khác nhau giống như vi xử lý (cho đến nay thì có các loại vi điều khiển 4bit, 8bit, 16bit, 32bit, 64bit và 128 bit)
+Hình 2.1: Hình ảnh vi điều khiển
+Vi điều khiển thường chứa các linh kiện sau: Bộ xử lý trung tâm (CPU), Bộ nhớ truy cập ngẫu nhiên (RAM), Bộ nhớ chỉ đọc (ROM), Cổng đầu vào / đầu ra, Bộ đếm thời gian và bộ đếm, Bộ chuyển đổi analog sang digital, Bộ chuyển đổi digital sang analog, Cổng giao tiếp nối tiếp Mạch dao động.
+Bên trong vi điều khiển chứa đầy đủ tất cả các tính năng cần thiết cho một hệ thống máy tính và các chức năng như một máy tính mà không cần thêm các bộ phận kỹ thuật số bên ngoài.
+Các loại vi điều khiển phổ biến
+Arduino 
+Arduino là một nền tảng mã nguồn mở được sử dụng để xây dựng các ứng dụng điện tử tương tác với nhau hoặc với môi trường được thuận lợi hơn.
+Arduino giống như một máy tính nhỏ để người dùng có thể lập trình và thực hiện các dự án điện tử mà không cần phải có các công cụ chuyên biệt để phục vụ việc nạp code.
+Hình 2.2: Vi điều khiển Arduino
+Khả năng kết nối
+Arduino có thể hoạt động độc lập.
+Arduino có thể kết nối với một máy tính. Máy tính của bạn được phép truy cập dữ liệu cảm biến từ thế giới bên ngoài và cung cấp thông tin phản hồi.
+Các Arduino có thể kết nối với nhau.
+Arduino có thể kết nối với thiết bị điện tử khác.
+Arduino có thể kết nối với các chip điều khiển.
+ESP32
+ESP32 là một series các vi điều khiển trên một vi mạch giá rẻ, năng lượng thấp có hỗ trợ WiFi và dual-mode Bluetooth. Dòng ESP32 sử dụng bộ vi xử lý Tensilica Xtensa LX6 ở cả hai biến thể lõi kép và lõi đơn, và bao gồm các công tắc antenna tích hợp, RF balun, bộ khuếch đại công suất, bộ khuếch đại thu nhiễu thấp, bộ lọc và module quản lý năng lượng
+Hình 2.3: Vi điều khiển ESP32
+8051
+Vi điều khiển 8051 được Intel thiết kế vào năm 1981. Đây là bộ vi điều khiển 8 bit, được xây dựng với 40 chân DIP (gói nội tuyến kép), 4kb bộ nhớ ROM và 128 byte bộ nhớ RAM, 2 bộ định thời 16 bit. Nó bao gồm bốn cổng 8 bit song song, có thể lập trình cũng như định địa chỉ theo yêu cầu. Một bộ dao động tinh thể trên chip được tích hợp trong bộ vi điều khiển có tần số tinh thể là 12 MHz.
+Hình 2.4: Vi điều khiển 8051
+Một số tính năng nổi bật:
+Là bộ vi điều khiển công nghệ CMOS hiệu suất cao tích hợp công nghệ Flash
+Hoạt động ở dải điện áp rộng 4 – 5.5V, vì vậy nó là một IC công suất thấp.
+Thiết bị hỗ trợ lập trình bên trong ở cả chế độ page và byte của bộ nhớ Flash.
+Tần số hoạt động lên đến 33MHz nhưng có thể thay đổi để tiết kiệm năng lượng.
+Module có thời gian lập trình nhanh với 10.000 chu kỳ đọc / ghi.
+Bộ nhớ RAM 256 × 8 bit.
+Giao tiếp nối tiếp thông qua module UART song công.
+Nó có một chân reset, ba bộ định thời 16 bit và tám bộ ngắt.
+AT89S52 có hai chế độ nguồn. Đầu tiên là chế độ nhàn rỗi, trong đó thiết bị xử lý dừng hoạt động trong khi ngoại vi vẫn tiếp tục hoạt động. Thứ hai là chế độ tắt nguồn sẽ tạm dừng bộ dao động và các chức năng khác và lưu nội dung RAM.
+Bộ đếm thời gian Watchdog để hoạt động khởi động thiết bị từ chế độ ngủ và có thể được kích hoạt hoặc hủy kích hoạt thông qua lập trình
+2.1.2 Cấu tạo của vi điều khiển
+Cấu tạo cơ bản và sơ đồ khối của vi điều khiển như hình 2.5:
+Hình 2.5: Cấu tạo của vi điều khiển
+2.2 Giới thiệu về Arduino mega2560
+2.2.1 Khái quát về Arduino mega2560
+Arduino Mega 2560 chính là phiên bản nâng cấp của Arduino Mega hay còn được gọi với cái tên thông thường là Arduino Mega 1280, đây là phiên bản đang được sử dụng phổ biến với các ứng dụng đa dạng hơn so với các phiên bản khác.Sự khác biệt và cải tiến lớn nhất của dòng Arduino này là chip nhân. Arduino Mega 2560 hoạt động bằng cách sử dụng ATmega2560 thay vì ATmega1280 như phiên bản cũ. 
+Nền tảng mã nguồn mở này chứa các thành phần bao gồm 54 chân digital, trong đó 15 chân có thể sử dụng như các chân PWM, 4 cổng nối tiếp phần cứng UART, 16 đầu vào analog, 1 cổng kết nối USB, 1 đầu ICSP, 1 jack cắm điện, 1 nút reset và 1 thạch anh 16MHz. Nhìn chung, Arduino Mega 2560 chứa tất cả các linh kiện cần thiết để hỗ trợ hoạt động cho các vi điều khiển.
+2.2.2 Thông số kỹ thuật chính
+Các thông số kỹ thuật của arduino mega2560 được trình bày ở bảng 2.1:
+Bảng 2.1: Thông số kỹ thuật của arduino mega2560
+Arduino Mega
+Tính năng, đặc điểm
+Vi điều khiển
+AVR Atmega2560 (8bit)
+Nguồn cung cấp
+5V
+Số chân I/O
+70
+Xung clock
+16 MHz
+Giao tiếp
+USB, ICSP, SPI, I2C và UART
+Số chân ngắt ngoài
+6
+Dài x Rộng 
+101.52 mm x 53.3 mm
+Hình 2.6: Cấu trúc của mega2560
+2.2.3 Ứng dụng
+Arduino được chọn làm bộ não xử lý của rất nhiều thiết bị từ đơn giản đến phức tạp. Trong số đó có một vài ứng dụng thực sự chứng tỏ khả năng vượt trội của Arduino do chúng có khả năng thực hiện nhiều nhiệm vụ rất phức tạp. Sau đây là danh sách một số ứng dụng nổi bật của Arduino.
+Robot: Arduino được ứng dụng trong các thiết kế về Robot, cụ thể như điều khiển motor, nhận biết và xử lý thông qua cảm biến...
+Máy CNC mini sử dụng cho điêu khắc sử dụng laser hoặc spindle tốc độ cao.
+Hình 2.7: Máy CNC
+Máy in 3D, sử dụng in chi tiết sản phẩm 3D
+Một cuộc cách mạng công nghệ mới cũng đang dần phát triển nhờ vào lập trình bằng mạch arduino, đó là sự xây dựng và thiết kế máy in 3D nguồn mở Reprap. Máy in 3D là công cụ giúp tạo ra các vật thể thực trực tiếp từ các file CAD 3D. 
+Hình 2.8: Máy in 3D
+Máy bay không người lái 
+UAV là một ứng dụng Arduino cực kỳ thích hợp và tương thích với bo mạch này, bởi vì chúng có khả năng xử lý nhiều loại cảm biến như Gyro, accelerometer, GPS…; điều khiển động cơ servo và cả khả năng truyền nhận tín hiệu từ xa. 
+Hình 2.9: Máy bay không người lái
+Điều khiển thiết bị thông qua internet ( IoT)
+Nhà thông minh (tiếng Anh là "Smart Home") là một ngôi nhà/ căn hộ được trang bị hệ thống tự động tiên tiến dành cho hệ thống đèn chiếu sáng, nhiệt độ, truyền thông đa phương tiện, và nhiều tính năng khác nhằm mục đích làm cho cuộc sống ngày càng tiện nghi, an toàn và góp phần sử dụng hợp lý các nguồn tài nguyên.
+Hình 2.10: Nhà thông minh ứng dụng IOT
+2.3 Giới thiệu về phần mềm Arduino IDE, Pycharm.
+2.3.1 Khái niệm về phần mềm Arduino IDE
+Arduino IDE à một phần mềm với một mã nguồn mở, được sử dụng chủ yếu để viết và biên dịch mã vào module Arduino. Nó bao gồm phần cứng và phần mềm. Phần cứng chứa đến 300,000 board mạch được thiết kế sẵn với các cảm biến, linh kiện. Phần mềm giúp bạn có thể sử dụng các cảm biến, linh kiện ấy của Arduino một cách linh hoạt phù hợp với mục đích sử dụng.
+Hình 2.11: Giao diện phần mềm Arduino IDE
+2.3.2 Ưu điểm và nhược điểm của phần mềm
+Ưu điểm: 
+Giao diện đơn giản và trực quan, dễ dàng cho người mới bắt đầu
+Arduino IDE là phần mềm miễn phí và mã nguồn mở, giúp người dùng dễ dàng tải về và sử dụng mà không cần chi phí.
+Quá trình nạp mã vào board rất đơn giản và nhanh chóng, giúp tiết kiệm thời gian trong quá trình phát triển.
+Cung cấp nhiều thư viện cho IoT, cho phép kết nối với mạng Wi-Fi và giao thức khác dễ dàng.
+Nhược điểm:
+So với các IDE phát triển khác như Visual Studio Code hay Eclipse, Arduino IDE thiếu nhiều tính năng nâng cao như gợi ý mã tốt hơn, kiểm tra lỗi mạnh mẽ hơn, và khả năng quản lý dự án tốt hơn.
+Khi làm việc với các dự án lớn hoặc phức tạp, hiệu suất có thể không ổn định và có thể gặp khó khăn trong việc xử lý mã lớn.
+2.3.3 Cách sử dụng phần mềm
+Cách tạo file và nạp chương trình
+Khi ta khởi động chương trình thì sẽ có giao diện như sau:
+Hình 2.12: Giao diện khởi động phần mềm
+Bước 1: Tạo một dự án – Vào file – Chọn New
+Hình 2.13: Tạo chương trình mới trên Arduino
+Bước 2: Viết một đoạn code để chạy chương trình.
+Hình 2.14: Giao diện viết code trên Arduino
+Bước 3: Chạy thử chương trình xem có báo lỗi hay không ta bấm vào dấu V góc trái màn hình -&gt; hiện chữ Done compiling là biên dịch thành công.
+Hình 2.15: Chạy chương trình trên Arduino
+Bước 4: Nếu không có lỗi thì ta nạp chương trình thông qua mũi tên góc trái màn hình.
+Hình 2.16: Nạp chương trình trên Arduino
+Bước 5: Lưu chương trình về tệp
+Hình 2.17: Lưu chương trình trên Arduino
+Như vậy ta đã hoàn thành việc chuẩn bị soạn thảo và biên dịch chương trình.
+2.3.4 Giới thiệu về phần mềm 
+Giới thiệu ngôn ngữ lập trình Python
+Python là một ngôn ngữ lập trình bậc cao, mã nguồn mở, được sử dụng rộng rãi trong nhiều lĩnh vực khác nhau, từ học tập, nghiên cứu đến phát triển phần mềm, trí tuệ nhân tạo và khoa học dữ liệu.
+Python hiện nay được sử dụng rộng rãi trong nhiều lĩnh vực khác nhau như phát triển web, phân tích dữ liệu, học máy, tự động hóa, và phát triển phần mềm. Ngôn ngữ này nổi bật với một kho thư viện phong phú và mạnh mẽ, hỗ trợ các công cụ như NumPy, Pandas, TensorFlow, Django và Flask, mang lại sự linh hoạt và tiện ích cho lập trình viên. Python còn hỗ trợ cả lập trình hướng đối tượng và lập trình hàm, giúp người dùng dễ dàng lựa chọn phương pháp phát triển phù hợp với từng dự án.
+Hình 2.18: Ngôn ngữ Python
+Lịch sử phát triển của Python
+Python được phát triển bởi Guido van Rossum vào cuối những năm 1980 tại Viện Nghiên cứu Toán học và Tin học CWI (Hà Lan). Ngôn ngữ này được thiết kế nhằm đơn giản hóa lập trình, dễ đọc và mạnh mẽ.
+1991: Python 0.9.0 ra mắt, giới thiệu các tính năng như kiểu dữ liệu động, lập trình hướng đối tượng, và quản lý bộ nhớ tự động.
+2000: Python 2.0 được phát hành, bổ sung bộ thu gom rác (Garbage Collection) và cải thiện xử lý chuỗi.
+2008: Python 3.0 ra đời với nhiều cải tiến lớn nhưng không tương thích ngược với Python 2.
+Hiện nay: Python tiếp tục phát triển mạnh mẽ, trở thành một trong những ngôn ngữ lập trình phổ biến nhất thế giới, đặc biệt trong AI, khoa học dữ liệu và phát triển web.
+Những lợi ích của Python bao gồm:
+Các nhà phát triển có thể dễ dàng đọc và hiểu một chương trình Python vì ngôn ngữ này có cú pháp cơ bản giống tiếng Anh. 
+Python giúp cải thiện năng suất làm việc của các nhà phát triển vì so với những ngôn ngữ khác, họ có thể sử dụng ít dòng mã hơn để viết một chương trình Python.
+Python có một thư viện tiêu chuẩn lớn, chứa nhiều dòng mã có thể tái sử dụng cho hầu hết mọi tác vụ. Nhờ đó, các nhà phát triển sẽ không cần phải viết mã từ đầu.
+Các nhà phát triển có thể dễ dàng sử dụng Python với các ngôn ngữ lập trình phổ biến khác như Java, C và C++.
+Cộng đồng Python tích cực hoạt động bao gồm hàng triệu nhà phát triển nhiệt tình hỗ trợ trên toàn thế giới. Nếu gặp phải vấn đề, bạn sẽ có thể nhận được sự hỗ trợ nhanh chóng từ cộng đồng.
+Trên Internet có rất nhiều tài nguyên hữu ích nếu bạn muốn học Python. Ví dụ: bạn có thể dễ dàng tìm thấy video, chỉ dẫn, tài liệu và hướng dẫn dành cho nhà phát triển.
+Python có thể được sử dụng trên nhiều hệ điều hành máy tính khác nhau, chẳng hạn như Windows, macOS, Linux và Unix.
+Các lĩnh vực ứng dụng của Python
+Python được ứng dụng rộng rãi trong nhiều lĩnh vực khác nhau, bao gồm:
+Phát triển phần mềm: Python được sử dụng để phát triển các ứng dụng web, desktop, ứng dụng di động, trò chơi điện tử,...
+Trí tuệ nhân tạo: Python là ngôn ngữ lập trình phổ biến nhất trong lĩnh vực trí tuệ nhân tạo, được sử dụng để xây dựng các mô hình học máy, xử lý ngôn ngữ tự nhiên,...
+Khoa học dữ liệu: Python là ngôn ngữ lập trình được sử dụng nhiều nhất trong lĩnh vực khoa học dữ liệu, được sử dụng để phân tích dữ liệu, xây dựng mô hình dự đoán,...
+Giới thiệu Pycharm
+Pycharm là một nền tảng kết kết hợp được JetBrains phát triển như một IDE (Môi trường phát triển tích hợp) để phát triển các ứng dụng cho lập trình trong Python. Một số ứng dụng lớn như Tweeter, Facebook, Amazon và Pinterest sử dụng Pycharm để làm IDE Python của họ.
+Hình 2.19: Shortcut Pycharm
+Hướng dẫn sử dụng Pycharm
+Khi mở Pycharm, giao diện sẽ hiển thị như sau:
+Hình 2.20: Giao diện Pycharm
+Ở bên trái, bạn có thể xem tất cả các dự án mà bạn đang làm việc. Nếu đây là lần đầu tiên bạn sử dụng Pycharm, thì cột bên trái sẽ hiển không hiển thị gì. 
+  Để tạo một dự án mới trong Pycharm nhấp vào tab Create New Project
+Hình 2.21: Tạo project Pycharm
+- Bạn có thể thiết lập các trình thông dịch Python của mình theo ý muốn. Ngay sau bước này, bạn có thể bắt đầu lập trình trên Pycharm
+Hình 2.22: Nơi để lập trình trên Pycharm
+Kết luận: Pycharm là một IDE Python tiện lợi dễ sử dụng cho các nhà phát triển. Bài viết trên đã hướng dẫn chi tiết cách cài đặt và sử dụng Pycharm. Các lập trình viên có thể cài đặt Pycharm để công việc lập trình trở nên tinh gọn và hiệu quả hơn.
+Thư viện Open CV
+OpenCV là một thư viện mạnh mẽ được sử dụng rộng rãi trong xử lý hình ảnh và thị giác máy tính. Nó cung cấp nhiều chức năng để làm việc với hình ảnh, video, và các thuật toán máy học.
+Hình 2.23: Thư viện OpenCV
+Một số chức năng phổ biến:
+Đọc và ghi hình ảnh, video.
+Xử lý hình ảnh như thay đổi kích thước, xoay, lọc, nhận diện đối tượng (ví dụ: nhận diện khuôn mặt).
+Phát hiện và theo dõi chuyển động trong video.
+Thực hiện các phép toán trên hình ảnh, ví dụ như biến đổi Fourier, lọc Gaussian.
+Numpy
+NumPy là một thư viện mạnh mẽ trong Python để xử lý mảng và tính toán số học với hiệu suất cao. Đây là thư viện quan trọng trong nhiều lĩnh vực khoa học máy tính, đặc biệt là trong xử lý hình ảnh (vì hình ảnh thường được biểu diễn dưới dạng mảng).
+Imutils
+Imutils là một thư viện giúp đơn giản hóa việc thao tác với hình ảnh trong OpenCV. Nó cung cấp các hàm bổ sung giúp việc xử lý hình ảnh trở nên dễ dàng và nhanh chóng hơn, giảm thiểu sự phức tạp khi sử dụng.
+PySerial
+PySerial là một thư viện giúp giao tiếp với các thiết bị ngoại vi thông qua giao thức Serial (RS-232). Thư viện này rất hữu ích khi cần kết nối máy tính với các thiết bị như Arduino, Raspberry Pi hoặc bất kỳ thiết bị nào hỗ trợ giao tiếp serial.
+Time 
+Thư viện time cung cấp các hàm để làm việc với thời gian trong Python. Nó thường được sử dụng để tính toán thời gian trễ, tạm dừng thực thi chương trình, hoặc đo thời gian thực hiện các tác vụ.
+2.4 Giới thiệu về công nghệ xử lý ảnh
+2.4.1 Tổng quan về công nghệ xử lý ảnh
+Công nghệ xử lý ảnh là một lĩnh vực kỹ thuật số quan trọng, tập trung vào việc cải thiện và phân tích hình ảnh để trích xuất thông tin có ý nghĩa. Quá trình xử lý ảnh bao gồm nhiều bước cơ bản như thu thập dữ liệu từ các nguồn như máy ảnh số, điện thoại di động, hoặc vệ tinh; tiền xử lý ảnh để loại bỏ nhiễu và điều chỉnh độ sáng, độ tương phản; biến đổi và phân tích ảnh thông qua các kỹ thuật như biến đổi hình học, phân đoạn ảnh, và chuyển đổi không gian màu. Trích xuất đặc trưng từ hình ảnh bao gồm các kỹ thuật như phát hiện cạnh, nhận diện hình dạng, và phát hiện đối tượng. 
+Xử lý ảnh là một lĩnh vực mang tính khoa học và công nghệ cao, với tốc độ phát triển nhanh chóng và tiềm năng ứng dụng rộng rãi trong nhiều lĩnh vực như y học, thiên văn học, quân sự, công nghiệp, và nhiều ngành khác. Các phương pháp xử lý ảnh chủ yếu bắt đầu từ việc nâng cao chất lượng ảnh và phân tích ảnh.
+Một trong những ứng dụng đầu tiên của xử lý ảnh là việc nâng cao chất lượng của các bức ảnh truyền qua cáp từ Luân Đôn đến New York vào những năm 1920. Vấn đề nâng cao chất lượng ảnh liên quan mật thiết đến việc điều chỉnh mức sáng và độ phân giải của hình ảnh. Năm 1964, công nghệ đã đủ mạnh để xử lý và nâng cao chất lượng hình ảnh chụp từ Mặt Trăng, cũng như từ vệ tinh Ranger 7 của Mỹ, bao gồm các kỹ thuật như làm nổi các đường biên và lưu trữ ảnh. Kể từ đó, các phương tiện và phương pháp xử lý, nâng cao chất lượng, nhận dạng ảnh đã phát triển không ngừng. Những tiến bộ trong trí tuệ nhân tạo, đặc biệt là mạng nơ ron nhân tạo, cùng với các thuật toán xử lý hiện đại và các công cụ nén ảnh, đã được áp dụng rộng rãi và mang lại những kết quả ấn tượng.
+Hình 2.24: Tổng quan về công nghệ xử lý ảnh
+Xử lý ảnh là quá trình chuyển đổi một hình ảnh sang dạng kỹ thuật số và thực hiện các thao tác nhất định để nhận được một số thông tin hữu ích từ hình ảnh đó. Hệ thống xử lý hình ảnh thường coi tất cả các hình ảnh là tín hiệu 2D khi áp dụng một số phương pháp xử lý tín hiệu đã xác định trước.
+Các loại xử lý hình ảnh chính:
+Nhận diện – Phân biệt hoặc phát hiện các đối tượng trong hình ảnh
+Làm sắc nét và phục hồi – Tạo hình ảnh nâng cao từ hình ảnh gốc
+Nhận dạng mẫu – Đo các mẫu khác nhau xung quanh các đối tượng trong hình ảnh
+Truy xuất – Duyệt và tìm kiếm hình ảnh từ một cơ sở dữ liệu lớn gồm các hình ảnh kỹ thuật số tương tự như hình ảnh gốc
+Tiềm năng mở rộng của Xử lý ảnh
+Thực tế ảo và Thực tế tăng cường: Với sự phát triển của công nghệ, xử lý ảnh có thể được sử dụng để tạo ra trải nghiệm thực tế ảo và thực tế tăng cường tuyệt vời hơn. 
+Xử lý ảnh y học tiên tiến: Công nghệ xử lý ảnh đang dần chuyển từ việc chỉ đơn giản là xem và chẩn đoán sang việc dự đoán và phân tích bệnh lý dựa trên dữ liệu hình ảnh y tế. Điều này có thể mở ra cánh cửa cho việc phát triển các phương pháp điều trị cá nhân hóa và tiên tiến hơn.
+An ninh và Quản lý dữ liệu: Trong tương lai, xử lý ảnh có thể được sử dụng rộng rãi hơn trong lĩnh vực an ninh và quản lý dữ liệu. Từ việc giám sát tự động đến phân tích dữ liệu hình ảnh để đưa ra quyết định kinh doanh, công nghệ này sẽ đóng vai trò ngày càng quan trọng trong việc tự động hóa các quy trình.
+Công nghệ xử lý ảnh là lĩnh vực quan trọng của khoa học máy tính và kỹ thuật, tập trung vào việc xử lý, phân tích và biến đổi hình ảnh số để trích xuất thông tin hoặc tạo ra hình ảnh mới. Các giai đoạn chính của quá trình bao gồm thu thập hình ảnh, tiền xử lý, phân tích và xử lý ảnh, nhận diện đối tượng và trực quan hóa kết quả. Công nghệ này có ứng dụng rộng rãi trong nhiều lĩnh vực như y tế, an ninh, sản xuất, truyền thông và giao thông. Được hỗ trợ bởi các thư viện và công cụ mạnh mẽ như OpenCV, công nghệ xử lý ảnh đóng vai trò quan trọng trong việc phát triển các giải pháp thông minh và hiệu quả.
+2.4.2 Một số công cụ và thư viện xử lý ảnh phổ biến
+OpenCV
+OpenCV là một thư viện mã nguồn mở được phát triển bởi Intel từ năm 1999, hiện được sử dụng rộng rãi trong lĩnh vực xử lý ảnh, video và thị giác máy (Computer Vision).
+Ngôn ngữ hỗ trợ: Python, C++, Java
+Tính năng nổi bật:
+Xử lý ảnh cơ bản: làm mịn, lọc nhiễu, phát hiện biên, biến đổi hình học...
+Xử lý video, nhận diện khuôn mặt, theo dõi chuyển động.
+Tích hợp nhiều thuật toán thị giác máy sẵn có.
+Hỗ trợ xử lý thời gian thực.
+Tesseract OCR (Google):
+Tesseract OCR là một công cụ OCR (Optical Character Recognition) mã nguồn mở do HP phát triển ban đầu, sau đó được Google duy trì và phát triển từ năm 2006. Có khả năng trích xuất văn bản từ ảnh, tài liệu scan, hóa đơn, biển số...
+Tính năng nổi bật:
+Mã nguồn mở, hỗ trợ nhiều ngôn ngữ
+Tốt với ảnh văn bản in, rõ ràng
+Có thể kết hợp với OpenCV để tiền xử lý ảnh trước khi OCR  
+YOLO
+YOLO là viết tắt của "You Only Look Once", là một kiến trúc mạng nơ-ron dùng để phát hiện đối tượng (Object Detection) trong ảnh hoặc video. Điểm đặc biệt của YOLO là phát hiện tất cả các đối tượng trong ảnh chỉ qua một lần quét duy nhất, cực kỳ nhanh và phù hợp với ứng dụng thời gian thực.
+Tính năng nổi bật:
+Mô hình phát hiện thời gian thực, cực nhanh và nhẹ
+Phù hợp cho các ứng dụng cần tốc độ cao như giám sát, xe tự hành
+Có nhiều phiên bản: YOLOv3, v4, v5, v8...
+2.5 Giới thiệu Google Sheets
+Google Sheet hay còn gọi là Google Trang tính, là một ứng dụng bảng tính trực tuyến và miễn phí, được phát triển bởi Google và tích hợp với Google Drive. Google Sheet cho phép bạn tạo ra các bảng tính đa dạng và phong phú, với khả năng chỉnh sửa và cộng tác trực tiếp trên Website. Google Sheet có nhiều tính năng giống với Excel nhưng cũng có những điểm khác biệt và ưu việt hơn.
+Google Sheet cho phép người dùng tạo, chỉnh sửa và chia sẻ các bảng tính trên nhiều thiết bị khác nhau. Google Sheet có nhiều tính năng mạnh mẽ và linh hoạt giúp bạn xử lý dữ liệu, phân tích số liệu, làm việc nhóm và tự động hóa các công việc.
+Hình 2.25: Logo Googel sheet
+Hướng dẫn cách sử dụng Google Sheet
+Bước 1: Tìm kiếm từ khóa “Google Sheet” trên Google  (Lưu ý, cần phải đăng nhập tài khoản Google trước khi sử dụng Google Sheet.)
+Bước 2: Tiếp theo, chọn hình dấu cộng như hình minh họa bên dưới là đã tạo ngay được một Trang tính mới. Sau đó, chỉ cần điền các trường dữ liệu vào như sử dụng Excel.
+Hình 2.26: Tạo mới 1 trang tính
+Bước 3: Có thể nhập hoặc thêm các tập tin có sẵn trên máy hoặc các tệp lưu trữ trên Drive của bạn vào Google Sheet
+Hình 2.27: Sử dụng google sheets
+Chia sẻ và mở quyền truy cập Google Sheet
+Một trong những tính năng hữu ích của Google Sheet là có thể chia sẻ và mở quyền truy cập cho người khác để cùng xem, chỉnh sửa hoặc bình luận trên bảng tính
+Bước 1: Đầu tiên, nhấp vào nút “Chia sẻ” ở góc trên bên phải của màn hình.
+Hình 2.28: Chia sẽ Google sheets
+Bước 2: Trong hộp thoại Chia sẻ, có thể nhập địa chỉ email của những người muốn chia sẻ tệp hoặc nhấp vào “Sao chép đường liên kết” để copy link.
+Hình 2.29: Chọn email muốn chia sẽ google sheet
+2.6 Giới thiệu về Webserver
+Webserver (máy chủ web) là một phần mềm hoặc phần cứng có nhiệm vụ tiếp nhận các yêu cầu (request) từ trình duyệt của người dùng (client), xử lý các yêu cầu đó và phản hồi lại dữ liệu phù hợp — thường là các trang web (HTML), hình ảnh, video, hoặc dữ liệu từ API.
+Webserver gồm 2 thành phần chính:
+Phần mềm máy chủ: như Apache, Nginx, Microsoft IIS, hoặc LiteSpeed.
+Phần cứng máy chủ: là máy tính (thực hoặc ảo) chạy phần mềm webserver, kết nối internet và có IP tĩnh.
+Hình 2.30: Hình ảnh cấu trúc webserver
+Các chức năng chính
+Lưu trữ và phân phối nội dung web.
+Xử lý yêu cầu và phản hồi HTTP/HTTPS.
+Chuyển hướng URL, ghi log, quản lý truy cập.
+Kết hợp với ngôn ngữ phía server như PHP, Python, Node.js để xử lý logic động.
+Ứng dụng của webserver
+Các trang web thương mại điện tử, blog, diễn đàn.
+API server cho ứng dụng di động/web.
+Webserver chuyên dụng trong hệ thống điều khiển (ví dụ: giám sát giao thông, điều khiển IoT).
+CHƯƠNG 3: THIẾT KẾ HỆ THỐNG VÀ THI CÔNG MÔ HÌNH
+3.1 Thiết kế hệ thống
+3.1.1 Yêu cầu kỹ thuật
+Kích thước ô tô: chiều dài (3,5 - 4,5m), chiều rộng (1,5 – 1,8m)
+Kích thước xe máy: chiều dài (1,5 – 1,8m), chiều rộng (0,7 – 0,8m)
+Kích thước biển số ô tô: chiều cao 165mm, chiều dài 330mm.
+Kích thước biển số xe máy: chiều cao 140mm, chiều dài 190mm.
+Camera giám sát cần có độ phân giải cao.
+Bộ điều khiển trung tâm đủ mạnh để đảm bảo thời gian xử lý các công việc.
+Khả năng nhận diện biển số xe và phát hiện vi phạm tốt.
+Đo lưu lượng xe di chuyển thông qua video mô phỏng để điều chỉnh tín hiệu giao thông.
+Có tính linh hoạt và khả năng mở rộng.
+Các linh kiện được sử dụng phải đảm bảo tính chính xác, ổn định.
+Xuất và lưu dữ liệu về thông tin xe vi phạm trên hệ thống. 
+3.1.2 Đặt thời gian cho tín hiệu đèn giao thông
+Nhóm tiến hành tìm hiểu, nghiên cứu và lựa chọn ngã tư trên thực tế: ngã tư Hà Huy Tập giao với Điện Biên Phủ.
+Có 2 tuyến đường chính: đường Hà Huy Tập (từ ngã tư Trần Cao Vân giao Hà Huy Tập đến Điện Biên Phủ) và đường Điện Biên Phủ (Lê Độ giao với Điện Biên Phủ tới Ngã tư Điện Biên Phủ giao với Hà Huy Tập) 
+Ta có: 
+Đường Hà Huy Tập (từ ngã tư Trần Cao Vân giao Hà Huy Tập đến Điện Biên Phủ) dài khoảng 660m.
+Đường Điện Biên Phủ (từ ngã tư đường Lê Độ đến ngã tư Hà Huy Tập) có khoảng cách 1000m
+Với vận tốc cho phép là 40km/h = 11,11m/s, từ đó ta có thể xây dựng được phương trình tính toán thời gian cho chu kỳ đèn tín hiệu: 
+∆t = S/Vt               (3.1)
+∆t: thời gian phương tiện lưu thông từ ngã tư này sang ngã tư kia (s) 
+S: Khoảng cách giữa hai ngã tư trên tuyến đường (m) 
+Vt: Vận tốc cho phép của phương tiện (m/s) 
+Ta xét tuyến đường Điện Biên Phủ (ngã tư đường Lê Độ giao Điện Biên Phủ) đến ngã tư Hà Huy Tập giao Điện Biên Phủ có khoảng cách khoảng 1000m, Suy ra: 
+∆t = S/Vt = 1000/11,11 = 90 (giây) 
+Thời gian phương tiện lưu thông từ ngã tư này đến ngã tư kia của tuyến đường này là ∆t = 90 giây
+Thời gian các pha tín hiệu của đèn giao thông: Chu kỳ đèn giao thông bao gồm thời gian của tất cả các trạng thái: đèn đỏ, đèn vàng và đèn xanh. 
+Thời Gian Đèn Xanh: Đèn xanh sẽ chiếm một phần của chu kỳ: 
+G=N⋅Lv-U+Σⅈ=1n⋅Pi             (3.2)
+Ta có: 
+N số lượng phương tiện mong muốn vượt qua nút giao thông trong một chu kỳ đèn (phương tiện/phút). Là 26 xe 
+L là độ dài của mỗi phương tiện (mét/phương tiện): trung bình dựa theo xe máy 2.5m 
+V là tốc độ trung bình của phương tiện (m/s): 11,11 (m/s) 
+U là tốc độ cắt bình thường của luồng giao thông (m/s). 50(km/h) = 13,8 (m/s) 
+Pi là thời gian mất mát do dừng ở các điểm đèn giao thông trước (giây): 4 giây 
+=&gt; G = (26x2.5)/ (11,11-13,8+4) = 50 (giây)
+Thời Gian Đèn Vàng: Thời gian chuyển từ đèn xanh sang đèn vàng là thời gian trống giữa đèn xanh và đèn đỏ. Ta thiết lập thời gian đèn vàng là 5 giây. 
+Thời Gian Đèn Đỏ: Là phần còn lại của chu kỳ sau thời gian đèn vàng. Thời gian đèn đỏ là 90 - 50 - 5 = 35 giây. 
+Vì vậy, ta có thời gian các pha tín hiệu đèn giao thông như sau: 
+Đèn xanh X1 = 50 giây
+Đèn vàng V1 = 5 giây 
+Đèn đỏ Đ1 = 35 giây 
+Ta xét tuyến đường Đường Hà Huy Tập (từ ngã tư Trần Cao Vân giao Hà Huy Tập đến Điện Biên Phủ) dài 660m 
+Thời gian các pha tín hiệu của đèn giao thông: Chu kỳ đèn giao thông bao gồm thời gian của tất cả các trạng thái: đèn đỏ, đèn vàng và đèn xanh. 
+Thời Gian Đèn Xanh: ở đường không ưu tiên có phân cấp là:
+G=N⋅Lv-U+Σⅈ=1n⋅Pi                  (3.3)
+Ta có: 
+N số lượng phương tiện mong muốn vượt qua nút giao thông trong một chu kỳ đèn (phương tiện/phút). 
+L là độ dài của mỗi phương tiện (mét/phương tiện): trung bình dựa theo xe máy 2.5m 
+V là tốc độ trung bình của phương tiện (m/s): 11,11 (m/s) 
+U là tốc độ cắt bình thường của luồng giao thông (m/s). 50(km/h) = 13,8 (m/s) 
+Pi là thời gian mất mát do dừng ở các điểm đèn giao thông trước (giây): 4 giây
+=&gt; G = (16x2.5)/ (11,11-13,8+4) = 30 (giây)
+Thời Gian Đèn Vàng: Thời gian chuyển từ đèn xanh sang đèn vàng là thời gian trống giữa đèn xanh và đèn đỏ. Ta thiết lập thời gian đèn vàng là 5 giây. 
+Thời Gian Đèn Đỏ: Là phần còn lại của chu kỳ sau thời gian đèn vàng. Vì đây là tuyến đường không ưu tiên nên tổng thời gian của chu kỳ sẽ theo với chu kỳ tuyến đường ưu tiên cho nên ta lấy tổng thời gian là 90 giây, vậy :
+Thời gian đèn đỏ là 60 - 30 - 5 = 55 giây. 
+Vì vậy, ta có thời gian các pha tín hiệu đèn giao thông như sau:
+Đèn xanh X2 = 30 giây 
+Đèn vàng V2 = 5 giây 
+Đèn đỏ Đ2 = 55 giây 
+Ta có bảng thời gian của các đèn : 
+Bảng 3.1: Đặt thời gian đèn giao thông 
+Xanh 1
+Vàng 1
+Đỏ 1
+Xanh 2
+Vàng 2
+Đỏ 2
+50 giây
+5 giây
+35 giây
+30 giây
+5 giây
+55 giây
+3.1.3 Tính toán mật độ giao thông và tính toán giám sát lưu lượng xe
+Lắp đặt camera cách đèn giao thông ở ngã tư tầm 100m để có thể điều khiển giám sát lưu lượng xe 1 cách chính xác. 
+Với 1 chiếc ô tô thông dụng trung bình thì hiện tại có chiều dài tầm (3,5 - 4,5m), chiều rộng dao động tầm (1,5 – 1,8m), như vậy diện tích ô tô dao động tầm (12-15m2).
+Hình 3.1: Kích thước trung bình của ô tô
+ Xe máy thông dụng trung bình thì ta có chiều dài dao động tầm (1,5 – 1,8m), chiều rộng dao động (0,7 – 0,8m), với các thông số này thì ta tính được diện tích trung bình của xe máy tầm 5m2. 
+Hình 3.2: Kích thước trung bình của xe máy
+Vậy ta quy ước diện tích 1 chiếc ô tô bằng 3 chiếc xe máy. Ta lấy trùng bình diện tích xe là 10m2.
+Ta xét điểm để thực hiện giám sát : làn đường rộng 8m và chiều dài trong khoảng 150m do đó ta được diện tích của điểm này là 1200m2.
+Với diện tích 1200m2 thì ta sẽ cần 1200/10 = 120 xe để lấp đầy với khoảng cách giữa các xe là tầm 1m thì ta sẽ có tầm 80 xe trong 1200m2. 
+Như thế ta có thể thấy: số lượng xe dao động tầm 90 - 92% thì sẽ kẹt xe, do đó ta có được trong diện tích 1200m2 tầm 70 xe thì sẽ kẹt xe.
+3.1.4 Kích thước biển số tiêu chuẩn
+Biển số xe ô tô
+Biển số ngắn: kích thước (330 x 165) mm
+Hình 3.3: Kích thước biển số ngắn của ô tô
+Biển số dài: kích thước (520 x 110) mm
+Hình 3.4: Kích thước biển số dài của ô tô
+Biển số xe máy
+Biển số xe máy có kích thước tiêu chuẩn là (190 x 140) mm
+Hình 3.5: Kích thước biển số xe máy
+Màu sắc biển số xe
+Biển số xe nền màu trắng; viền ngoài, chữ, số và ký tự màu đen.
+Biển số xe nền màu vàng; viền ngoài, chữ, số và ký tự màu đen.
+Biển số xe nền màu xanh; viền ngoài, chữ, số, các ký tự màu trắng.
+Biển số xe nền màu trắng; chữ màu đỏ; viền ngoài, số và ký tự màu đen.
+3.1.5 Nhận dữ liệu hệ thống giám sát gửi về và điều chỉnh đèn giao thông
+Tất cả được đếm và giám sát ở cả hai tuyến đường: 
+Tuyến 1 (ưu tiên): Tuyến đường Điện Biên Phủ từ ngã tư đường Lê Độ - Điện Biên Phủ đến ngã tư Hà Huy Tập - Điện Biên Phủ 
+Tuyến 2 (không ưu tiên):  Tuyến đường Hà Huy Tập từ ngã tư đường Trần Cao Vân - Hà Huy Tập đến ngã tư Điện Biên Phủ - Hà Huy Tập
+ Khi đèn tín hiệu đang hoạt động bình thường, ta đếm giám sát xe hết chu kỳ đèn (90 giây)
+Hình 3.6: Chu kì đèn hoạt động bình thường
+Khi trong chu kỳ giám sát xe ( đếm trong vòng 90 giây ), ta so sánh số lượng xe của cả hai tuyến đường khi hết chu kỳ đếm nếu:
+Tuyến 1 &gt; tuyến 2 thì xanh 1 tăng, đỏ 1 giảm, xanh 2 giảm, đỏ 2 tăng.
+Tuyến 1 = tuyến 2 thì vẫn dữ thông số ban đầu.
+Tuyến 1 &lt; tuyến 2 thì xanh 1 giảm, đỏ 1 tăng, xanh 2 tăng, đỏ 2 giảm.
+Hình 3.7: Chu kì đèn hoạt động ở tuyến 1 sau khi so sáng số lượng xe 
+Hình 3.8: Chu kì đèn hoạt động ở tuyến 2 sau khi so sáng số lượng xe 
+Bảng 3.2: Thời gian sáng các đèn
+Xanh 1
+Vàng 1
+Đỏ 1
+Xanh 2
+Vàng 2
+Đỏ 2
+50 ± x giây
+5 giây
+35 ± x giây
+30 ± x  giây
+5 giây
+55 ± x giây
+3.1.6  Tính chọn thiết bị
+Khối camera giám sát giao thông
+Camera Dahua ITC237-PW6M-IRLZF1050-B
+Camera ANPR tầm xa được thiết kế với cảm biến hình ảnh CMOS hiệu suất cao và bộ xử lý được phát triển độc lập, có khả năng đọc và trích xuất thông tin chi tiết về xe cả ngày lẫn đêm.Thuật toán học sâu thông minh cho phép nhận dạng biển số xe, nhãn hiệu, kiểu xe, logo và màu sắc xe. Camera được áp dụng rộng rãi để chụp ảnh xe và nhận dạng đường cộng đồng, bãi đậu xe và các tình huống giám sát ra vào khác.
+Hình 3.9: Camera giám sát giao thông
+Thông số kỹ thuật :
+Cảm biến hình ảnh: 1/1.8" CMOS
+Độ phân giải hình ảnh: 1920 × 1080 pixel
+Tốc độ khung hình: 30 fps (NTSC) hoặc 25 fps (PAL)​
+Chống ngược sáng (WDR): 96 dB
+Kích thước: 370.4 mm × 124.7 mm × 105.7 mm​
+Trọng lượng: 1.7 kg
+Khối tín hiệu giao thông
+Đèn tín hiệu giao thông
+Đèn giao thông DVX D300 – Đèn giao thông DVX D300 là một mẫu đèn tín hiệu giao thông hiện đại. Đèn DVX300, thường được sử dụng để điều khiển giao thông tại các ngã tư hoặc các khu vực giao thông đông đúc. ANCO là nhà sản xuất trực tiếp và phân phối bán lẻ, dự án và công trình.
+Hình 3.10: Đèn tín hiệu giao thông DVX D300
+Tính năng nổi bật:
+Công suất tiêu thụ bóng Led thấp giúp tiết kiệm 80% tiền điện so với đèn giao thông Halogen truyền thống, tuổi thọ bóng Led hơn 100.000h.
+Chất lượng linh kiện điện tử đảm bảo chức năng và tuổi thọ lâu dài, mạch điện áp không đổi phù hợp với đèn Led công suất nhỏ và có hiệu suất cao &gt;0,9. Tự động điều chỉnh độ sáng theo môi trường, không gây chói mắt cho người tham gia giao thông.
+Vỏ và thấu kính polycarbonate chất lượng cao ngăn ngừa lão hóa sớm và đảm bảo tuổi thọ lâu dài dưới ánh nắng mạnh. Vỏ chắc chắn và bề mặt thấu kính đã vượt qua cấp độ chống va đập Class IR3. Tới EN12368.
+Cấp độ bảo vệ IP65 đạt chuẩn EN60529, phù hợp với thời tiết khắc nghiệt và môi trường ô nhiễm nặng.
+Thông số kỹ thuật:
+Xuât xứ: Japan
+Điện áp hoạt động: 110 - 240 VAC hoặc 12 – 32 VDC
+Công suất tiêu thụ: 1W/3W/6W thay đổi theo mức sáng
+Kích thước: 1068x353x372mm
+Đèn đếm ngược LED
+Đèn đếm lùi D200- Đèn đếm lùi D200 là loại đèn lắp đặt bổ sung bên cạnh đèn tín hiệu chính. Đèn đếm lùi được hiển thị bằng một con số đếm ngược với những màu sắc khác nhau. Khi đèn đếm đến “0” là lập tức chuyển màu đèn chính. Đèn đếm lùi có thể có số 0 ở hàng chục hoặc không có.
+Hình 3.11: Đèn đếm ngược D200
+Tính năng nổi bật của bộ đèn đếm lùi D200
+-  Led chuyên dùng trong lĩnh vực giao thông, tuổi thọ cao, hài hoà môi trường.-  Phát huy tối đa hiệu quả, công suất tiêu thụ thấp.-  Tầm quan sát được thiết kế đặc biệt rộng và ánh sáng phân bố đều.-  Đặc biệt thiết kế dạng module, kín, công nghệ cao, rất thuận tiện khi lắp đặt-  Sản phẩm đã qua kiểm tra chính xác về các thông số kỹ thuật, đảm bảo chất lượng trước khi đưa vào sử dụng bằng các loại máy test chuyên nghiệp.
+Thông số kỹ thuật:
+Điện áp sử dụng: DC 9-36V/ AC: 85-264V/50H
+Công suất tiêu thụ nhỏ hơn 5,2 W.
+Góc quan sát 30 độ.
+Kích thước: 1074x960x388 mm.
+Độ rọi: Đ: 132,9lux V: 262,9lux X:340,1lux.
+Khối cảm biến giao thông
+Wavetronix SmartSensor HD là cảm biến radar công nghệ cao chuyên dùng trong hệ thống giao thông thông minh (ITS). Thiết bị cho phép phát hiện, phân loại và đo tốc độ phương tiện chính xác trên nhiều làn đường cùng lúc mà không cần cắt mặt đường, giúp tiết kiệm chi phí thi công và dễ bảo trì.
+Hình 3.12: Cảm biến radar giao thông
+Thông số kỹ thuật:
+Công nghệ radar: Sử dụng radar băng tần K hoạt động ở tần số 24.125 GHz.
+Phạm vi phát hiện: Lên đến 250 feet (khoảng 76,2 mét).
+Công suất: 8.1 W
+Điện áp hoạt động: 9-28 VDC
+Trọng lượng: 1.9 Kg
+Khối điều khiển trung tâm
+Econolite EOS là phần mềm điều khiển tín hiệu giao thông tiên tiến, được thiết kế để chạy trên các bộ điều khiển như Econolite Cobalt và các bộ điều khiển khác. EOS cung cấp các tính năng nâng cao nhằm tối ưu hóa hoạt động của hệ thống giao thông và hỗ trợ các ứng dụng Thành phố Thông minh và phương tiện kết nối.
+Hình 3.13: Bộ điều khiển EOS
+3.1.7 Sơ đồ đấu nối của hệ thống
+Hình 3.14: Sơ đồ đấu nối mô hình
+Giải thích các thành phần có trong sơ đồ:
+Hệ thống gồm 2 tuyến được chia làm 4 cột đèn với mỗi tuyến có 2 cột đèn giao thông.
+Mỗi tuyến có các đèn xanh, đỏ, vàng và có module 2 led 7 đoạn để hiển thị thời gian đếm ngược.
+Sử dụng Arduino Mega2560 làm bộ điều khiển chính, các chân SDI, SCLK, LOAD lần lượt là các chân dữ liệu, xung clock và chốt dữ liệu của module led 7 đoạn.
+Các đèn tín hiệu xanh, vàng, đỏ của tuyến 1 lần lượt được nối vào chân 16,17,18 của Arduino
+Các đèn tín hiệu xanh, vàng, đỏ của tuyến 2 lần lượt được nối vào chân 19,20,21 của Arduino
+Các chân SDI, SCLK, LOAD của module led 7 đoạn tuyến 1 lần lượt được nối vào chân 2,3,4 của Arduino
+Các chân SDI, SCLK, LOAD của module led 7 đoạn tuyến 2 lần lượt được nối vào chân 5,6,7 của Arduino
+3.2  Quy trình công nghệ
+Hệ thống sẽ bao gồm hai chức năng chính: 
+Thay đổi thời gian đèn giao thông tại ngã tư dựa vào sự chênh lệch lượng xe di chuyển trên 2 tuyến đường trong một chu kỳ đèn.
+Phát hiện, xử lý thông tin các xe vi phạm vượt đèn đỏ.
+3.2.1 Quy trình công nghệ 1
+Sử dụng video có lưu lượng xe di chuyển trên 2 tuyến đường để tiến hành so sánh và dùng camera gắn trên mô hình để phát hiện xe vượt đèn đỏ.
+Khi được cấp nguồn, hệ thống bắt đầu hoạt động. Arduino điều khiển đèn giao thông hoạt động ở chu kỳ cố định:
+Xanh1 = 10s, vàng1 = 3s, đỏ1 = 13s
+      Xanh2 = 10s, vàng2 = 3s, đỏ2 = 13s
+Arduino sẽ gửi tín hiệu bắt đầu chu kỳ đèn (qua Serial) cho máy tính.
+Máy tính nhận tín hiệu và bắt đầu phân tích video để đếm số lượng xe trên mỗi tuyến đường trong một chu kỳ đèn. Phát hiện phương tiện vượt đèn đỏ thông qua camera trên mô hình (khi đang đèn đỏ mà xe vẫn đi qua vạch dừng), nhận diện và đọc biển số xe vi phạm.
+Sau khi kết thúc mỗi chu kỳ đèn, máy tính gửi kết quả xe đếm được trở lại Arduino để tính toán, điều chỉnh thời gian đèn cho chu kỳ tiếp theo. Nếu chênh lệch từ 3 xe trở lên thì tăng thêm 5s đèn xanh ở tuyến đường có lượng xe nhiều hơn và giảm 5s đèn xanh ở tuyến còn lại so với thời gian đặt ban đầu:
+Nếu xe tuyến 1 - xe tuyến 2 ( hoặc xe tuyến 2 - xe tuyến 1 ) &lt; 3 xe: 
+Xanh1 = 10s, vàng1 = 3s, đỏ1 = 13s
+        Xanh2 = 10s, vàng2 = 3s, đỏ2 = 13s
+Nếu xe tuyến 1 - xe tuyến 2  3 xe: 
+Xanh1 = 15s, vàng1 = 3s, đỏ1 = 8s
+        Xanh2 = 5s, vàng2 = 3s, đỏ2 = 18s
+Nếu xe tuyến 2 - xe tuyến 1  3 xe: 
+Xanh1 = 5s, vàng1 = 3s, đỏ1 = 18s
+        Xanh2 = 15s, vàng2 = 3s, đỏ2 = 8s
+Nếu có phương tiện vượt đèn đỏ thì máy tính sẽ truy xuất thông tin về thời gian, biển số, hình ảnh xe vi phạm. Dữ liệu sau khi xử lý sẽ truyền tải lên google sheet để quản lý và Drive để lưu trữ.
+Mọi hoạt động của hệ thống đều được giám sát và hiển thị trực tiếp trên giao diện WebServer.
+3.2.2 Quy trình công nghệ 2
+Ở quy trình công nghê 2, các bước tương tự như quy trình công nghệ 1 nhưng sẽ sử dụng 2 camera gắn ở 2 tuyến đường trên mô hình để tiến hành đếm số lượng xe di chuyển. Các thông tin về phương tiện vi phạm vượt đèn đỏ chỉ được cập nhật lên google sheet, không được giám sát trên Webserver.
+3.2.3 Lựa chọn quy tình công nghệ
+Sau khi cân nhắc kỹ lưỡng, nhóm chúng em quyết định lựa chọn quy trình công nghệ 1 để áp dụng cho hệ thống. Việc sử dụng video mô phỏng nhằm so sánh lưu lượng xe trên hai tuyến đường tại ngã tư được đánh giá là thực tế và hiệu quả hơn so với việc so sánh trên mô hình. Bên cạnh đó, khả năng xử lý và cập nhật thông tin xe vi phạm vượt đèn đỏ lên Google Sheets và giám sát hệ thống trên Webserver sẽ trực quan hơn, giúp việc theo dõi tình hình giao thông và các vi phạm trong thời gian thực một cách thuận tiện và hiệu quả. Vì vậy, lựa chọn quy trình công nghệ 1 là phù hợp và tối ưu cho đề tài của chúng em.
+3.3  Thi công mô hình
+Hình 3.15: Mô hình thực tế sau khi thi công
+Dưới đây là những thiết bị được sử dụng trong mô hình:
+Khối tín hiệu giao thông
+Module đèn led giao thông
+Mạch hiển thị led đèn giao thông traffic light được sử dụng trong các mô hình sử dụng đèn giao thông hoặc trong các bài thực hành vi điều khiển về đèn giao thông, mạch có thiết kế nhỏ gọn, dễ kết nối với chân GND (0VDC) chung, các chân điều khiển kích mức cao VCC (3.3~5VDC) để đèn sáng.
+Hình 3.16: Module đèn led giao thông
+Mạch led đèn giao thông là một trong những module led được sử dụng làm các mô hình điện tử, với 3 bóng đèn led để mô phỏng cột đèn giao thông chính xác. Kích thước của mạch led giao thông nhỏ gọn, dễ dàng sử dụng.
+Thông số kỹ thuật:
+Kích thước: 56*21*11mm
+Màu sắc: đỏ, vàng xanh
+Điện áp: 5V
+Trọng lượng: 25 gram
+4 chân nối: GND red, yellow, blue
+Module hiển thị LED 7 đoạn 74HC595
+Module 2 LED 7 đoạn anode chung là một linh kiện hiển thị dùng trong các ứng dụng hiển thị số, thường thấy trong đồng hồ điện tử, bộ đếm, hoặc mạch đo. Module này gồm 2 cụm LED 7 đoạn có cực anode chung, nghĩa là tất cả các anode của các LED trong một chữ số được nối chung và điều khiển thông qua cực cathode.
+Thông số kỹ thuật
+Nguồn sử dụng: 3 ~ 6VDC.
+Tùy chọn hiển thị: 2 LED | 3 LED | 4 LED
+LED 7 đoạn 0.56 inch
+Dòng điện sử dụng: &lt;100mA
+IC Driver: 74HC595.
+3 chân giao tiếp: SCLK, RCLK, DIN.
+Hình 3.17: Module hiển thị LED 7 đoạn 74HC595
+Mạch hiển thị Led 7 đoạn 74HC595 2-Digit Display 0.56 Inch Module được thiết kế giúp bạn có thể dễ dàng điều khiển và hiển thị thông tin lên 2 led 7 đoạn chỉ với 2 chân giao tiếp thông qua IC ghi dịch 74HC595, ngoài ra mạch còn có khả năng mở rộng thêm các led tiếp theo qua cổng đầu ra nối tiếp, mạch có bộ thư viện đi kèm dễ sử dụng phù hợp cho các ứng dụng: bộ đếm, đồng hồ,...
+Camera
+Camera là loại thiết bị ghi hình kỹ thuật số được kết nối với máy tính để truyền trực tiếp hình ảnh mà nó ghi được đến một máy tính khác hoặc truyền lên một website nào đó thông qua internet.
+Trong đề tài này, Camera  được kết nối với PC để chụp ảnh rồi gửi tín hiệu về Arduino để xử lý ảnh, đồng thời gửi giữ liệu lên webserver.
+Hình 3.18: Webcam yoosee ys13
+Thông số kỹ thuật
+Độ phân giải: 1920 x 1080 (1080p)
+Kích thước: 70 x 50.7 x 44mm
+Điện áp hoạt động: USB 5V – 1A
+Khối điều khiển trung tâm
+Arduino mega2560
+Arduino Mega 2560 là một trong những bo mạch vi điều khiển mạnh mẽ nhất của dòng Arduino, được thiết kế để hỗ trợ các dự án yêu cầu nhiều cổng I/O hơn so với Arduino Uno. Bo mạch này sử dụng vi điều khiển ATmega2560 và được sử dụng phổ biến trong các dự án IoT, robot, điều khiển tự động và xử lý dữ liệu phức tạp.
+Hình 3.19: Arduino mega2560
+Arduino Mega 2560  là phiên bản mở rộng của Uno R3 có nhiều chân giao tiếp, ngoại vi và bộ nhớ hơn. Mạch Arduino này là một board vi điều khiển dựa trên ATmega2560, có 54 chân I/O (15 chân PWM ), 16 analog đầu vào, 4 UARTs (phần cứng cổng tuần tự), sử dụng thạch anh 16 MHz, kết nối cổng USB, một Jack cắm điện, chân ICSP, và một nút reset. Mạch có tất cả mọi thứ cần thiết để hỗ trợ vi điều khiển.
+Thông số kỹ thuật
+Vi điều khiển chính: ATmega2560
+Điện áp hoạt động: 5VDC
+Điện áp vào: 7~12VDC
+Điện áp vào giới hạn: 6~20 VDC
+Số chân Digital: 54 (15 chân PWM)
+Số chân vào Analog: 16
+Dòng DC trên mỗi chân: 40mA
+Dòng DC trên chân 3.3V: 50mA
+Bộ nhớ Flash: 256 KB (8KB dùng cho bootloader)
+SRAM: 8 KB
+EEPROM: 4 KB
+Tần số xung clock: 16 MHz
+IC 74HC595
+IC 74HC595 là một IC thanh ghi dịch có 16 chân bao gồm một chân chốt loại D cùng với một thanh ghi dịch bên trong chip. Nó nhận dữ liệu đầu vào nối tiếp và sau đó gửi dữ liệu này ra ngoài thông qua các chân song song. 
+Hình 3.20: IC 74HC595
+Ngoài các đầu ra song song, nó còn cung cấp một đầu ra nối tiếp, nó có các đầu vào xung nhịp riêng lẻ cho thanh ghi dịch và chân chốt D. IC này thuộc họ linh kiện logic HC được thiết kế để sử dụng trong các ứng dụng công nghệ CMOS.
+Sơ đồ chân
+ Hình 3.21: Sơ đồ chân IC 74HC595
+Thông số kỹ thuật
+Điện áp hoạt động: 2V đến 6V
+Mức tiêu thụ điện: 80uA
+Source ra / dòng sink: 35mA
+Điện áp đầu ra bằng điện áp hoạt động
+Điện áp đầu vào mức cao tối thiểu: 3,15V @ (Vcc = 4,5V)
+Điện áp đầu vào mức thấp tối đa: 1.35V @ (Vcc = 4.5V)
+Bảng 3.3: Ý nghĩa các chân của IC 74HC595
+Số chân
+Tên chân
+Mô tả
+1, 2, 3, 4, 5, 6, 7
+Chân output (Q1 đến Q7)
+74hc595 có 8 chân đầu ra, trong đó có 7 chân này. Chúng có thể được kiểm soát nối tiếp
+8
+Ground
+Nối đất
+9
+(Q7’) Serial Output
+Chân này được sử dụng để kết nối nhiều hơn một 74hc595 dưới dạng xếp tầng
+10
+(MR) Master Reset
+Reset tất cả các đầu ra ở mức thấp. Phải giữ ở mức cao để hoạt động bình thường
+11
+(SH_CP) Clock
+Đây là chân đồng hồ mà tín hiệu đồng hồ phải được cung cấp từ vi điều khiển hoặc vi xử lý
+12
+(ST_CP) Latch
+Chân Latch dùng để cập nhật dữ liệu vào các chân đầu ra. Nó kích hoạt mức cao
+13
+(OE) Output Enable
+Chân OE được sử dụng để tắt đầu ra. Phải giữ ở mức thấp để hoạt động bình thường
+14
+(DS) Serial Data
+Đây là chân mà dữ liệu được gửi đến, dựa trên đó 8 đầu ra được điều khiển
+15
+(Q0) Output
+Chân đầu ra đầu tiên
+16
+Vcc
+Chân này cấp nguồn cho IC, thường sử dụng + 5V
+CHƯƠNG 4: XÂY DỰNG CHƯƠNG TRÌNH ĐIỀU KHIỂN VÀ GIÁM SÁT GIAO THÔNG THÔNG MINH
+4.1 Bảng phân công đầu vào, đầu ra
+Hệ thống bao gồm các thiết bị đầu vào và đầu ra như bảng dưới:
+Bảng 4.1: Bảng phân công đầu vào
+STT
+Thiết bị
+Kết nối
+Mô tả
+1
+Camera 
+Nguồn (máy tính)
+Dùng để quan sát hoặc xử lý hình ảnh (nhận diện biển số, giám sát giao thông,...)
+Bảng 4.2: Bảng phân công đầu ra
+STT
+Thiết bị
+Chân Arduino
+Mô tả
+1
+Đèn xanh 1
+16
+Đèn tín hiệu làn 1
+2
+Đèn vàng 1
+17
+Đèn tín hiệu làn 1
+3
+Đèn đỏ 1
+18
+Đèn tín hiệu làn 1
+4
+Đèn xanh 2
+19
+Đèn tín hiệu làn 2
+5
+Đèn vàng 2
+20
+Đèn tín hiệu làn 2
+6
+Đèn đỏ 2
+21
+Đèn tín hiệu làn 2
+7
+Module led 7 đoạn tuyến 1
+SDI  =   2
+ SCLK =  3
+ LOAD = 4
+Led hiển thị số giây ở tuyến 1
+10
+Module led 7 đoạn tuyến 2
+SDI  =   5
+ SCLK =  6
+ LOAD = 7
+Led hiển thị số giây ở tuyến 2
+4.2  Lưu đồ thuật toán 
+Lưu đồ thuật toán điều khiển trên Arduino
+Giải thích lưu đồ:
+Ban đầu đặt thời gian đèn là: X1 = 10s, V1 = 3s, Đ1 = 13s
+                                               X2 = 10s, V2 = 3s, Đ2 = 13s
+Gửi trạng thái đèn đến máy tính để chương trình python thực hiện chức năng.
+Nhận số lượng xe đếm được trên 2 tuyến từ máy tính trong một chu kỳ đèn. 
+Kiểm tra số lượng xe chênh lệch trên tuyến 1 và tuyến 2:
+Nếu SLX1 - SLX2  3 xe: tăng thời gian đèn xanh tuyến 1 thêm 5s và giảm thời gian đèn xanh tuyến 2 đi 5s so với thời gian đặt ban đầu.
+Nếu SLX2 – SLX1  3 xe: tăng thời gian đèn xanh tuyến 2 thêm 5s và giảm thời gian đèn xanh tuyến 1 đi 5s so với thời gian đặt ban đầu.
+Nếu chênh lệch giữa 2 tuyến &lt;3 xe: trở lại thời gian đặt ban đầu.
+Hiển thị thời gian điều chỉnh lên led 7 đoạn
+Kết thúc chu kỳ và quay lại đầu vòng lặp cho chu kỳ tiếp theo.
+Hình 4.1: Lưu đồ thuật toán điều khiển trên Arduino
+Chú thích:  -    SLX1: số lượng xe trên tuyến 1
+SLX2: số lượng xe trên tuyến 2
+X1, V1, Đ1: đèn xanh, vàng, đỏ của tuyến 1
+X2, V2, Đ2: đèn xanh, vàng, đỏ của tuyến 2
+Lưu đồ thuật toán chương trình xử lý dữ liệu trên máy tính
+Hình 4.2: Lưu đồ thuật toán chương trình trên máy tính
+Chú thích:  -  x: số lượng xe tuyến 1
+y: số lượng xe tuyến 2
+Giải thích lưu đồ:
+Bắt đầu, hệ thống sẽ nhận trạng thái đèn từ Arduino và kiểm tra tín hiệu đầu vào từ camera và video đã lưu.
+Chương trình sẽ tiến hành đếm số lượng xe trên 2 tuyến đường trong 1 chu kỳ đèn, sau đó gửi dữ liệu đếm được về cho Arduino để điều chỉnh thời gian đèn giao thông phù hợp.
+Ở chức năng tiếp theo, chương trình sẽ kiểm tra xem có xe nào vượt vạch dừng khi đèn đỏ không, nếu có thì cắt hình ảnh khu vực chứa biển số của xe vi phạm, chuyển ảnh sang đen trắng để tăng độ chính xác, sử dụng thư viện EasyOCR để đọc ký tự trên biển số, lưu hình ảnh vi phạm lại để làm bằng chứng.
+Chương trình sẽ gửi thông tin vi phạm lên Google Sheet, bao gồm: biển số xe, thời gian vi phạm và hình ảnh vi phạm để lưu trữ và quản lý.
+Cập nhật thông tin trực tiếp lên Webserver để giám sát.
+Kết thúc chu kỳ và quay lại đầu vòng lặp cho chu kỳ tiếp theo.
+4.3 Chương trình điều khiển và giám sát
+4.3.1 Chương trình điều khiển
+Chương trình này sẽ tạo ra một hệ thống điều khiển và giám sát giao thông tại ngã tư sử dụng Arduino kết hợp với chương trình xử lý dữ liệu trên Python để nhận diện phương tiện vi phạm và điều khiển thời gian đèn tín hiệu khi lưu lượng xe trên 2 làn có sự chênh lệch quá số lượng cài đặt. 
+Chương trình gồm 2 phần chủ yếu:
+Arduino sẽ điều khiển đèn tín hiệu và thời gian hiển thị trên led 7 đoạn
+Trên máy tính, chương trình xử lý dữ liệu sẽ được viết bằng ngôn ngữ Python, nhận thông tin  từ camera, video và Arduino để xử lý. Gửi tín hiệu thay đổi thời gian đèn giao thông đến Arduino và thông tin sẽ được cập nhật lên google sheets để quản lý
+Giao tiếp dữ liệu giữa Arduino và máy tính thông qua Serial (giao tiếp cổng COM / USB)
+Về chức năng phát hiện xe vượt đèn đỏ:
+Máy tính sẽ nhận thông tin về tín hiệu đèn từ Arduino
+Camera sẽ ghi lại hình ảnh và gửi về để chương trình xử lý dữ liệu
+Nếu tín hiệu nhận được từ Arduino đang là đèn đỏ và camera phát hiện có xe vượt qua vạch quy định thì chương trình python sẽ xử lý hình ảnh,  biển số và thời gian vi phạm sau đó cập nhật trực tiếp lên google sheet và webserver.
+Về chức năng so sánh lượng xe giữa 2 làn để thay đổi thời gian đèn tín hiệu:
+Chương trình trên máy tính sẽ nhận tín hiệu từ video, sau đó thực hiện đếm số lượng xe trên 2 tuyến đường trong một chu kỳ đèn và gửi số lượng đếm được đến Arduino
+Nếu số lượng xe trên 2 tuyến chênh lệch quá số lượng đã cài đặt thì Arduino sẽ thay đồi thời gian đèn giao thông trong chu kỳ tiếp theo. 
+Đặt thời gian ban đầu: xanh1= 10s, vàng1=3s, đỏ1=13s
+                                     xanh2=10s, vàng2=3s, đỏ2=13s
+Nếu số lượng xe trên tuyến 1 lớn hơn trên tuyến 2 từ 3 xe trong một chu kì đèn thì cộng đèn xanh1 thêm 5s và giảm xanh2 xuống 5s so với thời gian đặt ban đầu, lúc đó: 
+xanh1= 15s, vàng1=3s, đỏ1=8s
+xanh2=5s, vàng2=3s, đỏ2=18s
+Nếu số lượng xe trên tuyến 2 lớn hơn trên tuyến 1 từ 3 xe trong một chu kì đèn thì cộng đèn xanh2 thêm 5s và giảm xanh1 xuống 5s so với thời gian đặt ban đầu, lúc đó: 
+xanh1= 5s, vàng1=3s, đỏ1=18s
+xanh2=15s, vàng2=3s, đỏ2=8s
+Nếu số lượng xe trên 2 tuyến chênh lệch &lt; 3 xe trong một chu kì đèn thì trở lại thời gian đặt ban đầu.
+Chương trình điều khiển trên Arduino và chương trình xử lý dữ liệu trên máy tính sẽ được trình bày cụ thể ở phần phụ lục.
+4.3.2 Hệ thống giám sát
+Toàn bộ hệ thống sẽ được giám trực tiếp thông qua WebServer, mọi thông tin vi phạm được lưu trữ và quản lý trên Google sheets, Google Driver.
+Giao diện WebServer được thiết kế trực quan, cung cấp đầy đủ các thông tin cần thiết để theo dõi và quản lý tình hình giao thông. 
+Hình 4.3: Giao diện giám sát trên WebServer
+Giao diện Webserver sẽ bao gồm các thông tin chính:
+Hình ảnh giám sát trực tiếp từ camera: Cho phép người dùng quan sát tình trạng giao thông theo thời gian thực.
+Hình 4.4: Camera giám sát trên Webserver
+Thông tin về lưu lượng xe các tuyến hiện tại và ở chu kỳ trước: Hệ thống hiển thị số lượng xe ở chu kỳ hiện tại và chu kỳ trước cho từng tuyến, hỗ trợ đánh giá mức độ lưu thông.
+Hình 4.5: Thông tin về lưu lượng xe trên webserver
+Danh sách thông tin các xe vi phạm vượt đèn đỏ, bao gồm các thông tin chi tiết như: biển số xe, thời gian vi phạm, và hình ảnh trích xuất.
+Hình 4.6: Thông tin các xe vi phạm vượt đèn đỏ trên Webserver
+Quản lý và lưu trữ dữ liệu vi phạm
+Tất cả dữ liệu vi phạm đều được ghi nhận và lưu trữ tự động để phục vụ công tác tra cứu và thống kê:
+Thông tin biển số, thời gian, trạng thái đèn được cập nhật trực tiếp lên Google Sheets.
+Hình 4.7: Thông tin lưu trữ trên google sheet
+Hình ảnh phương tiện vi phạm được lưu vào Google Drive để phục vụ đối chiếu, xử lý
+Hình 4.8: Hình ảnh vi phạm lưu trữ trên Driver
+KẾT LUẬN
+1.  Kết luận chung
+Qua thời gian tìm hiểu nghiên cứu hệ thống mạng lưới giao thông tại ngã tư, các tài liệu chuyên môn cũng như trên internet và đặc biệt là sự hướng dẫn, giúp đỡ của các thầy cô giáo bộ môn, nhóm đã hoàn thiện đề tài “Thiết kế hệ thống điều khiển và giám sát giao thông thông minh” theo đúng thời gian quy định và yêu cầu của giáo viên đưa ra.
+Đề tài “Thiết kế hệ thống điều khiển và giám sát giao thông thông minh” đã hoàn thành các mục tiêu đề ra, bao gồm việc xây dựng mô hình giám sát hành vi vượt đèn đỏ kết hợp với hệ thống điều khiển đèn giao thông thông minh. Thông qua việc sử dụng camera, công nghệ xử lý ảnh và nền tảng phần cứng như Arduino, hệ thống có thể tự động phát hiện vi phạm, nhận diện biển số xe và điều chỉnh chu kỳ đèn tín hiệu phù hợp với lưu lượng thực tế.
+Kết quả triển khai cho thấy hệ thống hoạt động ổn định, có khả năng xử lý nhanh và chính xác trong điều kiện mô phỏng. Việc điều chỉnh thời gian đèn linh hoạt giúp tối ưu hóa luồng giao thông tại giao lộ, trong khi chức năng phạt nguội góp phần nâng cao ý thức chấp hành luật giao thông của người dân.
+Mặc dù vẫn còn một số hạn chế như phụ thuộc vào điều kiện ánh sáng và chưa tích hợp xử lý pháp lý hoàn toàn tự động, đề tài đã mở ra nhiều hướng phát triển khả thi trong tương lai. Với việc bổ sung các công nghệ AI, đo tốc độ, nhận diện phương tiện và kết nối dữ liệu tập trung, hệ thống có tiềm năng trở thành một phần trong giải pháp giao thông thông minh hiện đại.
+Đề tài không chỉ có giá trị về mặt kỹ thuật mà còn mang ý nghĩa thực tiễn cao, có thể ứng dụng vào công tác quản lý và điều phối giao thông tại các đô thị lớn trong thời gian tới.
+2.  Kết quả đạt được
+Sau khi hoàn thành đồ án tốt nghiệp với đề tài “Thiết kế hệ thống điều khiển và giám sát giao thông thông minh”, nhóm em đã có thêm nhiều kiến thức chuyên ngành, hiểu biết về hệ thống điều khiển giao thông mà chúng ta gặp hằng ngày, các thiết bị điện được sử dụng và cách kết nối, xây dựng thành công hệ thống giám sát vi phạm giao thông và điều chỉnh thời gian đèn giao thông theo mật độ phương tiện.
+Đánh giá hiệu quả hoạt động:
+Hệ thống hoạt động ổn định trong điều kiện mô phỏng thực tế.
+Tỷ lệ phát hiện xe vượt đèn đỏ đạt hiệu quả trong điều kiện ánh sáng tốt
+Thời gian nhận diện biển số nhanh, cập nhật thông tin chính xác
+Việc điều chỉnh thời gian đèn giao thông giúp giảm ùn tắc tại hướng có mật độ cao, tăng khả năng lưu thông.
+3.  Ưu điểm và nhược điểm
+Ưu điểm:
+Mô hình hoạt động ổn định, đạt được yêu cầu đề ra 
+Góp phần nâng cao ý thức người tham gia giao thông
+Tăng cường hiệu quả trong việc quản lý giao thông
+Dễ dàng mở rộng hệ thống cho nhiều ngã tư hoặc tích hợp thêm tính năng mới như đo tốc độ, phát hiện đi sai làn, nhận diện xe ưu tiên,…
+Nhược điểm:
+Khả năng nhận diện biển số và phát hiện xe vi phạm có thể giảm trong điều kiện thiếu sáng, mưa lớn, hoặc sương mù,..
+Camera có độ phân giải thấp hoặc lắp đặt không đúng góc sẽ gây khó khăn cho việc nhận diện biển số chính xác.
+Trong điều kiện nhiều xe cùng lúc, hệ thống có thể xử lý chậm hoặc nhầm lẫn giữa các biển số nếu không được tối ưu tốt.
+4.  Hướng phát triển
+Hiện tại đề tài chỉ thực hiện được hai trong nhiều chức năng của một hệ thống giao thông thông minh đó là xử lý thông tin xe vượt đèn đỏ và điều chỉnh thời gian đèn giao thông dựa vào mật độ phương tiện tham gia trên đường, hệ thống có thế tích hợp thêm các chức năng để mở rộng như:
+Kết hợp chức năng đo tốc độ bằng xử lý video hoặc cảm biến để phát hiện và ghi nhận thêm hành vi chạy quá tốc độ, bổ sung cơ sở dữ liệu xử phạt.
+Phát triển hệ thống có thể nhận diện loại xe (ô tô, xe máy, xe tải...) để từ đó có thể áp dụng các mức xử phạt phù hợp hoặc ưu tiên xe đặc biệt (xe cấp cứu, xe buýt...).
+ Kết nối hệ thống với cơ sở dữ liệu đăng ký xe để gửi thông báo phạt nguội đến chủ phương tiện qua SMS, email hoặc ứng dụng di động.
+Phát triển phần mềm quản lý tập trung giúp theo dõi trạng thái giao thông, số liệu vi phạm, thống kê lưu lượng và xuất báo cáo trực quan.
+Mở rộng mô hình từ quy mô mô hình lên ứng dụng thực tế ngoài hiện trường, từng bước góp phần vào xây dựng đô thị thông minh.
+Từ kết quả đạt được, có thể thấy đề tài "Thiết kế hệ thống điều khiển và giám sát giao thông thông minh" hoàn toàn có khả năng phát triển và mở rộng trong thực tế. Việc kết hợp xử lý hình ảnh, điều khiển tín hiệu và giám sát giao thông tự động không chỉ giúp nâng cao hiệu quả quản lý giao thông mà còn góp phần xây dựng nền tảng cho các hệ thống giao thông thông trong tương lai.
+Các hướng phát triển như tích hợp đo tốc độ, phân loại phương tiện, cảnh báo vi phạm tự động, kết nối dữ liệu quản lý trung tâm hay ứng dụng trí tuệ nhân tạo đều là những bước đi phù hợp với xu hướng chuyển đổi số trong lĩnh vực giao thông đô thị. Nếu được đầu tư đúng mức về hạ tầng và công nghệ, hệ thống có thể triển khai thực tế tại các giao lộ lớn, giúp giảm thiểu vi phạm, hạn chế ùn tắc và nâng cao ý thức người tham gia giao thông.
+TÀI LIỆU THAM KHẢO
+[1] Hệ thống giao thông thông minh: Những điều cần biết (https://www.elcom.com.vn/he-thong-giao-thong-minh-la-gi).
+[2] Video về chuyển động xe trên 2 làn ( https://www.pexels.com/video/vehicles-on-highway-at-fast-speed-2431853/)
+[3] Hệ thống đèn giao thông thông minh (https://www.elcom.com.vn/den-giao-thong-thong-minh-thanh-phan-quan-trong-cua-its-1665538045 )
+[4] Ước Lượng Mật Độ Giao Thông Dựa Vào Học Sâu và Diện Tích (https://elib.vku.udn.vn/bitstream/123456789/974/1/B20.2019-164-171.pdf)
+[5] Giới thiệu Arduino ( http://arduino.vn/).
+[6] Hướng dẫn sử dụng Arduino(https://dientutuonglai.com/kit-arduino-uno-r3-atmega-328p-pu-cam.html).
+[7] Giới thiệu về led 7 đoạn, cấu tạo phân loại và cách điều khiển (ritech.vn).
+[8] Module hiển thị 2 led 7 đoạn kết hợp IC 74HC595 ( https://www.vietnic.vn/)
+[9] Chat GPT (https://chatgpt.com/) 
+[10] Hướng dẫn sử dụng và cài đặt Pycharm ( https://t3h.edu.vn/tin-tuc/pycharm-la-gi-huong-dan-cai-dat-va-su-dung-pycharm
+[11] Hhướng dẫn đọc biển số xe bằng xử lý ảnh ( https://dlapplications.github.io/2018-07-06-LicencePlaceDetection / )
+[12] Tự học lập trình Python cơ bản dành cho người mới bắt đầu ( https://csc.edu.vn/tin-tuc/Blog-chia-se/tu-hoc-lap-trinh-python-co-ban-danh-cho-nguoi-moi-bat-dau-8327 )
+[13] Công thức tính thời gian (3.1) (https://www.vietjack.com/tai-lieu-mon-ly/cong-thuc-tinh-van-toc-ctqt8.jsp )
+[14] Hướng dẫn cài đặt, sử dụng Pycharm lập trình Python
+( https://www.thegioididong.com/game-app/huong-dan-cai-dat-su-dung-pycharm-lap-trinh-python-1316867 )
+[15] Python - Opencv: Nhận diện bảng số xe và nhận diện ký tự alpahbet - marchine learning. (https://www.youtube.com/watch?v=An79dt26eks&amp;t=5s ) 
+[16] Hướng dẫn lập trình arduino ( https://viblo.asia/p/huong-dan-lap-trinh-arduino-co-ban-4P856n4a5Y3 )
+PHỤ LỤC
+Chương trên trên Arduino
+// ==== Cấu hình chân ====
+#define RED_1    18
+#define YELLOW_1 17
+#define GREEN_1  16
+#define RED_2    21
+#define YELLOW_2 20
+#define GREEN_2  19
+#define DATA1  2
+#define CLOCK1 3
+#define LATCH1 4
+#define DATA2  5
+#define CLOCK2 6
+#define LATCH2 7
+// ==== LED 7 đoạn ====
+byte digitCode[10] = {
+  ~0b00111111, ~0b00000110, ~0b01011011, ~0b01001111,
+  ~0b01100110, ~0b01101101, ~0b01111101, ~0b00000111,
+  ~0b01111111, ~0b01101111
+};
+// ==== Biến thời gian ====
+int timeGreen1 = 10;
+int timeGreen2 = 10;
+int pendingGreen1 = 10;
+int pendingGreen2 = 10;
+String inputString = "";
+bool stringComplete = false;
+// ==== Biến điều khiển chu kỳ ====
+bool cycleStarted = false;
+bool firstCycle = true;
+void setup() {
+  Serial.begin(9600);
+  pinMode(DATA1, OUTPUT); pinMode(CLOCK1, OUTPUT); pinMode(LATCH1, OUTPUT);
+  pinMode(DATA2, OUTPUT); pinMode(CLOCK2, OUTPUT); pinMode(LATCH2, OUTPUT);
+  pinMode(RED_1, OUTPUT); pinMode(YELLOW_1, OUTPUT); pinMode(GREEN_1, OUTPUT);
+  pinMode(RED_2, OUTPUT); pinMode(YELLOW_2, OUTPUT); pinMode(GREEN_2, OUTPUT);
+}
+void loop() {
+  // === Kiểm tra tín hiệu từ Python ===
+  if (Serial.available() &gt; 0 &amp;&amp; !cycleStarted &amp;&amp; !firstCycle) {
+    // Chờ nhận dữ liệu từ Python (Số lượng xe)
+ serialEvent();
+  }
+  // === Nếu nhận tín hiệu hoặc là chu kỳ đầu tiên, bắt đầu chu kỳ ===
+  if (firstCycle || cycleStarted) {
+    if (!firstCycle) {
+      // Cập nhật thời gian đèn xanh từ dữ liệu mới
+      timeGreen1 = pendingGreen1;
+      timeGreen2 = pendingGreen2;
+      Serial.print("Áp dụng thời gian: T1 = ");
+      Serial.print(timeGreen1);
+      Serial.print("s, T2 = ");
+      Serial.println(timeGreen2);
+    }
+    // ======== Giai đoạn 1: Tuyến 1 Xanh - Tuyến 2 Đỏ ========
+    digitalWrite(GREEN_1, HIGH); digitalWrite(RED_2, HIGH);
+    digitalWrite(RED_1, LOW); digitalWrite(GREEN_2, LOW);
+    digitalWrite(YELLOW_1, LOW); digitalWrite(YELLOW_2, LOW);
+    Serial.println("T1:GREEN T2:RED");
+    for (int i = timeGreen1; i &gt; 0; i--) {
+      displayNumber(i, DATA1, CLOCK1, LATCH1);
+      displayNumber(i + 3, DATA2, CLOCK2, LATCH2); // chờ thêm vàng
+      delay(1000);
+    }
+    // Giai đoạn 2: Tuyến 1 vàng, Tuyến 2 đỏ
+    digitalWrite(GREEN_1, LOW); digitalWrite(YELLOW_1, HIGH);
+    Serial.println("T1:YELLOW T2:RED");
+    for (int i = 3; i &gt; 0; i--) {
+      displayNumber(i, DATA1, CLOCK1, LATCH1);
+      displayNumber(i, DATA2, CLOCK2, LATCH2);
+      delay(1000);
+    }
+    digitalWrite(YELLOW_1, LOW); digitalWrite(RED_1, HIGH);
+    // ======== Giai đoạn 3: Tuyến 2 Xanh - Tuyến 1 Đỏ ========
+    digitalWrite(GREEN_2, HIGH); digitalWrite(RED_1, HIGH);
+    digitalWrite(RED_2, LOW); digitalWrite(GREEN_1, LOW);
+    Serial.println("T1:RED T2:GREEN");
+    for (int i = timeGreen2; i &gt; 0; i--) {
+      displayNumber(i + 3, DATA1, CLOCK1, LATCH1); // chờ thêm vàng
+      displayNumber(i, DATA2, CLOCK2, LATCH2);
+      delay(1000);
+    }
+    // Giai đoạn 4: Tuyến 2 vàng, Tuyến 1 đỏ tiếp
+    digitalWrite(GREEN_2, LOW); digitalWrite(YELLOW_2, HIGH);
+    Serial.println("T1:RED T2:YELLOW");
+    for (int i = 3; i &gt; 0; i--) {
+      displayNumber(i, DATA1, CLOCK1, LATCH1);
+      displayNumber(i, DATA2, CLOCK2, LATCH2);
+      delay(1000);
+    }
+    digitalWrite(YELLOW_2, LOW); digitalWrite(RED_2, HIGH);
+    digitalWrite(RED_1, LOW);
+    if (firstCycle) {
+      firstCycle = false;  // Chu kỳ đầu tiên đã hoàn thành
+    }
+    cycleStarted = false;  // Kết thúc chu kỳ, đợi chu kỳ tiếp theo
+  }
+}
+// ==== Hiển thị số lên LED 7 đoạn ====
+void displayNumber(int number, int dataPin, int clockPin, int latchPin) {
+  int tens = number / 10;
+  int ones = number % 10;
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, MSBFIRST, digitCode[ones]);
+  shiftOut(dataPin, clockPin, MSBFIRST, digitCode[tens]);
+  digitalWrite(latchPin, HIGH);
+}
+// ==== Nhận chuỗi "x,y\n" từ Python ====
+void serialEvent() {
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
+    if (inChar == '\n') {
+      int commaIndex = inputString.indexOf(',');
+      if (commaIndex &gt; 0) {
+        int count1 = inputString.substring(0, commaIndex).toInt();
+        int count2 = inputString.substring(commaIndex + 1).toInt();
+        int diff = count1 - count2;
+        Serial.print("ĐÃ NHẬN: Tuyến 1 = ");
+        Serial.print(count1);
+        Serial.print(", Tuyến 2 = ");
+        Serial.println(count2);
+        // Cập nhật thời gian đèn xanh dựa trên sự chênh lệch xe
+        if (abs(diff) &gt;= 3) {
+          if (diff &gt; 0) {
+            pendingGreen1 = 15;
+            pendingGreen2 = 5;
+          } else {
+            pendingGreen1 = 5;
+            pendingGreen2 = 15;
+          }
+        } else {
+          pendingGreen1 = 10;
+          pendingGreen2 = 10;
+        }
+        // Đặt flag để bắt đầu chu kỳ mới
+        cycleStarted = true;
+      }
+      inputString = "";
+    } else {
+      inputString += inChar;
+    }
+  }
+}
+Chương trình trên máy tính (ngôn ngữ Python)
+import cv2
+import easyocr
+import serial
+import time
+import threading
+import os
+import gspread
+from datetime import datetime
+from oauth2client.service_account import ServiceAccountCredentials
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
+# ==== Cài đặt chung ====
+STOP_LINE_Y = 300
+reader = easyocr.Reader(['en', 'vi'])
+cam = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+vid = cv2.VideoCapture(r'D:\Minhdat\HOCKI8\ĐỒ ÁN\Xử LÝ ẢNH\lưu lượng xe.mp4')
+vid.set(cv2.CAP_PROP_POS_FRAMES, 0)
+arduino = serial.Serial('COM10', 9600)
+time.sleep(2)
+# ==== Google Sheets và Drive ====
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name('phatnguoigiaothong-38efb4b0cd99.json', scope)
+client = gspread.authorize(creds)
+worksheet = client.open_by_key('1HCb_YUyOoppJiQdUwbAwwAphU-P_FqY4cUeAZPgCylQ').sheet1
+if worksheet.row_count == 0 or worksheet.cell(1, 1).value is None:
+    worksheet.append_row(["Thời gian", "Biển số", "Link hình ảnh"])
+gauth = GoogleAuth()
+gauth.credentials = creds
+drive = GoogleDrive(gauth)
+folder_id = '1PdoChVZpS4wbQY2dy0b68Xdu9N7hoUhP'
+os.makedirs('violations', exist_ok=True)
+# ==== Giao tiếp Arduino ====
+light_status = "T1:GREEN T2:RED"
+def listen_serial():
+    global light_status
+    while True:
+        if arduino.in_waiting:
+            light_status = arduino.readline().decode().strip()
+            print("Đèn:", light_status)
+threading.Thread(target=listen_serial, daemon=True).start()
+def upload_to_drive(local_path, file_name):
+    file_drive = drive.CreateFile({'title': file_name, 'parents': [{'id': folder_id}]} )
+    file_drive.SetContentFile(local_path)
+    file_drive.Upload()
+    file_drive.InsertPermission({'type': 'anyone', 'value': 'anyone', 'role': 'reader'})
+    return f"https://drive.google.com/uc?id={file_drive['id']}"
+# ==== Biến cho nhận diện biển số ====
+last_violation_time = 0
+cooldown_time = 5
+frame_count = 0
+recognized_plates = {}
+last_cleared_time = time.time()
+# ==== Biến đếm xe ====
+line_position = 360
+up_count = 0
+down_count = 0
+tracking_objects = {}
+track_id = 0
+ret, prev_frame = vid.read()
+prev_frame = cv2.resize(prev_frame, (1280, 720))
+prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+prev_gray = cv2.GaussianBlur(prev_gray, (5, 5), 0)
+cycle_start = time.time()
+cycle_duration = 26
+def center_handle(x, y, w, h):
+    return int(x + w / 2), int(y + h / 2)
+def process_license_plate(cam_frame):
+    global last_violation_time, recognized_plates, last_cleared_time
+    gray = cv2.cvtColor(cam_frame, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    edges = cv2.Canny(blurred, 100, 200)
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if "T1:RED" in light_status:
+        current_time = time.time()
+        if current_time - last_cleared_time &gt;= cooldown_time:
+            recognized_plates = {}
+            last_cleared_time = current_time
+        for contour in contours:
+            if cv2.contourArea(contour) &gt; 1000:
+                approx = cv2.approxPolyDP(contour, 0.02 * cv2.arcLength(contour, True), True)
+                if len(approx) == 4:
+                    x, y, w, h = cv2.boundingRect(approx)
+                    roi = cam_frame[y:y + h, x:x + w]
+                    if time.time() - last_violation_time &lt; cooldown_time:
+                        continue
+                    result = reader.readtext(roi)
+                    text_parts = [d[1].strip() for d in result if d[1].strip()]
+                    if len(text_parts) &gt;= 2:
+                        full_plate = ' '.join(text_parts)
+                        if full_plate in recognized_plates:
+                            continue
+                        recognized_plates[full_plate] = current_time
+                        last_violation_time = time.time()
+                        timestamp = int(time.time())
+                        current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        local_file = f"violations/{full_plate.replace(' ', '_')}_{timestamp}.jpg"             
+                        # Thêm thông tin thời gian và biển số vào góc trái hình ảnh
+                        cv2.putText(cam_frame, f"Time: {current_time_str}", (10, 30),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
+                        cv2.putText(cam_frame, f"Plate: {full_plate}", (10, 70),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)                     
+                        try:
+                            if cv2.imwrite(local_file, cam_frame):
+                                print(f"🚨 Vượt đèn đỏ: {full_plate}")
+                            link = upload_to_drive(local_file, os.path.basename(local_file))
+                        except Exception as e:
+                            print("Lỗi lưu/upload:", e)
+                            link = ""
+                        worksheet.insert_row([current_time_str, full_plate, link], index=2)
+                        break
+# ==== Biến thời gian ổn định ====
+current_time_live = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+last_time_update = time.time()
+# Thay đổi kích thước cửa sổ
+cv2.namedWindow("Camera - Bien so", cv2.WINDOW_NORMAL)
+cv2.namedWindow("Frame - Dem xe", cv2.WINDOW_NORMAL)
+# ==== Vòng lặp chính ====
+while True:
+    # ----------- XỬ LÝ CAMERA BIỂN SỐ ------------
+    ret1, cam_frame = cam.read()
+    if ret1:
+        display_frame = cam_frame.copy()
+        frame_count += 1
+        if time.time() - last_time_update &gt;= 1:
+            current_time_live = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            last_time_update = time.time()
+        if frame_count % 5 == 0:
+            threading.Thread(target=process_license_plate, args=(cam_frame.copy(),)).start()
+        cv2.putText(display_frame, current_time_live, (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
+        cv2.line(display_frame, (0, STOP_LINE_Y), (display_frame.shape[1], STOP_LINE_Y), (0, 0, 255), 2)
+        cv2.imshow("Camera - Bien so", display_frame)
+    # ----------- XỬ LÝ VIDEO ĐẾM XE ------------
+    ret2, vid_frame = vid.read()
+    if not ret2:
+        vid.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        continue
+    vid_frame = cv2.resize(vid_frame, (1280, 720))
+    gray = cv2.cvtColor(vid_frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    diff = cv2.absdiff(prev_gray, gray)
+    _, thresh = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    new_tracking = {}
+    for cnt in contours:
+        if cv2.contourArea(cnt) &gt; 500:
+            x, y, w, h = cv2.boundingRect(cnt)
+            center = center_handle(x, y, w, h)
+            matched = False
+            for id, pt in tracking_objects.items():
+                if abs(center[0] - pt[0]) + abs(center[1] - pt[1]) &lt; 50:
+                    new_tracking[id] = center
+                    matched = True
+                    if pt[1] &lt; line_position and center[1] &gt;= line_position:
+                        down_count += 1
+                    elif pt[1] &gt; line_position and center[1] &lt;= line_position:
+                        up_count += 1
+                    break
+            if not matched:
+                new_tracking[track_id] = center
+                track_id += 1
+            cv2.rectangle(vid_frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            cv2.circle(vid_frame, center, 4, (0, 0, 255), -1)
+    tracking_objects = new_tracking
+    prev_gray = gray.copy()
+    diff_count = abs(up_count - down_count)
+    cv2.line(vid_frame, (0, line_position), (1280, line_position), (0, 255, 255), 2)
+    cv2.putText(vid_frame, f'TUYEN 1: {up_count}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    cv2.putText(vid_frame, f'TUYEN 2: {down_count}', (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+    cv2.putText(vid_frame, f'CHENH LECH: {diff_count}', (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+    cv2.imshow('Frame - Dem xe', vid_frame)
+    if time.time() - cycle_start &gt;= cycle_duration:
+        msg = f"{up_count},{down_count}\n"
+        print(f"Gửi đến Arduino: {msg.strip()}")
+        arduino.write(msg.encode())
+        cycle_start = time.time()
+        up_count = down_count = 0
+    if cv2.waitKey(1) &amp; 0xFF == 27:
+        break
+cam.release()
+vid.release()
+cv2.destroyAllWindows()
+# ==== Trang web hiển thị video + danh sách xe vi phạm + lưu lượng xe ====
+HTML = """
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Giám sát vượt đèn đỏ&lt;/title&gt;
+    &lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"&gt;
+    &lt;style&gt;
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        }
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6;
+        }
+        .header-container img {
+            height: 60px;
+            width: auto;
+        }
+        .title-container {
+            text-align: center;
+        }
+        .title-container h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #212529;
+        }
+        .title-container p {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: #495057;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .left-column, .right-column {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .left-column {
+            flex: 1;
+            max-width: 500px;
+        }
+        .right-column {
+            flex: 2;
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #343a40;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        h2 i {
+            color: #007bff;
+        }
+        #traffic-counts {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f1f3f5;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .traffic-section {
+            flex: 1;
+            min-width: 200px;
+        }
+        #traffic-counts h3 {
+            font-size: 16px;
+            color: #343a40;
+            margin: 0 0 10px;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+        }
+        #traffic-counts p {
+            margin: 6px 0;
+            font-size: 16px;
+            color: #212529;
+        }
+        #traffic-counts p span {
+            font-weight: bold;
+        }
+        #traffic-counts p.route1 span { color: #28a745; }
+        #traffic-counts p.route2 span { color: #dc3545; }
+#traffic-counts p.diff span { color: #ffc107; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #212529;
+        }
+        tr:nth-child(even) {
+            background-color: #f1f3f5;
+        }
+        tr:hover {
+            background-color: #e9ecef;
+            transition: background-color 0.3s;
+        }
+        img.camera-feed {
+            width: calc(80% - 2cm); /* Giảm width để bù cho margin-left */
+            max-height: 600px;
+            object-fit: contain;
+            border: 2px solid #dee2e6;
+            border-radius: 15px;
+            margin-left: 2cm; /* Dịch chuyển sang phải 2cm */
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .left-column, .right-column {
+                max-width: 100%;
+            }
+            .header-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .header-container img {
+                height: 50px;
+            }
+            .title-container h1 {
+                font-size: 20px;
+            }
+            .title-container p {
+                font-size: 12px;
+            }
+            #traffic-counts {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .traffic-section {
+                min-width: 100%;
+            }
+            table {
+                font-size: 12px;
+            }
+            th, td {
+                padding: 8px;
+            }
+            img.camera-feed {
+                width: 100%; /* Trên di động, bỏ margin-left để tránh tràn */
+                max-height: 400px;
+                margin-left: 0; /* Loại bỏ margin-left trên di động */
+            }
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;!-- Header --&gt;
+    &lt;div class="header-container"&gt;
+        &lt;img src="{{ url_for('static', filename='logo-left.png') }}" alt="Logo trái"&gt;
+        &lt;div class="title-container"&gt;
+            &lt;h1&gt;Đề tài: Điều khiển và giám sát giao thông thông minh&lt;/h1&gt;
+            &lt;p&gt;SVTH: Văn Viết Hiễu, Lê Minh Đạt&lt;/p&gt;
+        &lt;/div&gt;
+        &lt;img src="{{ url_for('static', filename='logo-right.png') }}" alt="Logo phải"&gt;
+    &lt;/div&gt;
+    &lt;!-- Nội dung --&gt;
+    &lt;div class="container"&gt;
+        &lt;!-- Bên trái --&gt;
+        &lt;div class="left-column"&gt;
+            &lt;h2&gt;&lt;i class="fas fa-car"&gt;&lt;/i&gt; Lưu lượng xe&lt;/h2&gt;
+            &lt;div id="traffic-counts"&gt;
+                &lt;div class="traffic-section"&gt;
+                    &lt;h3&gt;Lưu lượng hiện tại&lt;/h3&gt;
+                    &lt;p class="route1"&gt;Tuyến 1: &lt;span id="up-count"&gt;0&lt;/span&gt;&lt;/p&gt;
+                    &lt;p class="route2"&gt;Tuyến 2: &lt;span id="down-count"&gt;0&lt;/span&gt;&lt;/p&gt;
+                    &lt;p class="diff"&gt;Chênh lệch: &lt;span id="diff-count"&gt;0&lt;/span&gt;&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div class="traffic-section"&gt;
+                    &lt;h3&gt;Lưu lượng chu kỳ trước&lt;/h3&gt;
+                    &lt;p class="route1"&gt;Tuyến 1: &lt;span id="prev-up-count"&gt;0&lt;/span&gt;&lt;/p&gt;
+                    &lt;p class="route2"&gt;Tuyến 2: &lt;span id="prev-down-count"&gt;0&lt;/span&gt;&lt;/p&gt;
+                    &lt;p class="diff"&gt;Chênh lệch: &lt;span id="prev-diff-count"&gt;0&lt;/span&gt;&lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;h2&gt;&lt;i class="fas fa-exclamation-triangle"&gt;&lt;/i&gt; Danh sách xe vượt đèn đỏ&lt;/h2&gt;
+            &lt;table id="violations-table"&gt;
+                &lt;tr&gt;
+                    &lt;th&gt;STT&lt;/th&gt;
+                    &lt;th&gt;Thời gian&lt;/th&gt;
+                    &lt;th&gt;Biển số&lt;/th&gt;
+                    &lt;th&gt;Hình ảnh&lt;/th&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+        &lt;/div&gt;
+        &lt;!-- Bên phải --&gt;
+        &lt;div class="right-column"&gt;
+            &lt;h2&gt;&lt;i class="fas fa-camera"&gt;&lt;/i&gt; Camera Giám sát&lt;/h2&gt;
+            &lt;img class="camera-feed" src="{{ url_for('video_feed') }}" alt="Camera Feed"/&gt;         
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- JavaScript cập nhật --&gt;
+    &lt;script&gt;
+        async function fetchViolations() {
+            const response = await fetch('/api/violations');
+            const data = await response.json();
+            const table = document.getElementById('violations-table');
+            while (table.rows.length &gt; 1) table.deleteRow(1);
+            data.plates.reverse().forEach((item, index) =&gt; {
+                const row = table.insertRow();
+                row.insertCell(0).textContent = index + 1;
+                row.insertCell(1).textContent = item.time;
+                row.insertCell(2).textContent = item.plate;
+                row.insertCell(3).innerHTML = item.link ? `&lt;a href="${item.link}" target="_blank"&gt;Xem ảnh&lt;/a&gt;` : 'Đang tải...';
+            });
+        }
+        async function fetchTrafficCounts() {
+            const response = await fetch('/api/traffic_counts');
+            const data = await response.json();
+document.getElementById('up-count').textContent = data.up_count;
+            document.getElementById('down-count').textContent = data.down_count;
+            document.getElementById('diff-count').textContent = data.diff_count;
+            document.getElementById('prev-up-count').textContent = data.prev_up_count;
+            document.getElementById('prev-down-count').textContent = data.prev_down_count;
+            document.getElementById('prev-diff-count').textContent = data.prev_diff_count;
+        }
+        setInterval(fetchViolations, 5000);
+        setInterval(fetchTrafficCounts, 5000);
+        fetchViolations();
+        fetchTrafficCounts();
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"""
+@app.route('/')
+def index():
+    with lock:
+        current_light = light_status
+        plates = recognized_plates_list[-10:]
+    return render_template_string(HTML, light=current_light, plates=plates)
+@app.route('/api/violations')
+def get_violations():
+    with lock:
+        return jsonify({"plates": recognized_plates_list[-10:]})
+@app.route('/api/traffic_counts')
+def get_traffic_counts():
+    with lock:
+        diff_count = abs(up_count - down_count)
+        return jsonify({
+            "up_count": up_count,
+            "down_count": down_count,
+            "diff_count": diff_count,
+            "prev_up_count": prev_up_count,
+            "prev_down_count": prev_down_count,
+            "prev_diff_count": prev_diff_count
+        })
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+# ==== Main ====
+if __name__ == '__main__':
+    schedule_license_plate_processing()
+    try:
+        app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    except KeyboardInterrupt:
+        print("Đang thoát chương trình...")
+    finally:
+        with video_lock:
+            cam.release()
+            vid.release()
+        cv2.destroyAllWindows()

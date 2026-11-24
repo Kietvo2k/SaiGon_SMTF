@@ -1,0 +1,32 @@
+(node:22700) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/camera-capture-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ projectToCamera32: xe trước mặt camera nằm trong FOV, sau lưng thì không (0.6971ms)
+✔ projectToPixel32: px ti lệ góc lệch (giữa khung khi thẳng trước, lệch khi sang bên) (0.206ms)
+✔ captureFrame/captureEvidence: gọi readRenderTargetPixelsAsync đúng chữ ký, trả đủ 3 ảnh + plate_crop theo vị trí xe (4.2061ms)
+✔ projectToPixel32 theo phép chiếu phối cảnh: xa hơn thì cao hơn trong khung; sang phải thì px lớn hơn (0.1595ms)
+✔ rowBandStats32 + skyAboveRoad32: khung trời-trên nhận true, khung lật dọc nhận false (1.0641ms)
+✔ readbackFlip32 theo backend thật: WebGPU không lật; WebGL (kể cả WebGPURenderer chạy backend WebGL2) lật (0.1275ms)
+✔ captureFrame (WebGPU): không lật dọc — hàng đầu của buffer là hàng trên khung (7.6519ms)
+✔ captureFrame (WebGPURenderer chạy backend WebGL2): buffer dưới-lên nên ảnh vẽ ra phải lật lại để trời ở trên (5.8336ms)
+✔ pickCaptureHeads32: chỉ xét đầu đèn của đúng nút camera; chọn mặt nhìn về camera nhất; không mặt nào nhìn về camera → -1 (0.2448ms)
+✔ renderTo: chỉ đầu đèn được chọn hiện khi render; HUD và quầng ẩn; trạng thái trả lại đúng sau chụp (3.4612ms)
+✔ visibleHeadsOf: báo đúng đầu đèn sẽ hiện trong khung và đèn đang sáng của nó (2.6523ms)
+✔ camera chụp chỉ đọc layer 0 (helper không render vào ảnh) (0.2076ms)
+(node:26152) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/traffic-signals-32.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lightColorOf ánh xạ phase → màu đèn (0.5427ms)
+✔ mặt đèn quay theo TRỤC pha của nút: nhóm 0 song song trục, nhóm 1 vuông góc, mỗi nhóm hai mặt đối nhau (2.7021ms)
+✔ den giao thong: moi dau den chi 1 den sang, den tat co emissive 0 va quang an (1.4394ms)
+✔ helper (non FOV, vien non FOV, cot camera, bang dem nguoc) nam layer 1; camera chinh bat layer 1 (0.4037ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 93.5813

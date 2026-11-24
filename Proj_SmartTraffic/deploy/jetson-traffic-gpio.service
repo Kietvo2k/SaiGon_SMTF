@@ -1,0 +1,18 @@
+[Unit]
+Description=Jetson Nano Traffic GPIO Controller
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+# Jetson.GPIO requires direct GPIO access; run this hardware controller as root.
+WorkingDirectory=/home/nvidia/traffic_gpio_test
+ExecStart=/usr/bin/python3 /home/nvidia/traffic_gpio_test/jetson_nano_traffic_gpio.py --port 8080
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target

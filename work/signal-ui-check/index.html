@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kiểm tra bảng đèn</title>
+<style>
+  :root{color-scheme:dark}
+  body{margin:0;padding:20px;background:#0a151b;color:#eaf6f7;font:13px/1.5 "Segoe UI",system-ui,sans-serif}
+  #smartHud32{width:320px;max-height:820px;overflow:auto;padding:14px;border:1px solid rgba(137,216,223,.28);border-radius:15px;background:#193238}
+  #smartHud32 h2{margin:0 0 8px;font-size:15px}
+  #smartHud32 dl{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:0 0 10px}
+  #smartHud32 dl div{padding:6px;border-radius:10px;background:rgba(3,17,21,.28);text-align:center}
+  #smartHud32 dt{font-size:9px;opacity:.75}
+  #smartHud32 dd{margin:0;font-size:16px;font-weight:700}
+  .heat-sec32,.scn-sec32,.save-sec32{padding-top:8px;margin-top:8px;border-top:1px solid rgba(137,216,223,.2);font-size:11px}
+  .scn-sec32 h3{margin:0 0 4px;font-size:12px}
+  .scn-grid32 button{display:block;width:100%;margin:3px 0;padding:5px;border-radius:8px;border:1px solid rgba(137,216,223,.35);background:rgba(3,17,21,.28);color:inherit;font:inherit;font-size:10px;text-align:left}
+</style>
+</head>
+<body>
+<aside id="smartHud32" aria-label="Bảng điều khiển thử">
+  <h2>Điều khiển đèn · Khu Bắc</h2>
+  <dl><div><dt>Chờ TB</dt><dd>8,4</dd></div><div><dt>Hàng chờ max</dt><dd>6</dd></div><div><dt>Lưu lượng</dt><dd>3,2</dd></div></dl>
+  <section class="heat-sec32"><h3>Bản đồ nhiệt</h3><p>Nguyễn Hữu Cảnh · 91%</p></section>
+  <section class="scn-sec32"><h3>Kịch bản</h3><div class="scn-grid32"><button>Xe khẩn cấp · ưu tiên qua nút</button><button>Ngập · Nguyễn Hữu Cảnh</button></div></section>
+  <section class="save-sec32">Tiết kiệm tài nguyên</section>
+</aside>
+<script type="module">
+  import { mountSignalInspector32 } from '/outputs/hcmc-poc/signal-inspector-panel-32.js?v=32c';
+  import { mountTestLab32 } from '/outputs/hcmc-poc/test-lab-32.js?v=32c';
+
+  const html = (s) => String(s);
+  const seg = (group, phase, start, end) => ({ group, phase, start, end });
+  const arms = (a, b) => [
+    { group: 0, names: [a], label: a },
+    { group: 1, names: [b], label: b }
+  ];
+  const rows = [
+    { id:'HX-C1', name:'Ngã tư Hàng Xanh', typeLabel:'Ngã tư', armCount:4, headCount:3, nodeIds:['HX-01','HX-05'], x:-246, z:-2452,
+      arms: [...arms('Điện Biên Phủ','Đinh Bộ Lĩnh'), {group:0,names:['Cầu vượt Hàng Xanh'],label:'Cầu vượt Hàng Xanh'}],
+      queue:[4,6], allocation:[34,16], allocationPct:[68,32],
+      phases:[{group:0,phase:'green',countdown_s:12},{group:1,phase:'red',countdown_s:7}],
+      now:[{phase:'green',remain_s:12,greenAt_s:0},{phase:'red',remain_s:7,greenAt_s:9}],
+      segments:[seg(0,'green',0,22),seg(0,'yellow',22,25),seg(0,'red',25,48),seg(0,'green',48,60),seg(1,'red',0,27),seg(1,'green',27,43),seg(1,'yellow',43,46),seg(1,'red',46,60)] },
+    { id:'HX-C2', name:'Nguyễn Gia Trí × Điện Biên Phủ', typeLabel:'Ngã ba', armCount:3, headCount:2, nodeIds:['HX-02'], x:395, z:-2427,
+      arms: arms('Điện Biên Phủ','Nguyễn Gia Trí'), queue:[1,2], allocation:[22,28], allocationPct:[44,56],
+      phases:[{group:0,phase:'red',countdown_s:4},{group:1,phase:'green',countdown_s:18}],
+      now:[{phase:'red',remain_s:4,greenAt_s:18},{phase:'green',remain_s:18,greenAt_s:0}],
+      segments:[seg(0,'red',0,4),seg(0,'green',4,26),seg(0,'yellow',26,29),seg(0,'red',29,60),seg(1,'green',0,18),seg(1,'yellow',18,21),seg(1,'red',21,33),seg(1,'green',33,49),seg(1,'yellow',49,52),seg(1,'red',52,60)] },
+    { id:'HX-C3', name:'Bạch Đằng × Đinh Bộ Lĩnh', typeLabel:'Ngã tư', armCount:4, headCount:3, nodeIds:['HX-03'], x:-232, z:-2657,
+      arms: arms('Bạch Đằng','Đinh Bộ Lĩnh'), queue:[7,3], allocation:[30,18], allocationPct:[62.5,37.5],
+      phases:[{group:0,phase:'yellow',countdown_s:2},{group:1,phase:'red',countdown_s:3}],
+      now:[{phase:'yellow',remain_s:2,greenAt_s:0},{phase:'red',remain_s:3,greenAt_s:5}],
+      segments:[seg(0,'green',0,20),seg(0,'yellow',20,23),seg(0,'red',23,48),seg(0,'green',48,60),seg(1,'red',0,25),seg(1,'green',25,43),seg(1,'yellow',43,46),seg(1,'red',46,60)] },
+    { id:'HX-C4', name:'Bạch Đằng × Xô Viết Nghệ Tĩnh', typeLabel:'Ngã ba', armCount:3, headCount:2, nodeIds:['HX-04'], x:-11, z:-2634,
+      arms: arms('Bạch Đằng','Xô Viết Nghệ Tĩnh'), queue:[2,8], allocation:[18,30], allocationPct:[37.5,62.5],
+      phases:[{group:0,phase:'red',countdown_s:12},{group:1,phase:'green',countdown_s:9}],
+      now:[{phase:'red',remain_s:12,greenAt_s:14},{phase:'green',remain_s:9,greenAt_s:0}],
+      segments:[seg(0,'red',0,14),seg(0,'green',14,32),seg(0,'yellow',32,35),seg(0,'red',35,60),seg(1,'green',0,9),seg(1,'yellow',9,12),seg(1,'red',12,24),seg(1,'green',24,42),seg(1,'yellow',42,45),seg(1,'red',45,60)] },
+    { id:'HX-C5', name:'Hàng Xanh × Xô Viết Nghệ Tĩnh', typeLabel:'Ngã ba', armCount:3, headCount:2, nodeIds:['HX-06'], x:-14, z:-2453,
+      arms: arms('Hàng Xanh','Xô Viết Nghệ Tĩnh'), queue:[5,1], allocation:[26,22], allocationPct:[54.2,45.8],
+      phases:[{group:0,phase:'green',countdown_s:6},{group:1,phase:'red',countdown_s:5}],
+      now:[{phase:'green',remain_s:6,greenAt_s:0},{phase:'red',remain_s:5,greenAt_s:11}],
+      segments:[seg(0,'green',0,6),seg(0,'yellow',6,9),seg(0,'red',9,34),seg(0,'green',34,56),seg(0,'yellow',56,59),seg(1,'red',0,11),seg(1,'green',11,29),seg(1,'yellow',29,32),seg(1,'red',32,44),seg(1,'green',44,60)] }
+  ];
+  const host = document.querySelector('#smartHud32');
+  const inspector = mountSignalInspector32(host, {
+    readSnapshot: () => ({ mode: 'fixed', time: 30, rows }),
+    onFocus: () => {},
+    onBoxes: () => {}
+  });
+  const lab = mountTestLab32(host, {
+    spawnNpc: (n) => ({ added: n, total: n }),
+    clearNpcs: () => ({ removed: 0, total: 0 }),
+    npcCount: () => 0
+  });
+  window.__uiCheck = { inspector, lab };
+  const tabs = [...document.querySelectorAll('[role="tab"]')].map(t => t.textContent);
+  document.title = `UI ${tabs.join('|')} cards=${document.querySelectorAll('.si32__card').length}`;
+</script>
+</body>
+</html>

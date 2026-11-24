@@ -1,0 +1,7 @@
+[
+  { "name": "fb1", "file": "work/m2b3-fb1.png", "x": 1208, "z": -1700, "dist": 190, "az": 0.9, "polar": 1.35 },
+  { "name": "fb2", "file": "work/m2b3-fb2.png", "x": 1208, "z": -1700, "dist": 190, "az": 2.4, "polar": 1.35 },
+  { "name": "fb3", "file": "work/m2b3-fb3.png", "x": 1208, "z": -1700, "dist": 190, "az": 1.65, "polar": 0.75 },
+  { "name": "crown", "file": "work/m2b3-crown.png", "x": 1124, "z": -1768, "dist": 480, "az": 0.9, "polar": 0.28 },
+  { "name": "spire", "file": "work/m2b3-spire.png", "x": 1124, "z": -1768, "dist": 900, "az": 0.9, "polar": 0.42 }
+]

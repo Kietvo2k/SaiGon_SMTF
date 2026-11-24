@@ -1,0 +1,9 @@
+﻿{
+  "_comment": "Copy this file to plate_owner_registry.json and maintain mappings only after lawful owner verification. AI does not infer CCCD from a plate.",
+  "plates": {
+    "43A12345": {
+      "cccd": "001095000123",
+      "display_name": "Tài khoản demo"
+    }
+  }
+}

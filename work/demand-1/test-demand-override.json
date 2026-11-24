@@ -1,0 +1,169 @@
+{
+  "mode": "fixed",
+  "seed": 31031,
+  "scenario": "app-1730",
+  "duration_s": 5,
+  "breaker_s": 180,
+  "breaker_respawns": 0,
+  "respawns": 29,
+  "max_stop_s": 5,
+  "demand": {
+    "center": [
+      -130,
+      -2540
+    ],
+    "radius_m": 1500,
+    "turnBias": 0,
+    "spawnBias": 200,
+    "poolScale": 3
+  },
+  "stopped_hx_by_group": [
+    0,
+    0
+  ],
+  "active_hx_by_group": [
+    0,
+    0
+  ],
+  "stopped_hx_samples": 0,
+  "top_stuck_lanes": [],
+  "spawn_dest_hx": {
+    "by_group": [
+      0,
+      0
+    ],
+    "by_node": {},
+    "by_node_group": {}
+  },
+  "wait_avg_s": 0.07,
+  "wait_avg_s_hx": 0.03,
+  "by_node": [
+    {
+      "node_id": "HX-01",
+      "cluster_id": "HX-C1",
+      "wait_avg_s": 0.13,
+      "queue_max": 3,
+      "flow_per_min": 0,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-05",
+      "cluster_id": "HX-C1",
+      "wait_avg_s": 0,
+      "queue_max": 0,
+      "flow_per_min": 0,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-02",
+      "cluster_id": "HX-C2",
+      "wait_avg_s": 0.05,
+      "queue_max": 10,
+      "flow_per_min": 50,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-03",
+      "cluster_id": "HX-C3",
+      "wait_avg_s": 0,
+      "queue_max": 1,
+      "flow_per_min": 30,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-04",
+      "cluster_id": "HX-C4",
+      "wait_avg_s": 0,
+      "queue_max": 0,
+      "flow_per_min": 0,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-06",
+      "cluster_id": "HX-C5",
+      "wait_avg_s": 0,
+      "queue_max": 0,
+      "flow_per_min": 0,
+      "switches_per_hour": 0
+    }
+  ],
+  "by_node_hx": [
+    {
+      "node_id": "HX-01",
+      "cluster_id": "HX-C1",
+      "wait_avg_s": 0.13,
+      "queue_max": 3,
+      "flow_per_min": 0,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-05",
+      "cluster_id": "HX-C1",
+      "wait_avg_s": 0,
+      "queue_max": 0,
+      "flow_per_min": 0,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-02",
+      "cluster_id": "HX-C2",
+      "wait_avg_s": 0.05,
+      "queue_max": 10,
+      "flow_per_min": 50,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-03",
+      "cluster_id": "HX-C3",
+      "wait_avg_s": 0,
+      "queue_max": 1,
+      "flow_per_min": 30,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-04",
+      "cluster_id": "HX-C4",
+      "wait_avg_s": 0,
+      "queue_max": 0,
+      "flow_per_min": 0,
+      "switches_per_hour": 0
+    },
+    {
+      "node_id": "HX-06",
+      "cluster_id": "HX-C5",
+      "wait_avg_s": 0,
+      "queue_max": 0,
+      "flow_per_min": 0,
+      "switches_per_hour": 0
+    }
+  ],
+  "queue_max_hx": 10,
+  "flow_per_min_hx": 80,
+  "a1_delay_s_hx": 0,
+  "a1_crossings_hx": 0,
+  "a1_crossings_per_hour_hx": 0,
+  "a1_window_s": [
+    300,
+    1800
+  ],
+  "active_vehicles": 5268,
+  "state_hash": "a90c2c70",
+  "params": {
+    "yellowS": 3,
+    "allRedS": 2,
+    "minGreenS": 8,
+    "maxGreenS": 45,
+    "decisionIntervalS": 1,
+    "switchMargin": 0.15,
+    "switchAbs": 3,
+    "maxRedS": 50,
+    "fixed": {
+      "green0S": 22,
+      "green1S": 16
+    },
+    "clusterM": 80,
+    "exitCapS": 4,
+    "satPerS": 0.5,
+    "algorithm": "max-pressure"
+  }
+}

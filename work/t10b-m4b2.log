@@ -1,0 +1,45 @@
+(node:30084) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/city-traffic-sim-31.js?v=32a is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Admin\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ groupAlertsByRoad32: một dòng mỗi tên (prob cao nhất, đếm đoạn), đường không tên gộp theo cạnh, tối đa 5 dòng (1.4179ms)
+✔ expandHeatHistory32: đúng định dạng thì mở rộng theo chỉ số cạnh; sai NE, sai số mức hoặc chỉ số lạ thì từ chối (0.4063ms)
+✔ probOfLevel32 đơn điệu tăng; mức 0,7 ↔ xác suất 50 % (0.1248ms)
+✔ đồng hồ: 16:00 lúc mở, +1 giờ = 17:00 giờ vàng, qua nửa đêm đổi ngày; nhãn thứ/ngày đúng (0.2847ms)
+✔ heat-live: giờ của lịch sử theo đồng hồ (clockOf), không theo giây sim (96.5811ms)
+✖ heat-live: nạp lịch sử và tua trước; từ chối kích thước sai; tua cũ quá 60 s sim thì không dùng (309.3021ms)
+✔ KPI lưu lượng: flow_per_node_min = trung bình các nút điều khiển; flow_per_min vẫn là tổng toàn mạng (743.2881ms)
+✔ tua trước (lõi Worker) khớp sim chính: chạy 60 s từ ảnh + pha đèn cho cùng hash (đèn cố định) (664.7569ms)
+✔ tua trước (lõi Worker) khớp sim chính ở chế độ thông minh (max-pressure) (574.6192ms)
+✔ tua trước chậm (ngân sách rất nhỏ): giảm số xe theo tỉ lệ và ghi scale < 1 (2567.6334ms)
+✔ collectBuffers32 gom đúng mọi ArrayBuffer, không trùng (0.3658ms)
+✔ đồng hồ (installClock32, không DOM): nhảy +1 giờ đổi nhóm ánh sáng và nhu cầu; không cần document (1.0918ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7018.9682
+
+✖ failing tests:
+
+test at outputs\hcmc-poc\test\m4b2-32.test.mjs:110:1
+✖ heat-live: nạp lịch sử và tua trước; từ chối kích thước sai; tua cũ quá 60 s sim thì không dùng (309.3021ms)
+  AssertionError [ERR_ASSERTION]: tua trước mức 0,95 phải sinh cảnh báo
+      at TestContext.<anonymous> (file:///C:/Users/Admin/orca/workspaces/SaiGon_SMTF/smart-bac/outputs/hcmc-poc/test/m4b2-32.test.mjs:122:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

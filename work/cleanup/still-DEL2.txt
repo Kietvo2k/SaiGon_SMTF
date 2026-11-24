@@ -1,0 +1,3 @@
+outputs/hcmc-poc/data/overture-region.geojson.state
+outputs/hcmc-poc/data/surface-18/official-forest-quarantine-report.json
+research/vibecode-18/VERIFY.md

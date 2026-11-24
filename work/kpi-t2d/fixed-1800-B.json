@@ -1,0 +1,32 @@
+{
+  "31036": {
+    "a1_delay_s_hx": 54.02,
+    "a1_crossings_hx": 4220,
+    "active": 8302,
+    "a1_crossings_per_hour_hx": 10128
+  },
+  "31037": {
+    "a1_delay_s_hx": 51.774,
+    "a1_crossings_hx": 4063,
+    "active": 8302,
+    "a1_crossings_per_hour_hx": 9751.2
+  },
+  "31038": {
+    "a1_delay_s_hx": 75.233,
+    "a1_crossings_hx": 3320,
+    "active": 8302,
+    "a1_crossings_per_hour_hx": 7968
+  },
+  "31039": {
+    "a1_delay_s_hx": 76.141,
+    "a1_crossings_hx": 3355,
+    "active": 8302,
+    "a1_crossings_per_hour_hx": 8052
+  },
+  "31040": {
+    "a1_delay_s_hx": 61.414,
+    "a1_crossings_hx": 3657,
+    "active": 8301,
+    "a1_crossings_per_hour_hx": 8776.8
+  }
+}

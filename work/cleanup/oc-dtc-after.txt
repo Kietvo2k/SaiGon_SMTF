@@ -1,0 +1,222 @@
+﻿Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.
+node:child_process:964
+    throw err;
+    ^
+
+Error: Command failed: python3 C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\research\vibecode-18\qa\make-cog-fixtures.py /private/tmp/rtr-cog18-fixtures
+Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.
+
+
+    at genericNodeError (node:internal/errors:985:15)
+    at wrappedFn (node:internal/errors:539:14)
+    at checkExecSyncError (node:child_process:925:11)
+    at Object.execFileSync (node:child_process:961:15)
+    at Object.<anonymous> (C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\cog-18.cjs:4:4)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {
+  status: 9009,
+  signal: null,
+  output: [
+    null,
+    Buffer(0) [Uint8Array] [],
+    Buffer(177) [Uint8Array] [
+       80, 121, 116, 104, 111, 110,  32, 119,  97, 115,  32, 110,
+      111, 116,  32, 102, 111, 117, 110, 100,  59,  32, 114, 117,
+      110,  32, 119, 105, 116, 104, 111, 117, 116,  32,  97, 114,
+      103, 117, 109, 101, 110, 116, 115,  32, 116, 111,  32, 105,
+      110, 115, 116,  97, 108, 108,  32, 102, 114, 111, 109,  32,
+      116, 104, 101,  32,  77, 105,  99, 114, 111, 115, 111, 102,
+      116,  32,  83, 116, 111, 114, 101,  44,  32, 111, 114,  32,
+      100, 105, 115,  97,  98, 108, 101,  32, 116, 104, 105, 115,
+       32, 115, 104, 111,
+      ... 77 more items
+    ]
+  ],
+  pid: 15868,
+  stdout: Buffer(0) [Uint8Array] [],
+  stderr: Buffer(177) [Uint8Array] [
+     80, 121, 116, 104, 111, 110,  32, 119,  97, 115,  32, 110,
+    111, 116,  32, 102, 111, 117, 110, 100,  59,  32, 114, 117,
+    110,  32, 119, 105, 116, 104, 111, 117, 116,  32,  97, 114,
+    103, 117, 109, 101, 110, 116, 115,  32, 116, 111,  32, 105,
+    110, 115, 116,  97, 108, 108,  32, 102, 114, 111, 109,  32,
+    116, 104, 101,  32,  77, 105,  99, 114, 111, 115, 111, 102,
+    116,  32,  83, 116, 111, 114, 101,  44,  32, 111, 114,  32,
+    100, 105, 115,  97,  98, 108, 101,  32, 116, 104, 105, 115,
+     32, 115, 104, 111,
+    ... 77 more items
+  ]
+}
+
+Node.js v24.18.1
+Γ£û C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\cog-18.cjs (239.1868ms)
+Γ£ö Worker client ready/query result exposes execution mode (6.2336ms)
+Γ£ö superseded requests reject immediately and stale Worker response ignored (15.061ms)
+Γ£ö cancelled requests reject and late result cannot restore selection (1.8431ms)
+Γ£ö Worker geometry failure retains code and does not silently fallback (3.5832ms)
+Γ£ö Worker runtime errors reject pending operation and require reinitialization (7.2849ms)
+Γ£ö Worker query timeout ends operation and terminates stalled Worker (15.1426ms)
+Γ£ö large dataset unsupported Worker refuses main-thread freeze explicitly (0.6782ms)
+Γ£ö destroy rejects pending work and further requests (1.2551ms)
+Γ£ö reinitialization during boot isolates old Worker messages and timer (33.8681ms)
+Γ£ö reinitialize during query rejects old query; late old errors do not destroy fresh Worker (26.8357ms)
+Γ£ö bounded main-thread fallback is explicit, functional and cancellable (68.0721ms)
+Γ£ö raw JSON client transfers buffer ownership to Worker and retains verified ready info (2.6007ms)
+Γ£ö raw JSON requires Worker and cannot silently fallback after integrity failure (5.069ms)
+Γ£ö holes exclude entirely contained footprint and subtract hole area (17.999ms)
+Γ£ö concave notch excludes polygon whose bbox/center would be misleading (3.4774ms)
+Γ£ö edge-only intersection counts contact with zero clipped area (2.3473ms)
+Γ£ö actual clipping finds polygon overlap when centroid lies outside query (4.101ms)
+Γ£ö duplicate source IDs group conservatively and unique area removes overlaps (2.2812ms)
+Γ£ö cross-provider identical IDs are not merged as physical buildings (2.0272ms)
+Γ£ö unknown source IDs retain separate representation identities (2.3249ms)
+Γ£ö illustrative/nonbuilding features are excluded from statistics (0.938ms)
+Γ£ö MultiPolygon query retains disjoint regions and holes (2.3538ms)
+Γ£ö corridor distances are meters with monotonic area and selected counts (39.7797ms)
+Γ£ö self-crossing query rejected before any statistics (0.9095ms)
+Γ£ö NaN/infinite/string coordinates and wrong axis range rejected (0.2843ms)
+Γ£ö unclosed, degenerate and external-hole geometry rejected (0.4433ms)
+Γ£ö outside source extent and partial coverage explicitly labeled (1.0096ms)
+Γ£ö invalid source geometry is rejected and its evidence is reported (0.3987ms)
+Γ£ö source, epoch, unsurveyed height and model linkage preserved in exports (0.787ms)
+Γ£ö broad candidate query refuses; never returns capped partial selection (0.3287ms)
+Γ£ö scenario distances reject zero, negative, excessive and duplicates (0.3774ms)
+Γ£ö untrusted source keys do not invoke object prototype properties (0.6121ms)
+Γ£ö missing or denied source gate refuses all spatial counts (0.2659ms)
+Γ£ö HCMC actual sample normalizes 70726 representations and excludes 10 illustrations (2611.9593ms)
+Γ£ö Gia Loc project was removed with the T├óy Ninh datasets; the shared kernel keeps only the HCMC contract (0.2706ms)
+Γ£ö actual Worker hashes UTF8 bytes, parses and propagates verified provenance into query (64.1139ms)
+Γ£ö mismatching source hash fails closed and removes a previously initialized dataset (15.548ms)
+Γ£ö valid hash for malformed JSON fails parsing; unavailable crypto never admits unverified bytes (32.1696ms)
+Γ£ö legacy parsed input remains compatible and explicitly unverified (21.3462ms)
+Γ£ö late asynchronous hash completion from older initialization cannot replace fresh dataset (14.1907ms)
+Γ£ö actual HCMC 30MB file passes expected SHA256 and mapped-road query through Worker endpoint (3904.6638ms)
+Γ£ö retained HCMC project manifest validates (1.7768ms)
+Γ£ö HCMC south-positive frame inverts local Z below the origin (0.4332ms)
+Γ£ö HCMC frame roundtrips geographic coordinates to less than 1e-10 degrees (0.2893ms)
+Γ£ö unknown frame and nonfinite geographic coordinates reject (0.2861ms)
+Γ£ö mismatched native scene origin rejects rather than moving reality (0.5613ms)
+Γ£ö native polygons close with holes retained and model source date stays unknown (1.9292ms)
+Γ£ö duplicate OSM IDs remain two representations and one source identity; illustrations separate (0.7972ms)
+Γ£ö valid generic WGS84 future-source FeatureCollection normalizes with explicit null epoch (1.1461ms)
+Γ£ö lead acquisition cannot bypass admission by calling normalizeScene (0.7316ms)
+Γ£ö noncommercial rights cannot bypass admission by calling normalizeScene (0.7237ms)
+Γ£ö missing license cannot bypass admission by calling normalizeScene (0.5998ms)
+Γ£ö missing CRS cannot bypass admission by calling normalizeScene (0.5391ms)
+Γ£ö missing hash cannot bypass admission by calling normalizeScene (0.6071ms)
+Γ£ö coordinate-unit mismatch cannot bypass admission by calling normalizeScene (0.5531ms)
+Γ£ö projected CRS cannot reinterpret GeoJSON degree coordinates (0.5301ms)
+Γ£ö invalid hole crossing outside outer is rejected even when its first vertex is inside (0.2289ms)
+Γ£ö overlapping and nested holes reject (0.2588ms)
+Γ£ö crossed polygon and degenerate ring reject (0.1415ms)
+Γ£ö overlapping MultiPolygon components reject while separate components pass (0.4879ms)
+Γ£ö MultiPolygon component inside a polygon hole does not overlap occupied interior (0.4193ms)
+Γ£ö negative and infinite survey accuracy cannot qualify a surveyed source (0.4212ms)
+Γ£ö modeled survey and unapproved plans fail; unknown capability never passes (0.3092ms)
+Γ£ö survey terrain alone is insufficient for hydrological simulation (1.1473ms)
+Γ£ö procedural asset cannot become real capture by changing role (0.5083ms)
+Γ£ö unsafe source URLs and malformed source entries reject without script execution (0.402ms)
+Γ£ö byte verification catches changed expected fingerprint without touching source (210.1044ms)
+Γ£ö quarantine import admits one valid GeoJSON, holds rejected rights, prevents clobber and path traversal (40.8571ms)
+Γ£û retained source snapshots verify actual local bytes for HCMC (197.5566ms)
+Γ£û CLI separates byte integrity from admission and refuses an empty denied preparation (181.0152ms)
+Γ£ö asset symlink escape cannot masquerade as contained verified data (121.7517ms)
+Γ£ö CLI safe project slugs admit added configs and block filename traversal (0.1697ms)
+Γ£ö Point and LineString may be query geometries but cannot be normalized as footprint buildings (0.6065ms)
+Γ£ö empty footprint collection is held in quarantine without a normalized artifact (6.7074ms)
+Γ£ö unverified surveyed height claim is rejected instead of silently downgraded (0.6011ms)
+Γ£ö COG manifest rejects unsupportedCRS and false common source admission (17.6576ms)
+Γ£ö Range client refuses HTTP200 before reading fullbody and verifies expectedETag/length (23.3945ms)
+Γ£ö Range budgets/logs remain bounded and source totals remain accurate (10.9878ms)
+Γ£ö Output budget and out-of-coverage refused before network (3.4898ms)
+Γ£ö Raster client stale/cancel and reinit isolate old Worker results (14.2056ms)
+Γ£ö LOD select is frustum, SSE and byte/count bounded (0.5989ms)
+Γ£ö Standard ENU ECEF transform equals glTFY-up axis-converted placement (0.5947ms)
+Γ£ö bilinear source sampler ignores zero-weight NoData neighbors but rejects contributors and outside center grid (0.1536ms)
+Γ£ö streamed source admission binds the exact asset path/hash and invalid reinit clears prior sources (2.8486ms)
+Γ£ö actual acquired ground validates its north-up raw grid and rejects metadata substitutions (11.5243ms)
+Γ£ö raster Worker timeout is explicit and a superseded boot timer cannot terminate a newer ready Worker (53.8279ms)
+Γ£ö actual generated catalog accounts all non-illustrative source representations, standard1.1/rootENU and retained sourcehash (1.2981ms)
+Γ£û all actual GLBs validate binary bounds/index space plus stable IDs across fine/coarse (11.092ms)
+Γä╣ tests 89
+Γä╣ suites 0
+Γä╣ pass 85
+Γä╣ fail 4
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 4206.1069
+
+Γ£û failing tests:
+
+test at outputs\shared\digital-twin-core\tests\cog-18.cjs:1:1
+Γ£û C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\cog-18.cjs (239.1868ms)
+  'test failed'
+
+test at outputs\shared\digital-twin-core\tests\source-core.cjs:50:1
+Γ£û retained source snapshots verify actual local bytes for HCMC (197.5566ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\source-core.cjs:50:81)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at outputs\shared\digital-twin-core\tests\source-core.cjs:51:1
+Γ£û CLI separates byte integrity from admission and refuses an empty denied preparation (181.0152ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\source-core.cjs:53:91)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at outputs\shared\digital-twin-core\tests\tiles-18.cjs:7:1
+Γ£û all actual GLBs validate binary bounds/index space plus stable IDs across fine/coarse (11.092ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '7f650c8bbf0db6bbc94daac25a21aa7cfa1e3b6f5f7ec43e2899b4d8862f5c95'
+  - '711fba01238a327a08c5f9154cb4e9ac3ba095db510627981c71d53b28e40eeb'
+  
+      at TestContext.<anonymous> (C:\Users\Admin\orca\workspaces\SaiGon_SMTF\smart-bac\outputs\shared\digital-twin-core\tests\tiles-18.cjs:7:1217)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '7f650c8bbf0db6bbc94daac25a21aa7cfa1e3b6f5f7ec43e2899b4d8862f5c95',
+    expected: '711fba01238a327a08c5f9154cb4e9ac3ba095db510627981c71d53b28e40eeb',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

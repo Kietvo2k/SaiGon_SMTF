@@ -1,0 +1,78 @@
+TAP version 13
+# Traceback (most recent call last):
+#   File "C:\\Users\\Admin\\orca\\workspaces\\SaiGon_SMTF\\smart-bac\\research\\vibecode-18\\qa\\make-cog-fixtures.py", line 3, in <module>
+#     import numpy as np,rasterio
+# ModuleNotFoundError: No module named 'rasterio'
+# node:child_process:964
+#     throw err;
+#     ^
+# Error: Command failed: C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python314\\python.exe C:\\Users\\Admin\\orca\\workspaces\\SaiGon_SMTF\\smart-bac\\research\\vibecode-18\\qa\\make-cog-fixtures.py /private/tmp/rtr-cog18-fixtures
+# Traceback (most recent call last):
+#   File "C:\\Users\\Admin\\orca\\workspaces\\SaiGon_SMTF\\smart-bac\\research\\vibecode-18\\qa\\make-cog-fixtures.py", line 3, in <module>
+#     import numpy as np,rasterio
+# ModuleNotFoundError: No module named 'rasterio'
+#     at genericNodeError (node:internal/errors:985:15)
+#     at wrappedFn (node:internal/errors:539:14)
+#     at checkExecSyncError (node:child_process:925:11)
+#     at Object.execFileSync (node:child_process:961:15)
+#     at Object.<anonymous> (C:\\Users\\Admin\\orca\\workspaces\\SaiGon_SMTF\\smart-bac\\outputs\\shared\\digital-twin-core\\tests\\cog-18.cjs:4:4)
+#     at Module._compile (node:internal/modules/cjs/loader:1871:14)
+#     at Object..js (node:internal/modules/cjs/loader:2002:10)
+#     at Module.load (node:internal/modules/cjs/loader:1594:32)
+#     at Module._load (node:internal/modules/cjs/loader:1396:12)
+#     at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {
+#   status: 1,
+#   signal: null,
+#   output: [
+#     null,
+#     Buffer(0) [Uint8Array] [],
+#     Buffer(247) [Uint8Array] [
+#        84, 114,  97,  99, 101,  98,  97,  99, 107,  32, 40, 109,
+#       111, 115, 116,  32, 114, 101,  99, 101, 110, 116, 32,  99,
+#        97, 108, 108,  32, 108,  97, 115, 116,  41,  58, 13,  10,
+#        32,  32,  70, 105, 108, 101,  32,  34,  67,  58, 92,  85,
+#       115, 101, 114, 115,  92,  65, 100, 109, 105, 110, 92, 111,
+#       114,  99,  97,  92, 119, 111, 114, 107, 115, 112, 97,  99,
+#       101, 115,  92,  83,  97, 105,  71, 111, 110,  95, 83,  77,
+#        84,  70,  92, 115, 109,  97, 114, 116,  45,  98, 97,  99,
+#        92, 114, 101, 115,
+#       ... 147 more items
+#     ]
+#   ],
+#   pid: 22524,
+#   stdout: Buffer(0) [Uint8Array] [],
+#   stderr: Buffer(247) [Uint8Array] [
+#      84, 114,  97,  99, 101,  98,  97,  99, 107,  32, 40, 109,
+#     111, 115, 116,  32, 114, 101,  99, 101, 110, 116, 32,  99,
+#      97, 108, 108,  32, 108,  97, 115, 116,  41,  58, 13,  10,
+#      32,  32,  70, 105, 108, 101,  32,  34,  67,  58, 92,  85,
+#     115, 101, 114, 115,  92,  65, 100, 109, 105, 110, 92, 111,
+#     114,  99,  97,  92, 119, 111, 114, 107, 115, 112, 97,  99,
+#     101, 115,  92,  83,  97, 105,  71, 111, 110,  95, 83,  77,
+#      84,  70,  92, 115, 109,  97, 114, 116,  45,  98, 97,  99,
+#      92, 114, 101, 115,
+#     ... 147 more items
+#   ]
+# }
+# Node.js v24.18.1
+# Subtest: outputs\\shared\\digital-twin-core\\tests\\cog-18.cjs
+not ok 1 - outputs\\shared\\digital-twin-core\\tests\\cog-18.cjs
+  ---
+  duration_ms: 871.2468
+  type: 'test'
+  location: 'C:\\Users\\Admin\\orca\\workspaces\\SaiGon_SMTF\\smart-bac\\outputs\\shared\\digital-twin-core\\tests\\cog-18.cjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 877.4568

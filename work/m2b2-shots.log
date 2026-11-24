@@ -1,0 +1,13 @@
+﻿cdbp-a target= [ -1207, -1596 ] dist= 296 camY= 42 az= 0.66 polar= 1.43
+cdbp-b target= [ -1204, -1598 ] dist= 295 camY= 50 az= 2.63 polar= 1.40
+ctkd-a target= [ -2270, -1856 ] dist= 293 camY= 41 az= 0.64 polar= 1.43
+ctn1-a target= [ -539, -1402 ] dist= 283 camY= 62 az= 0.61 polar= 1.35
+ctn2-a target= [ -224, -953 ] dist= 268 camY= 38 az= 0.63 polar= 1.43
+cvt2-a target= [ 171, -1157 ] dist= 294 camY= 41 az= 0.63 polar= 1.43
+csg-a target= [ 1590, -2168 ] dist= 500 camY= 102 az= 0.64 polar= 1.36
+csg-b target= [ 1597, -2180 ] dist= 300 camY= 42 az= 2.92 polar= 1.43
+ctt-a target= [ 611, -991 ] dist= 387 camY= 90 az= 0.63 polar= 1.34
+ctt-b target= [ 611, -998 ] dist= 239 camY= 34 az= 2.72 polar= 1.43
+l81-a target= [ 1136, -1758 ] dist= 624 camY= 378 az= 0.66 polar= 0.92
+l81-b target= [ 1137, -1765 ] dist= 500 camY= 433 az= 3.07 polar= 0.52
+l81-c target= [ 1128, -1766 ] dist= 300 camY= 42 az= 1.00 polar= 1.43

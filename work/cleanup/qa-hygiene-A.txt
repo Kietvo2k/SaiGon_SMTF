@@ -1,0 +1,14 @@
+{
+  "suite": "project-hygiene",
+  "passed": 8,
+  "checks": [
+    "No duplicate Finder-style tile is tracked",
+    "Accidental tile copies are ignored",
+    "Workspace cleanup is reproducible and leaves no allow-listed residue",
+    "Renderer assets are version-aligned at 30b",
+    "Unified map-first shell keeps one canonical UI and aligned collapsible panels",
+    "Navigation remains available on compact screens with normalized control geometry",
+    "Interactive markup has unique IDs, explicit button types and valid control targets",
+    "Flood model contract has evidence tiers and calibration gates"
+  ]
+}

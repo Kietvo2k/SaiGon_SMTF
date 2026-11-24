@@ -1,0 +1,989 @@
+{
+ "suite": "region-31 · H",
+ "passed": 58,
+ "failed": 2,
+ "failures": [
+  {
+   "name": "[webgpu] đổi khu không dựng pipeline mới: Đầy đủ cả hai vòng = 0; Tối thiểu vòng 1 chỉ là pipeline lần đầu dựng bản gộp khu, vòng 2 = 0",
+   "error": "full: khựng khi đổi khu {\"first\":{\"newPipelines\":0,\"histogram\":{},\"maxFrameMs\":403},\"second\":{\"newPipelines\":0,\"histogram\":{},\"maxFrameMs\":135}}"
+  },
+  {
+   "name": "[webgl] mở app và chạy kịch bản khu mô phỏng",
+   "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=31a&view=overview&density=full&backend=webgl\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=31a&view=overview&density=full&backend=webgl\", waiting until \"load\"\u001b[22m\n"
+  }
+ ],
+ "table": {
+  "webgpu": {
+   "full:all": {
+    "triangles": 3596193,
+    "drawCalls": 168,
+    "buildings": 70539,
+    "inRegion": 70539,
+    "trees": 10824,
+    "vehicles": 3059,
+    "switchMs": 29,
+    "maxFrameMs": 29
+   },
+   "full:trung-tam": {
+    "triangles": 2061422,
+    "drawCalls": 162,
+    "buildings": 23290,
+    "inRegion": 23271,
+    "trees": 1781,
+    "vehicles": 1289,
+    "switchMs": 48,
+    "maxFrameMs": 48
+   },
+   "full:ven-song": {
+    "triangles": 1600946,
+    "drawCalls": 149,
+    "buildings": 8411,
+    "inRegion": 8381,
+    "trees": 7177,
+    "vehicles": 929,
+    "switchMs": 40,
+    "maxFrameMs": 40
+   },
+   "full:bac": {
+    "triangles": 1950300,
+    "drawCalls": 154,
+    "buildings": 23111,
+    "inRegion": 23084,
+    "trees": 1208,
+    "vehicles": 756,
+    "switchMs": 34,
+    "maxFrameMs": 34
+   },
+   "full:nam": {
+    "triangles": 1634135,
+    "drawCalls": 153,
+    "buildings": 15841,
+    "inRegion": 15803,
+    "trees": 1081,
+    "vehicles": 592,
+    "switchMs": 47,
+    "maxFrameMs": 47
+   },
+   "minimal:all": {
+    "triangles": 1046358,
+    "drawCalls": 43,
+    "buildings": 11319,
+    "inRegion": 11319,
+    "trees": 2274,
+    "vehicles": 459,
+    "switchMs": 17,
+    "maxFrameMs": 18
+   },
+   "minimal:trung-tam": {
+    "triangles": 636694,
+    "drawCalls": 44,
+    "buildings": 5069,
+    "inRegion": 5050,
+    "trees": 469,
+    "vehicles": 195,
+    "switchMs": 73,
+    "maxFrameMs": 73
+   },
+   "minimal:ven-song": {
+    "triangles": 409201,
+    "drawCalls": 43,
+    "buildings": 1397,
+    "inRegion": 1367,
+    "trees": 1546,
+    "vehicles": 140,
+    "switchMs": 43,
+    "maxFrameMs": 43
+   },
+   "minimal:bac": {
+    "triangles": 490838,
+    "drawCalls": 41,
+    "buildings": 3033,
+    "inRegion": 3006,
+    "trees": 354,
+    "vehicles": 113,
+    "switchMs": 41,
+    "maxFrameMs": 41
+   },
+   "minimal:nam": {
+    "triangles": 433522,
+    "drawCalls": 44,
+    "buildings": 1934,
+    "inRegion": 1896,
+    "trees": 328,
+    "vehicles": 89,
+    "switchMs": 39,
+    "maxFrameMs": 39
+   }
+  }
+ },
+ "summary": {
+  "webgpu": {
+   "coverage": {
+    "total": 70726,
+    "counts": {
+     "trung-tam": 23366,
+     "bac": 23115,
+     "ven-song": 8393,
+     "nam": 15852
+    },
+    "bad": [],
+    "badCount": 0,
+    "sweepN": 27710,
+    "sweepBad": 0,
+    "chunkMismatch": [],
+    "chunkMismatchCount": 0,
+    "chunkCounts": {
+     "bac": 23084,
+     "nam": 15803,
+     "trung-tam": 23271,
+     "ven-song": 8381
+    },
+    "dupes": 0,
+    "drawable": 70539,
+    "polygons": [
+     {
+      "id": "trung-tam",
+      "n": 31
+     },
+     {
+      "id": "ven-song",
+      "n": 30
+     },
+     {
+      "id": "bac",
+      "n": 20
+     },
+     {
+      "id": "nam",
+      "n": 23
+     }
+    ],
+    "ids": [
+     "trung-tam",
+     "ven-song",
+     "bac",
+     "nam"
+    ]
+   },
+   "camera": {
+    "all": {
+     "label": "TOÀN VÙNG · 38,57 KM²",
+     "distance": 7600,
+     "expected": 7600,
+     "url": "?v=31a&view=overview&density=full"
+    },
+    "trung-tam": {
+     "label": "KHU · LÕI QUẬN 1 · BẾN NGHÉ",
+     "distance": 5300,
+     "expected": 5300,
+     "url": "?v=31a&view=overview&density=full"
+    },
+    "ven-song": {
+     "label": "KHU · VEN SÔNG · BA SON · THỦ THIÊM",
+     "distance": 7200,
+     "expected": 7200,
+     "url": "?v=31a&view=overview&density=full"
+    },
+    "bac": {
+     "label": "KHU · PHÍA BẮC · THỊ NGHÈ · BÌNH THẠNH",
+     "distance": 5000,
+     "expected": 5000,
+     "url": "?v=31a&view=overview&density=full"
+    },
+    "nam": {
+     "label": "KHU · PHÍA NAM · QUẬN 4 · KHÁNH HỘI",
+     "distance": 5400,
+     "expected": 5400,
+     "url": "?v=31a&view=overview&density=full"
+    }
+   },
+   "views": {
+    "bason": {
+     "region": "ven-song",
+     "label": "BA SON · MARINA CENTRAL + GRAND MARINA",
+     "notice": "Góc nhìn “BA SON · MARINA CENTRAL + GRAND MARINA” nằm ở khu “Ven sông · Ba Son · Thủ Thiêm” — đã chuyển khu để giữ tải GPU thấp.",
+     "active": "bason"
+    },
+    "materials": {
+     "region": "trung-tam",
+     "label": "MATERIAL DISTRICT",
+     "notice": "Góc nhìn “MATERIAL DISTRICT” nằm ở khu “Lõi Quận 1 · Bến Nghé” — đã chuyển khu để giữ tải GPU thấp.",
+     "active": "materials"
+    },
+    "river": {
+     "region": "trung-tam",
+     "label": "BẾN BẠCH ĐẰNG",
+     "notice": "Góc nhìn “BẾN BẠCH ĐẰNG” nằm ở khu “Lõi Quận 1 · Bến Nghé” — đã chuyển khu để giữ tải GPU thấp.",
+     "active": "river"
+    },
+    "boulevard": {
+     "region": "trung-tam",
+     "label": "NGUYỄN HUỆ",
+     "notice": "Góc nhìn “NGUYỄN HUỆ” nằm ở khu “Lõi Quận 1 · Bến Nghé” — đã chuyển khu để giữ tải GPU thấp.",
+     "active": "boulevard"
+    },
+    "corridor": {
+     "region": "trung-tam",
+     "label": "LAM SƠN · ĐỒNG KHỞI · NHÀ HÁT",
+     "notice": "Góc nhìn “LAM SƠN · ĐỒNG KHỞI · NHÀ HÁT” nằm ở khu “Lõi Quận 1 · Bến Nghé” — đã chuyển khu để giữ tải GPU thấp.",
+     "active": "corridor"
+    },
+    "overview": {
+     "region": "nam",
+     "label": "KHU · PHÍA NAM · QUẬN 4 · KHÁNH HỘI",
+     "notice": "Góc nhìn “LAM SƠN · ĐỒNG KHỞI · NHÀ HÁT” nằm ở khu “Lõi Quận 1 · Bến Nghé” — đã chuyển khu để giữ tải GPU thấp.",
+     "active": "overview"
+    }
+   },
+   "flood": {
+    "open": {
+     "region": "ven-song",
+     "panel": true,
+     "label": "THẢO ĐIỀN · MÔ PHỎNG NGẬP 25A"
+    },
+    "rain": {
+     "ok": true
+    },
+    "closed": {
+     "open": false,
+     "region": "ven-song"
+    }
+   },
+   "motion": {
+    "all": {
+     "vehicles": 3059,
+     "via": "traffic.api.setRegion",
+     "vessels": 22,
+     "apiRegion": {
+      "id": null,
+      "active": false,
+      "margin": 0,
+      "lanes": 20195,
+      "spawnLanes": 200,
+      "eligible": 3599
+     },
+     "total": 3599,
+     "eligibleBefore": null,
+     "eligibleAfter": null,
+     "bridgeVehicles": 0,
+     "bridgesWithVehicles": 0,
+     "boundaryBridges": 0
+    },
+    "trung-tam": {
+     "vehicles": 1293,
+     "via": "traffic.api.setRegion",
+     "vessels": 7,
+     "apiRegion": {
+      "id": "trung-tam",
+      "active": true,
+      "margin": 250,
+      "lanes": 8803,
+      "spawnLanes": 209,
+      "eligible": 1521
+     },
+     "total": 3599,
+     "eligibleBefore": 1226,
+     "eligibleAfter": 1521,
+     "bridgeVehicles": 20,
+     "bridgesWithVehicles": 13,
+     "boundaryBridges": 21
+    },
+    "ven-song": {
+     "vehicles": 947,
+     "via": "traffic.api.setRegion",
+     "vessels": 10,
+     "apiRegion": {
+      "id": "ven-song",
+      "active": true,
+      "margin": 250,
+      "lanes": 4842,
+      "spawnLanes": 177,
+      "eligible": 1114
+     },
+     "total": 3599,
+     "eligibleBefore": 940,
+     "eligibleAfter": 1114,
+     "bridgeVehicles": 17,
+     "bridgesWithVehicles": 6,
+     "boundaryBridges": 12
+    },
+    "bac": {
+     "vehicles": 774,
+     "via": "traffic.api.setRegion",
+     "vessels": 2,
+     "apiRegion": {
+      "id": "bac",
+      "active": true,
+      "margin": 250,
+      "lanes": 5552,
+      "spawnLanes": 134,
+      "eligible": 910
+     },
+     "total": 3599,
+     "eligibleBefore": 797,
+     "eligibleAfter": 910,
+     "bridgeVehicles": 20,
+     "bridgesWithVehicles": 11,
+     "boundaryBridges": 22
+    },
+    "nam": {
+     "vehicles": 581,
+     "via": "traffic.api.setRegion",
+     "vessels": 2,
+     "apiRegion": {
+      "id": "nam",
+      "active": true,
+      "margin": 250,
+      "lanes": 4496,
+      "spawnLanes": 165,
+      "eligible": 683
+     },
+     "total": 3599,
+     "eligibleBefore": 485,
+     "eligibleAfter": 683,
+     "bridgeVehicles": 9,
+     "bridgesWithVehicles": 5,
+     "boundaryBridges": 11
+    }
+   },
+   "bridges": {
+    "trung-tam": [
+     724,
+     899,
+     1506,
+     2039,
+     2107,
+     2148,
+     2274,
+     2832,
+     2847,
+     2939,
+     3246,
+     4454,
+     5097,
+     5561,
+     5735,
+     5741,
+     7091,
+     8181,
+     14024,
+     18717,
+     24015
+    ],
+    "ven-song": [
+     308,
+     1964,
+     2139,
+     2140,
+     2976,
+     3970,
+     4288,
+     4302,
+     6134,
+     16413,
+     17361,
+     22529
+    ],
+    "bac": [
+     308,
+     899,
+     1506,
+     1964,
+     2039,
+     2139,
+     2140,
+     2148,
+     2274,
+     2976,
+     3246,
+     3970,
+     4288,
+     4302,
+     5561,
+     5741,
+     6134,
+     16413,
+     17361,
+     18717,
+     22529,
+     24015
+    ],
+    "nam": [
+     724,
+     2107,
+     2832,
+     2847,
+     2939,
+     4454,
+     5097,
+     5735,
+     7091,
+     8181,
+     14024
+    ],
+    "margin": 250
+   },
+   "pipeline": {
+    "full": {
+     "first": {
+      "newPipelines": 0,
+      "histogram": {},
+      "maxFrameMs": 403
+     },
+     "second": {
+      "newPipelines": 0,
+      "histogram": {},
+      "maxFrameMs": 135
+     }
+    },
+    "minimal": {
+     "first": {
+      "newPipelines": 0,
+      "histogram": {},
+      "maxFrameMs": 88
+     },
+     "second": {
+      "newPipelines": 0,
+      "histogram": {},
+      "maxFrameMs": 56
+     }
+    }
+   },
+   "pick": {
+    "trung-tam": {
+     "insideHits": [
+      {
+       "id": 801710770,
+       "picked": 801710770,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101382601,
+       "picked": 1101382601,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 1161664599,
+       "picked": 1161664599,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 1218367429,
+       "picked": 1218367429,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101679549,
+       "picked": 1101679549,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      },
+      {
+       "id": 165400089,
+       "picked": 165400089,
+       "pickedRegion": "trung-tam",
+       "pickedSignature": false
+      }
+     ],
+     "outsideHits": [
+      {
+       "id": 409004246,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507468,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 193288938,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985217,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 682689444,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 620913924,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      }
+     ]
+    },
+    "ven-song": {
+     "insideHits": [
+      {
+       "id": 409004246,
+       "picked": 1151129911,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507468,
+       "picked": 1101507468,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507469,
+       "picked": 1101507469,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 193085711,
+       "picked": 193085711,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101415098,
+       "picked": 1101415098,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      },
+      {
+       "id": 1101415099,
+       "picked": 1101415099,
+       "pickedRegion": "ven-song",
+       "pickedSignature": false
+      }
+     ],
+     "outsideHits": [
+      {
+       "id": 801710770,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101382601,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 193288938,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985217,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 682689444,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 620913924,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      }
+     ]
+    },
+    "bac": {
+     "insideHits": [
+      {
+       "id": 193288938,
+       "picked": 193288938,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985217,
+       "picked": 1300985217,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 744233633,
+       "picked": 744233633,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 744233636,
+       "picked": 744233636,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985215,
+       "picked": 1300985215,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      },
+      {
+       "id": 744233634,
+       "picked": 744233634,
+       "pickedRegion": "bac",
+       "pickedSignature": false
+      }
+     ],
+     "outsideHits": [
+      {
+       "id": 801710770,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101382601,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 409004246,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507468,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 682689444,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 620913924,
+       "region": "nam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      }
+     ]
+    },
+    "nam": {
+     "insideHits": [
+      {
+       "id": 682689444,
+       "picked": 682689444,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 620913924,
+       "picked": 620913924,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 682689441,
+       "picked": 682689441,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 166103218,
+       "picked": 166103218,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 682199589,
+       "picked": 682199589,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      },
+      {
+       "id": 682689482,
+       "picked": 682689482,
+       "pickedRegion": "nam",
+       "pickedSignature": false
+      }
+     ],
+     "outsideHits": [
+      {
+       "id": 801710770,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101382601,
+       "region": "trung-tam",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 409004246,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1101507468,
+       "region": "ven-song",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 193288938,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      },
+      {
+       "id": 1300985217,
+       "region": "bac",
+       "picked": null,
+       "pickedRegion": null,
+       "pickedSignature": false
+      }
+     ]
+    }
+   },
+   "withDensity": {
+    "balanced": {
+     "region": "bac",
+     "level": "balanced",
+     "outside": 0,
+     "notShownSignature": 0,
+     "shown": 11392,
+     "audit": true
+    },
+    "light": {
+     "region": "bac",
+     "level": "light",
+     "outside": 0,
+     "notShownSignature": 0,
+     "shown": 6315,
+     "audit": true
+    },
+    "minimal": {
+     "region": "bac",
+     "level": "minimal",
+     "outside": 0,
+     "notShownSignature": 0,
+     "shown": 3033,
+     "audit": true
+    },
+    "full": {
+     "region": "bac",
+     "level": "full",
+     "outside": 0,
+     "notShownSignature": 0,
+     "shown": 23111,
+     "audit": true
+    }
+   },
+   "persist": {
+    "url": {
+     "region": "bac",
+     "source": "url",
+     "checked": "bac",
+     "dataset": "bac",
+     "level": "full",
+     "stored": null,
+     "url": "?v=31a&view=overview&region=bac",
+     "label": "KHU · PHÍA BẮC · THỊ NGHÈ · BÌNH THẠNH"
+    },
+    "urlAfterClick": {
+     "region": "nam",
+     "source": "user",
+     "checked": "nam",
+     "dataset": "nam",
+     "level": "full",
+     "stored": "nam",
+     "url": "?v=31a&view=overview&region=nam",
+     "label": "KHU · PHÍA NAM · QUẬN 4 · KHÁNH HỘI"
+    },
+    "urlAfterView": {
+     "region": "nam",
+     "source": "user",
+     "checked": "nam",
+     "dataset": "nam",
+     "level": "full",
+     "stored": "nam",
+     "url": "?v=31a&view=overview&region=nam",
+     "label": "KHU · PHÍA NAM · QUẬN 4 · KHÁNH HỘI"
+    },
+    "urlAfterSwitch": {
+     "region": "trung-tam",
+     "source": "view",
+     "checked": "trung-tam",
+     "dataset": "trung-tam",
+     "level": "full",
+     "stored": "trung-tam",
+     "url": "?v=31a&view=river&region=trung-tam",
+     "label": "BẾN BẠCH ĐẰNG"
+    },
+    "storage": {
+     "region": "nam",
+     "source": "storage",
+     "checked": "nam",
+     "dataset": "nam",
+     "level": "full",
+     "stored": "nam",
+     "url": "?v=31a&view=overview",
+     "label": "KHU · PHÍA NAM · QUẬN 4 · KHÁNH HỘI"
+    },
+    "storageAfterClick": {
+     "region": "trung-tam",
+     "source": "user",
+     "checked": "trung-tam",
+     "dataset": "trung-tam",
+     "level": "full",
+     "stored": "trung-tam",
+     "url": "?v=31a&view=overview",
+     "label": "KHU · LÕI QUẬN 1 · BẾN NGHÉ"
+    },
+    "reload": {
+     "region": "trung-tam",
+     "source": "storage",
+     "checked": "trung-tam",
+     "dataset": "trung-tam",
+     "level": "full",
+     "stored": "trung-tam",
+     "url": "?v=31a&view=overview",
+     "label": "KHU · LÕI QUẬN 1 · BẾN NGHÉ"
+    },
+    "urlWins": {
+     "region": "ven-song",
+     "source": "url",
+     "checked": "ven-song",
+     "dataset": "ven-song",
+     "level": "full",
+     "stored": "nam",
+     "url": "?v=31a&view=overview&region=ven-song",
+     "label": "KHU · VEN SÔNG · BA SON · THỦ THIÊM"
+    },
+    "combo": {
+     "region": "nam",
+     "source": "url",
+     "checked": "nam",
+     "dataset": "nam",
+     "level": "minimal",
+     "stored": null,
+     "url": "?v=31a&view=overview&density=minimal&region=nam",
+     "label": "KHU · PHÍA NAM · QUẬN 4 · KHÁNH HỘI"
+    },
+    "invalid": {
+     "region": "all",
+     "source": "default",
+     "checked": "all",
+     "dataset": "all",
+     "level": "full",
+     "stored": null,
+     "url": "?v=31a&view=overview&region=khong-co",
+     "label": "TOÀN VÙNG · 38,57 KM²"
+    }
+   },
+   "errors": []
+  }
+ }
+}
+
+CHECKS PASS:
+ ✓ mã nguồn: city-region-31.js xuất hằng và regionOf; HTML có radiogroup "Khu mô phỏng" đủ 5 nút; module nạp có khóa cache 30b-31h
+ ✓ [webgpu] backend đúng yêu cầu
+ ✓ [webgpu] mặc định "Toàn bộ" khi chưa có URL/localStorage
+ ✓ [webgpu] điều khiển: radiogroup "Khu mô phỏng", 5 nút role=radio đúng nhãn tiếng Việt, đúng 1 aria-checked, roving tabindex
+ ✓ [webgpu] bốn khu phủ toàn bộ công trình đúng một lần (0 lỗ hở, 0 chồng), chunk đúng khu, không công trình trùng
+ ✓ [webgpu] full/all: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] full/all: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] full/trung-tam: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] full/trung-tam: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] full/trung-tam: đèn ngoài khu chỉ là đèn vùng bảo vệ (lampsOutsideUnprotected = 0)
+ ✓ [webgpu] full/trung-tam: số công trình trong khu + tổng tự báo khớp mesh
+ ✓ [webgpu] full/ven-song: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] full/ven-song: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] full/ven-song: đèn ngoài khu chỉ là đèn vùng bảo vệ (lampsOutsideUnprotected = 0)
+ ✓ [webgpu] full/ven-song: số công trình trong khu + tổng tự báo khớp mesh
+ ✓ [webgpu] full/bac: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] full/bac: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] full/bac: đèn ngoài khu chỉ là đèn vùng bảo vệ (lampsOutsideUnprotected = 0)
+ ✓ [webgpu] full/bac: số công trình trong khu + tổng tự báo khớp mesh
+ ✓ [webgpu] full/nam: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] full/nam: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] full/nam: đèn ngoài khu chỉ là đèn vùng bảo vệ (lampsOutsideUnprotected = 0)
+ ✓ [webgpu] full/nam: số công trình trong khu + tổng tự báo khớp mesh
+ ✓ [webgpu] minimal/all: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] minimal/all: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] minimal/trung-tam: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] minimal/trung-tam: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] minimal/trung-tam: đèn ngoài khu chỉ là đèn vùng bảo vệ (lampsOutsideUnprotected = 0)
+ ✓ [webgpu] minimal/trung-tam: số công trình trong khu + tổng tự báo khớp mesh
+ ✓ [webgpu] minimal/ven-song: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] minimal/ven-song: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] minimal/ven-song: đèn ngoài khu chỉ là đèn vùng bảo vệ (lampsOutsideUnprotected = 0)
+ ✓ [webgpu] minimal/ven-song: số công trình trong khu + tổng tự báo khớp mesh
+ ✓ [webgpu] minimal/bac: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] minimal/bac: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] minimal/bac: đèn ngoài khu chỉ là đèn vùng bảo vệ (lampsOutsideUnprotected = 0)
+ ✓ [webgpu] minimal/bac: số công trình trong khu + tổng tự báo khớp mesh
+ ✓ [webgpu] minimal/nam: công trình hiển thị ⊆ khu ∪ signature; signature 100 %; registry đủ
+ ✓ [webgpu] minimal/nam: cây ngoài khu chỉ là mục bảo vệ; bản xa chỉ của khu + nhóm bảo vệ
+ ✓ [webgpu] minimal/nam: đèn ngoài khu chỉ là đèn vùng bảo vệ (lampsOutsideUnprotected = 0)
+ ✓ [webgpu] minimal/nam: số công trình trong khu + tổng tự báo khớp mesh
+ ✓ [webgpu] Đầy đủ: mỗi khu giảm rõ tam giác (≤ 70 %) và draw call (< Toàn bộ) so với Toàn bộ
+ ✓ [webgpu] Tối thiểu: mỗi khu không nặng hơn Toàn bộ (tam giác ≤; draw call ≤ +3 do nhóm bản xa/thiết bị mái tách theo khu)
+ ✓ [webgpu] đổi khu: khung dài nhất (gồm camera bay) ≤ 300 ms, áp dụng ngay (switchMs nhỏ)
+ ✓ [webgpu] sau khi đi qua mọi khu rồi về "Toàn bộ": số liệu quay về như ban đầu
+ ✓ [webgpu] chọn công trình: trong khu trúng đúng (đa số), mọi lần trúng là công trình trong khu hoặc signature; ngoài khu (không signature) không chọn được
+ ✓ [webgpu] camera: chọn khu bay tới khung khu (nhãn HUD + khoảng cách); Toàn bộ về Toàn vùng; URL không bị thêm region khi không có
+ ✓ [webgpu] góc nhìn data-view trong khu: tâm góc ở khu khác → chuyển sang khu đó (có thông báo); Toàn vùng = khung khu; góc cùng khu giữ khu
+ ✓ [webgpu] Flood Lab trong khu: mở sang khu chứa Thảo Điền (ven sông) không lỗi; kịch bản mưa vẫn chạy
+ ✓ [webgpu] xe theo khu: dùng traffic.api.setRegion thật; tổng xe giảm theo khu; mọi xe đang chạy nằm trong đa giác khu ĐÃ NỚI (biên REGION_TRAFFIC_MARGIN_M)
+ ✓ [webgpu] T1 · xe trên cầu nối ranh: mỗi khu có ≥ 1 cầu nối ranh có xe; eligible sau khi nới biên ≥ trước, không mất xe
+ ✓ [webgpu] tàu theo khu: tổng 4 khu ≈ 22 tàu, mỗi khu chỉ vẽ tàu trong khu
+ ✓ [webgpu] bàn phím: mũi tên/Home/End đổi khu, focus đi theo, aria-checked khớp, roving tabindex
+ ✓ [webgpu] số liệu hiển thị trong bảng điều khiển (nhà/cây/xe) và aria-live
+ ✓ [webgpu] kết hợp mọi mức mật độ: khu giữ nguyên, tập hiển thị ⊆ khu ∪ signature, registry đủ
+ ✓ [webgpu] URL &region= ưu tiên localStorage; đổi khu cập nhật URL (nếu có) + localStorage; góc nhìn giữ &region=; giá trị lạ → Toàn bộ
+ ✓ [webgpu] kết hợp &density=minimal&region=nam&view=bason: cả hai áp dụng; góc ở khu khác → khu theo URL quyết định (khung khu)
+ ✓ [webgpu] console không có lỗi

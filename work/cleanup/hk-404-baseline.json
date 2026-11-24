@@ -1,0 +1,329 @@
+{
+ "http4xx5xx": 72,
+ "notFound404": 0,
+ "consoleOrPageErrors": 21,
+ "bad": [
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/webgpu-entry-24.js?v=31a",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/landmark-detail.js",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/texture-atlas-09.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/data/facades-15.js?v=16d-r2",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/twin-surface-18.js?v=18b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/semantic-materials-08.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/surface-realism-14.js?v=16b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/experience.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/data/pbr-assets-14.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/hero-cluster-20b.js?v=20b-2",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/shared/digital-twin-core/analysis-client.js?v=17b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/public-realm.js",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/construction-change-23.js?v=23a",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/data/construction-change-23.js?v=23a",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/poc6-maximum.js?v=16b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/times-facade-16d.js?v=16d-r2",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/shared/digital-twin-core/lod-18.js?v=18b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/reality-tile-07b.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/reality-enrichment-13.js?v=16c",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/vendor/three.min.js",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/data/confidence-map-11.js",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/urban-detail-10.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/photo-occlusion-16c.js?v=16d-r2",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/reality-patch.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/data/planning-16.js?v=16a",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/river-reflection.js?v=16b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/leadership-16.js?v=23a",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/data/urban-detail-10.js",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/pbr-environment.js",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/data/scene.js?v=22a",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/data/semantic-materials-08.js",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/app.js?v=23a",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/runtime-monitor-20a.js?v=20b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/bach-dang-footbridge.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/twin-analysis-17.js?v=17b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/contact-shadows.js",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/architecture.js?v=16c",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/demo-shell.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/cinematic-night-12.js?v=15b",
+   "err": "net::ERR_ABORTED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/",
+   "status": "failed",
+   "url": "http://127.0.0.1:8879/hcmc-poc/photo-facades-15.js?v=16d-r2",
+   "err": "net::ERR_ABORTED"
+  }
+ ],
+ "errs": [
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+   "page": "http://127.0.0.1:8879/hcmc-poc/webgpu-materials-24.html?v=32a&app=smart&region=bac",
+   "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  }
+ ]
+}

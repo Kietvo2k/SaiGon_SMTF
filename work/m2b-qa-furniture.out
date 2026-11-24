@@ -1,0 +1,213 @@
+{
+ "suite": "street-furniture-31 · E2",
+ "passed": 40,
+ "failed": 0,
+ "checks": [
+  "dữ liệu street-furniture-31: version 31A, seed, provenance khớp hash, wrapper .js trùng JSON",
+  "mã nguồn: module đèn mới được nạp, runtime 28 không còn tự đặt đèn theo tim từng way",
+  "[webgpu] street-furniture-31 đã dựng xong",
+  "[webgpu] có cột đèn (≥ 500) trong đúng 1 InstancedMesh cột + 1 InstancedMesh đầu đèn",
+  "[webgpu] tam giác đèn không tăng so với 30B (cùng hình cột/đầu đèn)",
+  "[webgpu] 0 cột đèn nằm trên mặt asphalt hoặc polygon giao lộ (bán kính cột 0,3 m)",
+  "[webgpu] đèn/cột InstancedMesh khác (hero corridor 30…): 0 cột trong mặt asphalt hoặc giao lộ (bước G)",
+  "[webgpu] đèn hero corridor (Lam Son street lamps): 0 cột trong footprint công trình (hoặc cách mép < bán kính cột)",
+  "[webgpu] 0 cột đèn trong vòng xoay",
+  "[webgpu] 0 cột đèn trên cầu hoặc xuyên mặt cầu",
+  "[webgpu] cột đèn cách polygon giao lộ ≥ 4 m",
+  "[webgpu] cột đèn cách dải zebra ≥ 4 m",
+  "[webgpu] đèn signature (hero corridor + Nguyễn Huệ + Bạch Đằng) không ít hơn 30B",
+  "[webgpu] zebra: 1 mesh, polygonOffset mạnh hơn asphalt",
+  "[webgpu] zebra: mọi góc vạch nằm trên asphalt, lệch mặt ≤ 0,05 m (không lơ lửng, không chìm)",
+  "[webgpu] footway=crossing và footway trùng lòng đường không còn vẽ thành dải be",
+  "[webgpu] cầu bộ hành bridge=yes (footway/path/cycleway…) không còn vẽ phẳng trên lòng đường xe (bước G)",
+  "[webgpu] cầu vượt đi bộ Văn Thánh dựng nâng, tĩnh không ≥ 4,5 m, có cầu thang (bước G)",
+  "[webgpu] API bước E: instances có cờ signature, setVisibleFraction thưa đều và giữ signature",
+  "[webgpu] đèn đêm: phát sáng ở đêm (> 2,5) và giờ vàng cao hơn ngày, như 30B",
+  "[webgpu] console không có lỗi",
+  "[webgl] street-furniture-31 đã dựng xong",
+  "[webgl] có cột đèn (≥ 500) trong đúng 1 InstancedMesh cột + 1 InstancedMesh đầu đèn",
+  "[webgl] tam giác đèn không tăng so với 30B (cùng hình cột/đầu đèn)",
+  "[webgl] 0 cột đèn nằm trên mặt asphalt hoặc polygon giao lộ (bán kính cột 0,3 m)",
+  "[webgl] đèn/cột InstancedMesh khác (hero corridor 30…): 0 cột trong mặt asphalt hoặc giao lộ (bước G)",
+  "[webgl] đèn hero corridor (Lam Son street lamps): 0 cột trong footprint công trình (hoặc cách mép < bán kính cột)",
+  "[webgl] 0 cột đèn trong vòng xoay",
+  "[webgl] 0 cột đèn trên cầu hoặc xuyên mặt cầu",
+  "[webgl] cột đèn cách polygon giao lộ ≥ 4 m",
+  "[webgl] cột đèn cách dải zebra ≥ 4 m",
+  "[webgl] đèn signature (hero corridor + Nguyễn Huệ + Bạch Đằng) không ít hơn 30B",
+  "[webgl] zebra: 1 mesh, polygonOffset mạnh hơn asphalt",
+  "[webgl] zebra: mọi góc vạch nằm trên asphalt, lệch mặt ≤ 0,05 m (không lơ lửng, không chìm)",
+  "[webgl] footway=crossing và footway trùng lòng đường không còn vẽ thành dải be",
+  "[webgl] cầu bộ hành bridge=yes (footway/path/cycleway…) không còn vẽ phẳng trên lòng đường xe (bước G)",
+  "[webgl] cầu vượt đi bộ Văn Thánh dựng nâng, tĩnh không ≥ 4,5 m, có cầu thang (bước G)",
+  "[webgl] API bước E: instances có cờ signature, setVisibleFraction thưa đều và giữ signature",
+  "[webgl] đèn đêm: phát sáng ở đêm (> 2,5) và giờ vàng cao hơn ngày, như 30B",
+  "[webgl] console không có lỗi"
+ ],
+ "failures": [],
+ "summary": {
+  "webgpu": {
+   "lampCount": 1810,
+   "legacyLamps": 4418,
+   "signatureActual": 220,
+   "legacySignature": 201,
+   "bad": {
+    "onAsphalt": 0,
+    "nearJunction": 0,
+    "inRoundabout": 0,
+    "onBridge": 0,
+    "nearCrossing": 0
+   },
+   "zebraBands": 584,
+   "zebraStripes": 6491,
+   "zebraYWorst": 0.000008061879576137798,
+   "footwayOnRoad": 0,
+   "footbridgesOnRoad": [],
+   "counts": {
+    "lamps": 1810,
+    "signatureLamps": 220,
+    "medianLamps": 186,
+    "legacyLamps": 4418,
+    "legacySignatureLamps": 201,
+    "zebraBands": 584,
+    "zebraStripes": 6491,
+    "crossings": 440,
+    "hiddenFootways": 533,
+    "curbLines": 4244
+   },
+   "rejected": {
+    "trùng vị trí đèn khác": 232,
+    "sát vạch qua đường": 130,
+    "dải phân cách hẹp < 2,5 m": 177,
+    "dưới mặt cầu thấp": 48,
+    "mặt đường khác ngay trước/sau": 6,
+    "sát giao lộ": 23,
+    "mũi dải phân cách/đảo nhỏ": 2
+   },
+   "api": {
+    "instances": 1810,
+    "signature": 220,
+    "kinds": [
+     "lamp"
+    ],
+    "hasSetDensity": true,
+    "halfCount": 1014,
+    "halfSignature": 220,
+    "emptiedCells": 0,
+    "zeroCount": 220,
+    "restoredCount": 1810
+   },
+   "emissive": {
+    "day": 0.04,
+    "golden": 0.28800000000000003,
+    "night": 3.14
+   },
+   "poleMeshes": [
+    {
+     "name": "Street lamp poles · 31 theo mép hợp nhất",
+     "count": 1810,
+     "triangles": 28
+    }
+   ],
+   "headMeshes": [
+    {
+     "name": "Street lamp heads · 31 cần đèn quay về lòng đường",
+     "count": 1810,
+     "triangles": 12
+    }
+   ],
+   "zebraMeshes": [
+    {
+     "name": "Zebra crossings 31 · vạch qua đường trên asphalt",
+     "polygonOffset": true,
+     "factor": -5,
+     "units": -5,
+     "triangles": 12982
+    }
+   ],
+   "errors": []
+  },
+  "webgl": {
+   "lampCount": 1810,
+   "legacyLamps": 4418,
+   "signatureActual": 220,
+   "legacySignature": 201,
+   "bad": {
+    "onAsphalt": 0,
+    "nearJunction": 0,
+    "inRoundabout": 0,
+    "onBridge": 0,
+    "nearCrossing": 0
+   },
+   "zebraBands": 584,
+   "zebraStripes": 6491,
+   "zebraYWorst": 0.000008061879576137798,
+   "footwayOnRoad": 0,
+   "footbridgesOnRoad": [],
+   "counts": {
+    "lamps": 1810,
+    "signatureLamps": 220,
+    "medianLamps": 186,
+    "legacyLamps": 4418,
+    "legacySignatureLamps": 201,
+    "zebraBands": 584,
+    "zebraStripes": 6491,
+    "crossings": 440,
+    "hiddenFootways": 533,
+    "curbLines": 4244
+   },
+   "rejected": {
+    "trùng vị trí đèn khác": 232,
+    "sát vạch qua đường": 130,
+    "dải phân cách hẹp < 2,5 m": 177,
+    "dưới mặt cầu thấp": 48,
+    "mặt đường khác ngay trước/sau": 6,
+    "sát giao lộ": 23,
+    "mũi dải phân cách/đảo nhỏ": 2
+   },
+   "api": {
+    "instances": 1810,
+    "signature": 220,
+    "kinds": [
+     "lamp"
+    ],
+    "hasSetDensity": true,
+    "halfCount": 1014,
+    "halfSignature": 220,
+    "emptiedCells": 0,
+    "zeroCount": 220,
+    "restoredCount": 1810
+   },
+   "emissive": {
+    "day": 0.04,
+    "golden": 0.28800000000000003,
+    "night": 3.14
+   },
+   "poleMeshes": [
+    {
+     "name": "Street lamp poles · 31 theo mép hợp nhất",
+     "count": 1810,
+     "triangles": 28
+    }
+   ],
+   "headMeshes": [
+    {
+     "name": "Street lamp heads · 31 cần đèn quay về lòng đường",
+     "count": 1810,
+     "triangles": 12
+    }
+   ],
+   "zebraMeshes": [
+    {
+     "name": "Zebra crossings 31 · vạch qua đường trên asphalt",
+     "polygonOffset": true,
+     "factor": -5,
+     "units": -5,
+     "triangles": 12982
+    }
+   ],
+   "errors": []
+  }
+ }
+}
+FURN_EXIT=0

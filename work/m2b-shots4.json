@@ -1,0 +1,12 @@
+[
+ {"name":"l81-a","file":"work/m2b-sig-l81-a.png","x":1124,"z":-1768,"dist":420,"az":0.6,"polar":1.02},
+ {"name":"l81-b","file":"work/m2b-sig-l81-b.png","x":1124,"z":-1768,"dist":230,"az":0.6,"polar":1.38},
+ {"name":"csg-a","file":"work/m2b-sig-csg-a.png","x":1620,"z":-2175,"dist":340,"az":0.95,"polar":1.05},
+ {"name":"csg-b","file":"work/m2b-sig-csg-b.png","x":1600,"z":-2180,"dist":150,"az":2.9,"polar":1.40},
+ {"name":"csg2-a","file":"work/m2b-sig-csg2-a.png","x":1639,"z":-2166,"dist":300,"az":0.95,"polar":1.05},
+ {"name":"csg2-b","file":"work/m2b-sig-csg2-b.png","x":1639,"z":-2166,"dist":130,"az":2.9,"polar":1.40},
+ {"name":"ctt-a","file":"work/m2b-sig-ctt-a.png","x":605,"z":-994,"dist":400,"az":0.6,"polar":1.05},
+ {"name":"ctt-b","file":"work/m2b-sig-ctt-b.png","x":605,"z":-994,"dist":170,"az":2.7,"polar":1.40},
+ {"name":"nvh-a","file":"work/m2b-sig-nvh-a.png","x":1813,"z":-2592,"dist":260,"az":0.6,"polar":1.10},
+ {"name":"nvh-b","file":"work/m2b-sig-nvh-b.png","x":1813,"z":-2592,"dist":120,"az":2.0,"polar":1.43}
+]

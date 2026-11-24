@@ -1,0 +1,15 @@
+[Unit]
+Description=Traffic Dashboard Web (Da Nang) - giam sat giao thong
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nvidia
+WorkingDirectory=/home/nvidia/traffic_project
+ExecStart=/usr/bin/python3 /home/nvidia/traffic_project/web/server.py --host 0.0.0.0 --port 8090
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

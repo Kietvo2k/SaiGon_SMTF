@@ -1,0 +1,29 @@
+{
+  "mode": "REALISTIC_TRAFFIC_DENSITY_HEATMAP",
+  "input": "C:\\AI_Bach\\Proj_SmartTraffic\\demo_videos\\violation_redlight_15s_ccby4.mp4",
+  "output_video": "C:\\AI_Bach\\Proj_SmartTraffic\\demo_videos\\violation_redlight_15s_ccby4_density_heatmap.mp4",
+  "metrics_csv": "C:\\AI_Bach\\Proj_SmartTraffic\\demo_videos\\violation_redlight_15s_ccby4_density_heatmap.metrics.csv",
+  "frames_processed": 113,
+  "processing_elapsed_s": 19.21,
+  "processing_fps": 5.88,
+  "total_unique_vehicles": 39,
+  "peak_dwell_seconds": 7.64,
+  "peak_flow_count": 6.21,
+  "config": {
+    "model_path": "",
+    "imgsz": 480,
+    "conf": 0.28,
+    "iou": 0.5,
+    "mode": "combined",
+    "stop_speed_threshold_px": 3.2,
+    "max_dwell_scale_sec": 6.0,
+    "max_flow_scale_count": 3.5,
+    "decay_rate": 1.0,
+    "overlay_alpha": 0.65,
+    "base_kernel_radius": 26,
+    "perspective_scale": true,
+    "draw_trajectories": true,
+    "draw_boxes": true,
+    "draw_colorbar": true
+  }
+}

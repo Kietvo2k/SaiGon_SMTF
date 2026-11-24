@@ -1,0 +1,76 @@
+11:44:48 | INFO     | PyTorch CPU threads: 2
+11:44:48 | INFO     | Đang tải model AI...
+11:44:48 | INFO     | ✓ Vehicle model: yolo26n.pt  (classes: {0: 'person', 1: 'bicycle', 2: 'car', 3: 'motorcycle', 4: 'airplane', 5: 'bus', 6: 'train', 7: 'truck', 8: 'boat', 9: 'traffic light', 10: 'fire hydrant', 11: 'stop sign', 12: 'parking meter', 13: 'bench', 14: 'bird', 15: 'cat', 16: 'dog', 17: 'horse', 18: 'sheep', 19: 'cow', 20: 'elephant', 21: 'bear', 22: 'zebra', 23: 'giraffe', 24: 'backpack', 25: 'umbrella', 26: 'handbag', 27: 'tie', 28: 'suitcase', 29: 'frisbee', 30: 'skis', 31: 'snowboard', 32: 'sports ball', 33: 'kite', 34: 'baseball bat', 35: 'baseball glove', 36: 'skateboard', 37: 'surfboard', 38: 'tennis racket', 39: 'bottle', 40: 'wine glass', 41: 'cup', 42: 'fork', 43: 'knife', 44: 'spoon', 45: 'bowl', 46: 'banana', 47: 'apple', 48: 'sandwich', 49: 'orange', 50: 'broccoli', 51: 'carrot', 52: 'hot dog', 53: 'pizza', 54: 'donut', 55: 'cake', 56: 'chair', 57: 'couch', 58: 'potted plant', 59: 'bed', 60: 'dining table', 61: 'toilet', 62: 'tv', 63: 'laptop', 64: 'mouse', 65: 'remote', 66: 'keyboard', 67: 'cell phone', 68: 'microwave', 69: 'oven', 70: 'toaster', 71: 'sink', 72: 'refrigerator', 73: 'book', 74: 'clock', 75: 'vase', 76: 'scissors', 77: 'teddy bear', 78: 'hair drier', 79: 'toothbrush'})
+11:44:48 | INFO     | ✓ Plate detection model: models/license_plate/license_plate_detection.pt  (classes: {0: 'license_plate'})
+11:44:49 | INFO     | ✓ Plate OCR model: models/license_plate/license_plate_ocr.pt  (classes: {0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: 'A', 11: 'B', 12: 'C', 13: 'D', 14: 'E', 15: 'F', 16: 'G', 17: 'H', 18: 'I', 19: 'J', 20: 'K', 21: 'L', 22: 'M', 23: 'N', 24: 'O', 25: 'P', 26: 'Q', 27: 'R', 28: 'S', 29: 'T', 30: 'U', 31: 'V', 32: 'W', 33: 'X', 34: 'Y', 35: 'Z'})
+11:44:49 | INFO     | Lọc class xe (COCO): {2: 'car', 3: 'motorcycle', 5: 'bus', 7: 'truck'}
+11:44:49 | INFO     | OCR engine: YOLO (license_plate_ocr.pt)
+11:44:49 | INFO     | JetsonComm: chế độ OFFLINE (không kết nối Jetson)
+11:44:49 | INFO     | Mở video mô phỏng: demo_videos/violation_redlight_15s_ccby4.mp4 (15.00 FPS, loop=False)
+11:44:49 | INFO     | Camera kết nối thành công: demo_videos/violation_redlight_15s_ccby4.mp4
+11:44:49 | INFO     | Camera sẵn sàng. Độ phân giải: 1280x720
+11:44:49 | INFO     | Tuyến DOC: 1280x720 | stop_line=418 | count_line=418
+11:44:49 | INFO     | Chỉ 1 camera (DỌC). Tuyến ngang coi như 0 xe. Cắm --camera-h để đủ 2 tuyến.
+11:44:49 | INFO     | Đang warm-up AI trước khi bắt đầu demo...
+11:44:54 | INFO     | Warm-up AI hoàn tất.
+11:44:55 | INFO     | Excel vi phạm: logs/test_v26_redlight.xlsx (sheet=ViPham)
+11:44:55 | WARNING  | Evidence sync config not found; queue-only: C:\AI_Bach\Proj_SmartTraffic\config\evidence_sync.json
+11:44:55 | INFO     | Hệ thống bắt đầu. Nhấn 'q' thoát, 's' chụp màn hình.
+11:44:55 | INFO     | Jetson Nano controller: OFFLINE (test) | 192.168.16.210:8080 | Số tuyến: 1
+11:44:55 | INFO     | Nguồn COUNT: crossing
+11:44:56 | INFO     | VI PHẠM! ID=1 car vượt đèn đỏ
+11:44:56 | WARNING  | 🚨 MÔ PHỎNG VI PHẠM [DOC] #1 | car | Biển: UNREADABLE | 20261111_114456
+11:44:56 | INFO     | Lưu ảnh vi phạm: violations/car_UNREADABLE_20261111_114456_DOC_E1_ID1.jpg
+11:44:56 | WARNING  | Evidence queued locally (C:\AI_Bach\Proj_SmartTraffic\logs\evidence_sync_queue.json); Drive backend is not configured yet.
+11:44:56 | INFO     | Evidence-only: không kích còi/relay cho vi phạm demo.
+11:44:58 | INFO     | Video mô phỏng đã kết thúc: demo_videos/violation_redlight_15s_ccby4.mp4
+11:44:58 | INFO     | All local video sources ended; stopping cleanly.
+11:44:58 | INFO     | Đang dọn dẹp tài nguyên...
+11:44:59 | INFO     | Lưu clip vi phạm: violations/clip_car_UNREADABLE_20261111_114456_DOC_E1_ID1.mp4 (10 frame, codec=h264/libx264)
+11:44:59 | INFO     | Camera đã đóng.
+11:44:59 | INFO     | JetsonComm đã đóng.
+11:44:59 | INFO     | Evidence sync queue: C:\AI_Bach\Proj_SmartTraffic\logs\evidence_sync_queue.json | events=1 | states={'queued': 1}
+11:45:28 | INFO     | Lọc class xe (COCO): {2: 'car', 3: 'motorcycle', 5: 'bus', 7: 'truck'}
+11:45:28 | INFO     | Excel vi phạm: logs/test_v26_speed.xlsx (sheet=ViPham)
+11:45:28 | INFO     | Speed demo OFFLINE: 2.mp4 | 30.0 FPS | source 8.0-15.0s
+11:45:28 | INFO     | Hai vach: A=1300 B=1800, distance=10.00m, threshold demo=5.0km/h
+11:45:41 | INFO     | Lưu ảnh vi phạm: violations/truck_AF54OM_20261111_114539_SPEED_DEMO_E1_ID10.jpg
+11:45:41 | WARNING  | SPEED_DEMO event 1: truck 14.7 > 5.0 km/h | OCR=AF54OM (READ_UNVERIFIED)
+11:45:45 | INFO     | Lưu clip vi phạm: violations/clip_truck_20261111_114539_SPEED_DEMO_E1_ID10.mp4 (9 frame, codec=h264/libx264)
+11:45:45 | WARNING  | Evidence sync config not found; queue-only: C:\AI_Bach\Proj_SmartTraffic\config\evidence_sync.json
+11:45:45 | WARNING  | Evidence queued locally (C:\AI_Bach\Proj_SmartTraffic\logs\evidence_sync_queue.json); Drive backend is not configured yet.
+11:45:45 | INFO     | Evidence sync queue: C:\AI_Bach\Proj_SmartTraffic\logs\evidence_sync_queue.json | states={'queued': 2}
+11:47:27 | INFO     | PyTorch CPU threads: 2
+11:47:27 | INFO     | Đang tải model AI...
+11:47:27 | INFO     | ✓ Vehicle model: yolo26n.pt  (classes: {0: 'person', 1: 'bicycle', 2: 'car', 3: 'motorcycle', 4: 'airplane', 5: 'bus', 6: 'train', 7: 'truck', 8: 'boat', 9: 'traffic light', 10: 'fire hydrant', 11: 'stop sign', 12: 'parking meter', 13: 'bench', 14: 'bird', 15: 'cat', 16: 'dog', 17: 'horse', 18: 'sheep', 19: 'cow', 20: 'elephant', 21: 'bear', 22: 'zebra', 23: 'giraffe', 24: 'backpack', 25: 'umbrella', 26: 'handbag', 27: 'tie', 28: 'suitcase', 29: 'frisbee', 30: 'skis', 31: 'snowboard', 32: 'sports ball', 33: 'kite', 34: 'baseball bat', 35: 'baseball glove', 36: 'skateboard', 37: 'surfboard', 38: 'tennis racket', 39: 'bottle', 40: 'wine glass', 41: 'cup', 42: 'fork', 43: 'knife', 44: 'spoon', 45: 'bowl', 46: 'banana', 47: 'apple', 48: 'sandwich', 49: 'orange', 50: 'broccoli', 51: 'carrot', 52: 'hot dog', 53: 'pizza', 54: 'donut', 55: 'cake', 56: 'chair', 57: 'couch', 58: 'potted plant', 59: 'bed', 60: 'dining table', 61: 'toilet', 62: 'tv', 63: 'laptop', 64: 'mouse', 65: 'remote', 66: 'keyboard', 67: 'cell phone', 68: 'microwave', 69: 'oven', 70: 'toaster', 71: 'sink', 72: 'refrigerator', 73: 'book', 74: 'clock', 75: 'vase', 76: 'scissors', 77: 'teddy bear', 78: 'hair drier', 79: 'toothbrush'})
+11:47:27 | INFO     | ✓ Plate detection model: models/license_plate/license_plate_detection.pt  (classes: {0: 'license_plate'})
+11:47:27 | INFO     | ✓ Plate OCR model: models/license_plate/license_plate_ocr.pt  (classes: {0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: 'A', 11: 'B', 12: 'C', 13: 'D', 14: 'E', 15: 'F', 16: 'G', 17: 'H', 18: 'I', 19: 'J', 20: 'K', 21: 'L', 22: 'M', 23: 'N', 24: 'O', 25: 'P', 26: 'Q', 27: 'R', 28: 'S', 29: 'T', 30: 'U', 31: 'V', 32: 'W', 33: 'X', 34: 'Y', 35: 'Z'})
+11:47:27 | INFO     | Lọc class xe (COCO): {2: 'car', 3: 'motorcycle', 5: 'bus', 7: 'truck'}
+11:47:27 | INFO     | OCR engine: YOLO (license_plate_ocr.pt)
+11:47:27 | INFO     | JetsonComm: chế độ OFFLINE (không kết nối Jetson)
+11:47:28 | INFO     | Mở video mô phỏng: demo_videos/violation_redlight_15s_ccby4.mp4 (15.00 FPS, loop=False)
+11:47:28 | INFO     | Camera kết nối thành công: demo_videos/violation_redlight_15s_ccby4.mp4
+11:47:28 | INFO     | Camera sẵn sàng. Độ phân giải: 1280x720
+11:47:28 | INFO     | Tuyến DOC: 1280x720 | stop_line=418 | count_line=418
+11:47:28 | INFO     | Chỉ 1 camera (DỌC). Tuyến ngang coi như 0 xe. Cắm --camera-h để đủ 2 tuyến.
+11:47:28 | INFO     | Đang warm-up AI trước khi bắt đầu demo...
+11:47:33 | INFO     | Warm-up AI hoàn tất.
+11:47:34 | INFO     | Excel vi phạm: logs/test_v26_redlight.xlsx (sheet=ViPham)
+11:47:34 | WARNING  | Evidence sync config not found; queue-only: C:\AI_Bach\Proj_SmartTraffic\config\evidence_sync.json
+11:47:34 | INFO     | Hệ thống bắt đầu. Nhấn 'q' thoát, 's' chụp màn hình.
+11:47:34 | INFO     | Jetson Nano controller: OFFLINE (test) | 192.168.16.210:8080 | Số tuyến: 1
+11:47:34 | INFO     | Nguồn COUNT: crossing
+11:47:36 | INFO     | VI PHẠM! ID=1 car vượt đèn đỏ
+11:47:36 | WARNING  | 🚨 MÔ PHỎNG VI PHẠM [DOC] #1 | car | Biển: UNREADABLE | 20261111_114736
+11:47:36 | INFO     | Lưu ảnh vi phạm: violations/car_UNREADABLE_20261111_114736_DOC_E1_ID1.jpg
+11:47:36 | WARNING  | Evidence queued locally (C:\AI_Bach\Proj_SmartTraffic\logs\evidence_sync_queue.json); Drive backend is not configured yet.
+11:47:36 | INFO     | Evidence-only: không kích còi/relay cho vi phạm demo.
+11:47:37 | INFO     | Lưu clip vi phạm: violations/clip_car_UNREADABLE_20261111_114736_DOC_E1_ID1.mp4 (10 frame, codec=h264/libx264)
+11:47:39 | INFO     | Video mô phỏng đã kết thúc: demo_videos/violation_redlight_15s_ccby4.mp4
+11:47:39 | INFO     | All local video sources ended; stopping cleanly.
+11:47:39 | INFO     | Đang dọn dẹp tài nguyên...
+11:47:39 | INFO     | Camera đã đóng.
+11:47:39 | INFO     | JetsonComm đã đóng.
+11:47:39 | INFO     | Evidence sync queue: C:\AI_Bach\Proj_SmartTraffic\logs\evidence_sync_queue.json | events=3 | states={'queued': 3}
+11:47:39 | INFO     | Tổng vi phạm ghi nhận: 1
+11:47:39 | INFO     | Excel: logs/test_v26_redlight.xlsx | CSV: logs/violations_20261111_114733.csv

@@ -1,0 +1,31 @@
+{
+  "suite": "signature-registry-31",
+  "passed": 8,
+  "checks": [
+    "registry có version 31A, provenance và wrapper .js trùng JSON",
+    "mỗi mục có key duy nhất, kind hợp lệ, ids số nguyên, source và reason tiếng Việt",
+    "mọi building id tồn tại trong scene.js, mọi way id tồn tại trong D.roads hoặc osm-raw",
+    "đủ các nhóm tối thiểu",
+    "zone hợp lệ: polygon ≥3 đỉnh, diện tích dương, nằm trong bbox",
+    "API tra cứu building/way đúng cho hero và không nhận nhầm",
+    "inProtectedZone đúng cho Nguyễn Huệ/corridor và sai cho điểm xa",
+    "auditSignatureVisibility phát hiện đối tượng registry bị ẩn"
+  ],
+  "entries": 77,
+  "buildings": 31,
+  "ways": 81,
+  "groups": {
+    "hero_envelopes": 3,
+    "ba_son_bridge": 2,
+    "bach_dang_footbridge": 2,
+    "river_bridges": 9,
+    "marina": 4,
+    "hero_corridor": 6,
+    "protected_zones": 1,
+    "identity_facades_30": 11,
+    "photo_facades": 21,
+    "places": 13,
+    "extra": 5
+  },
+  "unresolved": 3
+}

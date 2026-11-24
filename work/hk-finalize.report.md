@@ -1,0 +1,13 @@
+# Báo cáo HK-FINALIZE (2026-10-17)
+
+Tổng: xóa 1166 / 1394 file trong danh sách. Commit: 9a1639e (B), f227018 (A), 712172e (C), 2f35e71 (DOCS). Không push, không đổi nhánh. Lưu ý: 18fe7f3 ("CLEANUP A: sửa 11 link chết trong outputs/hcmc-poc/README.md", cùng tài khoản, 00:06) không do tôi tạo; commit DOCS 2f35e71 viết lại toàn bộ README đó, nên thay thế nội dung của nó. Cần kiểm tra xem có tiến trình song song nào trên worktree này.
+- Nhóm A (DEL2+DECA+REVIEW, 778): xóa 619, giữ 159. Giữ vì còn được tham chiếu từ file không xóa: manifest băm (outputs/delivery-manifest.json, capture-manifest.json, release-fingerprints.json), biên nhận JSON, VERIFY.md và ARCHITECTURE-AND-SOURCES.md giữ lại, validate_demo_ready.py. Zip quarantine giữ (acquisition.json tham chiếu; Q5 chưa xác nhận bản gốc).
+- Nhóm B (legacy-only, 83): index.html viết lại thành trang chuyển hướng; xóa 16; giữ 22 file assets/vendor/tiles (theo GIT-DATA-PACKAGING, danh sách gốc đưa nhầm vào nhóm); giữ 44 vì validate_demo_ready.py, qa-construction-change-23.cjs, validate_ba_son_bridge.py và tệp giữ khác còn tham chiếu. qa-project-hygiene.cjs dòng 58 đã sửa.
+- Nhóm C (TACH, 533): xóa 531; giữ 2 tệp do scripts/prepare-project.py dùng. KHÔNG xóa projects/gia-loc.json: source-core.cjs và gis-projects.cjs nạp nó ở cấp module, xóa sẽ làm hỏng suite; cần viết lại ~12 test (quyết định của bạn). GIT-DATA-PACKAGING.md đã cập nhật.
+- Link FIX-final4: README gốc và outputs/hcmc-poc/README.md viết lại (không còn link tới file đã xóa). palace-exact-search.json -> 03.jpg: 03.jpg đã xóa, nguồn JSON cũng nằm trong nhóm xóa.
+- Kiểm 404 (3 URL, chờ 20 s): trước cleanup 0 HTTP 404; sau B, A, C vẫn 0. Lỗi còn lại là ERR_ABORTED (chuyển hướng) và ERR_CONNECTION_REFUSED tới backend :8900 chưa chạy, có sẵn từ trước.
+- Test cuối: node --test 209/209 pass; qa-north-32 29 PASS / 0 FAIL; pytest 106 passed; hygiene và validator signature pass.
+- Ngoài brief: source-core.cjs 33/35. 2 test lỗi do lệch hash EOL CRLF trong bản làm việc (core.autocrlf), file vẫn còn; chưa chạy lại ở commit trước để đối chiếu.
+- Dọn: xóa 4 thư mục __pycache__ chưa track trong outputs/smart-traffic/backend (hygiene báo lỗi). Tắt server 8879 (PID 23328). Không đụng node qa-region-31.cjs (PID 22224), không phải tiến trình của tôi.
+- Lệch brief: thứ tự commit B, A, C, DOCS; tài khoản seed ở backend/app/seed/accounts.json; runtime không đọc region=bac; docs/NEXT-PHASE-PROMPTS.md có nhưng chưa track (không commit).
+- Còn lại: validate_demo_ready.py và qa-app-integrity-30b.cjs báo lỗi vì vẫn đọc ?legacy=1. Cần quyết định: xóa manifest băm (giải phóng khoảng 200 file) và viết lại test shared core rồi xóa gia-loc.json.

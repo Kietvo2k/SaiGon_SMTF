@@ -1,0 +1,32 @@
+{
+ "outputs/hcmc-poc/app.js": [
+  "outputs/hcmc-poc/scripts/validate_demo_ready.py"
+ ],
+ "outputs/hcmc-poc/cinematic-night-12.js": [
+  "outputs/hcmc-poc/scripts/validate_demo_ready.py"
+ ],
+ "outputs/hcmc-poc/demo-shell.js": [
+  "outputs/hcmc-poc/scripts/validate_demo_ready.py"
+ ],
+ "outputs/hcmc-poc/executive-story-19.js": [
+  "outputs/hcmc-poc/scripts/validate_demo_ready.py"
+ ],
+ "outputs/hcmc-poc/reality-enrichment-13.js": [
+  "outputs/hcmc-poc/scripts/validate_demo_ready.py"
+ ],
+ "outputs/hcmc-poc/style.css": [
+  "outputs/hcmc-poc/scripts/validate_demo_ready.py"
+ ],
+ "outputs/hcmc-poc/twin-analysis-17.js": [
+  "outputs/hcmc-poc/scripts/validate_demo_ready.py"
+ ],
+ "outputs/hcmc-poc/twin-surface-18.js": [
+  "outputs/hcmc-poc/scripts/validate_demo_ready.py"
+ ],
+ "outputs/hcmc-poc/vendor/GLTFLoader-r128.js": [
+  "outputs/hcmc-poc/scripts/validate_demo_ready.py"
+ ],
+ "outputs/hcmc-poc/bridge-detail.js": [
+  "outputs/hcmc-poc/scripts/validate_ba_son_bridge.py"
+ ]
+}

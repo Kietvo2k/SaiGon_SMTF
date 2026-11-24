@@ -1,0 +1,41 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+globalThis.window = globalThis;
+require(path.resolve('outputs/hcmc-poc/data/road-graph-31.js'));
+require(path.resolve('outputs/hcmc-poc/data/scene.js'));
+const G = globalThis.ROAD_GRAPH_31, D = globalThis.CITY_DATA;
+const nodeMap = JSON.parse(fs.readFileSync(path.resolve('outputs/smart-traffic/backend/app/seed/node_map.json'), 'utf8'));
+const { buildTrafficNetwork31, createTrafficSim31 } = await import(new URL('../outputs/hcmc-poc/city-traffic-sim-31.js?v=32a', import.meta.url).href);
+const { buildSignalPlan32 } = await import(new URL('../outputs/hcmc-poc/signal-plan-32.js?v=32a', import.meta.url).href);
+const { NORTH_DEMAND_32, lockNorthRegion32 } = await import(new URL('../outputs/hcmc-poc/smart-app-32.js?v=32a', import.meta.url).href);
+const { regionPolygon } = await import(new URL('../outputs/hcmc-poc/city-region-31.js?v=31a', import.meta.url).href);
+const WIDTHS = { motorway: 16, trunk: 15, primary: 14, secondary: 11, tertiary: 8, residential: 5, living_street: 4, service: 3.5, unclassified: 5, footway: 2.5, pedestrian: 12, cycleway: 2, path: 1.5 };
+const widthOf = i => D.roads[i].lanes ? Math.max(WIDTHS[D.roads[i].type] || 4, D.roads[i].lanes * 3.1) : WIDTHS[D.roads[i].type] || 4;
+const drawn = i => !D.roads[i].tunnel && G.roads[i].skipRender !== 'hide';
+const signalPlan = buildSignalPlan32({ graph: G, nodeMap });
+const net = buildTrafficNetwork31({ graph: G, roads: D.roads, widthOf, drawn, signalPlan });
+const sim = createTrafficSim31(net, { signalPlan, controller: null, breakerS: 180, seed: 31031, demand: NORTH_DEMAND_32 });
+lockNorthRegion32(sim, regionPolygon('bac'));
+sim.setFraction(1);
+const idx = new Map(net.G.nodes.map((n, i) => [n.id, i]));
+const hxIdx = nodeMap.map(m => idx.get(m.osm_id));
+console.log('NL', net.NL, 'N', sim.N, 'active', sim.activeCount(), 'spawnList', net.spawnLanes.length, 'region spawnList', sim.region.spawnLanes);
+console.log('HX idx', hxIdx);
+const gOf = st => net.arriveGroup[st];
+let c0 = 0, c1 = 0; const rows = [];
+for (let l = 0; l < net.NL; l++) {
+  if (!sim.insideLaneOf(l)) continue;
+  const t = net.lanes.to[l];
+  if (!hxIdx.includes(t)) continue;
+  const g = gOf(net.lanes.st[l]);
+  if (g === 0) c0++; else c1++;
+  rows.push({ l, node: t, group: g, road: G.roads[net.E[net.lanes.edge[l]].road]?.name, len: +net.lanes.length[l].toFixed(0) });
+}
+console.log('lanes into HX in region:', rows.length, 'group0', c0, 'group1', c1);
+console.log(rows.slice(0, 40));
+// region lane stats
+let inRegion = 0, out = 0;
+for (let l = 0; l < net.NL; l++) (sim.insideLaneOf(l) ? inRegion++ : out++);
+console.log('lanes inside region', inRegion, 'outside', out);

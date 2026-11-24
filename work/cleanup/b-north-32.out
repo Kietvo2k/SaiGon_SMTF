@@ -1,0 +1,30 @@
+PASS window.__smartApp tồn tại
+PASS app smart ép khu bắc (dataset.region=bac)
+PASS tiêu đề panel = "Khu Bắc" (Khu Bắc)
+PASS đúng 5 nút Tham quan khu Bắc (hx:Ngã tư Hàng Xanh, l81:Landmark 81, csg:Cầu Sài Gòn, ctn:Cầu Thị Nghè, bac:Toàn khu Bắc)
+PASS công tắc vùng quan sát camera tồn tại, mặc định tắt ở toàn cảnh
+PASS M2c: albedo khóa đã hiệu chỉnh (đất #7a7e81 → hiển thị ≈ #9aa0a6, nước #455d6d → ≈ #7f97a6) qua mặt nạ
+PASS M2a: viền sáng khu Bắc tồn tại
+PASS M2a: đúng 3 nhãn "🔒 Khu vực đang khóa" (🔒 Khu vực đang khóa · Lõi Quận 1 · Bến Nghé | 🔒 Khu vực đang khóa · Ven sông · Ba Son · Thủ Thiêm | 🔒 Khu vực đang khóa · Phía nam · Quận 4 · Khánh Hội)
+PASS M2a: 3 nút khu khóa được đánh dấu (+ Toàn bộ) (all, trung-tam, ven-song, nam)
+PASS M2a: sim khu Bắc margin=0 ({"id":"bac","margin":0})
+PASS M2a: camera overview trong giới hạn ({"x":0,"z":-591.0188536314171,"distance":5600})
+PASS góc Hàng Xanh có công trình hiển thị (11)
+PASS góc Hàng Xanh có xe hiển thị (4359/3083)
+PASS vùng quan sát camera bật ở góc cận cảnh
+PASS camera cận cảnh Hàng Xanh (~60 m)
+PASS M2a: camera cận cảnh Hàng Xanh trong giới hạn ({"x":-59.13281830260497,"z":-2511.5850620462274,"distance":155.11641568896994})
+PASS M2a: bấm nút khu khóa không đổi khu (region=bac)
+PASS M2a: thông báo khu khóa hiện ("🔒 Khu vực đang khóa · Lõi Quận 1 · Bến Nghé")
+PASS M2a: nhà hiển thị ngoài khu Bắc = 0 (shown 11)
+PASS M2a: cây hiển thị ngoài khu Bắc = 0 (shown 1208)
+PASS M2a: xe hiển thị ngoài khu Bắc = 0 (active 3083)
+PASS M2c: công trình signature hiển thị ngoài khu Bắc = 0 (tổng signature đang vẽ 11)
+PASS M2c: cầu signature ngoài khu Bắc, không vắt ranh, đang vẽ = 0 (0)
+PASS M2c: cầu vắt ranh (Sài Gòn, Thủ Thiêm…) vẫn vẽ (11 way)
+PASS M2c: module signature ngoài khu Bắc đang vẽ = 0 (không có)
+PASS M2c: nhãn signature ngoài khu Bắc không hiển thị = 0 (không có)
+PASS M2a: ≥ 60 xe trong 300 m quanh Hàng Xanh sau 60 s (281/3083)
+PASS 0 chuỗi cấm trên UI ()
+errors: Failed to load resource: net::ERR_CONNECTION_REFUSED | Failed to load resource: net::ERR_CONNECTION_REFUSED | Failed to load resource: net::ERR_CONNECTION_REFUSED | Failed to load resource: net::ERR_CONNECTION_REFUSED | Failed to load resource: net::ERR_CONNECTION_REFUSED | Failed to load resource: net::ERR_CONNECTION_REFUSED
+PASS qa-north-32
