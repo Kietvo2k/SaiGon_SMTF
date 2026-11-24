@@ -6,3 +6,5 @@ outputs/hcmc-poc/research/facades-15/snapshots/** -text
 outputs/hcmc-poc/research/visual-14/snapshots/** -text
 outputs/hcmc-poc/research/vibecode-16/source-snapshots/** -text
 research/hcmc-flood-digital-twin/refinery/hcmc-flood-sources/snapshots/** -text
+Proj_SmartTraffic/**/*.pt filter=lfs diff=lfs merge=lfs -text
+Proj_SmartTraffic/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
